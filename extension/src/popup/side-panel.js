@@ -598,7 +598,7 @@ async function loadComments(videoId) {
             <span class="comment-author">${escapeHtml(c.author)}</span>
             ${likesText}
           </div>
-          <p class="comment-text">${escapeHtml(c.text)}</p>
+          <p class="comment-text">${sanitizeCommentHtml(c.text)}</p>
         </div>
       `;
     }).join('');
@@ -613,6 +613,19 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// YouTube API returns HTML in textDisplay (e.g. <br>, &#39;, <a href>).
+// Strip everything except <br> and <a> (with href sanitized), then decode entities.
+function sanitizeCommentHtml(html) {
+  return String(html)
+    // Keep <br> as-is
+    // Strip all tags except <br> and <a href="...">
+    .replace(/<(?!br\s*\/?>|a\s[^>]*href=["']https?:\/\/[^"']*["'][^>]*>|\/a>)[^>]+>/gi, '')
+    // Force all <a> links to open safely
+    .replace(/<a\s[^>]*href=["'](https?:\/\/[^"']*?)["'][^>]*>/gi,
+      (_, url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`)
+    .trim();
 }
 
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────

@@ -106,6 +106,13 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           </a>
           <p className={styles.sideNavSection}>Curations</p>
           <a
+            href="/dashboard/analytics"
+            className={`${styles.sideNavItem} ${isActive('/dashboard/analytics') ? styles.sideNavItemActive : ''}`}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>bar_chart</span>
+            <span>Analytics</span>
+          </a>
+          <a
             href="/dashboard/groups"
             className={`${styles.sideNavItem} ${isActive('/dashboard/groups') ? styles.sideNavItemActive : ''}`}
           >
@@ -134,12 +141,6 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           </form>
         </nav>
 
-        <div className={styles.sidebarCta}>
-          <button className={styles.newBookmarkBtn}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
-            New Bookmark
-          </button>
-        </div>
       </aside>
 
       {/* ── Page content ── */}

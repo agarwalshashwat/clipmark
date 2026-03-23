@@ -436,42 +436,6 @@
     margin-top: 16px !important;
 }
 
-.side-nav-footer {
-    padding: 16px 0 0;
-}
-
-.side-nav-new-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #006b5f 0%, #14b8a6 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
-    transition: opacity 0.15s, transform 0.15s;
-}
-
-.side-nav-new-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-}
-
-.side-nav-new-btn:active {
-    transform: scale(0.97);
-    opacity: 0.8;
-}
-
-.side-nav-new-btn .material-symbols-outlined {
-    font-size: 20px;
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    MAIN CONTENT AREA
@@ -2977,8 +2941,7 @@
 .toolbar-btn:focus-visible,
 .ep-btn:focus-visible,
 .vc-jump:focus-visible,
-.btn-icon:focus-visible,
-.side-nav-new-btn:focus-visible {
+.btn-icon:focus-visible {
     outline: 2px solid #14b8a6;
     outline-offset: 2px;
 }

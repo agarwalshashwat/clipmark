@@ -294,36 +294,6 @@
   margin: 0;
 }
 
-.sidebarCta {
-  padding: 16px;
-  background: rgba(0, 107, 95, 0.05);
-  border-radius: 16px;
-}
-
-.newBookmarkBtn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #14B8A6 0%, #006b5f 100%);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 107, 95, 0.2);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.newBookmarkBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 107, 95, 0.28);
-}
-
 /* ── Main ─────────────────────────────────────────────────────────────────── */
 .main {
   padding-top: 64px;
