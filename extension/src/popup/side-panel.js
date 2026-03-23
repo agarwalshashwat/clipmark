@@ -457,7 +457,7 @@ async function summarizeBookmarks() {
 }
 
 // ─── Social Post Generation ───────────────────────────────────────────────────
-async function generateSocialPost(platform, shareUrl) {
+async function generateSocialPost(platform, shareUrl, autoOpen = false) {
   const outputEl = document.getElementById('social-output');
   const textareaEl = document.getElementById('social-post-text');
   const openLink = document.getElementById('social-open-link');
@@ -509,6 +509,7 @@ async function generateSocialPost(platform, shareUrl) {
     openLink.textContent = `Open ${platform.charAt(0).toUpperCase() + platform.slice(1)} ↗`;
 
     outputEl.style.display = 'block';
+    if (autoOpen && composeUrls[platform]) chrome.tabs.create({ url: composeUrls[platform] });
   } catch (error) {
     showError(error.message);
   } finally {
@@ -757,8 +758,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') });
   });
 
-  document.getElementById('share-btn').addEventListener('click', shareBookmarks);
-
   document.getElementById('summarize-btn').addEventListener('click', summarizeBookmarks);
 
   document.getElementById('summary-close').addEventListener('click', () => {
@@ -769,8 +768,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('social-panel').style.display = 'none';
   });
 
+  // Overlay platform buttons (copy flow)
   document.querySelectorAll('.social-platform-btn').forEach(btn => {
     btn.addEventListener('click', () => generateSocialPost(btn.dataset.platform, null));
+  });
+
+  // Footer platform buttons — generate post and open platform directly
+  document.querySelectorAll('.sp-platform-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('social-panel').style.display = 'flex';
+      generateSocialPost(btn.dataset.platform, null, true);
+    });
   });
 
   // Watch for storage changes (real-time sync from dashboard)

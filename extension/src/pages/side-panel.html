@@ -112,37 +112,29 @@
       </div>
     </section>
 
-    <!-- Social Integration -->
-    <section class="sp-section sp-social-section">
-      <div class="sp-social-inner">
-        <div class="sp-social-info">
-          <p class="sp-social-sup">Share the insight</p>
-          <h3 class="sp-social-title">Post to Social</h3>
-        </div>
-        <button class="sp-social-cta" id="share-btn">
-          <span class="material-symbols-outlined" style="font-size:18px;">ios_share</span>
-          Generate Post
-        </button>
-      </div>
-    </section>
-
   </main>
 
-  <!-- Bottom Navigation -->
-  <nav class="sp-bottom-nav">
-    <button class="sp-nav-tab sp-nav-tab--active" id="sp-tab-save">
-      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">add_circle</span>
-      <span class="sp-nav-label">Save</span>
-    </button>
-    <button class="sp-nav-tab" id="summarize-btn-nav" onclick="document.getElementById('summarize-btn').click()">
-      <span class="material-symbols-outlined">auto_awesome</span>
-      <span class="sp-nav-label">Summary</span>
-    </button>
-    <button class="sp-nav-tab" id="sp-tab-library" onclick="chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') })">
-      <span class="material-symbols-outlined">video_library</span>
-      <span class="sp-nav-label">Library</span>
-    </button>
-  </nav>
+  <!-- Bottom: Social Post -->
+  <div class="sp-social-footer">
+    <span class="sp-social-label">Post to Social</span>
+    <div class="sp-platform-btns">
+      <button class="sp-platform-btn" data-platform="twitter" title="Post to X (Twitter)">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      </button>
+      <button class="sp-platform-btn" data-platform="linkedin" title="Post to LinkedIn">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      </button>
+      <button class="sp-platform-btn" data-platform="threads" title="Post to Threads">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+          <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.343 3.59 8.709 3.563 12c.027 3.29.744 5.658 2.075 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 011.563.009c.573.044 1.118.115 1.626.212-.056-.57-.187-1.042-.396-1.41-.297-.53-.774-.8-1.452-.82h-.073c-.53 0-1.095.149-1.493.698l-1.809-.966C10.58 6.648 11.5 6.2 12.7 6.2h.086c2.273.052 3.61 1.403 3.917 3.928.11.028.218.058.327.09 1.271.385 2.262 1.048 2.922 1.966.96 1.337 1.101 3.11.4 5.028C19.327 20.29 16.562 23.95 12.186 24z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <div id="error-message" class="error-message"></div>
 

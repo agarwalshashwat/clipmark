@@ -877,65 +877,66 @@ body {
   cursor: not-allowed;
 }
 
-/* ── Bottom Navigation ───────────────────────────────────────────────────────── */
-.sp-bottom-nav {
+/* ── Social Footer ───────────────────────────────────────────────────────────── */
+.sp-social-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  padding: 6px 8px 10px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px 16px;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 -1px 0 var(--border), 0 -4px 20px rgba(26, 28, 29, 0.04);
   border-radius: 16px 16px 0 0;
   z-index: 60;
-  transition: background 0.2s;
 }
 
-[data-theme="dark"] .sp-bottom-nav {
+[data-theme="dark"] .sp-social-footer {
   background: rgba(15, 16, 17, 0.92);
 }
 
-.sp-nav-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  text-decoration: none;
-  font-family: var(--font);
-  transition: all 0.2s;
-  min-width: 48px;
-}
-
-.sp-nav-tab:hover {
-  color: var(--accent);
-}
-
-.sp-nav-tab .material-symbols-outlined {
-  font-size: 20px;
-}
-
-.sp-nav-label {
-  font-size: 9px;
+.sp-social-label {
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
-.sp-nav-tab--active {
+.sp-platform-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sp-platform-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.sp-platform-btn:hover {
+  border-color: var(--accent);
   color: var(--accent-hover);
   background: var(--accent-light);
+}
+
+.sp-platform-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ── Overlay Panels ──────────────────────────────────────────────────────────── */
@@ -1189,6 +1190,6 @@ body {
   .sp-logo-text { font-size: 13px; }
   .quick-tags { gap: 3px; }
   .quick-tag-btn { padding: 2px 7px; font-size: 9px; }
-  .sp-nav-tab { padding: 6px 8px; min-width: 40px; }
-  .sp-nav-label { display: none; }
+  .sp-social-footer { padding: 10px 12px 14px; }
+  .sp-social-title { font-size: 12px; }
 }
