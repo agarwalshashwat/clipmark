@@ -10,192 +10,45 @@ Live at **[clipmark-chi.vercel.app](https://clipmark-chi.vercel.app)**
 
 ## Who is it for?
 
-### Developers — Interview & Tutorial Recap
-You have a system design interview tomorrow. You're not watching that 2-hour lecture again.
+**Developers** — Reviewing a 2-hour system design lecture before an interview? Hit ▶ Revisit Mode and play only your saved clips back to back. `2 hours → 6 minutes`.
 
-Open your bookmarks, hit **▶ Revisit Mode**, and the extension plays only your saved clips — back to back, automatically. `2 hours → 6 minutes`.
+**Students** — Spaced Revisit resurfaces your bookmarks at 1, 3, and 7 days after saving — like flashcards for video.
 
-### Students — Lecture Revisit
-A 1.5-hour physics lecture has 20 minutes of content worth revisiting. Clipmark plays only those moments. And **Spaced Revisit** resurfaces your bookmarks 1, 3, and 7 days later — like flashcards for video.
-
-### Tech Creators — Content to Posts
-You watched a 3-hour podcast. You want a LinkedIn post and a shareable guide. Bookmark the key moments, hit **✍ Post**, and AI writes a platform-tuned caption with a share link attached. One session becomes a published post, a newsletter section, and a replayable guide.
+**Creators** — Bookmark key moments from a podcast, hit ✍ Post, and AI writes a platform-tuned caption with a share link attached.
 
 ---
 
 ## Features
 
-### Core Bookmarking
-- **One-click save** — description is optional; auto-fills from transcript, chapter title, or "Bookmark at M:SS"
-- **Alt+B silent save** — instantly bookmark the current moment from any YouTube video
-- **Ctrl+Shift+S / Cmd+Shift+S** — quick save bookmark
-- **Player button** — bookmark icon injected into the YouTube player controls
-- **Visual progress bar markers** — colored markers appear on the YouTube seek bar; clusters when >8 bookmarks
-- **Inline edit** — click any description to edit in-place
-
-### Tags & Colors
-- **`#tag` syntax** — type `#important`, `#review`, `#key`, etc. in descriptions
-- **Named tag colors** — `important` → red, `review` → orange, `note` → blue, `question` → green, `todo` → purple, `key` → pink
-- **Custom tags** — unknown tags get a deterministic hash-based color
-- **Colored markers** — each progress bar marker reflects its bookmark's tag color
-
-### AI Features (Pro)
-- **✦ Auto** button — pre-fills description from the video's live transcript at the current timestamp
-- **✦ Summary** — AI-generated overview, key topics, and action items for your bookmarks (Claude Haiku)
-- **Smart tag suggestions** — after auto-fill, AI suggests relevant tags as clickable chips
-- **✍ Post** — generate platform-tuned posts for X/Twitter, LinkedIn, or Threads from your bookmarks
-
-### Revisit & Learning
-- **Revisit Mode** — "▶ Revisit" button on every video card in the dashboard; opens the video and plays each bookmarked segment sequentially (default 60s clips) with a HUD overlay showing clip progress and countdown to the next clip
-- **Spaced Revisit** — bookmarks are scheduled for review at 1, 3, and 7 days after creation; a "📚 Revisit Today" panel appears in the popup whenever reviews are due
-- **Custom revisit reminders** — set a per-video reminder interval (e.g. every 3 days); stored in `chrome.storage.sync` as `rem_{videoId}`; popup shows the next due date with change/clear controls
-
-### Dashboard
-- **Editorial card layout** — each video gets a two-column card: left panel with rounded thumbnail (gradient overlay, YouTube badge, duration, hover play button), visual timeline scrubber with colored dots, and Revisit/Group action buttons; right panel with large title, bookmark count/date metadata, and a vertical timeline thread of all bookmarks
-- **Vertical bookmark timeline** — single connecting thread line with colored dot markers, timestamp badges, type labels ("ANNOTATED BOOKMARK" / "QUICK CLIP"), and hover-reveal action buttons; collapse/expand cards with more than 3 bookmarks
-- **Timeline view** — chronological view of all bookmarks across all videos with month/year markers
-- **Groups view** — playlist-style grouping of videos; create/rename/delete groups, add any video to multiple groups
-- **Search & sort** — filter by description, title, or tag; sort newest/oldest/timestamp
-- **Card, timeline, and groups view toggle**
-- **Bulk delete** — checkbox selection with a "Delete (N)" action
-
-### Side Panel
-- **Persistent side panel** — access bookmarks alongside any YouTube video without leaving the page
-
-### Export & Import
-- **Export JSON / CSV / Markdown** — full backup or paste-ready timestamped links
-- **Import JSON** — merge from backup, deduplicates by ID
-
-### Sync & Sharing
-- **`chrome.storage.sync`** — bookmarks sync automatically across all your Chrome instances
-- **↗ Share** — publish bookmarks for any video to a public URL (`/v/{shareId}`)
-- **Public profile** — `/u/[username]` page with avatar and collection grid
-- **Embed widget** — `<iframe>`-embeddable page at `/embed/{shareId}`
-- **Cloud sync** — bookmarks pushed to Supabase when signed in (Bearer token auth)
-- **Sign in with Google** — OAuth flow through the webapp; token stored in extension sync storage
-
-### Pro & Monetization
-- **✦ Pro upgrade button** — always-visible in popup header; opens `/upgrade` page; hidden when already Pro
-- **Upgrade page** — Free / Pro Monthly ($5/mo) / Pro Annual ($40/yr) pricing cards with feature comparison
-- **Dodo Payments** — Merchant of Record checkout; handles VAT/global tax compliance
-- **Webhook sync** — `POST /api/webhooks/dodo` sets `is_pro` on Supabase profile in real time
-
----
-
-## Project Structure
-
-```
-youtube-vid-bookmarker/
-├── extension/                     # Chrome Extension (Manifest V3, vanilla JS)
-│   ├── manifest.json              # MV3 config — permissions, commands, host_permissions
-│   ├── assets/icons/              # Extension icons (16/48/128px + logo)
-│   ├── src/
-│   │   ├── background/
-│   │   │   └── background.js      # Service worker: auth token storage, messaging
-│   │   ├── content/
-│   │   │   └── content.js         # YouTube page: markers, keyboard shortcuts, revisit mode
-│   │   ├── pages/
-│   │   │   ├── popup.html         # Extension popup HTML
-│   │   │   ├── bookmarks.html     # Full-page dashboard HTML
-│   │   │   └── side-panel.html    # Side panel HTML
-│   │   └── popup/
-│   │       ├── popup.js           # Popup: bookmark CRUD, AI features, auth, reminders
-│   │       ├── bookmarks.js       # Dashboard: grouped cards, timeline, groups, export/import
-│   │       ├── side-panel.js      # Side panel logic
-│   │       └── theme-loader.js    # Theme initialization
-│   └── styles/
-│       ├── popup.css              # Popup styles
-│       ├── bookmarks.css          # Dashboard styles
-│       ├── side-panel.css         # Side panel styles
-│       └── design-tokens.css      # Shared CSS design tokens
-│
-├── packages/
-│   └── design-system/             # Shared design tokens (extension + webapp)
-│
-├── webapp/                        # Next.js 14 + Supabase
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── share/             # POST — store bookmark collection, return shareId
-│   │   │   ├── bookmarks/         # PUT  — upsert per-video bookmarks (cloud sync)
-│   │   │   ├── summarize/         # POST — AI summary via Claude Haiku
-│   │   │   ├── suggest-tags/      # POST — AI tag suggestions via Claude Haiku
-│   │   │   ├── generate-post/     # POST — AI social post via Claude Haiku
-│   │   │   └── webhooks/dodo/     # POST — Dodo Payments webhook → update is_pro
-│   │   ├── upgrade/               # Pricing page + Server Action checkout
-│   │   ├── v/[shareId]/           # Public shared collection page
-│   │   ├── embed/[shareId]/       # Embeddable iframe page
-│   │   ├── u/[username]/          # Public user profile page
-│   │   └── auth/                  # Google OAuth callback + extension handoff
-│   ├── lib/
-│   │   └── supabase.ts
-│   ├── migrations/                # SQL schema migrations
-│   └── middleware.ts
-```
-
----
-
-## Storage Schema
-
-Bookmarks are stored per-video in `chrome.storage.sync`:
-
-```js
-// Key: "bm_{videoId}"  →  Value: Bookmark[]
-{
-  id:             number,     // Date.now() — also creation sort key
-  videoId:        string,
-  timestamp:      number,     // seconds (float)
-  description:    string,
-  tags:           string[],   // parsed from #tag in description
-  color:          string,     // derived from first tag
-  createdAt:      string,     // ISO date
-  videoTitle:     string,
-  reviewSchedule: number[],   // days after creation to resurface [1, 3, 7]
-  lastReviewed:   string|null // ISO date of last spaced-revisit interaction
-}
-
-// Key: "rem_{videoId}"  →  Value: RevisitReminder
-{
-  days:     number,  // user-defined revisit interval in days
-  nextDue:  string,  // ISO date of next reminder
-  setAt:    string,  // ISO date reminder was created/updated
-}
-
-// Key: "vgroups"  →  Value: VideoGroup[]
-{
-  id:       string,    // uuid
-  name:     string,    // group label
-  videoIds: string[],  // list of videoIds in this group
-}
-```
+- **Bookmark any moment** — one click, optional description, auto-tagged
+- **Visual progress bar markers** — colored dots on the YouTube seek bar
+- **`#tag` syntax** — `#important`, `#review`, `#key`, etc. with named colors
+- **Revisit Mode** — plays only your bookmarked segments, back to back
+- **Spaced Revisit** — resurfaces bookmarks on a 1/3/7-day schedule
+- **AI features (Pro)** — auto-description from transcript, tag suggestions, social post generator
+- **Dashboard** — card/timeline/groups view, search, sort, bulk delete
+- **Side panel** — persistent access alongside any YouTube video
+- **Export / Import** — JSON, CSV, Markdown
+- **Share** — publish any video's bookmarks to a public URL (`/v/{shareId}`)
+- **Cloud sync** — bookmarks pushed to Supabase when signed in
+- **Sign in with Google** — OAuth through the webapp
 
 ---
 
 ## Installation
 
-### Load unpacked (development)
+**Load the extension (dev)**
 1. Clone this repo
 2. Go to `chrome://extensions/` → enable **Developer mode**
-3. Click **Load unpacked** → select the `extension/` directory
+3. **Load unpacked** → select the `extension/` folder
 
-### Run the webapp locally
+**Run the webapp locally**
 ```bash
-cd webapp
-npm install
-# Add .env.local:
-#   NEXT_PUBLIC_SUPABASE_URL
-#   NEXT_PUBLIC_SUPABASE_ANON_KEY
-#   SUPABASE_SERVICE_ROLE_KEY
-#   ANTHROPIC_API_KEY
-#   NEXT_PUBLIC_APP_URL=http://localhost:3000
-#   DODO_PAYMENTS_API_KEY
-#   DODO_PAYMENTS_WEBHOOK_SECRET
-#   DODO_MONTHLY_PRODUCT_ID
-#   DODO_ANNUAL_PRODUCT_ID
-#   DODO_LIFETIME_PRODUCT_ID
-npm run dev
+cd webapp && npm install && npm run dev
 ```
+Copy `.env.local.example` to `.env.local` and fill in your Supabase, Anthropic, and Dodo Payments keys.
 
-Update `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost:3000` for local development.
+Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost:3000` for local dev.
 
 ---
 
@@ -203,7 +56,7 @@ Update `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localh
 
 | Shortcut | Action |
 |----------|--------|
-| `Alt+B`  | Silent-save bookmark at current timestamp |
+| `Alt+B` | Silent-save bookmark at current timestamp |
 | `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick save bookmark |
 
 ---
@@ -214,14 +67,23 @@ Update `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localh
 |-------|-------|
 | Extension | Vanilla JS, Chrome Manifest V3 |
 | Webapp | Next.js 14, TypeScript |
-| Database | Supabase (PostgreSQL + JSONB) |
+| Database | Supabase (PostgreSQL) |
 | Auth | Google OAuth via Supabase |
-| AI | Anthropic Claude Haiku (`claude-haiku-4-5-20251001`) |
-| Payments | Dodo Payments (Merchant of Record) |
+| AI | Anthropic Claude Haiku |
+| Payments | Dodo Payments |
 | Hosting | Vercel |
+
+---
+
+## Testing
+
+```bash
+npx playwright install chromium   # first time only
+npm run test:yt
+```
 
 ---
 
 ## License
 
-MIT
+Copyright © 2026 Clipmark. All rights reserved. This software is proprietary and not open source.
