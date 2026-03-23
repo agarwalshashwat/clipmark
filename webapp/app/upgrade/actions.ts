@@ -36,7 +36,7 @@ export async function createCheckoutSession(formData: FormData) {
     },
     // Passed through to webhook payload so we can identify the Supabase user
     metadata: { user_id: user.id },
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade?success=true`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
   });
 
   redirect(session.checkout_url!);

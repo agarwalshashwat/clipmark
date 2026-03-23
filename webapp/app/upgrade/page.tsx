@@ -1,6 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase';
 import { createCheckoutSession } from './actions';
-import { ThemeToggle } from '../components/ThemeToggle';
+// import { ThemeToggle } from '../components/ThemeToggle';
 
 const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,  pro: true  },
@@ -76,21 +76,33 @@ export default async function UpgradePage({
               <a href="/upgrade" style={{ color: '#006B5F', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, borderBottom: '2px solid #14B8A6', paddingBottom: 2, textDecoration: 'none' }}>Pricing</a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <ThemeToggle />
-              <a href="/signin" style={{
-                color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 600, fontSize: 14, textDecoration: 'none',
-                padding: '10px 16px',
-              }}>
-                Log In
-              </a>
-              <a href="https://chrome.google.com/webstore" style={{
-                padding: '10px 22px',
-                background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-                color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-              }}>
-                Get Started
-              </a>
+              {/* <ThemeToggle /> */}
+              {user ? (
+                <a href="/dashboard" style={{
+                  padding: '10px 22px',
+                  background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+                  color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                }}>
+                  Dashboard
+                </a>
+              ) : (
+                <>
+                  <a href="/signin" style={{
+                    color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontWeight: 600, fontSize: 14, textDecoration: 'none',
+                    padding: '10px 16px',
+                  }}>
+                    Log In
+                  </a>
+                  <a href="https://chrome.google.com/webstore" style={{
+                    padding: '10px 22px',
+                    background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+                    color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                  }}>
+                    Get Started
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </nav>

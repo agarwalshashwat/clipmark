@@ -4,7 +4,11 @@
   "description": "A plug-and-play Chrome extension for managing YouTube video bookmarks",
   "scripts": {
     "sync-tokens": "node scripts/sync-design-tokens.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:yt": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
   },
   "keywords": [
     "youtube",

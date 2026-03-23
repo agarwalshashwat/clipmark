@@ -41,9 +41,9 @@ export const metadata = { title: 'Dashboard — Clipmark' };
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; success?: string }>;
 }) {
-  const { view = 'library' } = await searchParams;
+  const { view = 'library', success } = await searchParams;
   const isTimeline = view === 'timeline';
 
   const supabase = await createServerSupabase();
@@ -77,8 +77,20 @@ export default async function DashboardPage({
 
   const grouped = groupBookmarksByMonth(allBookmarks);
 
+  const successBanner = success ? (
+    <div style={{
+      background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)',
+      borderRadius: 10, padding: '14px 24px', marginBottom: 24,
+      textAlign: 'center', fontSize: 15, color: '#006b5f',
+      fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
+    }}>
+      Payment successful — welcome to Clipmark Pro! 🎉
+    </div>
+  ) : null;
+
   return isTimeline ? (
     <div className={styles.timelineWrap}>
+      {successBanner}
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Knowledge Stream</h1>
         <p className={styles.pageSub}>Your curated editorial journey through the web.</p>
@@ -141,6 +153,7 @@ export default async function DashboardPage({
     </div>
   ) : (
     <div className={styles.libraryWrap}>
+      {successBanner}
       <section className={styles.libraryHeader}>
         <div>
           <h1 className={styles.pageTitle}>Knowledge Stream</h1>

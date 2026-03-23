@@ -1038,36 +1038,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadAuthState();
 
-  // ── Theme Toggle ────────────────────────────────────────────────────────────
-  function initTheme() {
-    // Load saved theme or default to light
-    chrome.storage.local.get(['theme'], (result) => {
-      const theme = result.theme || 'light';
-      document.documentElement.setAttribute('data-theme', theme);
-      updateThemeIcon(theme);
-    });
-  }
-
-  function updateThemeIcon(theme) {
-    const icon = document.querySelector('.theme-icon');
-    if (icon) {
-      icon.textContent = theme === 'dark' ? '🌙' : '☀️';
-    }
-  }
-
-  function toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = current === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    chrome.storage.local.set({ theme: newTheme });
-    updateThemeIcon(newTheme);
-  }
-
-  // Initialize theme on load
-  initTheme();
-
-  // Theme toggle button
-  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+  // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
+  // function initTheme() {
+  //   chrome.storage.local.get(['theme'], (result) => {
+  //     const theme = result.theme || 'light';
+  //     document.documentElement.setAttribute('data-theme', theme);
+  //     updateThemeIcon(theme);
+  //   });
+  // }
+  // function updateThemeIcon(theme) {
+  //   const icon = document.querySelector('.theme-icon');
+  //   if (icon) { icon.textContent = theme === 'dark' ? '🌙' : '☀️'; }
+  // }
+  // function toggleTheme() {
+  //   const current = document.documentElement.getAttribute('data-theme') || 'light';
+  //   const newTheme = current === 'light' ? 'dark' : 'light';
+  //   document.documentElement.setAttribute('data-theme', newTheme);
+  //   chrome.storage.local.set({ theme: newTheme });
+  //   updateThemeIcon(newTheme);
+  // }
+  // initTheme();
+  // document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
   // Refresh auth state live when sign-in completes in another tab
   chrome.storage.onChanged.addListener((changes, area) => {

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { ThemeToggle } from './components/ThemeToggle';
+// import { ThemeToggle } from './components/ThemeToggle';
 import { createServerSupabase } from '@/lib/supabase';
 
 export default async function Home({
@@ -42,7 +42,7 @@ export default async function Home({
             <a href="/upgrade" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14 }}>Pricing</a>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
             <a href="/signin" style={{
               color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 600, fontSize: 14, textDecoration: 'none',
@@ -429,7 +429,7 @@ export default async function Home({
               <a key={link} href="#" style={{ color: '#545f6c', fontSize: 14 }}>{link}</a>
             ))}
           </div>
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
         </div>
       </footer>
 
