@@ -997,6 +997,14 @@ chrome.runtime.sendMessage({ action: 'contentScriptReady' }, response => {
   debugLog('Init', 'Sent contentScriptReady', response);
 });
 
+// Detect YouTube SPA navigation and notify the side panel
+document.addEventListener('yt-navigate-finish', () => {
+  const videoId = new URLSearchParams(window.location.search).get('v');
+  if (videoId) {
+    chrome.runtime.sendMessage({ action: 'ytVideoChanged', videoId }).catch(() => {});
+  }
+});
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);
 } else {

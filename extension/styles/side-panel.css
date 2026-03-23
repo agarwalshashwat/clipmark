@@ -1204,7 +1204,7 @@ body {
 .sp-tab {
   background: none;
   border: none;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   padding: 5px 12px;
@@ -1214,12 +1214,12 @@ body {
 }
 
 .sp-tab:hover {
-  color: var(--text-primary, #e2e8f0);
+  color: var(--text);
 }
 
 .sp-tab--active {
   background: rgba(20, 184, 166, 0.18);
-  color: var(--accent-teal, #14B8A6);
+  color: var(--accent-hover);
 }
 
 /* ── Comments ─────────────────────────────────────────────────────────────────── */
@@ -1230,8 +1230,8 @@ body {
 }
 
 .comment-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
   animation: slideIn 0.2s ease;
@@ -1261,7 +1261,7 @@ body {
 .comment-author {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary, #e2e8f0);
+  color: var(--text);
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -1270,13 +1270,13 @@ body {
 
 .comment-likes {
   font-size: 11px;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .comment-text {
   font-size: 12px;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-sub);
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
@@ -1313,7 +1313,7 @@ body {
 
 .resume-pill-icon {
   font-size: 18px;
-  color: var(--accent-teal, #14B8A6);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -1321,18 +1321,18 @@ body {
   flex: 1;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary, #e2e8f0);
+  color: var(--text);
 }
 
 .resume-pill-text:hover,
 .resume-pill-icon:hover {
-  color: var(--accent-teal, #14B8A6);
+  color: var(--accent-hover);
 }
 
 .resume-pill-dismiss {
   background: none;
   border: none;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
   padding: 0 2px;
@@ -1341,7 +1341,7 @@ body {
 }
 
 .resume-pill-dismiss:hover {
-  color: var(--text-primary, #e2e8f0);
+  color: var(--text);
 }
 
 /* ── Responsive: narrow side panels ─────────────────────────────────────────── */

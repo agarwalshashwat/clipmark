@@ -820,7 +820,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
   // Tab switching: Bookmarks / Comments
-  let commentsLoaded = false;
+  let lastCommentVideoId = null;
   document.getElementById('tab-bookmarks').addEventListener('click', () => {
     document.getElementById('tab-bookmarks').classList.add('sp-tab--active');
     document.getElementById('tab-comments').classList.remove('sp-tab--active');
@@ -832,10 +832,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tab-bookmarks').classList.remove('sp-tab--active');
     document.getElementById('bookmarks-panel').style.display = 'none';
     document.getElementById('comments-panel').style.display = '';
-    if (!commentsLoaded) {
-      commentsLoaded = true;
-      const tab = await getCurrentTab();
-      const videoId = tab?.url ? extractVideoId(tab.url) : null;
+    const tab = await getCurrentTab();
+    const videoId = tab?.url ? extractVideoId(tab.url) : null;
+    if (videoId !== lastCommentVideoId) {
+      lastCommentVideoId = videoId;
       if (videoId) loadComments(videoId);
       else document.getElementById('comment-list').innerHTML = '<div class="no-bookmarks">Open a YouTube video first.</div>';
     }
@@ -932,4 +932,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     debugLog('Tabs', 'Tab activated, reloading bookmarks');
     loadBookmarks();
   });
+});
+
+// Auto-refresh when YouTube SPA navigates to a new video
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === 'ytVideoChanged') {
+    debugLog('Nav', 'YouTube video changed, reloading', { videoId: msg.videoId });
+    loadBookmarks();
+  }
 });
