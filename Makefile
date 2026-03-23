@@ -1,7 +1,7 @@
 # Clipmark — dev commands
 # Usage: make <target>
 
-.PHONY: help dev build start migrate sync-tokens ext-zip ext-open clean
+.PHONY: help dev build start migrate sync-tokens ext-zip ext-open test test-report clean
 
 WEBAPP_DIR := webapp
 EXT_DIR    := extension
@@ -22,6 +22,10 @@ help:
 	@echo "    make ext-zip    — zip extension folder for Chrome Web Store"
 	@echo "    make ext-open   — open chrome://extensions in default browser"
 	@echo ""
+	@echo "  Testing"
+	@echo "    make test        — run Playwright extension tests"
+	@echo "    make test-report — open last Playwright HTML report"
+	@echo ""
 	@echo "  Shared"
 	@echo "    make sync-tokens — sync design tokens from extension → webapp"
 	@echo "    make clean       — remove build artifacts"
@@ -39,6 +43,13 @@ start:
 
 migrate:
 	cd $(WEBAPP_DIR) && npm run migrate
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+test:
+	npm run test:yt
+
+test-report:
+	npx playwright show-report
 
 # ── Shared ────────────────────────────────────────────────────────────────────
 sync-tokens:
