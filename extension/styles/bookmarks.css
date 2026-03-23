@@ -1313,7 +1313,7 @@
     gap: 8px;
 }
 
-.vc-revision-btn {
+.vc-revisit-btn {
     flex: 1;
     display: flex;
     align-items: center;
@@ -1331,13 +1331,13 @@
     transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
-.vc-revision-btn:hover {
+.vc-revisit-btn:hover {
     background: #14b8a6;
     color: white;
     border-color: #14b8a6;
 }
 
-[data-theme="dark"] .vc-revision-btn,
+[data-theme="dark"] .vc-revisit-btn,
 [data-theme="dark"] .vc-group-btn {
     background: rgba(255, 255, 255, 0.04);
     border-color: var(--border);
@@ -3299,3 +3299,69 @@
 [data-theme="dark"] .rq-item       { border-color: var(--border-color, #2a2a2a); background: var(--bg-card, #1a1a1a); }
 [data-theme="dark"] .rq-item-title { color: var(--text-primary, #f0f0f0); }
 [data-theme="dark"] .rq-item-note  { color: var(--text-secondary, #ccc); }
+
+/* ── Revisit Carousel ─────────────────────────────────────────────────────── */
+.rq-carousel {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.rq-card {
+    flex: 1;
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    background: var(--bg-card, #fff);
+    min-width: 0;
+}
+
+.rq-thumb-wrap--large {
+    width: 160px;
+}
+
+.rq-arrow {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color, #e5e7eb);
+    background: var(--bg-sub, #f3f3f5);
+    color: var(--text-muted, #545f6c);
+    cursor: pointer;
+    margin-top: 60px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.rq-arrow:hover:not(:disabled) {
+    background: var(--accent-light, rgba(20,184,166,0.1));
+    color: var(--accent, #14B8A6);
+    border-color: rgba(20,184,166,0.3);
+}
+
+.rq-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.rq-arrow .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.rq-counter {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted, #888);
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .rq-card       { border-color: var(--border-color, #2a2a2a); background: var(--bg-card, #1a1a1a); }
+[data-theme="dark"] .rq-arrow      { background: rgba(255,255,255,0.04); border-color: var(--border-color, #2a2a2a); color: #aaa; }
+[data-theme="dark"] .rq-counter    { color: var(--text-muted, #aaa); }

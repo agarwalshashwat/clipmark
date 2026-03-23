@@ -206,6 +206,7 @@ let sortOrder     = 'newest';
 let viewMode      = localStorage.getItem('bm_viewMode') || 'cards';
 let density       = localStorage.getItem('bm_density')  || 'default';
 let selectedIds   = new Set();
+let revisitIndex  = 0;
 
 // ─── Sort & filter ────────────────────────────────────────────────────────────
 function applyFiltersAndSort(bookmarks) {
@@ -410,7 +411,7 @@ async function renderBookmarks() {
             </div>
           </div>
           <div class="vc-card-btns">
-            <button class="vc-revision-btn" data-video-id="${videoId}">
+            <button class="vc-revisit-btn" data-video-id="${videoId}">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_circle</span> Revisit
             </button>
             <button class="vc-group-btn" data-video-id="${videoId}">
@@ -703,7 +704,7 @@ function attachEventListeners() {
     });
   });
 
-  document.querySelectorAll('.vc-revision-btn').forEach(btn => {
+  document.querySelectorAll('.vc-revisit-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const isPro = await checkPro();
       if (!isPro) {
@@ -1313,45 +1314,69 @@ async function renderRevisitView(container) {
 
   const videoTitles = await getVideoTitles();
   const sorted = [...allBookmarks].sort((a, b) => a.id - b.id);
+  const total = sorted.length;
 
-  const header = document.createElement('div');
-  header.className = 'rq-header';
-  header.innerHTML = `
-    <h2 class="rq-title">Revisit Queue</h2>
-    <p class="rq-sub">Your oldest saved moments — oldest bookmarks listed first.</p>`;
-  container.appendChild(header);
+  // Clamp index in case bookmarks were deleted
+  if (revisitIndex >= total) revisitIndex = total - 1;
+  if (revisitIndex < 0) revisitIndex = 0;
 
-  const list = document.createElement('div');
-  list.className = 'rq-list';
-
-  sorted.forEach(b => {
+  function renderCard(idx) {
+    const b     = sorted[idx];
     const title = b.videoTitle || videoTitles[b.videoId] || `Video: ${b.videoId}`;
     const ytUrl = `https://www.youtube.com/watch?v=${b.videoId}&t=${Math.floor(b.timestamp)}`;
     const thumb = `https://img.youtube.com/vi/${b.videoId}/mqdefault.jpg`;
     const c     = b.color || '#4da1ee';
 
-    const item = document.createElement('div');
-    item.className = 'rq-item';
-    item.innerHTML = `
-      <a href="${ytUrl}" target="_blank" rel="noopener" class="rq-thumb-wrap">
-        <img src="${thumb}" alt="${title}" class="rq-thumb" loading="lazy">
-        <span class="rq-ts">${formatTimestamp(b.timestamp)}</span>
-      </a>
-      <div class="rq-item-body">
-        <div class="rq-item-title">${title}</div>
-        <div class="rq-item-note" style="border-left-color:${c}">${b.description || 'No note added.'}</div>
-        ${b.tags && b.tags.length
-          ? `<div class="rq-tags">${b.tags.map(t =>
-              `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
-            ).join('')}</div>`
-          : ''}
-        <div class="rq-item-meta">${relativeTime(b.id)} · <a href="${ytUrl}" target="_blank" rel="noopener" class="rq-jump">Jump to moment ↗</a></div>
-      </div>`;
+    container.innerHTML = `
+      <div class="rq-header">
+        <h2 class="rq-title">Revisit Queue</h2>
+        <p class="rq-sub">Your saved moments — use arrows or keyboard ← → to browse.</p>
+      </div>
+      <div class="rq-carousel">
+        <button class="rq-arrow rq-arrow-prev" id="rq-prev" ${idx === 0 ? 'disabled' : ''} title="Previous (←)">
+          <span class="material-symbols-outlined">arrow_back_ios</span>
+        </button>
+        <div class="rq-card">
+          <a href="${ytUrl}" target="_blank" rel="noopener" class="rq-thumb-wrap rq-thumb-wrap--large">
+            <img src="${thumb}" alt="${title}" class="rq-thumb" loading="lazy">
+            <span class="rq-ts">${formatTimestamp(b.timestamp)}</span>
+          </a>
+          <div class="rq-item-body">
+            <div class="rq-item-title">${title}</div>
+            <div class="rq-item-note" style="border-left-color:${c}">${b.description || 'No note added.'}</div>
+            ${b.tags && b.tags.length
+              ? `<div class="rq-tags">${b.tags.map(t =>
+                  `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
+                ).join('')}</div>`
+              : ''}
+            <div class="rq-item-meta">${relativeTime(b.id)} · <a href="${ytUrl}" target="_blank" rel="noopener" class="rq-jump">Jump to moment ↗</a></div>
+          </div>
+        </div>
+        <button class="rq-arrow rq-arrow-next" id="rq-next" ${idx === total - 1 ? 'disabled' : ''} title="Next (→)">
+          <span class="material-symbols-outlined">arrow_forward_ios</span>
+        </button>
+      </div>
+      <div class="rq-counter">${idx + 1} / ${total}</div>`;
 
-    list.appendChild(item);
-  });
+    document.getElementById('rq-prev')?.addEventListener('click', () => {
+      if (revisitIndex > 0) { revisitIndex--; renderCard(revisitIndex); }
+    });
+    document.getElementById('rq-next')?.addEventListener('click', () => {
+      if (revisitIndex < total - 1) { revisitIndex++; renderCard(revisitIndex); }
+    });
+  }
 
-  container.appendChild(list);
+  renderCard(revisitIndex);
+
+  // Keyboard arrow navigation (only active while revisit view is shown)
+  function onKeyDown(e) {
+    if (viewMode !== 'revisit') { document.removeEventListener('keydown', onKeyDown); return; }
+    if (e.key === 'ArrowLeft'  && revisitIndex > 0)          { revisitIndex--; renderCard(revisitIndex); }
+    if (e.key === 'ArrowRight' && revisitIndex < total - 1)  { revisitIndex++; renderCard(revisitIndex); }
+  }
+  // Remove any previous listener then add fresh one
+  document.removeEventListener('keydown', onKeyDown);
+  document.addEventListener('keydown', onKeyDown);
 }
 
 // ─── Videos View ─────────────────────────────────────────────────────────────
@@ -1467,31 +1492,37 @@ function outsidePopoverHandler(e) {
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-function loadAuthState() {
-  chrome.storage.sync.get({ bmUser: null }, ({ bmUser }) => {
-    const signinBtn  = document.getElementById('signin-btn');
-    const userChip   = document.getElementById('user-chip');
-    const signoutBtn = document.getElementById('signout-btn');
-    const syncBtn    = document.getElementById('sync-btn');
-    const upgradeBtn = document.getElementById('dashboard-upgrade-btn');
-    if (!signinBtn || !userChip) return;
+async function loadAuthState() {
+  const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
+  const signinBtn  = document.getElementById('signin-btn');
+  const userChip   = document.getElementById('user-chip');
+  const signoutBtn = document.getElementById('signout-btn');
+  const syncBtn    = document.getElementById('sync-btn');
+  const upgradeBtn = document.getElementById('dashboard-upgrade-btn');
+  if (!signinBtn || !userChip) return;
 
-    if (bmUser) {
-      signinBtn.style.display  = 'none';
-      userChip.style.display   = '';
-      userChip.textContent     = bmUser.userEmail?.split('@')[0] || 'Signed in';
-      userChip.title           = bmUser.userEmail || '';
-      if (signoutBtn) signoutBtn.style.display = '';
-      if (syncBtn)    syncBtn.style.display    = '';
-      if (upgradeBtn) upgradeBtn.style.display = bmUser.isPro ? 'none' : '';
-    } else {
-      signinBtn.style.display  = '';
-      userChip.style.display   = 'none';
-      if (signoutBtn) signoutBtn.style.display = 'none';
-      if (syncBtn)    syncBtn.style.display    = 'none';
-      if (upgradeBtn) upgradeBtn.style.display = '';
+  if (bmUser) {
+    signinBtn.style.display  = 'none';
+    userChip.style.display   = '';
+    userChip.textContent     = bmUser.userEmail?.split('@')[0] || 'Signed in';
+    userChip.title           = bmUser.userEmail || '';
+    if (signoutBtn) signoutBtn.style.display = '';
+    if (syncBtn)    syncBtn.style.display    = '';
+    if (upgradeBtn) upgradeBtn.style.display = bmUser.isPro ? 'none' : '';
+
+    // Silently validate/refresh token — sign out if session is fully expired
+    const token = await getValidToken();
+    if (!token) {
+      await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
+      loadAuthState();
     }
-  });
+  } else {
+    signinBtn.style.display  = '';
+    userChip.style.display   = 'none';
+    if (signoutBtn) signoutBtn.style.display = 'none';
+    if (syncBtn)    syncBtn.style.display    = 'none';
+    if (upgradeBtn) upgradeBtn.style.display = '';
+  }
 }
 
 async function syncAllWithCloud() {
@@ -1508,20 +1539,26 @@ async function syncAllWithCloud() {
   let updatedCount = 0;
   for (const videoId of videoIds) {
     try {
+      const localBms = allData[bmKey(videoId)] || [];
+      if (!localBms.length) continue;
+
       const res = await fetch(`${API_BASE}/api/bookmarks?videoId=${encodeURIComponent(videoId)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) continue;
       const { bookmarks: cloudBms } = await res.json();
-      if (!cloudBms?.length) continue;
 
-      const localBms = allData[bmKey(videoId)] || [];
+      const cloudIds = new Set((cloudBms || []).map(b => b.id));
       const localIds = new Set(localBms.map(b => b.id));
-      const newFromCloud = cloudBms.filter(b => !localIds.has(b.id));
-      if (!newFromCloud.length) continue;
+      const newFromCloud = (cloudBms || []).filter(b => !localIds.has(b.id));
+      const newFromLocal = localBms.filter(b => !cloudIds.has(b.id));
+
+      if (!newFromCloud.length && !newFromLocal.length) continue;
 
       const merged = [...localBms, ...newFromCloud];
-      await new Promise(resolve => chrome.storage.sync.set({ [bmKey(videoId)]: merged }, resolve));
+      if (newFromCloud.length) {
+        await new Promise(resolve => chrome.storage.sync.set({ [bmKey(videoId)]: merged }, resolve));
+      }
       await fetch(`${API_BASE}/api/bookmarks`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

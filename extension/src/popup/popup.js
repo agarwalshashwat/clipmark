@@ -973,6 +973,13 @@ async function loadAuthState() {
     userChip.title           = bmUser.userEmail || '';
     if (signoutBtn) signoutBtn.style.display = '';
     if (upgradeBtn) upgradeBtn.style.display = bmUser.isPro ? 'none' : '';
+
+    // Silently validate/refresh token — sign out if session is fully expired
+    const token = await getValidToken();
+    if (!token) {
+      await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
+      loadAuthState();
+    }
   } else {
     signinBtn.style.display  = '';
     userChip.style.display   = 'none';
