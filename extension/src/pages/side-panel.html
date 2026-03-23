@@ -60,6 +60,9 @@
       </button>
     </section>
 
+    <!-- Resume pill -->
+    <div id="resume-pill" class="resume-pill" style="display:none;"></div>
+
     <!-- Quick Capture Section -->
     <section class="sp-section sp-capture-section">
       <div class="sp-capture-card">
@@ -97,18 +100,30 @@
     <!-- Revisit reminder -->
     <div id="revisit-reminder-panel" class="revisit-reminder-panel"></div>
 
-    <!-- Bookmarks Timeline -->
+    <!-- Bookmarks / Comments Tabs -->
     <section class="sp-section sp-bookmarks-section">
-      <div class="sp-bookmarks-header">
-        <h2 class="sp-bookmarks-title">Bookmarks</h2>
+      <div class="sp-tab-header">
+        <div class="sp-tabs">
+          <button class="sp-tab sp-tab--active" id="tab-bookmarks">Bookmarks</button>
+          <button class="sp-tab" id="tab-comments">Comments</button>
+        </div>
         <a href="#" id="dashboard-link" class="sp-view-all-link" title="Open full dashboard">
           <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">open_in_new</span>
           All
         </a>
       </div>
-      <div id="revision-today" class="revision-today" style="display:none;"></div>
-      <div id="bookmark-list" class="sp-bookmark-list">
-        <div class="loading-spinner" style="display:none;">Loading…</div>
+
+      <!-- Bookmarks panel -->
+      <div id="bookmarks-panel">
+        <div id="revision-today" class="revision-today" style="display:none;"></div>
+        <div id="bookmark-list" class="sp-bookmark-list">
+          <div class="loading-spinner" style="display:none;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Comments panel -->
+      <div id="comments-panel" style="display:none;">
+        <div id="comment-list" class="sp-comment-list"></div>
       </div>
     </section>
 

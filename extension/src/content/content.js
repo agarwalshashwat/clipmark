@@ -19,6 +19,9 @@ let revisionState = null; // { segments, index, countdownTimer }
 let titleSaveTimer = null;
 const savedTitlesCache = {}; // avoid redundant sync writes
 
+// ─── Resume playback state ────────────────────────────────────────────────────
+let progressSaveTimer = null;
+
 // ─── Transcript state ─────────────────────────────────────────────────────────
 let cachedTranscript       = null; // null = not fetched yet, [] = fetched but empty
 let transcriptFetchPromise = null;
@@ -122,6 +125,15 @@ function setupBookmarkMarkers() {
   video.addEventListener('durationchange', () => {
     debugLog('Video', 'Duration changed', { duration: video.duration });
     updateBookmarkMarkers();
+  });
+
+  // Track watch position for resume-playback (debounced to once per 10s)
+  video.addEventListener('timeupdate', () => {
+    if (progressSaveTimer) return;
+    progressSaveTimer = setTimeout(() => {
+      progressSaveTimer = null;
+      saveProgress();
+    }, 10000);
   });
 }
 
@@ -606,6 +618,19 @@ async function saveVideoTitle() {
   savedTitlesCache[videoId] = title;
 }
 
+// ─── Resume playback tracking ─────────────────────────────────────────────────
+function saveProgress() {
+  if (!isContextValid()) return;
+  const activeVideo = document.querySelector('video') || video;
+  if (!activeVideo || activeVideo.currentTime < 30) return; // only save past 30s
+  const videoId = new URLSearchParams(window.location.search).get('v');
+  if (!videoId) return;
+  const key = `resume_${videoId}`;
+  chrome.storage.local.set({
+    [key]: { time: activeVideo.currentTime, lastWatched: new Date().toISOString() }
+  });
+}
+
 // ─── Extension reconnect ──────────────────────────────────────────────────────
 async function attemptReconnect() {
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) return false;
@@ -983,6 +1008,8 @@ window.addEventListener('pagehide', () => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
   if (video) video.removeEventListener('durationchange', updateBookmarkMarkers);
   exitRevisionMode();
+  if (progressSaveTimer) { clearTimeout(progressSaveTimer); progressSaveTimer = null; }
+  saveProgress(); // flush final position on page unload
   isInitialized       = false;
   reconnectAttempts   = 0;
   cachedTranscript    = null;

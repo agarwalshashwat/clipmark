@@ -517,6 +517,104 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
   }
 }
 
+// ─── Resume Playback ──────────────────────────────────────────────────────────
+async function loadResumePosition(videoId, tabId) {
+  const pill = document.getElementById('resume-pill');
+  if (!pill) return;
+
+  const key = `resume_${videoId}`;
+  const data = await new Promise(resolve => chrome.storage.local.get({ [key]: null }, resolve));
+  const entry = data[key];
+
+  if (!entry || entry.time < 30) { pill.style.display = 'none'; return; }
+
+  pill.style.display = 'flex';
+  pill.innerHTML = `
+    <span class="resume-pill-icon material-symbols-outlined">play_circle</span>
+    <span class="resume-pill-text">Resume from ${formatTimestamp(entry.time)}</span>
+    <button class="resume-pill-dismiss" title="Dismiss" aria-label="Dismiss">✕</button>
+  `;
+
+  pill.querySelector('.resume-pill-text').addEventListener('click', async () => {
+    try {
+      await sendMessageToTab(tabId, { action: 'seekTo', time: entry.time });
+      pill.style.display = 'none';
+    } catch { /* tab may have been navigated */ }
+  });
+
+  pill.querySelector('.resume-pill-icon').addEventListener('click', async () => {
+    try {
+      await sendMessageToTab(tabId, { action: 'seekTo', time: entry.time });
+      pill.style.display = 'none';
+    } catch { /* tab may have been navigated */ }
+  });
+
+  pill.querySelector('.resume-pill-dismiss').addEventListener('click', () => {
+    pill.style.display = 'none';
+  });
+}
+
+async function pruneOldResumeEntries() {
+  const all = await new Promise(resolve => chrome.storage.local.get(null, resolve));
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days ago
+  const toRemove = Object.keys(all).filter(k => {
+    if (!k.startsWith('resume_')) return false;
+    const entry = all[k];
+    return !entry?.lastWatched || new Date(entry.lastWatched).getTime() < cutoff;
+  });
+  if (toRemove.length) chrome.storage.local.remove(toRemove);
+}
+
+// ─── Comments View ────────────────────────────────────────────────────────────
+async function loadComments(videoId) {
+  const list = document.getElementById('comment-list');
+  if (!list) return;
+
+  list.innerHTML = '<div class="comment-skeleton"></div><div class="comment-skeleton"></div><div class="comment-skeleton"></div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/comments?videoId=${encodeURIComponent(videoId)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to load comments');
+    }
+
+    const { comments } = await res.json();
+
+    if (!comments || comments.length === 0) {
+      list.innerHTML = '<div class="no-bookmarks">No comments found.</div>';
+      return;
+    }
+
+    list.innerHTML = comments.map(c => {
+      const initials = (c.author || '?').charAt(0).toUpperCase();
+      const likesText = c.likeCount > 0
+        ? `<span class="comment-likes">♥ ${c.likeCount.toLocaleString()}</span>`
+        : '';
+      return `
+        <div class="comment-card">
+          <div class="comment-header">
+            <div class="comment-avatar">${initials}</div>
+            <span class="comment-author">${escapeHtml(c.author)}</span>
+            ${likesText}
+          </div>
+          <p class="comment-text">${escapeHtml(c.text)}</p>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    list.innerHTML = `<div class="no-bookmarks">${error.message}</div>`;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
 async function loadBookmarks() {
   try {
@@ -525,6 +623,10 @@ async function loadBookmarks() {
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
+
+    // Resume playback pill + entry cleanup
+    loadResumePosition(videoId, tab.id);
+    pruneOldResumeEntries();
 
     // Update video title context
     const videoTitles = await getVideoTitles();
@@ -703,6 +805,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   // }
   // initTheme();
   // document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+  // Tab switching: Bookmarks / Comments
+  let commentsLoaded = false;
+  document.getElementById('tab-bookmarks').addEventListener('click', () => {
+    document.getElementById('tab-bookmarks').classList.add('sp-tab--active');
+    document.getElementById('tab-comments').classList.remove('sp-tab--active');
+    document.getElementById('bookmarks-panel').style.display = '';
+    document.getElementById('comments-panel').style.display = 'none';
+  });
+  document.getElementById('tab-comments').addEventListener('click', async () => {
+    document.getElementById('tab-comments').classList.add('sp-tab--active');
+    document.getElementById('tab-bookmarks').classList.remove('sp-tab--active');
+    document.getElementById('bookmarks-panel').style.display = 'none';
+    document.getElementById('comments-panel').style.display = '';
+    if (!commentsLoaded) {
+      commentsLoaded = true;
+      const tab = await getCurrentTab();
+      const videoId = tab?.url ? extractVideoId(tab.url) : null;
+      if (videoId) loadComments(videoId);
+      else document.getElementById('comment-list').innerHTML = '<div class="no-bookmarks">Open a YouTube video first.</div>';
+    }
+  });
 
   // Quick tags
   const descInput = document.getElementById('description');
