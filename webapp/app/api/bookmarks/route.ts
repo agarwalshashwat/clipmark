@@ -3,6 +3,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase, createServerSupabase } from '@/lib/supabase';
 import type { Bookmark } from '@/lib/supabase';
 
+// Service-role client for is_pro check (bypasses RLS)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
+
+async function isProUser(userId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', userId)
+    .single();
+  return data?.is_pro === true;
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 });
 }
@@ -40,6 +55,10 @@ export async function GET(request: NextRequest) {
   const auth = await getAuthenticatedUser(request);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  if (!await isProUser(auth.user.id)) {
+    return NextResponse.json({ error: 'pro_required' }, { status: 403 });
+  }
+
   const { data, error } = await auth.client
     .from('user_bookmarks')
     .select('bookmarks, updated_at')
@@ -61,6 +80,10 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const auth = await getAuthenticatedUser(request);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!await isProUser(auth.user.id)) {
+    return NextResponse.json({ error: 'pro_required' }, { status: 403 });
+  }
 
   try {
     const { videoId, bookmarks } = await request.json() as {

@@ -5,14 +5,15 @@ import { createCheckoutSession } from './actions';
 const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,  pro: true  },
   { label: 'Shareable public pages',             free: true,  pro: true  },
-  { label: 'Cloud sync across devices',          free: true,  pro: true  },
   { label: 'Public collections limit',           free: '5',   pro: '∞'   },
+  { label: 'Cloud sync across devices',          free: false, pro: true  },
   { label: 'AI auto-fill from transcript',       free: false, pro: true  },
   { label: 'AI summaries',                       free: false, pro: true  },
   { label: 'Smart tag suggestions',              free: false, pro: true  },
   { label: 'Social post generation',             free: false, pro: true  },
   { label: 'Revision Mode',                      free: false, pro: true  },
   { label: 'Spaced revision',                    free: false, pro: true  },
+  { label: 'Request a feature',                  free: false, pro: true  },
 ];
 
 function Check() {
@@ -383,7 +384,7 @@ export default async function UpgradePage({
                         </p>
                         <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <li style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1a1c1d', fontSize: 14, fontWeight: 500 }}>
-                            <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 20 }}>colors_spark</span>
+                            <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 20 }}>edit_note</span>
                             AI Auto-fill Metadata
                           </li>
                           <li style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1a1c1d', fontSize: 14, fontWeight: 500 }}>
@@ -427,10 +428,11 @@ export default async function UpgradePage({
                     </h3>
                     <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
                       {[
+                        { icon: 'sync', title: 'Cloud Sync', desc: 'Bookmarks synced across all your devices, instantly.' },
                         { icon: 'history_edu', title: 'Social Post Generation', desc: 'Turn any clip into a LinkedIn or Twitter post instantly.' },
                         { icon: 'psychology_alt', title: 'Spaced Revisit', desc: 'AI-scheduled reminders to help you actually learn your clips.' },
                         { icon: 'folder_managed', title: 'Unlimited Collections', desc: 'Infinite depth for your personal knowledge base.' },
-                        { icon: 'devices', title: 'Priority Support', desc: 'Direct line to our curation experts and tech team.' },
+                        { icon: 'rate_review', title: 'Request a Feature', desc: 'Vote on and request features directly — Pro members shape the roadmap.' },
                       ].map((feat) => (
                         <li key={feat.icon} style={{ display: 'flex', gap: 14 }}>
                           <div style={{

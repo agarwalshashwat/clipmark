@@ -97,7 +97,7 @@ export default async function SignInPage({
                 maxWidth: 280, margin: '0 auto',
               }}>
                 {extensionId
-                  ? 'Sign in to sync your bookmarks across devices and share collections.'
+                  ? 'Sign in to manage your collections and unlock Pro features.'
                   : 'Sign in to manage your bookmark collections.'}
               </p>
             </div>

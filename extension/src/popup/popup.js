@@ -147,7 +147,7 @@ async function syncToCloud(videoId, bookmarks) {
   try {
     const token = await getValidToken();
     if (!token) return;
-    await fetch(`${API_BASE}/api/bookmarks`, {
+    const res = await fetch(`${API_BASE}/api/bookmarks`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -155,6 +155,11 @@ async function syncToCloud(videoId, bookmarks) {
       },
       body: JSON.stringify({ videoId, bookmarks }),
     });
+    if (res.status === 403) {
+      // Server says not Pro — sync local flag so UI reflects reality
+      const { bmUser } = await syncGet({ bmUser: null });
+      if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
+    }
   } catch {
     // Cloud sync is best-effort — don't block the user
   }
@@ -167,6 +172,12 @@ async function pullFromCloud(videoId) {
     const res = await fetch(`${API_BASE}/api/bookmarks?videoId=${encodeURIComponent(videoId)}`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
+    if (res.status === 403) {
+      // Server says not Pro — sync local flag so UI reflects reality
+      const { bmUser } = await syncGet({ bmUser: null });
+      if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
+      return;
+    }
     if (!res.ok) return;
     const { bookmarks: cloudBms } = await res.json();
     if (!cloudBms?.length) return;
