@@ -3,10 +3,9 @@
     "name": "Clipmark",
     "version": "1.0",
     "description": "Bookmark, tag, and revisit YouTube moments with AI-powered notes and cloud sync.",
-    "permissions": ["storage", "tabs", "activeTab", "scripting", "contextMenus", "sidePanel"],
+    "permissions": ["storage", "tabs", "activeTab", "scripting", "contextMenus", "sidePanel", "alarms"],
     "host_permissions": [
         "*://www.youtube.com/*",
-        "http://localhost:3000/*",
         "https://clipmark-chi.vercel.app/*"
     ],
     "web_accessible_resources": [{

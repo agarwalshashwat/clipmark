@@ -4,11 +4,28 @@ import { ThemeProvider } from './components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'Clipmark — YouTube Timestamp Bookmarks',
-  description: 'Save, tag, and share timestamped moments from YouTube videos. AI-powered bookmarking.',
+  description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
+  keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer'],
   openGraph: {
-    title: 'Clipmark',
-    description: 'Turn YouTube videos into searchable, shareable knowledge.',
+    title: 'Clipmark — YouTube Timestamp Bookmarks',
+    description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     type: 'website',
+    url: 'https://clipmark-chi.vercel.app',
+    siteName: 'Clipmark',
+    images: [
+      {
+        url: 'https://clipmark-chi.vercel.app/clipmark-logo.png',
+        width: 512,
+        height: 512,
+        alt: 'Clipmark — YouTube Bookmark Extension',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Clipmark — YouTube Timestamp Bookmarks',
+    description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
+    images: ['https://clipmark-chi.vercel.app/clipmark-logo.png'],
   },
 };
 

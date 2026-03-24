@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
+import { CopyLinkButton } from './CopyLinkButton';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -236,19 +237,72 @@ export default async function SharePage(
                 </div>
               </div>
 
-              {/* Promo card */}
-              <div className={styles.promoCard}>
-                <h6 className={styles.promoTitle}>Want to clip your own?</h6>
-                <p className={styles.promoBody}>
-                  Clipmark makes it easy to save, organize, and share highlights
-                  from any video — instantly.
+              {/* Promo card — viral acquisition CTA */}
+              <div className={styles.promoCard} style={{
+                background: 'linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(0,107,95,0.06) 100%)',
+                border: '1px solid rgba(20,184,166,0.25)',
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 10 }}>📌</div>
+                <h6 className={styles.promoTitle} style={{ fontSize: 16, marginBottom: 8 }}>
+                  Bookmark YouTube moments like these
+                </h6>
+                <p className={styles.promoBody} style={{ fontSize: 13, marginBottom: 18 }}>
+                  Clipmark is a free Chrome extension that lets you save, tag, and share
+                  timestamped highlights from any YouTube video — in one click.
                 </p>
                 <a
                   href="https://chrome.google.com/webstore"
-                  className={styles.promoLink}
+                  style={{
+                    display: 'block', textAlign: 'center',
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+                    color: 'white', borderRadius: 10,
+                    fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                    boxShadow: '0 4px 16px rgba(0,107,95,0.22)',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    marginBottom: 10,
+                  }}
                 >
-                  Get the Browser Extension →
+                  Add to Chrome — it&apos;s free
                 </a>
+                <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
+                  No sign-up required to start bookmarking
+                </p>
+              </div>
+
+              {/* Social share buttons */}
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid rgba(26,28,29,0.08)',
+                borderRadius: 14, padding: 22,
+                marginTop: 16,
+              }}>
+                <p style={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 12, fontWeight: 700, color: '#545f6c',
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  marginBottom: 12, marginTop: 0,
+                }}>
+                  Share this collection
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Bookmarked key moments from "${title}" — check them out`)}&url=${encodeURIComponent(`https://clipmark-chi.vercel.app/v/${video_id}`)}&via=clipmarkapp`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 14px', borderRadius: 8,
+                      background: '#f9f9fa', border: '1px solid rgba(26,28,29,0.08)',
+                      color: '#1a1c1d', textDecoration: 'none',
+                      fontSize: 13, fontWeight: 600,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    }}
+                  >
+                    <span style={{ fontSize: 15 }}>𝕏</span> Share on X / Twitter
+                  </a>
+                  <CopyLinkButton url={`https://clipmark-chi.vercel.app/v/${shareId}`} />
+                </div>
               </div>
 
             </div>
@@ -265,10 +319,9 @@ export default async function SharePage(
             <span className={styles.footerTagline}>© 2025 Clipmark. The Digital Curator.</span>
           </div>
           <ul className={styles.footerLinks}>
-            <li><a href="#" className={styles.footerLink}>Privacy</a></li>
-            <li><a href="#" className={styles.footerLink}>Terms</a></li>
-            <li><a href="#" className={styles.footerLink}>Support</a></li>
-            <li><a href="#" className={styles.footerLink}>Twitter</a></li>
+            <li><a href="/privacy" className={styles.footerLink}>Privacy</a></li>
+            <li><a href="/terms" className={styles.footerLink}>Terms</a></li>
+            <li><a href="mailto:support@clipmark.app" className={styles.footerLink}>Support</a></li>
           </ul>
         </div>
       </footer>

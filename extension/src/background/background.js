@@ -35,9 +35,24 @@ const TAG_COLORS = {
   
   function bmKey(videoId) { return `bm_${videoId}`; }
 
+  // ─── Service Worker Keep-Alive (MV3) ─────────────────────────────────────────
+  // MV3 service workers shut down after ~5 min of inactivity.
+  // A recurring alarm prevents this for features that need persistence
+  // (context menus, OAuth coordination, cloud sync events).
+  chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
+
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'keepalive') {
+      // Trivial ping — keeps the service worker alive.
+    }
+  });
+
   // ─── Context Menu Setup ───────────────────────────────────────────────────────
   // Create context menu items on extension install/update
   chrome.runtime.onInstalled.addListener(() => {
+    // Recreate keepalive alarm on update to ensure it persists
+    chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
+
     // "Bookmark at [time]" - visible only on YouTube watch pages
     chrome.contextMenus.create({
       id: 'bookmark-at-time',

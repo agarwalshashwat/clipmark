@@ -99,7 +99,7 @@ export default async function UpgradePage({
                     background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
                     color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
                   }}>
-                    Get Started
+                    Add to Chrome — Free
                   </a>
                 </>
               )}
@@ -160,6 +160,96 @@ export default async function UpgradePage({
             </p>
           </section>
 
+          {/* ── Lifetime Launch Special ── */}
+          <section style={{ padding: '0 24px 48px', maxWidth: 1100, margin: '0 auto' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
+              borderRadius: 20,
+              padding: '40px 48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 32,
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              {/* Background glow */}
+              <div style={{
+                position: 'absolute', top: -60, right: -60,
+                width: 300, height: 300,
+                background: 'rgba(20,184,166,0.15)',
+                borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none',
+              }} />
+
+              {/* Left: copy */}
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(20,184,166,0.2)', color: '#14B8A6',
+                  padding: '4px 12px', borderRadius: 9999,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontWeight: 700, fontSize: 11, letterSpacing: '0.1em',
+                  textTransform: 'uppercase', marginBottom: 16,
+                }}>
+                  ✦ Launch Special — Limited Time
+                </div>
+                <h2 style={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 32, fontWeight: 800, letterSpacing: '-0.5px',
+                  color: '#f9fafb', margin: '0 0 12px',
+                }}>
+                  Lifetime Pro — Pay Once, Own It Forever
+                </h2>
+                <p style={{ fontSize: 15, color: '#94a3b8', maxWidth: 480, lineHeight: 1.7, margin: '0 0 8px' }}>
+                  One payment unlocks every Pro feature — AI summaries, spaced revisit, unlimited collections —
+                  with no recurring charges. Ever.
+                </p>
+                <p style={{ fontSize: 13, color: '#64748b' }}>
+                  Price increases to $79 after the launch window. Early supporters lock in forever at $40.
+                </p>
+              </div>
+
+              {/* Right: price + CTA */}
+              <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', flexShrink: 0 }}>
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 14, color: '#64748b',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    textDecoration: 'line-through', marginRight: 8,
+                  }}>$79</span>
+                  <span style={{
+                    fontSize: 56, fontWeight: 800, color: '#f9fafb',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    letterSpacing: '-2px',
+                  }}>$40</span>
+                </div>
+                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>one-time · no subscription</p>
+                <form action={createCheckoutSession}>
+                  <input type="hidden" name="plan" value="lifetime" />
+                  <button
+                    type="submit"
+                    disabled={isPro}
+                    style={{
+                      padding: '14px 36px',
+                      background: isPro ? '#374151' : 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+                      color: 'white', border: 'none', borderRadius: 12,
+                      fontSize: 15, fontWeight: 700, cursor: isPro ? 'default' : 'pointer',
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      boxShadow: isPro ? 'none' : '0 8px 24px rgba(20,184,166,0.35)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {isPro ? 'Already Pro' : 'Get Lifetime Access →'}
+                  </button>
+                </form>
+                <p style={{ fontSize: 11, color: '#475569', marginTop: 10 }}>
+                  7-day money-back guarantee
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* ── Pricing Bento Grid ── */}
           <section id="pricing" style={{ padding: '0 24px 96px', maxWidth: 1100, margin: '0 auto' }}>
             <div
@@ -204,7 +294,7 @@ export default async function UpgradePage({
                       'Chrome extension access',
                     ].map((item) => (
                       <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3c4947', fontSize: 14 }}>
-                        <span className="material-symbols-filled" style={{ color: '#14B8A6', fontSize: 20 }}>check_circle</span>
+                        <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontSize: 20 }}>check_circle</span>
                         {item}
                       </li>
                     ))}
@@ -293,11 +383,11 @@ export default async function UpgradePage({
                         </p>
                         <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <li style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1a1c1d', fontSize: 14, fontWeight: 500 }}>
-                            <span className="material-symbols-filled" style={{ color: '#732EE4', fontSize: 20 }}>colors_spark</span>
+                            <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 20 }}>colors_spark</span>
                             AI Auto-fill Metadata
                           </li>
                           <li style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1a1c1d', fontSize: 14, fontWeight: 500 }}>
-                            <span className="material-symbols-filled" style={{ color: '#732EE4', fontSize: 20 }}>summarize</span>
+                            <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 20 }}>summarize</span>
                             AI Intelligent Summaries
                           </li>
                         </ul>

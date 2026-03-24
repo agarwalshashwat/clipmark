@@ -55,7 +55,7 @@ export default async function Home({
               background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
               color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
             }}>
-              Get Started
+              Add to Chrome — Free
             </a>
           </div>
         </div>
@@ -425,9 +425,10 @@ export default async function Home({
             <div style={{ fontSize: 13, color: '#545f6c' }}>© 2025 Clipmark. The Digital Curator.</div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
-            {['Product', 'Company', 'Legal', 'Privacy', 'Twitter', 'Support'].map(link => (
-              <a key={link} href="#" style={{ color: '#545f6c', fontSize: 14 }}>{link}</a>
-            ))}
+            <a href="/upgrade" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Pricing</a>
+            <a href="/privacy" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Privacy</a>
+            <a href="/terms" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Terms</a>
+            <a href="mailto:support@clipmark.app" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Support</a>
           </div>
           {/* <ThemeToggle /> */}
         </div>
