@@ -528,7 +528,7 @@ async function renderAnalyticsView(container) {
         <div class="empty-state-icon">📊</div>
         <h3>Analytics — Pro Feature</h3>
         <p>See which topics you save most, activity over time, and tag insights — all from your local data.</p>
-        <a href="https://clipmark-chi.vercel.app/upgrade" target="_blank" class="analytics-upgrade-btn">✦ Upgrade to Pro</a>
+        <a href="https://clipmark.mithahara.com/upgrade" target="_blank" class="analytics-upgrade-btn">✦ Upgrade to Pro</a>
       </div>`;
     return;
   }
@@ -708,7 +708,7 @@ function attachEventListeners() {
       const isPro = await checkPro();
       if (!isPro) {
         showToast('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro to unlock it.', 'error');
-        window.open('https://clipmark-chi.vercel.app/upgrade', '_blank');
+        window.open('https://clipmark.mithahara.com/upgrade', '_blank');
         return;
       }
       const videoId   = btn.dataset.videoId;
@@ -1797,7 +1797,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Subnav — Shared (sidebar) → opens external Clipmark page
   document.getElementById('subnav-shared-side').addEventListener('click', () => {
-    window.open('https://clipmark-chi.vercel.app', '_blank', 'noopener');
+    window.open('https://clipmark.mithahara.com', '_blank', 'noopener');
   });
 
   // Mobile bottom nav

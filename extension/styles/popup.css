@@ -1043,13 +1043,14 @@ body {
   position: relative;
   border-radius: var(--radius-sm);
   overflow: hidden;
+  min-height: 160px;
 }
 
 .soft-paywall-blur {
-  filter: blur(3px);
+  filter: blur(5px);
   user-select: none;
   pointer-events: none;
-  padding: 10px;
+  padding: 16px;
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.5;
@@ -1064,12 +1065,12 @@ body {
   justify-content: center;
   text-align: center;
   gap: 6px;
-  background: rgba(26, 28, 29, 0.72);
-  backdrop-filter: blur(2px);
+  background: linear-gradient(160deg, rgba(0, 107, 95, 0.82) 0%, rgba(20, 184, 166, 0.78) 100%);
+  backdrop-filter: blur(4px);
   padding: 16px;
 }
 
-.soft-paywall-icon { font-size: 22px; color: var(--secondary); }
+.soft-paywall-icon { font-size: 22px; color: rgba(255, 255, 255, 0.9); }
 
 .soft-paywall-cta strong {
   font-size: 14px;
@@ -1085,8 +1086,8 @@ body {
 }
 
 .soft-paywall-btn {
-  background: var(--secondary);
-  color: white;
+  background: white;
+  color: #006b5f;
   border: none;
   border-radius: var(--radius-sm);
   padding: 8px 18px;

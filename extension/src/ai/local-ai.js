@@ -23,7 +23,7 @@ function _closeJson(raw, opener, closer) {
  */
 async function localAiAvailability() {
   if (typeof LanguageModel === 'undefined') return 'unavailable';
-  try { return await LanguageModel.availability(); }
+  try { return await LanguageModel.availability({ expectedOutputLanguages: ['en'] }); }
   catch { return 'unavailable'; }
 }
 
@@ -35,6 +35,7 @@ async function localAiAvailability() {
  */
 async function localSuggestTags(description, transcript) {
   const session = await LanguageModel.create({
+    expectedOutputLanguages: ['en'],
     systemPrompt:
       'You are a tagging assistant for YouTube video bookmarks. ' +
       'Respond ONLY with a raw JSON array of 1-3 lowercase single-word tags. ' +
@@ -67,6 +68,7 @@ async function localSuggestTags(description, transcript) {
  */
 async function localSummarizeBookmarks(bookmarks, videoTitle) {
   const session = await LanguageModel.create({
+    expectedOutputLanguages: ['en'],
     systemPrompt:
       'You are an AI that summarizes YouTube video bookmark lists. ' +
       'Respond ONLY with a single JSON object matching this exact shape: ' +

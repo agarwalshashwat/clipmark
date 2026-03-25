@@ -68,3 +68,4 @@ test-results/
 
 # Extension environment config (never commit — copy from config.example.js)
 extension/src/config.js
+screenshots/

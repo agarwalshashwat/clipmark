@@ -1064,6 +1064,68 @@ body {
   opacity: 0.8;
 }
 
+/* Soft Paywall */
+.soft-paywall {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 160px;
+}
+
+.soft-paywall-blur {
+  filter: blur(5px);
+  user-select: none;
+  pointer-events: none;
+  padding: 10px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.soft-paywall-cta {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  background: linear-gradient(160deg, rgba(0, 107, 95, 0.82) 0%, rgba(20, 184, 166, 0.78) 100%);
+  backdrop-filter: blur(4px);
+  padding: 16px;
+}
+
+.soft-paywall-icon { font-size: 22px; color: rgba(255, 255, 255, 0.9); }
+
+.soft-paywall-cta strong {
+  font-size: 14px;
+  color: white;
+  font-weight: 700;
+}
+
+.soft-paywall-cta p {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+  max-width: 260px;
+}
+
+.soft-paywall-btn {
+  background: white;
+  color: #006b5f;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+
+.soft-paywall-btn:hover { opacity: 0.85; }
+
 /* Social panel internals */
 .social-platform-row {
   display: flex;

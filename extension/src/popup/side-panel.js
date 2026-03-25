@@ -460,7 +460,7 @@ async function summarizeBookmarks() {
             <div class="soft-paywall-cta">
               <span class="soft-paywall-icon">✦</span>
               <strong>Unlock AI Summary</strong>
-              <p>Enable local AI in Chrome flags, or upgrade to Pro for cloud AI.</p>
+              <p>Get instant AI-powered summaries, key topics, and action items from your bookmarks.</p>
               <button class="soft-paywall-btn" id="soft-paywall-upgrade">✦ Upgrade to Pro</button>
             </div>
           </div>`;

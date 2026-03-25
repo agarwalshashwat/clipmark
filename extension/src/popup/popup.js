@@ -473,7 +473,7 @@ async function summarizeBookmarks() {
             <div class="soft-paywall-cta">
               <span class="soft-paywall-icon">✦</span>
               <strong>Unlock AI Summary</strong>
-              <p>Enable local AI in Chrome flags, or upgrade to Pro for cloud AI.</p>
+              <p>Get instant AI-powered summaries, key topics, and action items from your bookmarks.</p>
               <button class="soft-paywall-btn" id="soft-paywall-upgrade">✦ Upgrade to Pro</button>
             </div>
           </div>`;
@@ -1023,6 +1023,21 @@ async function loadAuthState() {
     if (!token) {
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
+    } else {
+      // Sync Pro status from server (handles upgrades after login)
+      try {
+        const res = await fetch(`${API_BASE}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const { isPro } = await res.json();
+          if (isPro !== bmUser.isPro) {
+            const updated = { ...bmUser, isPro };
+            await new Promise(resolve => chrome.storage.sync.set({ bmUser: updated }, resolve));
+            if (upgradeBtn) upgradeBtn.style.display = isPro ? 'none' : '';
+          }
+        }
+      } catch { /* non-critical, ignore */ }
     }
   } else {
     signinBtn.style.display  = '';
