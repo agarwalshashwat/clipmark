@@ -6,7 +6,7 @@
     "permissions": ["storage", "tabs", "activeTab", "scripting", "contextMenus", "sidePanel", "alarms"],
     "host_permissions": [
         "*://www.youtube.com/*",
-        "https://clipmark-chi.vercel.app/*"
+        "https://clipmark.mithahara.com/*"
     ],
     "web_accessible_resources": [{
       "resources": ["src/pages/bookmarks.html", "src/popup/bookmarks.js", "styles/bookmarks.css"],
@@ -56,7 +56,7 @@
     "externally_connectable": {
       "matches": [
         "http://localhost:3000/*",
-        "https://clipmark-chi.vercel.app/*"
+        "https://clipmark.mithahara.com/*"
       ]
     }
 }

@@ -19,7 +19,7 @@ export default async function SharedPage() {
   const shared = collections.filter(c => (c.view_count ?? 0) > 0);
   const unshared = collections.filter(c => (c.view_count ?? 0) === 0);
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://clipmark-chi.vercel.app';
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com';
 
   return (
     <div className={styles.wrap}>

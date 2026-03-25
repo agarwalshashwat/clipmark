@@ -1,5 +1,4 @@
-// ─── API config ──────────────────────────────────────────────────────────────
-const API_BASE = 'https://clipmark-chi.vercel.app';
+// API_BASE is defined in config.js (loaded via <script> tag before this file)
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
@@ -423,25 +422,74 @@ async function summarizeBookmarks() {
     }
 
     const videoTitles = await getVideoTitles();
+    const videoTitle = videoTitles[videoId] || '';
 
-    btn.textContent = '…';
-    btn.disabled = true;
+    const availability = await localAiAvailability();
+    const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
+    const isPro = bmUser?.isPro === true;
+    let result = null;
 
-    const response = await fetch(`${API_BASE}/api/summarize`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bookmarks,
-        videoTitle: videoTitles[videoId] || '',
-      }),
-    });
+    if (availability === 'available') {
+      // Local AI — works for everyone, no cost
+      btn.textContent = '…';
+      btn.disabled = true;
+      try { result = await localSummarizeBookmarks(bookmarks, videoTitle); } catch { /* fall through to cloud */ }
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || 'Server error');
+    } else if (availability === 'downloading') {
+      // Model is still downloading — show informational notice
+      const hint = isPro
+        ? 'Cloud AI will be used automatically once the download completes.'
+        : 'Upgrade to Pro to use cloud AI while Gemini Nano downloads.';
+      content.innerHTML = `
+        <div class="local-ai-notice">
+          <p>Gemini Nano is downloading to your device. Try again in a few minutes.</p>
+          <p class="local-ai-notice-hint">${hint}</p>
+        </div>`;
+      panel.style.display = 'block';
+      return;
+
+    } else {
+      // Local AI unavailable — soft paywall for free users, cloud for Pro
+      if (!isPro) {
+        content.innerHTML = `
+          <div class="soft-paywall">
+            <div class="soft-paywall-blur">
+              <p>Your bookmarks summarized into key topics, decisions, and action items — powered by AI.</p>
+              <ul><li>Introduction to the topic</li><li>Key concepts covered</li><li>Action items to follow up</li></ul>
+            </div>
+            <div class="soft-paywall-cta">
+              <span class="soft-paywall-icon">✦</span>
+              <strong>Unlock AI Summary</strong>
+              <p>Enable local AI in Chrome flags, or upgrade to Pro for cloud AI.</p>
+              <button class="soft-paywall-btn" id="soft-paywall-upgrade">✦ Upgrade to Pro</button>
+            </div>
+          </div>`;
+        panel.style.display = 'block';
+        document.getElementById('soft-paywall-upgrade').addEventListener('click', () => {
+          chrome.tabs.create({ url: `${API_BASE}/upgrade` });
+        });
+        return;
+      }
+      // Pro + no local AI → fall through to cloud fetch below
     }
 
-    const { summary, topics, actionItems } = await response.json();
+    if (!result) {
+      // Cloud fallback — Pro only (reached when local AI unavailable or errored)
+      btn.textContent = '…';
+      btn.disabled = true;
+      const response = await fetch(`${API_BASE}/api/summarize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookmarks, videoTitle }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Server error');
+      }
+      result = await response.json();
+    }
+
+    const { summary, topics, actionItems } = result;
 
     let html = `<p class="summary-text">${summary}</p>`;
 

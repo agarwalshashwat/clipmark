@@ -287,7 +287,7 @@ export default async function SharePage(
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Bookmarked key moments from "${title}" — check them out`)}&url=${encodeURIComponent(`https://clipmark-chi.vercel.app/v/${video_id}`)}&via=clipmarkapp`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Bookmarked key moments from "${title}" — check them out`)}&url=${encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/v/${video_id}`)}&via=clipmarkapp`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -301,7 +301,7 @@ export default async function SharePage(
                   >
                     <span style={{ fontSize: 15 }}>𝕏</span> Share on X / Twitter
                   </a>
-                  <CopyLinkButton url={`https://clipmark-chi.vercel.app/v/${shareId}`} />
+                  <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/v/${shareId}`} />
                 </div>
               </div>
 

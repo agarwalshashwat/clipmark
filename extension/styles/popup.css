@@ -1099,6 +1099,23 @@ body {
 
 .soft-paywall-btn:hover { opacity: 0.85; }
 
+/* Local AI downloading/unavailable notice */
+.local-ai-notice {
+  padding: 12px 14px;
+  background: rgba(77, 161, 238, 0.08);
+  border: 1px solid rgba(77, 161, 238, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.5;
+}
+
+.local-ai-notice-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
 /* Social platform buttons */
 .social-platform-row {
   display: flex;

@@ -10,11 +10,11 @@ export const metadata: Metadata = {
     title: 'Clipmark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     type: 'website',
-    url: 'https://clipmark-chi.vercel.app',
+    url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com',
     siteName: 'Clipmark',
     images: [
       {
-        url: 'https://clipmark-chi.vercel.app/clipmark-logo.png',
+        url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/clipmark-logo.png`,
         width: 512,
         height: 512,
         alt: 'Clipmark — YouTube Bookmark Extension',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Clipmark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
-    images: ['https://clipmark-chi.vercel.app/clipmark-logo.png'],
+    images: [`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/clipmark-logo.png`],
   },
 };
 

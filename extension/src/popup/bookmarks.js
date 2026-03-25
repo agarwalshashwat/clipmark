@@ -1,5 +1,4 @@
-// ─── API config ───────────────────────────────────────────────────────────────
-const API_BASE = 'https://clipmark-chi.vercel.app';
+// API_BASE is defined in config.js (loaded via <script> tag before this file)
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
