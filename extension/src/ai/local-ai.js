@@ -9,11 +9,14 @@ function _fmtTs(seconds) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-// Internal: reconstruct and parse JSON that the model continues from an opener char.
-// e.g. prompt ends with "[", model outputs `"tag1","tag2"]` → reconstruct `["tag1","tag2"]`
-function _closeJson(raw, opener, closer) {
-  const idx = raw.lastIndexOf(closer);
-  const body = idx !== -1 ? raw.slice(0, idx) : raw;
+// Parse JSON from model output — handles both full JSON and partial continuations.
+function _parseJson(raw, opener, closer) {
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  // Try direct parse first (model returned full JSON)
+  try { return JSON.parse(cleaned); } catch { }
+  // Fall back: model continued from opener char, reconstruct
+  const idx = cleaned.lastIndexOf(closer);
+  const body = idx !== -1 ? cleaned.slice(0, idx) : cleaned;
   try { return JSON.parse(opener + body + closer); } catch { return null; }
 }
 
@@ -53,8 +56,7 @@ async function localSuggestTags(description, transcript) {
     const raw = await session.prompt(
       `${ctx}\n\nSuggest tags for this bookmark. Reply with only a JSON array:\n[`
     );
-    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
-    const tags = _closeJson(cleaned, '[', ']');
+    const tags = _parseJson(raw, '[', ']');
     if (!Array.isArray(tags)) return [];
     return tags
       .filter(t => typeof t === 'string' && /^\w+$/.test(t))
@@ -90,8 +92,7 @@ async function localSummarizeBookmarks(bookmarks, videoTitle) {
       `Summarize these bookmarks. Return JSON matching {"summary":"...","topics":[...],"actionItems":[...]}:\n{`;
     const raw = await session.prompt(prompt);
     console.log('[local-ai] raw summarize output:', raw);
-    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
-    const result = _closeJson(cleaned, '{', '}');
+    const result = _parseJson(raw, '{', '}');
     console.log('[local-ai] parsed result:', result);
     return {
       summary:     typeof result?.summary === 'string'     ? result.summary     : '',
