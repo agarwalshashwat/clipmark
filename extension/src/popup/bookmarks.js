@@ -436,7 +436,6 @@ async function renderBookmarks() {
               if (hasMore && i >= COLLAPSE_AFTER) return '';
               const c         = b.color || '#14B8A6';
               const hasNotes  = b.notes && b.notes.trim();
-              const typeLabel = hasNotes ? 'ANNOTATED BOOKMARK' : 'QUICK CLIP';
               return `
                 <div class="vc-chapter vc-vt-item" data-bookmark-id="${b.id}" data-video-id="${videoId}" style="--bm-color:${c}">
                   <input type="checkbox" class="bookmark-checkbox vc-cb" data-bookmark-id="${b.id}" data-video-id="${videoId}">
@@ -444,7 +443,6 @@ async function renderBookmarks() {
                   <div class="vc-vt-content">
                     <div class="vc-vt-header">
                       <span class="vc-vt-time" style="background:${c}20;color:${c}">${formatTimestamp(b.timestamp)}</span>
-                      <span class="vc-vt-type">${typeLabel}</span>
                     </div>
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
@@ -471,7 +469,6 @@ async function renderBookmarks() {
                 ${bookmarks.slice(COLLAPSE_AFTER).map(b => {
                   const c         = b.color || '#14B8A6';
                   const hasNotes  = b.notes && b.notes.trim();
-                  const typeLabel = hasNotes ? 'ANNOTATED BOOKMARK' : 'QUICK CLIP';
                   return `
                 <div class="vc-chapter vc-vt-item" data-bookmark-id="${b.id}" data-video-id="${videoId}" style="--bm-color:${c}">
                   <input type="checkbox" class="bookmark-checkbox vc-cb" data-bookmark-id="${b.id}" data-video-id="${videoId}">
@@ -479,7 +476,6 @@ async function renderBookmarks() {
                   <div class="vc-vt-content">
                     <div class="vc-vt-header">
                       <span class="vc-vt-time" style="background:${c}20;color:${c}">${formatTimestamp(b.timestamp)}</span>
-                      <span class="vc-vt-type">${typeLabel}</span>
                     </div>
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
