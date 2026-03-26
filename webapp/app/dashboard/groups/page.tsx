@@ -20,7 +20,7 @@ export default async function GroupsPage() {
     id: row.video_id as string,
     video_id: row.video_id as string,
     video_title: ((row.bookmarks as BmRow[])?.[0]?.videoTitle) ?? null,
-    bookmarks: row.bookmarks as BmRow[],
+    bookmarks: (row.bookmarks as unknown) as import('@/lib/supabase').Bookmark[],
     created_at: row.updated_at as string,
     view_count: 0,
     user_id: user.id,
