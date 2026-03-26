@@ -474,6 +474,27 @@ body {
 .sp-btn-primary:active { transform: scale(0.98); }
 .sp-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+/* ── Revisit Mode Button ─────────────────────────────────────────────────────── */
+.sp-btn-revisit {
+  padding: 11px 14px;
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sp-btn-revisit:hover {
+  background: rgba(20, 184, 166, 0.1);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.sp-btn-revisit:active { transform: scale(0.96); }
+
 /* ── Revisit Reminder Panel ──────────────────────────────────────────────────── */
 .revisit-reminder-panel {
   padding: 10px 14px 0;

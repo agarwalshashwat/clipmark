@@ -13,8 +13,8 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_DELAY = 1000;
 
-// ─── Revision mode state ──────────────────────────────────────────────────────
-let revisionState = null; // { segments, index, countdownTimer }
+// ─── Revisit mode state ───────────────────────────────────────────────────────
+let revisionState = null; // { segments, index, countdownTimer, speed }
 
 let titleSaveTimer = null;
 const savedTitlesCache = {}; // avoid redundant sync writes
@@ -469,13 +469,24 @@ function showSilentSaveIndicator(message, type = 'success') {
 
 // ─── Keyboard shortcuts ───────────────────────────────────────────────────────
 function handleKeyboardShortcut(event) {
-  if (!event.altKey) return;
-  if (event.key.toLowerCase() === 'b') {
-    try { chrome.runtime.sendMessage({ action: 'openPopup' }); } catch { }
+  // Ignore keypresses from text inputs
+  const tag = event.target?.tagName?.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || event.target?.isContentEditable) return;
+
+  // Alt+B / Alt+S global shortcuts
+  if (event.altKey) {
+    if (event.key.toLowerCase() === 'b') {
+      try { chrome.runtime.sendMessage({ action: 'openPopup' }); } catch { }
+    }
+    if (event.key.toLowerCase() === 's') {
+      silentSaveBookmark();
+    }
   }
-  if (event.key.toLowerCase() === 's') {
-    silentSaveBookmark();
-  }
+
+  // Revisit mode navigation — only when a session is active
+  if (!revisionState) return;
+  if (event.key === '[') { event.preventDefault(); skipToPrev(); }
+  if (event.key === ']') { event.preventDefault(); skipToNext(); }
 }
 
 // ─── Message listener ─────────────────────────────────────────────────────────
@@ -843,6 +854,51 @@ function injectStyles() {
       transition: color 0.12s;
     }
     .yt-revision-close:hover { color: white; }
+    .yt-revision-note {
+      font-size: 11px;
+      color: rgba(255,255,255,0.50);
+      font-style: italic;
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+    .yt-revision-speed {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .yt-revision-speed-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 5px;
+      color: rgba(255,255,255,0.70);
+      font-size: 10px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 3px 0;
+      transition: background 0.12s, color 0.12s;
+    }
+    .yt-revision-speed-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+    .yt-revision-speed-btn.active { background: #14B8A6; border-color: #14B8A6; color: #000; font-weight: 700; }
+    .yt-revision-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .yt-revision-nav-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 5px;
+      color: rgba(255,255,255,0.80);
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 5px 0;
+      transition: background 0.12s;
+    }
+    .yt-revision-nav-btn:hover { background: rgba(255,255,255,0.20); color: white; }
+    .yt-revision-nav-btn:disabled { opacity: 0.3; cursor: default; }
 
     /* Player bookmark button */
     .yt-bookmark-player-btn {
@@ -874,7 +930,7 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
-// ─── Revision mode ────────────────────────────────────────────────────────────
+// ─── Revisit mode ─────────────────────────────────────────────────────────────
 function buildRevisionSegments(bookmarks) {
   const sorted = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
   return sorted.map((b, i) => {
@@ -887,7 +943,7 @@ function buildRevisionSegments(bookmarks) {
 function startRevisionMode(bookmarks) {
   if (!bookmarks.length) return;
   exitRevisionMode(); // clean up any prior session
-  revisionState = { segments: buildRevisionSegments(bookmarks), index: 0, countdownTimer: null };
+  revisionState = { segments: buildRevisionSegments(bookmarks), index: 0, countdownTimer: null, speed: 1 };
   playRevisionSegment(0);
 }
 
@@ -897,6 +953,7 @@ function playRevisionSegment(index) {
   const seg = revisionState.segments[index];
   revisionState.index = index;
   v.currentTime = seg.start;
+  v.playbackRate = revisionState.speed;
   v.play().catch(() => {});
   updateRevisionOverlay();
   v.addEventListener('timeupdate', revisionTimeUpdateHandler);
@@ -934,6 +991,28 @@ function advanceRevision() {
   }, 1000);
 }
 
+function skipToNext() {
+  if (!revisionState) return;
+  if (revisionState.countdownTimer) { clearInterval(revisionState.countdownTimer); revisionState.countdownTimer = null; }
+  const v = document.querySelector('video') || video;
+  if (v) v.removeEventListener('timeupdate', revisionTimeUpdateHandler);
+  const next = revisionState.index + 1;
+  if (next >= revisionState.segments.length) {
+    exitRevisionMode();
+    showSilentSaveIndicator('Revision complete ✓');
+    return;
+  }
+  playRevisionSegment(next);
+}
+
+function skipToPrev() {
+  if (!revisionState || revisionState.index <= 0) return;
+  if (revisionState.countdownTimer) { clearInterval(revisionState.countdownTimer); revisionState.countdownTimer = null; }
+  const v = document.querySelector('video') || video;
+  if (v) v.removeEventListener('timeupdate', revisionTimeUpdateHandler);
+  playRevisionSegment(revisionState.index - 1);
+}
+
 function exitRevisionMode() {
   const v = document.querySelector('video') || video;
   if (v) v.removeEventListener('timeupdate', revisionTimeUpdateHandler);
@@ -947,17 +1026,73 @@ function ensureRevisionOverlay() {
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.className = 'yt-revision-overlay';
+    overlay.style.cursor = 'grab';
     overlay.innerHTML = `
-      <div class="yt-revision-label">🔖 Revision Mode</div>
+      <div class="yt-revision-label">▶ Revisit Mode</div>
       <div class="yt-revision-clip"></div>
       <div class="yt-revision-range"></div>
+      <div class="yt-revision-note"></div>
       <div class="yt-revision-next"></div>
+      <div class="yt-revision-nav">
+        <button class="yt-revision-nav-btn" data-dir="prev">◀ Prev</button>
+        <button class="yt-revision-nav-btn" data-dir="next">Next ▶</button>
+      </div>
+      <div class="yt-revision-speed">
+        <button class="yt-revision-speed-btn" data-rate="0.75">0.75×</button>
+        <button class="yt-revision-speed-btn" data-rate="1">1×</button>
+        <button class="yt-revision-speed-btn" data-rate="1.25">1.25×</button>
+        <button class="yt-revision-speed-btn" data-rate="1.5">1.5×</button>
+        <button class="yt-revision-speed-btn" data-rate="1.75">1.75×</button>
+        <button class="yt-revision-speed-btn" data-rate="2">2×</button>
+      </div>
       <button class="yt-revision-close">✕</button>
     `;
     overlay.querySelector('.yt-revision-close').addEventListener('click', exitRevisionMode);
+    overlay.querySelector('[data-dir="prev"]').addEventListener('click', skipToPrev);
+    overlay.querySelector('[data-dir="next"]').addEventListener('click', skipToNext);
+    overlay.querySelectorAll('.yt-revision-speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!revisionState) return;
+        const rate = parseFloat(btn.dataset.rate);
+        revisionState.speed = rate;
+        const v = document.querySelector('video') || video;
+        if (v) v.playbackRate = rate;
+        updateSpeedButtons(overlay, rate);
+      });
+    });
+
+    // Drag to reposition
+    let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+    overlay.addEventListener('mousedown', e => {
+      if (e.target.closest('button')) return;
+      isDragging = true;
+      const rect = overlay.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      overlay.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+      if (!isDragging || !overlay.isConnected) return;
+      overlay.style.right = 'auto';
+      overlay.style.left  = (e.clientX - dragOffsetX) + 'px';
+      overlay.style.top   = (e.clientY - dragOffsetY) + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      if (overlay.isConnected) overlay.style.cursor = 'grab';
+    });
+
     document.body.appendChild(overlay);
   }
   return overlay;
+}
+
+function updateSpeedButtons(overlay, activeRate) {
+  overlay.querySelectorAll('.yt-revision-speed-btn').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.dataset.rate) === activeRate);
+  });
 }
 
 function updateRevisionOverlay() {
@@ -966,10 +1101,15 @@ function updateRevisionOverlay() {
   const seg      = revisionState.segments[revisionState.index];
   const current  = revisionState.index + 1;
   const total    = revisionState.segments.length;
+  const rawNote  = seg.bookmark.description || '';
+  const note     = rawNote.length > 90 ? rawNote.slice(0, 90) + '…' : rawNote;
   overlay.querySelector('.yt-revision-clip').textContent  = `Clip ${current} / ${total}`;
   overlay.querySelector('.yt-revision-range').textContent =
     `${formatTimestamp(seg.start)} → ${formatTimestamp(seg.end)}`;
+  overlay.querySelector('.yt-revision-note').textContent  = note;
   overlay.querySelector('.yt-revision-next').textContent  = '';
+  overlay.querySelector('[data-dir="prev"]').disabled = revisionState.index === 0;
+  updateSpeedButtons(overlay, revisionState.speed);
 }
 
 function updateRevisionCountdown(sec) {

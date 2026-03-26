@@ -1015,6 +1015,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') });
   });
 
+  document.getElementById('revisit-mode-btn').addEventListener('click', async () => {
+    try {
+      const isPro = await checkPro();
+      if (!isPro) {
+        showError('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro.', 4000);
+        return;
+      }
+      const tab = await getCurrentTab();
+      if (!tab.url.includes('youtube.com/watch')) {
+        showError('Please navigate to a YouTube video first.');
+        return;
+      }
+      const videoId = extractVideoId(tab.url);
+      if (!videoId) return;
+      const bookmarks = (await getVideoBookmarks(videoId)).sort((a, b) => a.timestamp - b.timestamp);
+      if (!bookmarks.length) {
+        showError('No bookmarks for this video yet.');
+        return;
+      }
+      await waitForContentScript(tab.id);
+      await sendMessageToTab(tab.id, { action: 'startRevision', bookmarks });
+    } catch (error) {
+      showError('Could not start Revisit Mode: ' + error.message);
+    }
+  });
+
   document.getElementById('summarize-btn').addEventListener('click', summarizeBookmarks);
 
   document.getElementById('summary-close').addEventListener('click', () => {

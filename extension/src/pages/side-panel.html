@@ -89,11 +89,16 @@
         </div>
         <div id="tag-suggestions" class="tag-suggestions" style="display:none;"></div>
 
-        <!-- Save button -->
-        <button id="add-bookmark" class="sp-btn-primary" title="Save bookmark (Alt+S)">
-          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:18px;vertical-align:middle;">add_circle</span>
-          Save Moment
-        </button>
+        <!-- Save + Revisit row -->
+        <div style="display:flex;gap:8px;">
+          <button id="add-bookmark" class="sp-btn-primary" style="flex:1;" title="Save bookmark (Alt+S)">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:18px;vertical-align:middle;">add_circle</span>
+            Save Moment
+          </button>
+          <button id="revisit-mode-btn" class="sp-btn-revisit" title="Start Revisit Mode for this video">
+            <span class="material-symbols-outlined" style="font-size:20px;">history</span>
+          </button>
+        </div>
       </div>
     </section>
 
