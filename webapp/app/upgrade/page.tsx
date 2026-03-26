@@ -1,5 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase';
 import { createCheckoutSession } from './actions';
+import CancelSubscriptionButton from './CancelSubscriptionButton';
 // import { ThemeToggle } from '../components/ThemeToggle';
 
 const FEATURES = [
@@ -42,14 +43,31 @@ export default async function UpgradePage({
   const { data: { user } } = await supabase.auth.getUser();
 
   let isPro = false;
+  let subscriptionId: string | null = null;
+  let subscriptionStartedAt: string | null = null;
+  let subscriptionPeriodEnd: string | null = null;
+  let cancelAtPeriodEnd = false;
+
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_pro')
+      .select('*')
       .eq('id', user.id)
       .single();
     isPro = profile?.is_pro ?? false;
+    subscriptionId = profile?.subscription_id ?? null;
+    subscriptionStartedAt = profile?.subscription_started_at ?? null;
+    subscriptionPeriodEnd = profile?.subscription_period_end ?? null;
+    cancelAtPeriodEnd = profile?.cancel_at_period_end ?? false;
   }
+
+  const daysSinceStart = subscriptionStartedAt
+    ? (Date.now() - new Date(subscriptionStartedAt).getTime()) / 86400000
+    : Infinity;
+  const isRefundEligible = subscriptionId !== null && daysSinceStart <= 14;
+  const periodEndFormatted = subscriptionPeriodEnd
+    ? new Date(subscriptionPeriodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
 
   return (
     <div style={{
@@ -122,15 +140,53 @@ export default async function UpgradePage({
             </div>
           )}
 
-          {/* ── Banner: Already Pro ── */}
+          {/* ── Manage Subscription (Pro users) ── */}
           {isPro && !success && (
             <div style={{
-              background: 'rgba(115,46,228,0.08)', border: '1px solid rgba(115,46,228,0.2)',
-              borderRadius: 10, padding: '14px 24px', margin: '24px auto 0',
-              maxWidth: 640, textAlign: 'center', fontSize: 15, color: '#732EE4',
-              fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
+              background: 'white', border: '1px solid rgba(26,28,29,0.1)',
+              borderRadius: 12, padding: '24px 28px', margin: '28px auto 0',
+              maxWidth: 640, fontFamily: "'Inter', sans-serif",
+              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
             }}>
-              You&apos;re already on Clipmark Pro
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span style={{ fontSize: 18 }}>✦</span>
+                <span style={{ fontWeight: 700, fontSize: 16, color: '#1a1c1d', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  You&apos;re on Clipmark Pro
+                </span>
+              </div>
+
+              {!subscriptionId && (
+                <p style={{ fontSize: 14, color: '#545f6c', margin: '0 0 0 28px' }}>
+                  Lifetime Access — your Pro benefits never expire.
+                </p>
+              )}
+
+              {subscriptionId && cancelAtPeriodEnd && periodEndFormatted && (
+                <p style={{ fontSize: 14, color: '#545f6c', margin: '0 0 0 28px' }}>
+                  Your subscription cancels on <strong>{periodEndFormatted}</strong>. You can enjoy all Pro features until then.
+                </p>
+              )}
+
+              {subscriptionId && !cancelAtPeriodEnd && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 28 }}>
+                  {periodEndFormatted && (
+                    <p style={{ fontSize: 14, color: '#545f6c', margin: 0 }}>
+                      Next billing date: <strong>{periodEndFormatted}</strong>
+                    </p>
+                  )}
+                  {isRefundEligible && (
+                    <p style={{ fontSize: 13, color: '#006b5f', margin: 0 }}>
+                      Within your 14-day refund window — cancel for a full refund.
+                    </p>
+                  )}
+                  {!isRefundEligible && (
+                    <p style={{ fontSize: 13, color: '#545f6c', margin: 0 }}>
+                      Cancelling will keep Pro active until {periodEndFormatted ?? 'your billing date'}, after which AI features and shared collections will be deactivated.
+                    </p>
+                  )}
+                  <CancelSubscriptionButton isRefundEligible={isRefundEligible} />
+                </div>
+              )}
             </div>
           )}
 

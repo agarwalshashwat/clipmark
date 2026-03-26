@@ -42,12 +42,30 @@ export async function POST(request: NextRequest) {
   }
 
   // subscription.active fires when a new subscription starts
-  // subscription.renewed fires on each successful billing cycle
-  else if (type === 'subscription.active' || type === 'subscription.renewed') {
+  else if (type === 'subscription.active') {
     const sub = data as DodoPayments.WebhookPayload.Subscription;
     const userId = sub.metadata?.user_id;
     if (userId) {
-      await supabaseAdmin.from('profiles').update({ is_pro: true }).eq('id', userId);
+      await supabaseAdmin.from('profiles').update({
+        is_pro: true,
+        subscription_id: sub.subscription_id,
+        subscription_started_at: sub.created_at,
+        subscription_period_end: sub.next_billing_date ?? null,
+        cancel_at_period_end: false,
+      }).eq('id', userId);
+    }
+  }
+
+  // subscription.renewed fires on each successful billing cycle
+  else if (type === 'subscription.renewed') {
+    const sub = data as DodoPayments.WebhookPayload.Subscription;
+    const userId = sub.metadata?.user_id;
+    if (userId) {
+      await supabaseAdmin.from('profiles').update({
+        is_pro: true,
+        subscription_period_end: sub.next_billing_date ?? null,
+        cancel_at_period_end: false,
+      }).eq('id', userId);
     }
   }
 
@@ -56,7 +74,12 @@ export async function POST(request: NextRequest) {
     const sub = data as DodoPayments.WebhookPayload.Subscription;
     const userId = sub.metadata?.user_id;
     if (userId) {
-      await supabaseAdmin.from('profiles').update({ is_pro: false }).eq('id', userId);
+      await supabaseAdmin.from('profiles').update({
+        is_pro: false,
+        subscription_id: null,
+        subscription_period_end: null,
+        cancel_at_period_end: false,
+      }).eq('id', userId);
     }
   }
 

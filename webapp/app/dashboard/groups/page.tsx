@@ -1,5 +1,6 @@
 import { createServerSupabase, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
+import GroupsContent from './GroupsContent';
 
 export const metadata = { title: 'Groups — Clipmark' };
 
@@ -16,10 +17,36 @@ export default async function GroupsPage() {
 
   const collections = (collectionsData ?? []) as Collection[];
 
-  // Group collections by unique tags across bookmarks
+  // ── User-created groups ──────────────────────────────────────────────────
+  const { data: groupsData } = await supabase
+    .from('groups')
+    .select('*, group_collections(collection_id)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  const collectionMap = new Map(collections.map(c => [c.id, c]));
+
+  const userGroups = (groupsData ?? []).map(g => {
+    let groupCollections: Collection[];
+
+    if (g.type === 'tag' && g.tag_name) {
+      // Tag group: auto-populate from collections where any bookmark has this tag
+      groupCollections = collections.filter(c =>
+        (c.bookmarks ?? []).some((b: { tags?: string[] }) => (b.tags ?? []).includes(g.tag_name!))
+      );
+    } else {
+      // Custom group: use junction table memberships
+      const ids: string[] = (g.group_collections ?? []).map((gc: { collection_id: string }) => gc.collection_id);
+      groupCollections = ids.map(id => collectionMap.get(id)).filter(Boolean) as Collection[];
+    }
+
+    return { id: g.id, name: g.name, type: g.type as 'custom' | 'tag', tag_name: g.tag_name ?? null, collections: groupCollections };
+  });
+
+  // ── Auto-tag groups (existing behaviour) ────────────────────────────────
   const tagMap = new Map<string, Collection[]>();
   for (const c of collections) {
-    const tags = Array.from(new Set((c.bookmarks ?? []).flatMap(b => b.tags ?? [])));
+    const tags = Array.from(new Set((c.bookmarks ?? []).flatMap((b: { tags?: string[] }) => b.tags ?? [])));
     if (tags.length === 0) {
       if (!tagMap.has('Untagged')) tagMap.set('Untagged', []);
       tagMap.get('Untagged')!.push(c);
@@ -30,12 +57,13 @@ export default async function GroupsPage() {
       }
     }
   }
+  const autoTagGroups = Array.from(tagMap.entries()).map(([tag, cols]) => ({ tag, collections: cols }));
 
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
         <h1 className={styles.title}>Groups</h1>
-        <p className={styles.sub}>Your collections organised by tag.</p>
+        <p className={styles.sub}>Organise your videos into custom groups or browse by tag.</p>
       </div>
 
       {collections.length === 0 ? (
@@ -43,41 +71,13 @@ export default async function GroupsPage() {
           <div className={styles.emptyIcon}>
             <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>folder_shared</span>
           </div>
-          <h3 className={styles.emptyTitle}>No groups yet</h3>
+          <h3 className={styles.emptyTitle}>No bookmarks yet</h3>
           <p className={styles.emptyText}>
-            Tag your bookmarks in the extension and they&apos;ll be grouped automatically here.
+            Start bookmarking videos in the extension and they&apos;ll appear here for grouping.
           </p>
         </div>
       ) : (
-        <div className={styles.groups}>
-          {Array.from(tagMap.entries()).map(([tag, cols]) => (
-            <div key={tag} className={styles.group}>
-              <div className={styles.groupHeader}>
-                <span className={styles.groupTag}>#{tag}</span>
-                <span className={styles.groupCount}>{cols.length} video{cols.length !== 1 ? 's' : ''}</span>
-              </div>
-              <div className={styles.groupGrid}>
-                {cols.slice(0, 4).map(c => (
-                  <a key={c.id} href={`/v/${c.id}`} className={styles.groupCard}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://img.youtube.com/vi/${c.video_id}/hqdefault.jpg`}
-                      alt={c.video_title ?? 'Video'}
-                      className={styles.groupCardImg}
-                    />
-                    <div className={styles.groupCardOverlay}>
-                      <p className={styles.groupCardTitle}>{c.video_title ?? 'Untitled Video'}</p>
-                      <span className={styles.groupCardClips}>{c.bookmarks?.length ?? 0} clips</span>
-                    </div>
-                  </a>
-                ))}
-                {cols.length > 4 && (
-                  <div className={styles.groupMore}>+{cols.length - 4} more</div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <GroupsContent userGroups={userGroups} autoTagGroups={autoTagGroups} />
       )}
     </div>
   );

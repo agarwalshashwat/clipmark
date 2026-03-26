@@ -44,6 +44,24 @@ function groupBookmarksByMonth(bookmarks: BookmarkWithCollection[]): Map<string,
   return map;
 }
 
+type TimelineGroup = { dayLabel: string; collection: Collection; items: BookmarkWithCollection[] };
+
+function buildTimelineGroups(bookmarks: BookmarkWithCollection[]): TimelineGroup[] {
+  const groups: TimelineGroup[] = [];
+  const indexMap = new Map<string, number>();
+  for (const b of bookmarks) {
+    const dayLabel = formatDayLabel(b.createdAt);
+    const key = `${dayLabel}::${b.collection.video_id}`;
+    if (indexMap.has(key)) {
+      groups[indexMap.get(key)!].items.push(b);
+    } else {
+      indexMap.set(key, groups.length);
+      groups.push({ dayLabel, collection: b.collection, items: [b] });
+    }
+  }
+  return groups;
+}
+
 // ─── Export helpers ───────────────────────────────────────────────────────────
 
 function downloadFile(content: string, filename: string, mimeType: string) {
@@ -122,6 +140,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exportOpen, setExportOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
+  const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // ── Filtering ───────────────────────────────────────────────────────────────
@@ -520,12 +539,71 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                       </div>
                     );
                   })}
-                  {(c.bookmarks?.length ?? 0) > 4 && (
-                    <a href={`https://www.youtube.com/watch?v=${c.video_id}`} className={styles.expandLink}>
-                      Expand All Curations
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>expand_more</span>
-                    </a>
-                  )}
+                  {(c.bookmarks?.length ?? 0) > 4 && (() => {
+                    const isExpanded = expandedVideos.has(c.video_id);
+                    const remaining = (c.bookmarks?.length ?? 0) - 4;
+                    const toggle = () => setExpandedVideos(prev => {
+                      const next = new Set(prev);
+                      if (next.has(c.video_id)) next.delete(c.video_id); else next.add(c.video_id);
+                      return next;
+                    });
+                    return (
+                      <>
+                        <div className={`${styles.extraBookmarks} ${isExpanded ? styles.extraBookmarksOpen : ''}`}>
+                          <div className={styles.extraBookmarksInner}>
+                            {(c.bookmarks ?? []).slice(4).map((b: Bookmark, i: number) => {
+                              const selKey = `${c.video_id}:${b.id}`;
+                              const isSelected = selectedIds.has(selKey);
+                              return (
+                                <div key={i + 4} className={`${styles.threadItem} ${toolbarStyles.threadItemHover} ${isSelected ? toolbarStyles.threadItemSelected : ''}`}>
+                                  <input
+                                    type="checkbox"
+                                    className={toolbarStyles.checkbox}
+                                    checked={isSelected}
+                                    onChange={() => toggleSelect(c.video_id, b.id)}
+                                    title="Select"
+                                  />
+                                  <div className={styles.threadDot} style={{ borderColor: b.color || '#006b5f' }} />
+                                  <div className={styles.threadContent}>
+                                    <div className={styles.threadMeta}>
+                                      <span className={styles.threadTime} style={{ color: b.color || '#006b5f', background: `${b.color || '#006b5f'}12` }}>
+                                        {formatTimestamp(b.timestamp)}
+                                      </span>
+                                      <span className={styles.threadType}>
+                                        {b.description ? 'Annotated Bookmark' : 'Quick Clip'}
+                                      </span>
+                                      <div className={toolbarStyles.bookmarkActions}>
+                                        <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(c.video_id, b.timestamp)}>
+                                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                                        </button>
+                                        <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
+                                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <p className={styles.threadNote}>{b.description || 'No note added.'}</p>
+                                    {(b.tags ?? []).length > 0 && (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                        {(b.tags ?? []).map((tag: string) => (
+                                          <span key={tag} className={styles.entryTag}>#{tag}</span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <button className={styles.expandLink} onClick={toggle}>
+                          {isExpanded ? 'Show Less' : `Show ${remaining} More`}
+                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                            {isExpanded ? 'expand_less' : 'expand_more'}
+                          </span>
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -554,71 +632,65 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                 <div className={styles.monthDot} />
                 <span className={styles.monthLabel}>{month}</span>
               </div>
-              {bookmarks.map((b, i) => {
-                const selKey = `${b.collection.video_id}:${b.id}`;
-                const isSelected = selectedIds.has(selKey);
-                return (
-                  <div key={`${b.collection.id}-${b.timestamp}-${i}`} className={styles.timelineEntry}>
-                    <div className={styles.entryDate}>
-                      <span className={styles.dayLabel}>{formatDayLabel(b.createdAt)}</span>
-                    </div>
-                    <div className={`${styles.entryCard} ${toolbarStyles.entryCardHover} ${isSelected ? toolbarStyles.entrySelected : ''}`} style={{ position: 'relative' }}>
-                      <div className={toolbarStyles.entryActions}>
-                        <input
-                          type="checkbox"
-                          className={toolbarStyles.checkbox}
-                          checked={isSelected}
-                          onChange={() => toggleSelect(b.collection.video_id, b.id)}
-                          title="Select"
+              {buildTimelineGroups(bookmarks).map((group, gi) => (
+                <div key={`${group.dayLabel}::${group.collection.video_id}-${gi}`} className={styles.timelineEntry}>
+                  <div className={styles.entryDate}>
+                    <span className={styles.dayLabel}>{group.dayLabel}</span>
+                  </div>
+                  <div className={`${styles.entryCard} ${toolbarStyles.entryCardHover}`} style={{ position: 'relative' }}>
+                    <div className={styles.entryInner}>
+                      <a href={`https://www.youtube.com/watch?v=${group.collection.video_id}`} className={styles.entryThumb}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://img.youtube.com/vi/${group.collection.video_id}/hqdefault.jpg`}
+                          alt={group.collection.video_title ?? 'Video'}
+                          className={styles.entryThumbImg}
                         />
-                        <button
-                          className={toolbarStyles.actionBtn}
-                          title="Copy timestamp link"
-                          onClick={() => copyLink(b.collection.video_id, b.timestamp)}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
-                        </button>
-                        <button
-                          className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`}
-                          title="Delete bookmark"
-                          onClick={() => handleDelete(b.collection.video_id, b.id)}
-                          disabled={isPending}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
-                        </button>
+                        {group.items.length > 1 && (
+                          <span className={styles.entryTimestamp}>{group.items.length} clips</span>
+                        )}
+                      </a>
+                      <div className={styles.entryBody}>
+                        <h3 className={styles.entryTitle}>{group.collection.video_title ?? 'Untitled Video'}</h3>
                       </div>
-                      <div className={styles.entryInner}>
-                        <a href={`https://www.youtube.com/watch?v=${b.collection.video_id}&t=${Math.floor(b.timestamp)}s`} className={styles.entryThumb}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={`https://img.youtube.com/vi/${b.collection.video_id}/hqdefault.jpg`}
-                            alt={b.collection.video_title ?? 'Video'}
-                            className={styles.entryThumbImg}
-                          />
-                          <span className={styles.entryTimestamp}>{formatTimestamp(b.timestamp)}</span>
-                        </a>
-                        <div className={styles.entryBody}>
-                          <div className={styles.entryTitleRow}>
-                            <h3 className={styles.entryTitle}>{b.collection.video_title ?? 'Untitled Video'}</h3>
-                          </div>
-                          <p className={styles.entryNote}>{b.description || 'No note added.'}</p>
-                          {(b.tags?.length ?? 0) > 0 && (
-                            <div className={styles.entryTags}>
-                              {b.tags.slice(0, 3).map((tag: string) => (
-                                <span key={tag} className={styles.entryTag}>#{tag}</span>
-                              ))}
+                    </div>
+                    <div className={styles.groupedClips}>
+                      {group.items.map((b, ci) => {
+                        const selKey = `${group.collection.video_id}:${b.id}`;
+                        const isSelected = selectedIds.has(selKey);
+                        return (
+                          <div key={ci} className={`${styles.clipRow} ${isSelected ? toolbarStyles.entrySelected : ''}`}>
+                            <input
+                              type="checkbox"
+                              className={toolbarStyles.checkbox}
+                              checked={isSelected}
+                              onChange={() => toggleSelect(group.collection.video_id, b.id)}
+                              title="Select"
+                            />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: b.color || '#006b5f', flexShrink: 0 }} />
+                            <a
+                              href={`https://www.youtube.com/watch?v=${group.collection.video_id}&t=${Math.floor(b.timestamp)}s`}
+                              className={styles.clipTimestamp}
+                              style={{ color: b.color || '#006b5f', background: `${b.color || '#006b5f'}12` }}
+                            >
+                              {formatTimestamp(b.timestamp)}
+                            </a>
+                            <span className={styles.clipRowNote}>{b.description || 'No note added.'}</span>
+                            <div className={toolbarStyles.bookmarkActions}>
+                              <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(group.collection.video_id, b.timestamp)}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                              </button>
+                              <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                              </button>
                             </div>
-                          )}
-                          <span className={styles.jumpLink}>
-                            Jump to moment
-                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_forward</span>
-                          </span>
-                        </div>
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           ))}
         </div>

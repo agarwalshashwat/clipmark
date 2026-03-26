@@ -39,7 +39,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
               href="/dashboard/queue"
               className={`${styles.topNavLink} ${isActive('/dashboard/queue') ? styles.topNavLinkActive : ''}`}
             >
-              Revisit Queue
+              Reminders
             </a>
             <a
               href="/dashboard/shared"
@@ -54,7 +54,10 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6c7a77' }}>search</span>
             <input type="text" placeholder="Search your bookmarks..." className={styles.searchInput} />
           </div>
-          {!isPro && <a href="/upgrade" className={styles.upgradeCta}>✦ Upgrade</a>}
+          {!isPro
+            ? <a href="/upgrade" className={styles.upgradeCta}>✦ Upgrade</a>
+            : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: '#006b5f', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
+          }
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatarUrl} alt={username} className={styles.avatar} title={username} />
@@ -102,7 +105,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             className={`${styles.sideNavItem} ${isActive('/dashboard/queue') ? styles.sideNavItemActive : ''}`}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>schedule</span>
-            <span>Revisit Queue</span>
+            <span>Reminders</span>
           </a>
           <p className={styles.sideNavSection}>Curations</p>
           <a
@@ -127,10 +130,15 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             <span>Shared</span>
           </a>
           <p className={styles.sideNavSection}>Account</p>
-          {!isPro && (
+          {!isPro ? (
             <a href="/upgrade" className={`${styles.sideNavItem} ${styles.sideNavUpgrade}`}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>auto_awesome</span>
               <span>Upgrade</span>
+            </a>
+          ) : (
+            <a href="/upgrade" className={`${styles.sideNavItem}`}>
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>workspace_premium</span>
+              <span>Manage Subscription</span>
             </a>
           )}
           <form action="/auth/signout" method="POST" style={{ width: '100%' }}>

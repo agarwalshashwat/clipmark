@@ -15,6 +15,36 @@ const PRODUCT_IDS: Record<string, string> = {
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
 
+export async function cancelSubscription() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_id, subscription_started_at')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.subscription_id) {
+    throw new Error('No active subscription found. Lifetime access cannot be cancelled here.');
+  }
+
+  const daysSinceStart = profile.subscription_started_at
+    ? (Date.now() - new Date(profile.subscription_started_at).getTime()) / 86400000
+    : Infinity;
+
+  if (daysSinceStart <= 14) {
+    // Within 14-day window: immediate cancellation
+    await dodo.subscriptions.update(profile.subscription_id, { status: 'cancelled' });
+    // Webhook will fire subscription.cancelled → is_pro = false automatically
+  } else {
+    // After 14 days: cancel at next billing date — user keeps Pro until period end
+    await dodo.subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
+    await supabase.from('profiles').update({ cancel_at_period_end: true }).eq('id', user.id);
+  }
+}
+
 export async function createCheckoutSession(formData: FormData) {
   const plan = formData.get('plan') as string;
 

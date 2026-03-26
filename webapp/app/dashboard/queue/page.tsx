@@ -1,81 +1,84 @@
-import { createServerSupabase, type Collection, type Bookmark } from '@/lib/supabase';
+import { createServerSupabase, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
+import RemindersContent from './RemindersContent';
 
-function formatTimestamp(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-}
+export const metadata = { title: 'Reminders — Clipmark' };
 
-export const metadata = { title: 'Revisit Queue — Clipmark' };
-
-export default async function QueuePage() {
+export default async function RemindersPage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: collectionsData } = await supabase
-    .from('collections')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+  const now = new Date().toISOString();
 
-  const collections = (collectionsData ?? []) as Collection[];
+  // Fetch reminders, collections, and groups in parallel
+  const [{ data: remindersData }, { data: collectionsData }, { data: groupsData }] = await Promise.all([
+    supabase
+      .from('revisit_reminders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('next_due_at', { ascending: true }),
+    supabase
+      .from('collections')
+      .select('id, video_id, video_title')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('groups')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+  ]);
 
-  // Revisit queue: all bookmarks that have a description (annotated) sorted by oldest
-  const queue: (Bookmark & { collection: Collection })[] = collections
-    .flatMap(c => (c.bookmarks ?? []).map((b: Bookmark) => ({ ...b, collection: c })))
-    .filter(b => b.description)
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const collections = (collectionsData ?? []) as Pick<Collection, 'id' | 'video_id' | 'video_title'>[];
+  const collectionMap = new Map(collections.map(c => [c.id, c]));
+  const groupMap = new Map((groupsData ?? []).map((g: { id: string; name: string }) => [g.id, g]));
+
+  const reminders = (remindersData ?? []).map(r => {
+    let targetLabel = 'Unknown';
+    let videoId: string | undefined;
+
+    if (r.target_type === 'collection') {
+      const c = collectionMap.get(r.target_id);
+      targetLabel = c?.video_title ?? 'Untitled Video';
+      videoId = c?.video_id;
+    } else {
+      const g = groupMap.get(r.target_id);
+      targetLabel = g?.name ?? 'Unknown Group';
+    }
+
+    return { ...r, targetLabel, videoId };
+  });
+
+  const dueReminders = reminders.filter(r => r.next_due_at <= now);
+  const upcomingReminders = reminders.filter(r => r.next_due_at > now);
+
+  const collectionTargets = collections.map(c => ({
+    id: c.id,
+    label: c.video_title ?? 'Untitled Video',
+    videoId: c.video_id,
+    type: 'collection' as const,
+  }));
+  const groupTargets = (groupsData ?? []).map((g: { id: string; name: string }) => ({
+    id: g.id,
+    label: g.name,
+    type: 'group' as const,
+  }));
 
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Revisit Queue</h1>
-        <p className={styles.sub}>Annotated bookmarks worth revisiting — oldest first.</p>
+        <h1 className={styles.title}>Reminders</h1>
+        <p className={styles.sub}>Schedule revisits for your videos and groups.</p>
       </div>
 
-      {queue.length === 0 ? (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>
-            <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>schedule</span>
-          </div>
-          <h3 className={styles.emptyTitle}>Queue is empty</h3>
-          <p className={styles.emptyText}>
-            Add notes to your bookmarks and they&apos;ll appear here for scheduled revisits.
-          </p>
-        </div>
-      ) : (
-        <div className={styles.list}>
-          {queue.map((b, i) => (
-            <a key={i} href={`/v/${b.collection.id}`} className={styles.card}>
-              <div className={styles.cardThumb}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.youtube.com/vi/${b.collection.video_id}/hqdefault.jpg`}
-                  alt={b.collection.video_title ?? 'Video'}
-                  className={styles.cardThumbImg}
-                />
-                <span className={styles.cardTimestamp}>{formatTimestamp(b.timestamp)}</span>
-              </div>
-              <div className={styles.cardBody}>
-                <p className={styles.cardVideoTitle}>{b.collection.video_title ?? 'Untitled Video'}</p>
-                <p className={styles.cardNote}>{b.description}</p>
-                {b.tags?.length > 0 && (
-                  <div className={styles.cardTags}>
-                    {b.tags.slice(0, 3).map((tag: string) => (
-                      <span key={tag} className={styles.tag}>#{tag}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className={styles.cardAction}>
-                <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#006b5f' }}>play_circle</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
+      <RemindersContent
+        dueReminders={dueReminders}
+        upcomingReminders={upcomingReminders}
+        collections={collectionTargets}
+        groups={groupTargets}
+      />
     </div>
   );
 }
+
