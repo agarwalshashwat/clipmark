@@ -12,7 +12,7 @@ Live at **[clipmark-chi.vercel.app](https://clipmark-chi.vercel.app)**
 
 **Developers** — Reviewing a 2-hour system design lecture before an interview? Hit ▶ Revisit Mode and play only your saved clips back to back. `2 hours → 6 minutes`.
 
-**Students** — Spaced Revisit resurfaces your bookmarks at 1, 3, and 7 days after saving — like flashcards for video.
+**Students** — Schedule revisit reminders at any cadence (daily, weekly, monthly) so you come back to important content before it fades.
 
 **Creators** — Bookmark key moments from a podcast, hit ✍ Post, and AI writes a platform-tuned caption with a share link attached.
 
@@ -20,18 +20,39 @@ Live at **[clipmark-chi.vercel.app](https://clipmark-chi.vercel.app)**
 
 ## Features
 
+### Core Bookmarking
 - **Bookmark any moment** — one click, optional description, auto-tagged
-- **Visual progress bar markers** — colored dots on the YouTube seek bar
+- **Visual progress bar markers** — always-visible diamond nubs on the YouTube seek bar with rich hover tooltips (timestamp, description, tag chips)
+- **16px invisible click target** — easy to hit without pixel-perfect aim
+- **Active marker pulse** — the marker at the current playback position briefly pulses/glows
 - **`#tag` syntax** — `#important`, `#review`, `#key`, etc. with named colors
-- **Revisit Mode** — plays only your bookmarked segments, back to back
+- **Marker clustering** — nearby markers merge into a cluster marker when a video has many bookmarks
+
+### Revisit & Learning
+- **Revisit Mode** — plays only your bookmarked segments back to back
+- **Reminders & Re-engagement** — schedule revisits for any video or group (once, daily, weekly, bi-weekly, monthly); due reminders surface with a badge in the sidebar
 - **Spaced Revisit** — resurfaces bookmarks on a 1/3/7-day schedule
-- **AI features (Pro)** — auto-description from transcript, tag suggestions, social post generator
-- **Dashboard** — card/timeline/groups view, search, sort, bulk delete
+
+### Dashboard & Organisation
+- **Dashboard** — card / timeline / groups view, search, sort, bulk delete
+- **Groups** — create custom groups (manual curation) or tag-based auto-groups; add/remove videos per group
+- **Timeline grouping** — multiple clips from the same video on the same day grouped into one card
 - **Side panel** — persistent access alongside any YouTube video
-- **Export / Import** — JSON, CSV, Markdown
+
+### AI (Pro)
+- **Auto-description** — fills description from live transcript at current timestamp (Claude Haiku)
+- **Summary** — AI overview, key topics, and action items for a video's bookmarks
+- **Smart tag suggestions** — clickable chips suggested after auto-fill
+- **Social post generator** — X/Twitter, LinkedIn, or Threads caption with share link
+
+### Sharing & Sync
 - **Share** — publish any video's bookmarks to a public URL (`/v/{shareId}`)
 - **Cloud sync** — bookmarks pushed to Supabase when signed in
 - **Sign in with Google** — OAuth through the webapp
+
+### Other
+- **Export / Import** — JSON, CSV, Markdown
+- **Upgrade / Pro** — Dodo Payments integration; Pro Monthly and Pro Annual plans
 
 ---
 
@@ -75,12 +96,36 @@ Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost
 
 ---
 
+## Project Structure
+
+```
+extension/          Chrome extension source (Manifest V3)
+  src/
+    content/        Content script — injected into YouTube
+    popup/          Extension popup UI
+    background/     Service worker
+webapp/             Next.js 14 webapp
+  app/
+    dashboard/      Authenticated dashboard pages
+    api/            API routes (share, bookmarks, webhooks)
+    v/[shareId]/    Public share pages
+  migrations/       Supabase SQL migrations
+```
+
+---
+
 ## Testing
 
 ```bash
 npx playwright install chromium   # first time only
 npm run test:yt
 ```
+
+---
+
+## Contributing
+
+The `main` branch is protected — all changes must come in through a pull request with at least one review. Branch off `main`, open a PR, and request a review.
 
 ---
 
