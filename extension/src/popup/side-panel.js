@@ -941,6 +941,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // ── Auto-fill from transcript ──────────────────────────────────────────────
+  document.getElementById('auto-fill-btn').addEventListener('click', async () => {
+    const btn   = document.getElementById('auto-fill-btn');
+    const input = document.getElementById('description');
+    const origHTML = btn.innerHTML;
+    try {
+      const tab = await getCurrentTab();
+      debugLog('AutoFill', 'Tab URL', tab.url);
+      if (!tab.url.includes('youtube.com/watch')) {
+        debugLog('AutoFill', 'Not a YouTube watch page, aborting');
+        return;
+      }
+
+      btn.disabled = true;
+
+      await waitForContentScript(tab.id);
+      const tsRes = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+      debugLog('AutoFill', 'Timestamp response', tsRes);
+      if (!tsRes?.timestamp) throw new Error('no timestamp');
+
+      debugLog('AutoFill', 'Fetching transcript and chapter in parallel', tsRes.timestamp);
+      const [txResult, chResult] = await Promise.allSettled([
+        sendMessageToTab(tab.id, { action: 'getTranscriptAtTimestamp', timestamp: tsRes.timestamp }),
+        sendMessageToTab(tab.id, { action: 'getCurrentChapter' }),
+      ]);
+
+      const transcript = txResult.status === 'fulfilled' ? txResult.value?.text  : null;
+      const chapter    = chResult.status  === 'fulfilled' ? chResult.value?.chapter : null;
+      const txRaw = txResult.status === 'fulfilled' ? txResult.value : null;
+      debugLog('AutoFill', 'Transcript raw response', {
+        status: txResult.status,
+        text: txRaw?.text,
+        segmentCount: txRaw?._debug?.segmentCount,
+        hasCaptions: txRaw?._debug?.hasCaptions,
+        error: txResult.reason?.message,
+      });
+      debugLog('AutoFill', 'Transcript text', transcript);
+      debugLog('AutoFill', 'Chapter', chapter);
+
+      let text = null;
+      if (chapter && transcript) text = `${chapter} - ${transcript}`;
+      else if (transcript)        text = transcript;
+      else if (chapter)           text = chapter;
+
+      if (text) {
+        debugLog('AutoFill', 'Filled with', text);
+        input.value = text;
+        input.focus();
+        input.select();
+      } else {
+        debugLog('AutoFill', 'No transcript or chapter available');
+        showStatus('No transcript available');
+      }
+    } catch (e) {
+      debugLog('AutoFill', 'Error', e?.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origHTML;
+    }
+  });
+
   document.getElementById('signin-btn').addEventListener('click', () => {
     chrome.tabs.create({ url: `${API_BASE}/signin?extensionId=${chrome.runtime.id}` });
   });

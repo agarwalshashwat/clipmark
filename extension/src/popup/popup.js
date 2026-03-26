@@ -1203,41 +1203,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     const input = document.getElementById('description');
     try {
       const tab = await getCurrentTab();
-      if (!tab.url.includes('youtube.com/watch')) return;
+      debugLog('AutoFill', 'Tab URL', tab.url);
+      if (!tab.url.includes('youtube.com/watch')) {
+        debugLog('AutoFill', 'Not a YouTube watch page, aborting');
+        return;
+      }
 
       btn.textContent = '…';
       btn.disabled    = true;
 
       await waitForContentScript(tab.id);
       const tsRes = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+      debugLog('AutoFill', 'Timestamp response', tsRes);
       if (!tsRes?.timestamp) throw new Error('no timestamp');
 
-      const txRes = await sendMessageToTab(tab.id, {
-        action:    'getTranscriptAtTimestamp',
-        timestamp: tsRes.timestamp,
-      });
+      debugLog('AutoFill', 'Fetching transcript and chapter in parallel', tsRes.timestamp);
+      const [txResult, chResult] = await Promise.allSettled([
+        sendMessageToTab(tab.id, { action: 'getTranscriptAtTimestamp', timestamp: tsRes.timestamp }),
+        sendMessageToTab(tab.id, { action: 'getCurrentChapter' }),
+      ]);
 
-      if (txRes?.text) {
-        input.value = txRes.text;
+      const transcript = txResult.status === 'fulfilled' ? txResult.value?.text    : null;
+      const chapter    = chResult.status  === 'fulfilled' ? chResult.value?.chapter : null;
+      debugLog('AutoFill', 'Transcript text', transcript);
+      debugLog('AutoFill', 'Chapter', chapter);
+
+      let text = null;
+      if (chapter && transcript) text = `${chapter} - ${transcript}`;
+      else if (transcript)        text = transcript;
+      else if (chapter)           text = chapter;
+
+      if (text) {
+        debugLog('AutoFill', 'Filled with', text);
+        input.value = text;
         input.focus();
         input.select();
         btn.textContent = '✓';
         btn.classList.add('auto-fill-btn--done');
-        suggestTags(txRes.text, txRes.text);
+        suggestTags(text, text);
       } else {
-        const chRes = await sendMessageToTab(tab.id, { action: 'getCurrentChapter' }).catch(() => null);
-        if (chRes?.chapter) {
-          input.value = chRes.chapter;
-          input.focus();
-          input.select();
-          btn.textContent = '✓';
-          btn.classList.add('auto-fill-btn--done');
-          suggestTags(chRes.chapter);
-        } else {
-          btn.textContent = 'No transcript';
-        }
+        debugLog('AutoFill', 'No transcript or chapter available');
+        btn.textContent = 'No transcript';
       }
-    } catch {
+    } catch (e) {
+      debugLog('AutoFill', 'Error', e?.message);
       btn.textContent = '✦ Auto';
     } finally {
       setTimeout(() => {

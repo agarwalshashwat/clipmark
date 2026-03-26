@@ -571,7 +571,14 @@ function initializeMessageListener() {
       if (request.action === 'getTranscriptAtTimestamp') {
         const transcript = await fetchTranscript();
         const text       = getTextAtTimestamp(transcript, request.timestamp);
-        sendResponse({ text: text || null });
+        const hasCaptions = !!window.ytInitialPlayerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks?.length;
+        debugLog('Transcript', 'getTranscriptAtTimestamp result', {
+          timestamp: request.timestamp,
+          segmentCount: transcript.length,
+          hasCaptionsInPlayerResponse: hasCaptions,
+          textFound: !!text,
+        });
+        sendResponse({ text: text || null, _debug: { segmentCount: transcript.length, hasCaptions } });
         return;
       }
       if (request.action === 'prefetchTranscript') {
@@ -1007,6 +1014,16 @@ document.addEventListener('yt-navigate-finish', () => {
       chrome.runtime.sendMessage({ action: 'ytVideoChanged', videoId }).catch(() => {});
     } catch { /* extension context invalidated after reload — ignore */ }
   }
+});
+
+// ytInitialPlayerResponse is only populated after yt-page-data-updated fires during SPA navigation.
+// Reset transcript cache here so the next fetch reads fresh captions data.
+document.addEventListener('yt-page-data-updated', () => {
+  debugLog('Transcript', 'yt-page-data-updated — resetting transcript cache');
+  cachedTranscript       = null;
+  transcriptFetchPromise = null;
+  cachedTranscriptVideoId = null;
+  fetchTranscript().catch(() => {});
 });
 
 if (document.readyState === 'loading') {
