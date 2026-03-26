@@ -41,7 +41,8 @@ Rules:
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text.trim() : '[]';
+    const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : '[]';
+    const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     const tags: string[] = JSON.parse(text);
 
     return NextResponse.json({ tags });

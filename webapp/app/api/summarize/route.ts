@@ -49,7 +49,9 @@ Respond with a JSON object (no markdown) in this exact shape:
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const raw = message.content[0].type === 'text' ? message.content[0].text : '';
+    // Strip markdown code fences if present (model sometimes wraps JSON)
+    const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     const result = JSON.parse(text);
 
     return NextResponse.json(result);

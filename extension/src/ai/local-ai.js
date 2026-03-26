@@ -23,8 +23,12 @@ function _closeJson(raw, opener, closer) {
  */
 async function localAiAvailability() {
   if (typeof LanguageModel === 'undefined') return 'unavailable';
-  try { return await LanguageModel.availability({ expectedOutputLanguages: ['en'] }); }
-  catch { return 'unavailable'; }
+  try {
+    // Try with language options first (newer API), fall back to no-arg call
+    const fn = LanguageModel.availability.bind(LanguageModel);
+    try { return await fn({ expectedOutputLanguages: ['en'] }); }
+    catch { return await fn(); }
+  } catch { return 'unavailable'; }
 }
 
 /**
@@ -49,7 +53,8 @@ async function localSuggestTags(description, transcript) {
     const raw = await session.prompt(
       `${ctx}\n\nSuggest tags for this bookmark. Reply with only a JSON array:\n[`
     );
-    const tags = _closeJson(raw, '[', ']');
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    const tags = _closeJson(cleaned, '[', ']');
     if (!Array.isArray(tags)) return [];
     return tags
       .filter(t => typeof t === 'string' && /^\w+$/.test(t))
@@ -84,7 +89,10 @@ async function localSummarizeBookmarks(bookmarks, videoTitle) {
       `Bookmarks:\n${list}\n\n` +
       `Summarize these bookmarks. Return JSON matching {"summary":"...","topics":[...],"actionItems":[...]}:\n{`;
     const raw = await session.prompt(prompt);
-    const result = _closeJson(raw, '{', '}');
+    console.log('[local-ai] raw summarize output:', raw);
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    const result = _closeJson(cleaned, '{', '}');
+    console.log('[local-ai] parsed result:', result);
     return {
       summary:     typeof result?.summary === 'string'     ? result.summary     : '',
       topics:      Array.isArray(result?.topics)           ? result.topics      : [],

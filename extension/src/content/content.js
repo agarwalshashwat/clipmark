@@ -471,7 +471,7 @@ function showSilentSaveIndicator(message, type = 'success') {
 function handleKeyboardShortcut(event) {
   if (!event.altKey) return;
   if (event.key.toLowerCase() === 'b') {
-    chrome.runtime.sendMessage({ action: 'openPopup' });
+    try { chrome.runtime.sendMessage({ action: 'openPopup' }); } catch { }
   }
   if (event.key.toLowerCase() === 's') {
     silentSaveBookmark();
@@ -993,15 +993,19 @@ function initialize() {
 }
 
 // Notify background that content script is ready
-chrome.runtime.sendMessage({ action: 'contentScriptReady' }, response => {
-  debugLog('Init', 'Sent contentScriptReady', response);
-});
+try {
+  chrome.runtime.sendMessage({ action: 'contentScriptReady' }, response => {
+    debugLog('Init', 'Sent contentScriptReady', response);
+  });
+} catch { }
 
 // Detect YouTube SPA navigation and notify the side panel
 document.addEventListener('yt-navigate-finish', () => {
   const videoId = new URLSearchParams(window.location.search).get('v');
   if (videoId) {
-    chrome.runtime.sendMessage({ action: 'ytVideoChanged', videoId }).catch(() => {});
+    try {
+      chrome.runtime.sendMessage({ action: 'ytVideoChanged', videoId }).catch(() => {});
+    } catch { /* extension context invalidated after reload — ignore */ }
   }
 });
 
