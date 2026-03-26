@@ -568,6 +568,12 @@ function initializeMessageListener() {
         sendResponse({});
         return;
       }
+      if (request.action === 'getTranscriptCachedAtTimestamp') {
+        // Cache-only — never waits for a network fetch, always returns instantly
+        const text = cachedTranscript ? getTextAtTimestamp(cachedTranscript, request.timestamp) : null;
+        sendResponse({ text: text || null });
+        return;
+      }
       if (request.action === 'getTranscriptAtTimestamp') {
         const transcript = await fetchTranscript();
         const text       = getTextAtTimestamp(transcript, request.timestamp);

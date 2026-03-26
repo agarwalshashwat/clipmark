@@ -226,21 +226,23 @@ async function saveBookmark(bookmark) {
 
     await waitForContentScript(tab.id);
 
-    // Duplicate check
-    const existing = await getVideoBookmarks(bookmark.videoId);
-    if (existing.some(b => Math.floor(b.timestamp) === Math.floor(bookmark.timestamp))) {
+    // Parallel reads — dupe check list + video titles in one round-trip
+    const [bookmarks, videoTitles] = await Promise.all([
+      getVideoBookmarks(bookmark.videoId),
+      getVideoTitles(),
+    ]);
+
+    if (bookmarks.some(b => Math.floor(b.timestamp) === Math.floor(bookmark.timestamp))) {
       showError('Bookmark already exists.');
       return;
     }
 
-    const videoTitles = await getVideoTitles();
-
-    // Auto-fill description if empty
+    // Auto-fill description using cached transcript only (no network wait)
     let description = bookmark.description.trim();
     if (!description) {
       try {
         const txRes = await sendMessageToTab(tab.id, {
-          action: 'getTranscriptAtTimestamp',
+          action: 'getTranscriptCachedAtTimestamp',
           timestamp: bookmark.timestamp,
         });
         if (txRes?.text) description = txRes.text;
@@ -257,7 +259,6 @@ async function saveBookmark(bookmark) {
     const tags = parseTags(description);
     const color = getTagColor(tags);
 
-    const bookmarks = await getVideoBookmarks(bookmark.videoId);
     bookmarks.push({
       ...bookmark,
       description,
@@ -278,15 +279,14 @@ async function saveBookmark(bookmark) {
     }
     debugLog('Bookmarks', 'Saved bookmark', { description, tags });
 
-    // Visual feedback
-    try { await sendMessageToTab(tab.id, { action: 'showSaveFlash' }); } catch {}
-
+    // Instant feedback — UI refresh runs in background
+    sendMessageToTab(tab.id, { action: 'showSaveFlash' }).catch(() => {});
     document.getElementById('description').value = '';
     document.getElementById('tag-suggestions').style.display = 'none';
     showStatus('Bookmark saved ✓');
 
-    await loadBookmarks();
-    try { await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }); } catch {}
+    loadBookmarks();
+    sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }).catch(() => {});
   } catch (error) {
     debugLog('Error', 'Failed to save bookmark', { error: error.message });
     showError('Failed to save bookmark: ' + error.message);
