@@ -1,4 +1,4 @@
-import { createServerSupabase, type Collection } from '@/lib/supabase';
+import { createServerSupabase } from '@/lib/supabase';
 import styles from './page.module.css';
 import RemindersContent from './RemindersContent';
 
@@ -11,18 +11,18 @@ export default async function RemindersPage() {
 
   const now = new Date().toISOString();
 
-  // Fetch reminders, collections, and groups in parallel
-  const [{ data: remindersData }, { data: collectionsData }, { data: groupsData }] = await Promise.all([
+  // Fetch reminders, user bookmarks, and groups in parallel
+  const [{ data: remindersData }, { data: userBookmarksData }, { data: groupsData }] = await Promise.all([
     supabase
       .from('revisit_reminders')
       .select('*')
       .eq('user_id', user.id)
       .order('next_due_at', { ascending: true }),
     supabase
-      .from('collections')
-      .select('id, video_id, video_title')
+      .from('user_bookmarks')
+      .select('video_id, bookmarks')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false }),
+      .order('updated_at', { ascending: false }),
     supabase
       .from('groups')
       .select('id, name')
@@ -30,7 +30,15 @@ export default async function RemindersPage() {
       .order('created_at', { ascending: false }),
   ]);
 
-  const collections = (collectionsData ?? []) as Pick<Collection, 'id' | 'video_id' | 'video_title'>[];
+  type BookmarkRow = { videoTitle?: string; tags?: string[] };
+
+  const collections = (userBookmarksData ?? []).map(row => ({
+    id: row.video_id as string,
+    video_id: row.video_id as string,
+    video_title: ((row.bookmarks as BookmarkRow[])?.[0]?.videoTitle) ?? null,
+    tags: Array.from(new Set((row.bookmarks as BookmarkRow[] ?? []).flatMap(b => b.tags ?? []))).slice(0, 4),
+  }));
+
   const collectionMap = new Map(collections.map(c => [c.id, c]));
   const groupMap = new Map((groupsData ?? []).map((g: { id: string; name: string }) => [g.id, g]));
 
@@ -57,6 +65,7 @@ export default async function RemindersPage() {
     id: c.id,
     label: c.video_title ?? 'Untitled Video',
     videoId: c.video_id,
+    tags: c.tags,
     type: 'collection' as const,
   }));
   const groupTargets = (groupsData ?? []).map((g: { id: string; name: string }) => ({
@@ -66,10 +75,10 @@ export default async function RemindersPage() {
   }));
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Reminders</h1>
-        <p className={styles.sub}>Schedule revisits for your videos and groups.</p>
+    <div className={styles.pageWrap}>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.title}>Reminders &amp; Re-engagement</h1>
+        <p className={styles.sub}>Set intentional moments to revisit your curated content. Use the editorial scheduler to keep your learning loop continuous.</p>
       </div>
 
       <RemindersContent
@@ -81,4 +90,3 @@ export default async function RemindersPage() {
     </div>
   );
 }
-

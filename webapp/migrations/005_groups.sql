@@ -8,10 +8,11 @@ CREATE TABLE IF NOT EXISTS public.groups (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Junction table for custom group → collection membership
+-- Junction table for custom group → video membership
+-- collection_id stores video_id (TEXT) from user_bookmarks
 CREATE TABLE IF NOT EXISTS public.group_collections (
   group_id      UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
-  collection_id UUID NOT NULL REFERENCES public.collections(id) ON DELETE CASCADE,
+  collection_id TEXT NOT NULL,
   added_at      TIMESTAMPTZ DEFAULT NOW(),
   PRIMARY KEY (group_id, collection_id)
 );

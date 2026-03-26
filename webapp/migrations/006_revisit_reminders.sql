@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS public.revisit_reminders (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   target_type  TEXT        NOT NULL CHECK (target_type IN ('collection', 'group')),
-  target_id    UUID        NOT NULL,
+  target_id    TEXT        NOT NULL,
   label        TEXT,
   frequency    TEXT        NOT NULL CHECK (frequency IN ('once', 'daily', 'weekly', 'biweekly', 'monthly')),
   next_due_at  TIMESTAMPTZ NOT NULL,

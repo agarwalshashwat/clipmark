@@ -1,10 +1,13 @@
-.wrap {
-  max-width: 720px;
+/* ── Page shell ─────────────────────────────────────────────────────────── */
+.pageWrap {
+  max-width: 980px;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 48px 24px 80px;
 }
 
-.header { margin-bottom: 40px; }
+.pageHeader {
+  margin-bottom: 40px;
+}
 
 .title {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -12,17 +15,113 @@
   font-weight: 800;
   letter-spacing: -0.5px;
   color: #1a1c1d;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
 }
 
-.sub { font-size: 14px; color: #545f6c; margin: 0; }
+.sub {
+  font-size: 14px;
+  color: #545f6c;
+  margin: 0;
+  max-width: 560px;
+  line-height: 1.6;
+}
 
-/* Empty state */
-.empty {
-  background: rgba(243, 243, 244, 0.6);
-  border: 2px dashed rgba(187, 202, 198, 0.4);
-  border-radius: 24px;
-  padding: 80px 32px;
+/* ── Two-column create area ──────────────────────────────────────────────── */
+.twoCol {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 56px;
+}
+
+@media (max-width: 720px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Left panel — Active Clip ────────────────────────────────────────────── */
+.leftPanel {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(26, 28, 29, 0.07);
+  border: 1px solid rgba(26, 28, 29, 0.06);
+}
+
+.clipThumbWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #1a1c1d;
+}
+
+.clipBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: #14B8A6;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.clipThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.clipInfo {
+  padding: 16px;
+}
+
+.clipTitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1c1d;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.clipTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.clipTag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 107, 95, 0.08);
+  color: #006b5f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.clipQuote {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid #14B8A6;
+  font-size: 12px;
+  font-style: italic;
+  color: #545f6c;
+  line-height: 1.6;
+}
+
+.clipPlaceholder {
+  padding: 32px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -30,168 +129,139 @@
   gap: 12px;
 }
 
-.emptyIcon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emptyTitle {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1c1d;
-  margin: 0;
-}
-
-.emptyText {
+.clipPlaceholderText {
   font-size: 13px;
-  color: #6c7a77;
-  max-width: 280px;
-  line-height: 1.6;
+  color: #9ca3af;
   margin: 0;
+  line-height: 1.5;
 }
 
-/* List */
-.list { display: flex; flex-direction: column; gap: 12px; }
-
-.card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* ── Right panel — Form ──────────────────────────────────────────────────── */
+.rightPanel {
   background: #fff;
   border-radius: 16px;
-  padding: 16px;
-  text-decoration: none;
-  color: inherit;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.05);
-  transition: box-shadow 0.2s, border-color 0.2s;
-}
-
-.card:hover {
-  box-shadow: 0 6px 24px rgba(26, 28, 29, 0.1);
-  border-color: rgba(20, 184, 166, 0.15);
-}
-
-.cardThumb {
-  position: relative;
-  flex-shrink: 0;
-  width: 120px;
-  aspect-ratio: 16 / 9;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #e8e8e9;
-}
-
-.cardThumbImg { width: 100%; height: 100%; object-fit: cover; }
-
-.cardTimestamp {
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  background: rgba(26, 28, 29, 0.8);
-  color: #fff;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 4px;
-}
-
-.cardBody { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-
-.cardVideoTitle {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: #006b5f;
-  margin: 0;
-}
-
-.cardNote {
-  font-size: 13px;
-  color: #1a1c1d;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardTags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-
-.tag {
-  padding: 2px 8px;
-  background: rgba(0, 107, 95, 0.08);
-  color: #006b5f;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.cardAction { flex-shrink: 0; }
-
-/* ── Reminders redesign ──────────────────────────────────────────────────── */
-.headerRow {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 40px;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.newReminderBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #14B8A6, #006b5f);
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.createForm {
-  background: #fff;
-  border: 1px solid rgba(26, 28, 29, 0.1);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 32px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(26, 28, 29, 0.07);
+  border: 1px solid rgba(26, 28, 29, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 0;
 }
-.formGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-@media (max-width: 560px) { .formGrid { grid-template-columns: 1fr; } }
-.formLabel {
-  font-size: 11px;
+
+.formFieldLabel {
+  font-size: 10px;
   font-weight: 700;
   color: #9ca3af;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
 }
-.formGroup { display: flex; flex-direction: column; }
-.formSelect, .formInput, .formDate {
+
+/* Target type tabs */
+.targetTypeTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid rgba(26, 28, 29, 0.12);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.targetTab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border: none;
+  background: #f9f9fa;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  border-right: 1px solid rgba(26, 28, 29, 0.1);
+}
+.targetTab:last-child { border-right: none; }
+.targetTab:hover { background: #f0f0f1; }
+
+.targetTabActive {
+  background: #fff;
+  border-bottom: 2px solid #14B8A6;
+}
+
+.targetTabTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1c1d;
+  line-height: 1.3;
+}
+
+.targetTabSub {
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Content select */
+.contentSelect {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(26, 28, 29, 0.15);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1c1d;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.contentSelect:focus { border-color: #006b5f; }
+
+/* Frequency + date row */
+.freqRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+@media (max-width: 560px) {
+  .freqRow { grid-template-columns: 1fr; }
+}
+
+.freqRadios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 4px;
+  min-width: 0;
+}
+
+.freqRadioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #1a1c1d;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.freqRadioInput {
+  accent-color: #14B8A6;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.startDateWrap {
+  flex-shrink: 0;
+}
+
+.dateInput {
   padding: 9px 12px;
   border: 1px solid rgba(26, 28, 29, 0.15);
   border-radius: 8px;
@@ -202,14 +272,46 @@
   outline: none;
   transition: border-color 0.15s;
 }
-.formSelect:focus, .formInput:focus, .formDate:focus { border-color: #006b5f; }
-.formActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+.dateInput:focus { border-color: #006b5f; }
+
+/* Label input */
+.labelInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(26, 28, 29, 0.15);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1c1d;
+  background: #f9f9fa;
+  outline: none;
+  transition: border-color 0.15s;
 }
-.formSubmit {
-  padding: 8px 18px;
+.labelInput:focus { border-color: #006b5f; background: #fff; }
+.labelInput::placeholder { color: #c4cac8; }
+
+/* Form footer */
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(26, 28, 29, 0.07);
+  flex-wrap: wrap;
+}
+
+.formHint {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.submitBtn {
+  padding: 10px 22px;
   border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #14B8A6, #006b5f);
@@ -218,82 +320,143 @@
   font-size: 13px;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.15s;
 }
-.formCancel {
-  padding: 8px 18px;
+.submitBtn:disabled { opacity: 0.6; cursor: default; }
+
+.cancelEditBtn {
+  padding: 10px 16px;
   border-radius: 8px;
   border: 1px solid rgba(26, 28, 29, 0.15);
   background: transparent;
   color: #545f6c;
-  font-weight: 600;
   font-size: 13px;
-  cursor: pointer;
+  font-weight: 600;
   font-family: inherit;
+  cursor: pointer;
 }
 
-.sectionLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: 0 0 12px;
+/* ── Active Schedule section ─────────────────────────────────────────────── */
+.scheduleSection {
+  margin-top: 8px;
 }
 
-.reminderCard {
+.scheduleHeader {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.scheduleTitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1c1d;
+  margin: 0;
+}
+
+.viewCalendarLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: #14B8A6;
+  text-decoration: none;
+}
+.viewCalendarLink:hover { text-decoration: underline; }
+
+.scheduleEmpty {
+  font-size: 14px;
+  color: #9ca3af;
+  margin: 0;
+  padding: 32px 0;
+}
+
+.scheduleCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scheduleCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   background: #fff;
   border-radius: 14px;
-  padding: 14px 16px;
-  border: 1px solid rgba(26, 28, 29, 0.08);
+  padding: 18px 20px;
+  border: 1px solid rgba(26, 28, 29, 0.07);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.2s;
 }
-.reminderCard:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
-.reminderThumb {
-  width: 80px;
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #e8e8e9;
-  flex-shrink: 0;
+.scheduleCard:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
+
+.scheduleCardDue {
+  border-left: 3px solid #ef4444;
 }
-.reminderThumb img { width: 100%; height: 100%; object-fit: cover; }
-.reminderBody { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-.reminderLabel {
-  font-size: 13px;
-  font-weight: 600;
+
+.scheduleCardLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scheduleDate {
+  font-size: 10px;
+  font-weight: 800;
+  color: #006b5f;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scheduleDateDue {
+  color: #ef4444;
+}
+
+.scheduleCardTitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
   color: #1a1c1d;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.reminderMeta {
+
+.scheduleCardSub {
   font-size: 12px;
   color: #9ca3af;
+  margin: 0;
 }
-.reminderDue {
-  font-size: 12px;
-  font-weight: 600;
+
+.scheduleFreqBadge {
+  display: inline-block;
+  margin-top: 2px;
   padding: 2px 8px;
-  border-radius: 20px;
-}
-.reminderDueSoon {
-  background: rgba(239,68,68,0.1);
-  color: #ef4444;
-}
-.reminderDueUpcoming {
-  background: rgba(0,107,95,0.08);
+  border-radius: 4px;
+  background: rgba(0, 107, 95, 0.07);
   color: #006b5f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.reminderActions { display: flex; gap: 6px; flex-shrink: 0; }
-.reminderActionBtn {
-  padding: 6px 10px;
+
+.scheduleCardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.scheduleActionBtn {
+  padding: 7px 13px;
   border-radius: 7px;
-  border: 1px solid rgba(26,28,29,0.12);
+  border: 1px solid rgba(26, 28, 29, 0.12);
   background: transparent;
   font-size: 12px;
   font-weight: 600;
@@ -304,9 +467,42 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  white-space: nowrap;
   transition: all 0.12s;
+  white-space: nowrap;
 }
-.reminderActionBtn:hover { background: rgba(0,107,95,0.06); border-color: #006b5f; color: #006b5f; }
-.reminderActionBtnDanger:hover { background: rgba(239,68,68,0.06); border-color: #ef4444; color: #ef4444; }
-.sectionGap { margin-top: 32px; }
+.scheduleActionBtn:hover { background: rgba(0, 107, 95, 0.06); border-color: #006b5f; color: #006b5f; }
+
+.scheduleEditBtn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #006b5f;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 4px;
+  white-space: nowrap;
+  transition: opacity 0.12s;
+}
+.scheduleEditBtn:hover { opacity: 0.7; }
+
+.scheduleDeleteBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #c4cac8;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.scheduleDeleteBtn:hover { background: rgba(239, 68, 68, 0.06); border-color: #ef4444; color: #ef4444; }
+
+/* ── Legacy classes kept for safety ─────────────────────────────────────── */
+.wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px; }
+.header { margin-bottom: 40px; }

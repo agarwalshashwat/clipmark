@@ -299,6 +299,100 @@
   margin: 40px 0;
 }
 
+/* ── Add / Remove video controls ────────────────────────────────────────── */
+.groupCardWrap {
+  position: relative;
+}
+
+.removeVideoBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+.groupCardWrap:hover .removeVideoBtn { opacity: 1; }
+
+.addVideoBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px dashed rgba(0,107,95,0.35);
+  background: transparent;
+  color: #006b5f;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.addVideoBtn:hover { background: rgba(0,107,95,0.06); border-color: #006b5f; }
+
+.addVideoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.addVideoSelect {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(26,28,29,0.15);
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  color: #1a1c1d;
+  outline: none;
+}
+.addVideoSelect:focus { border-color: #006b5f; }
+
+.addVideoConfirm {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: linear-gradient(135deg, #14B8A6, #006b5f);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.addVideoConfirm:disabled { opacity: 0.5; cursor: default; }
+
+.addVideoCancel {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(26,28,29,0.15);
+  background: transparent;
+  color: #545f6c;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .groupMore {
   aspect-ratio: 16 / 9;
   border-radius: 12px;

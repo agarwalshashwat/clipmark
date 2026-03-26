@@ -29,7 +29,7 @@ export async function deleteGroup(groupId: string) {
   revalidatePath('/dashboard/groups');
 }
 
-export async function addCollectionToGroup(groupId: string, collectionId: string) {
+export async function addCollectionToGroup(groupId: string, videoId: string) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -38,11 +38,11 @@ export async function addCollectionToGroup(groupId: string, collectionId: string
   const { data: group } = await supabase.from('groups').select('id').eq('id', groupId).eq('user_id', user.id).single();
   if (!group) throw new Error('Group not found');
 
-  await supabase.from('group_collections').upsert({ group_id: groupId, collection_id: collectionId });
+  await supabase.from('group_collections').upsert({ group_id: groupId, collection_id: videoId });
   revalidatePath('/dashboard/groups');
 }
 
-export async function removeCollectionFromGroup(groupId: string, collectionId: string) {
+export async function removeCollectionFromGroup(groupId: string, videoId: string) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -50,6 +50,6 @@ export async function removeCollectionFromGroup(groupId: string, collectionId: s
   await supabase.from('group_collections')
     .delete()
     .eq('group_id', groupId)
-    .eq('collection_id', collectionId);
+    .eq('collection_id', videoId);
   revalidatePath('/dashboard/groups');
 }

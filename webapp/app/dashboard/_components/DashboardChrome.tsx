@@ -8,10 +8,11 @@ interface Props {
   avatarInitial: string;
   avatarUrl: string | null;
   isPro: boolean;
+  dueReminderCount: number;
   children: React.ReactNode;
 }
 
-export default function DashboardChrome({ username, avatarInitial, avatarUrl, isPro, children }: Props) {
+export default function DashboardChrome({ username, avatarInitial, avatarUrl, isPro, dueReminderCount, children }: Props) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -106,6 +107,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           >
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>schedule</span>
             <span>Reminders</span>
+            {dueReminderCount > 0 && <span className={styles.dueBadge}>{dueReminderCount}</span>}
           </a>
           <p className={styles.sideNavSection}>Curations</p>
           <a
@@ -168,9 +170,11 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
         <a
           href="/dashboard/queue"
           className={`${styles.mobileNavItem} ${isActive('/dashboard/queue') ? styles.mobileNavItemActive : ''}`}
+          style={{ position: 'relative' }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: 22, fontVariationSettings: isActive('/dashboard/queue') ? "'FILL' 1" : "'FILL' 0" }}>schedule</span>
-          <span className={styles.mobileNavLabel}>Queue</span>
+          <span className={styles.mobileNavLabel}>Reminders</span>
+          {dueReminderCount > 0 && <span className={styles.dueBadgeMobile} />}
         </a>
         <a
           href="/dashboard/groups"

@@ -9,13 +9,22 @@ export default async function GroupsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: collectionsData } = await supabase
-    .from('collections')
-    .select('*')
+  const { data: userBookmarksData } = await supabase
+    .from('user_bookmarks')
+    .select('video_id, bookmarks, updated_at')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+    .order('updated_at', { ascending: false });
 
-  const collections = (collectionsData ?? []) as Collection[];
+  type BmRow = { tags?: string[]; videoTitle?: string };
+  const collections: Collection[] = (userBookmarksData ?? []).map(row => ({
+    id: row.video_id as string,
+    video_id: row.video_id as string,
+    video_title: ((row.bookmarks as BmRow[])?.[0]?.videoTitle) ?? null,
+    bookmarks: row.bookmarks as BmRow[],
+    created_at: row.updated_at as string,
+    view_count: 0,
+    user_id: user.id,
+  }));
 
   // ── User-created groups ──────────────────────────────────────────────────
   const { data: groupsData } = await supabase
@@ -77,7 +86,7 @@ export default async function GroupsPage() {
           </p>
         </div>
       ) : (
-        <GroupsContent userGroups={userGroups} autoTagGroups={autoTagGroups} />
+        <GroupsContent userGroups={userGroups} autoTagGroups={autoTagGroups} allCollections={collections} />
       )}
     </div>
   );

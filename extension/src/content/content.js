@@ -107,6 +107,14 @@ function setupBookmarkMarkers() {
   container.className = 'yt-bookmark-markers';
   container.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;';
   progressBar.appendChild(container);
+
+  // Create shared tooltip element (once per page)
+  if (!document.getElementById('yt-bm-tooltip')) {
+    const tt = document.createElement('div');
+    tt.id = 'yt-bm-tooltip';
+    document.body.appendChild(tt);
+  }
+
   updateBookmarkMarkers();
   setupPlayerBookmarkButton();
 
@@ -128,12 +136,21 @@ function setupBookmarkMarkers() {
   });
 
   // Track watch position for resume-playback (debounced to once per 10s)
+  // Also track active marker (throttled to ~2.5/sec)
+  let activeCheckTimer = null;
   video.addEventListener('timeupdate', () => {
-    if (progressSaveTimer) return;
-    progressSaveTimer = setTimeout(() => {
-      progressSaveTimer = null;
-      saveProgress();
-    }, 10000);
+    if (!progressSaveTimer) {
+      progressSaveTimer = setTimeout(() => {
+        progressSaveTimer = null;
+        saveProgress();
+      }, 10000);
+    }
+    if (!activeCheckTimer) {
+      activeCheckTimer = setTimeout(() => {
+        activeCheckTimer = null;
+        updateActiveMarker();
+      }, 400);
+    }
   });
 }
 
@@ -180,9 +197,18 @@ function clusterBookmarks(bookmarks, duration) {
     if (group.length === 1) {
       result.push({ ...group[0], isCluster: false });
     } else {
-      const mid   = group[Math.floor(group.length / 2)];
-      const label = `×${group.length}: ` + group.map(b => `${formatTimestamp(b.timestamp)} — ${b.description || 'No description'}`).join(' | ');
-      result.push({ ...mid, isCluster: true, clusterCount: group.length, clusterLabel: label });
+      const mid = group[Math.floor(group.length / 2)];
+      result.push({
+        ...mid,
+        isCluster: true,
+        clusterCount: group.length,
+        clusterItems: group.map(b => ({
+          timestamp: b.timestamp,
+          description: b.description || 'No description',
+          tags: b.tags || [],
+          color: b.color || getTagColor(b.tags || []),
+        })),
+      });
     }
     i = j;
   }
@@ -208,22 +234,21 @@ function updateBookmarkMarkers() {
 
     const duration = video.duration;
     const items = clusterBookmarks(bookmarks, duration);
+
+    // Shared tooltip element (created in setupBookmarkMarkers)
+    const bmTooltip = document.getElementById('yt-bm-tooltip');
+
     items.forEach(bookmark => {
       const color = bookmark.color || getTagColor(bookmark.tags || []);
 
       const marker = document.createElement('div');
-      marker.className = bookmark.isCluster ? 'yt-bookmark-marker yt-bookmark-cluster' : 'yt-bookmark-marker';
+      marker.className = 'yt-bookmark-marker';
       marker.setAttribute('data-timestamp', bookmark.timestamp);
-      marker.setAttribute('data-description', bookmark.isCluster
-        ? bookmark.clusterLabel
-        : `${formatTimestamp(bookmark.timestamp)} — ${bookmark.description || 'No description'}`);
+      marker.style.left = `${(bookmark.timestamp / duration) * 100}%`;
+      marker.style.setProperty('--bm-color', color);
+      marker.style.pointerEvents = 'auto';
 
-      marker.style.left            = `${(bookmark.timestamp / duration) * 100}%`;
-      marker.style.backgroundColor = color;
-      marker.style.boxShadow       = `0 0 4px ${color}80`;
-      marker.style.pointerEvents   = 'auto';
-      if (bookmark.isCluster) marker.style.width = '5px';
-
+      // Click → seek
       marker.addEventListener('click', () => {
         debugLog('Marker', 'Clicked', { timestamp: bookmark.timestamp });
         marker.classList.add('clicked');
@@ -231,9 +256,81 @@ function updateBookmarkMarkers() {
         setTimeout(() => marker.classList.remove('clicked'), 600);
       });
 
+      // Hover → rich tooltip
+      if (bmTooltip) {
+        marker.addEventListener('mouseenter', () => {
+          if (bookmark.isCluster) {
+            const items = bookmark.clusterItems
+              .map(ci => `<div class="yt-bm-tt-cluster-item"><span class="yt-bm-tt-cluster-time">${formatTimestamp(ci.timestamp)}</span>${ci.description.replace(/</g, '&lt;')}</div>`)
+              .join('');
+            bmTooltip.innerHTML = `<div class="yt-bm-tt-cluster-header">${bookmark.clusterCount} clips nearby</div>${items}`;
+          } else {
+            const tags = (bookmark.tags || []);
+            const tagHtml = tags.length
+              ? `<div class="yt-bm-tt-tags">${tags.map(t => {
+                  const c = TAG_COLORS[t] || stringToColor(t);
+                  return `<span class="yt-bm-tt-tag" style="background:${c}22;color:${c}">${t}</span>`;
+                }).join('')}</div>`
+              : '';
+            const desc = (bookmark.description || '').replace(/</g, '&lt;');
+            bmTooltip.innerHTML = `<div class="yt-bm-tt-time">${formatTimestamp(bookmark.timestamp)}</div>${desc ? `<div class="yt-bm-tt-desc">${desc}</div>` : ''}${tagHtml}`;
+          }
+
+          // Position with edge clamping
+          requestAnimationFrame(() => {
+            const tw = bmTooltip.offsetWidth;
+            const th = bmTooltip.offsetHeight;
+            const rect = marker.getBoundingClientRect();
+            const pad = 8;
+            let left = rect.left + rect.width / 2 - tw / 2;
+            let top  = rect.top - th - 10;
+            left = Math.max(pad, Math.min(left, window.innerWidth - tw - pad));
+            if (top < pad) top = rect.bottom + 6;
+            bmTooltip.style.left = left + 'px';
+            bmTooltip.style.top  = top + 'px';
+            bmTooltip.classList.add('visible');
+          });
+        });
+
+        marker.addEventListener('mouseleave', () => {
+          bmTooltip.classList.remove('visible');
+        });
+      }
+
       container.appendChild(marker);
     });
   });
+}
+
+// ─── Active marker tracking ───────────────────────────────────────────────────
+let lastActiveMarker = null;
+
+function updateActiveMarker() {
+  if (!video) return;
+  const container = document.querySelector('.yt-bookmark-markers');
+  if (!container) return;
+
+  const currentTime = video.currentTime;
+  const threshold = 1.5;
+  let closestMarker = null;
+  let closestDist = threshold;
+
+  container.querySelectorAll('.yt-bookmark-marker').forEach(m => {
+    const ts = parseFloat(m.getAttribute('data-timestamp'));
+    const dist = Math.abs(ts - currentTime);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestMarker = m;
+    }
+  });
+
+  if (lastActiveMarker && lastActiveMarker !== closestMarker) {
+    lastActiveMarker.classList.remove('yt-bookmark-marker--active');
+  }
+  if (closestMarker && closestMarker !== lastActiveMarker) {
+    closestMarker.classList.add('yt-bookmark-marker--active');
+  }
+  lastActiveMarker = closestMarker;
 }
 
 // ─── Transcript ───────────────────────────────────────────────────────────────
@@ -675,68 +772,146 @@ function injectStyles() {
   debugLog('Styles', 'Injecting marker styles');
   const style = document.createElement('style');
   style.textContent = `
+    /* ── Bookmark markers ───────────────────────────────────────────────── */
     .yt-bookmark-marker {
       position: absolute;
-      width: 3px;
+      width: 16px;          /* wide transparent hit-area */
       height: 100%;
       z-index: 2;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: transparent;
+      transform: translateX(-50%);  /* center the 16px on the exact position */
     }
-    .yt-bookmark-marker:hover {
-      transform: scaleX(2) scaleY(1.2);
-      filter: brightness(1.3);
+
+    /* The 3px colored bar (centered inside the 16px hit area) */
+    .yt-bookmark-marker::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 100%;
+      background: var(--bm-color, #4da1ee);
+      box-shadow: 0 0 5px var(--bm-color, #4da1ee);
+      transition: width 0.2s ease, filter 0.2s ease;
     }
+    .yt-bookmark-marker:hover::after {
+      width: 5px;
+      filter: brightness(1.35);
+    }
+    .yt-bookmark-marker--active::after {
+      width: 5px;
+      box-shadow: 0 0 10px var(--bm-color, #4da1ee), 0 0 20px var(--bm-color, #4da1ee);
+      animation: bm-pass-pulse 0.5s ease-out;
+    }
+    @keyframes bm-pass-pulse {
+      0%   { transform: translateX(-50%) scaleY(1); }
+      40%  { transform: translateX(-50%) scaleY(1.5); filter: brightness(1.7); }
+      100% { transform: translateX(-50%) scaleY(1); }
+    }
+
+    /* Always-visible diamond nub above the bar */
     .yt-bookmark-marker::before {
       content: '';
       position: absolute;
-      top: -2px;
+      top: -6px;
       left: 50%;
-      transform: translateX(-50%);
-      width: 7px;
-      height: 7px;
-      background-color: inherit;
-      border-radius: 50%;
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-50%) rotate(45deg);
+      width: 8px;
+      height: 8px;
+      background: var(--bm-color, #4da1ee);
+      border-radius: 2px;
+      opacity: 0.85;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.45);
+      transition: transform 0.2s ease, top 0.2s ease, opacity 0.2s ease;
     }
     .yt-bookmark-marker:hover::before {
+      transform: translateX(-50%) rotate(45deg) scale(1.35);
+      top: -8px;
       opacity: 1;
-      transform: translateX(-50%) scale(1.2);
     }
-    .yt-bookmark-marker::after {
-      content: attr(data-description);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background-color: #2d2d2d;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-      visibility: hidden;
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-      margin-bottom: 5px;
-      z-index: 9999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .yt-bookmark-marker:hover::after {
-      visibility: visible;
+    .yt-bookmark-marker--active::before {
+      transform: translateX(-50%) rotate(45deg) scale(1.3);
+      top: -8px;
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
     }
-    .yt-bookmark-marker.clicked {
+
+    .yt-bookmark-marker.clicked::after {
       animation: bm-ripple 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
     @keyframes bm-ripple {
-      0%   { box-shadow: 0 0 0 0 rgba(77,161,238,0.4); }
-      100% { box-shadow: 0 0 0 10px rgba(77,161,238,0); }
+      0%   { box-shadow: 0 0 0 0 var(--bm-color, rgba(77,161,238,0.5)); }
+      100% { box-shadow: 0 0 0 10px transparent; }
+    }
+
+    /* ── Shared rich tooltip ─────────────────────────────────────────────── */
+    #yt-bm-tooltip {
+      position: fixed;
+      z-index: 999999;
+      background: rgba(18, 18, 18, 0.96);
+      color: #fff;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-family: 'YouTube Noto', 'Roboto', Arial, sans-serif;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.08);
+      max-width: 260px;
+      min-width: 110px;
+    }
+    #yt-bm-tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .yt-bm-tt-time {
+      font-size: 13px;
+      font-weight: 700;
+      color: #14B8A6;
+      margin-bottom: 4px;
+      letter-spacing: 0.02em;
+    }
+    .yt-bm-tt-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .yt-bm-tt-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .yt-bm-tt-tag {
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .yt-bm-tt-cluster-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .yt-bm-tt-cluster-item {
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.45;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .yt-bm-tt-cluster-item:last-child { border-bottom: none; }
+    .yt-bm-tt-cluster-time {
+      color: #14B8A6;
+      font-weight: 700;
+      margin-right: 5px;
     }
 
     /* Silent-save toast */
@@ -761,13 +936,6 @@ function injectStyles() {
       opacity: 1;
       transform: translateY(0);
     }
-    .yt-bookmark-cluster::after {
-      white-space: normal;
-      max-width: 300px;
-      word-break: break-word;
-      font-size: 11px;
-    }
-
     /* Save flash overlay */
     .yt-save-flash {
       position: absolute;

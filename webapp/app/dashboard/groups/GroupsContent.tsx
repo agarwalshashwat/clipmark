@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import styles from './page.module.css';
-import { createGroup, deleteGroup } from './actions';
+import { createGroup, deleteGroup, addCollectionToGroup, removeCollectionFromGroup } from './actions';
 import type { Collection } from '@/lib/supabase';
 
 interface UserGroup {
@@ -21,12 +21,28 @@ interface AutoTagGroup {
 interface Props {
   userGroups: UserGroup[];
   autoTagGroups: AutoTagGroup[];
+  allCollections: Collection[];
 }
 
-export default function GroupsContent({ userGroups, autoTagGroups }: Props) {
+export default function GroupsContent({ userGroups, autoTagGroups, allCollections }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<'custom' | 'tag'>('tag');
+  const [addingToGroup, setAddingToGroup] = useState<string | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  const handleAddVideo = (groupId: string) => {
+    if (!selectedVideoId) return;
+    startTransition(async () => {
+      await addCollectionToGroup(groupId, selectedVideoId);
+      setAddingToGroup(null);
+      setSelectedVideoId('');
+    });
+  };
+
+  const handleRemoveVideo = (groupId: string, videoId: string) => {
+    startTransition(() => removeCollectionFromGroup(groupId, videoId));
+  };
 
   const handleCreate = (formData: FormData) => {
     startTransition(async () => {
@@ -128,28 +144,73 @@ export default function GroupsContent({ userGroups, autoTagGroups }: Props) {
               </div>
               {g.collections.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#9ca3af' }}>
-                  {g.type === 'tag' ? 'No bookmarks with this tag yet.' : 'No videos added to this group yet.'}
+                  {g.type === 'tag' ? 'No bookmarks with this tag yet.' : 'No videos added yet.'}
                 </p>
               ) : (
                 <div className={styles.groupGrid}>
                   {g.collections.slice(0, 4).map(c => (
-                    <a key={c.id} href={`/v/${c.id}`} className={styles.groupCard}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`https://img.youtube.com/vi/${c.video_id}/hqdefault.jpg`}
-                        alt={c.video_title ?? 'Video'}
-                        className={styles.groupCardImg}
-                      />
-                      <div className={styles.groupCardOverlay}>
-                        <p className={styles.groupCardTitle}>{c.video_title ?? 'Untitled Video'}</p>
-                        <span className={styles.groupCardClips}>{c.bookmarks?.length ?? 0} clips</span>
-                      </div>
-                    </a>
+                    <div key={c.id} className={styles.groupCardWrap}>
+                      <a href={`/v/${c.id}`} className={styles.groupCard}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://img.youtube.com/vi/${c.video_id}/hqdefault.jpg`}
+                          alt={c.video_title ?? 'Video'}
+                          className={styles.groupCardImg}
+                        />
+                        <div className={styles.groupCardOverlay}>
+                          <p className={styles.groupCardTitle}>{c.video_title ?? 'Untitled Video'}</p>
+                          <span className={styles.groupCardClips}>{c.bookmarks?.length ?? 0} clips</span>
+                        </div>
+                      </a>
+                      {g.type === 'custom' && (
+                        <button
+                          className={styles.removeVideoBtn}
+                          title="Remove from group"
+                          onClick={() => handleRemoveVideo(g.id, c.id)}
+                          disabled={isPending}
+                        >×</button>
+                      )}
+                    </div>
                   ))}
                   {g.collections.length > 4 && (
                     <div className={styles.groupMore}>+{g.collections.length - 4} more</div>
                   )}
                 </div>
+              )}
+
+              {/* Add Video row for custom groups */}
+              {g.type === 'custom' && (
+                addingToGroup === g.id ? (
+                  <div className={styles.addVideoRow}>
+                    <select
+                      className={styles.addVideoSelect}
+                      value={selectedVideoId}
+                      onChange={e => setSelectedVideoId(e.target.value)}
+                    >
+                      <option value="">— Select a video —</option>
+                      {allCollections
+                        .filter(c => !g.collections.some(gc => gc.id === c.id))
+                        .map(c => (
+                          <option key={c.id} value={c.id}>{c.video_title ?? c.video_id}</option>
+                        ))
+                      }
+                    </select>
+                    <button
+                      className={styles.addVideoConfirm}
+                      onClick={() => handleAddVideo(g.id)}
+                      disabled={isPending || !selectedVideoId}
+                    >Add</button>
+                    <button
+                      className={styles.addVideoCancel}
+                      onClick={() => { setAddingToGroup(null); setSelectedVideoId(''); }}
+                    >Cancel</button>
+                  </div>
+                ) : (
+                  <button className={styles.addVideoBtn} onClick={() => { setAddingToGroup(g.id); setSelectedVideoId(''); }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                    Add Video
+                  </button>
+                )
               )}
             </div>
           ))}
