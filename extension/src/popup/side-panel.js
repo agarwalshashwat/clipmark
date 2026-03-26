@@ -1,5 +1,10 @@
 // API_BASE is defined in config.js (loaded via <script> tag before this file)
 
+async function checkPro() {
+  const { bmUser } = await syncGet({ bmUser: null });
+  return bmUser?.isPro === true;
+}
+
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
   const { bmUser } = await new Promise(resolve =>

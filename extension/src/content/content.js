@@ -899,6 +899,20 @@ function injectStyles() {
     }
     .yt-revision-nav-btn:hover { background: rgba(255,255,255,0.20); color: white; }
     .yt-revision-nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .yt-revision-extend {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 5px;
+      color: rgba(255,255,255,0.70);
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 5px 0;
+      margin-top: 6px;
+      transition: background 0.12s, color 0.12s;
+    }
+    .yt-revision-extend:hover { background: rgba(255,255,255,0.14); color: white; }
 
     /* Player bookmark button */
     .yt-bookmark-player-btn {
@@ -1045,6 +1059,7 @@ function ensureRevisionOverlay() {
         <button class="yt-revision-speed-btn" data-rate="1.75">1.75×</button>
         <button class="yt-revision-speed-btn" data-rate="2">2×</button>
       </div>
+      <button class="yt-revision-extend">+ Extend 30s</button>
       <button class="yt-revision-close">✕</button>
     `;
     overlay.querySelector('.yt-revision-close').addEventListener('click', exitRevisionMode);
@@ -1059,6 +1074,11 @@ function ensureRevisionOverlay() {
         if (v) v.playbackRate = rate;
         updateSpeedButtons(overlay, rate);
       });
+    });
+    overlay.querySelector('.yt-revision-extend').addEventListener('click', () => {
+      if (!revisionState) return;
+      revisionState.segments[revisionState.index].end += 30;
+      updateRevisionOverlay();
     });
 
     // Drag to reposition
