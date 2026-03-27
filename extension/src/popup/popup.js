@@ -1285,6 +1285,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('view-all-bookmarks').addEventListener('click', e => {
     e.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
   });
 });

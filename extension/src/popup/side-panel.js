@@ -693,10 +693,24 @@ function sanitizeCommentHtml(html) {
 }
 
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
+function showUnsupportedScreen() {
+  const screen = document.getElementById('sp-unsupported-screen');
+  if (screen) screen.style.display = 'flex';
+}
+
+function hideUnsupportedScreen() {
+  const screen = document.getElementById('sp-unsupported-screen');
+  if (screen) screen.style.display = 'none';
+}
+
 async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) return;
+    if (!tab.url || !tab.url.includes('youtube.com/watch')) {
+      showUnsupportedScreen();
+      return;
+    }
+    hideUnsupportedScreen();
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -861,6 +875,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadBookmarks();
   loadAuthState();
 
+  // Unsupported screen button handlers
+  document.getElementById('sp-go-youtube-btn')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://www.youtube.com' });
+  });
+  document.getElementById('sp-open-dashboard-btn')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
+  });
+
+  // Re-check when the active tab navigates (e.g. user goes to YouTube)
+  chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+    if (changeInfo.status === 'complete') {
+      loadBookmarks();
+    }
+  });
+
   // Theme toggle (hidden)
   // function initTheme() {
   //   chrome.storage.local.get(['theme'], (result) => {
@@ -1017,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('dashboard-link').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
   });
 
   document.getElementById('revisit-mode-btn').addEventListener('click', async () => {

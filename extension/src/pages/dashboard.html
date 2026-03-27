@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bookmarks — Clipmark</title>
+    <title>Dashboard — Clipmark</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../styles/bookmarks.css">
+    <link rel="stylesheet" href="../../styles/dashboard.css">
     <!-- <script src="../popup/theme-loader.js"></script> -->
 </head>
 <body class="bookmarks-page">
@@ -23,10 +23,10 @@
             <nav class="page-header-nav">
                 <button class="subnav-link subnav-link--active" id="subnav-all">All Bookmarks</button>
                 <button class="subnav-link" id="subnav-revisit">
-                    Revisit Queue
+                    Reminders
                     <span class="subnav-badge" id="revisit-badge" style="display:none">0</span>
                 </button>
-                <a class="subnav-link" href="https://clipmark-chi.vercel.app" target="_blank" rel="noopener">Shared ↗</a>
+                <a class="subnav-link" href="https://clipmark.mithahara.com" target="_blank" rel="noopener">Shared ↗</a>
             </nav>
         </div>
         <div class="page-header-right">
@@ -48,7 +48,7 @@
             <button id="signout-btn" class="signout-btn" title="Sign out" style="display:none;">
                 <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">logout</span>
             </button>
-            <a id="dashboard-upgrade-btn" href="https://clipmark-chi.vercel.app/upgrade" target="_blank" class="dashboard-upgrade-btn">✦ Upgrade</a>
+            <a id="dashboard-upgrade-btn" href="https://clipmark.mithahara.com/upgrade" target="_blank" class="dashboard-upgrade-btn">✦ Upgrade</a>
         </div>
     </header>
 
@@ -75,7 +75,7 @@
             </button>
             <button class="subnav-link side-nav-link" id="subnav-revisit-side">
                 <span class="material-symbols-outlined">schedule</span>
-                <span>Revisit Queue</span>
+                <span>Reminders</span>
                 <span class="subnav-badge side-nav-badge" id="revisit-badge-side" style="display:none">0</span>
             </button>
             <p class="side-nav-section-label">Curations</p>
@@ -88,7 +88,7 @@
                 <span>Shared</span>
             </button>
             <p class="side-nav-section-label">Account</p>
-            <a class="subnav-link side-nav-link side-nav-upgrade" href="https://clipmark-chi.vercel.app/upgrade" target="_blank" rel="noopener">
+            <a class="subnav-link side-nav-link side-nav-upgrade" href="https://clipmark.mithahara.com/upgrade" target="_blank" rel="noopener">
                 <span class="material-symbols-outlined">auto_awesome</span>
                 <span>Upgrade</span>
             </a>
@@ -183,14 +183,14 @@
             <span class="mobile-nav-label">Bookmarks</span>
         </a>
         <a class="mobile-nav-item" href="#" id="mobile-nav-queue">
-            <span class="material-symbols-outlined">history</span>
-            <span class="mobile-nav-label">Queue</span>
+            <span class="material-symbols-outlined">schedule</span>
+            <span class="mobile-nav-label">Reminders</span>
         </a>
         <a class="mobile-nav-item" href="#" id="mobile-nav-groups">
             <span class="material-symbols-outlined">folder</span>
             <span class="mobile-nav-label">Groups</span>
         </a>
-        <a class="mobile-nav-item" href="https://clipmark-chi.vercel.app/upgrade" target="_blank" rel="noopener">
+        <a class="mobile-nav-item" href="https://clipmark.mithahara.com/upgrade" target="_blank" rel="noopener">
             <span class="material-symbols-outlined">grade</span>
             <span class="mobile-nav-label">Pro</span>
         </a>
@@ -201,6 +201,6 @@
     <div id="success-toast" class="success-toast"></div>
 
     <script src="../config.js"></script>
-    <script src="../popup/bookmarks.js"></script>
+    <script src="../popup/dashboard.js"></script>
 </body>
 </html>

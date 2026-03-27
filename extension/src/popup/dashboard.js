@@ -242,6 +242,19 @@ function groupByVideo(bookmarks) {
   return groups;
 }
 
+// Groups bookmarks by videoId + calendar day (YYYY-MM-DD).
+// Returns an ordered array of { key, videoId, dayKey, bookmarks }.
+function groupByVideoAndDay(bookmarks) {
+  const map = new Map();
+  bookmarks.forEach(b => {
+    const day = b.createdAt ? b.createdAt.slice(0, 10) : new Date(b.id).toISOString().slice(0, 10);
+    const key = `${b.videoId}__${day}`;
+    if (!map.has(key)) map.set(key, { key, videoId: b.videoId, dayKey: day, bookmarks: [] });
+    map.get(key).bookmarks.push(b);
+  });
+  return Array.from(map.values());
+}
+
 // ─── Stats Bar ────────────────────────────────────────────────────────────────
 function renderStatsBar() {
   const bar = document.getElementById('stats-bar');
@@ -348,38 +361,33 @@ async function renderBookmarks() {
   }
 
   // ── Cards view ───────────────────────────────────────────────────────────
-  const grouped  = groupByVideo(filtered);
-  const videoIds = Object.keys(grouped);
+  let groups = groupByVideoAndDay(filtered);
 
   if (sortOrder === 'oldest') {
-    videoIds.sort((a, b) =>
-      Math.min(...grouped[a].map(x => x.id)) - Math.min(...grouped[b].map(x => x.id)));
+    groups.sort((a, b) => Math.min(...a.bookmarks.map(x => x.id)) - Math.min(...b.bookmarks.map(x => x.id)));
   } else if (sortOrder === 'timestamp') {
-    videoIds.sort((a, b) => {
-      const ta = (grouped[a][0].videoTitle || videoTitles[a] || a).toLowerCase();
-      const tb = (grouped[b][0].videoTitle || videoTitles[b] || b).toLowerCase();
+    groups.sort((a, b) => {
+      const ta = (a.bookmarks[0].videoTitle || videoTitles[a.videoId] || a.videoId).toLowerCase();
+      const tb = (b.bookmarks[0].videoTitle || videoTitles[b.videoId] || b.videoId).toLowerCase();
       return ta.localeCompare(tb);
     });
   } else {
-    videoIds.sort((a, b) =>
-      Math.max(...grouped[b].map(x => x.id)) - Math.max(...grouped[a].map(x => x.id)));
+    groups.sort((a, b) => Math.max(...b.bookmarks.map(x => x.id)) - Math.max(...a.bookmarks.map(x => x.id)));
   }
 
-  // Featured = video with most bookmarks (only when there are multiple videos)
-  const featuredVideoId = videoIds.length > 1
-    ? videoIds.reduce((best, vid) =>
-        (grouped[vid].length > grouped[best].length) ? vid : best, videoIds[0])
+  // Featured = group with most bookmarks (only when there are multiple groups)
+  const featuredKey = groups.length > 1
+    ? groups.reduce((best, g) => (g.bookmarks.length > best.bookmarks.length) ? g : best, groups[0]).key
     : null;
 
-  videoIds.forEach(videoId => {
-    const bookmarks = grouped[videoId];
+  groups.forEach(({ key, videoId, bookmarks }) => {
     const title  = bookmarks[0].videoTitle || videoTitles[videoId] || `Video: ${videoId}`;
     const ytUrl  = `https://www.youtube.com/watch?v=${videoId}`;
     const thumb  = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
     const count  = bookmarks.length;
 
     const card = document.createElement('div');
-    card.className = 'vc-card' + (videoId === featuredVideoId ? ' vc-card--featured' : '');
+    card.className = 'vc-card' + (key === featuredKey ? ' vc-card--featured' : '');
 
     const maxTs    = Math.max(...bookmarks.map(b => b.timestamp));
     const trackMax = videoDurations[videoId] || Math.max(maxTs + 60, 120);
@@ -1256,22 +1264,87 @@ async function renderGroupsView() {
 
     container.appendChild(section);
   });
+
+  // ── Auto Groups (tag-based, read-only) ────────────────────────────────────
+  const tagMap = new Map();
+  allBookmarks.forEach(b => {
+    const tags = (b.tags && b.tags.length) ? b.tags : ['untagged'];
+    tags.forEach(tag => {
+      if (!tagMap.has(tag)) tagMap.set(tag, new Set());
+      tagMap.get(tag).add(b.videoId);
+    });
+  });
+
+  if (tagMap.size > 0) {
+    const divider = document.createElement('hr');
+    divider.className = 'gv-divider';
+    container.appendChild(divider);
+
+    const autoHeader = document.createElement('div');
+    autoHeader.className = 'gv-header';
+    autoHeader.innerHTML = `<span class="gv-header-title">Auto Groups <span style="font-size:11px;font-weight:400;color:#9ca3af;">— from your tags</span></span>`;
+    container.appendChild(autoHeader);
+
+    const sortedTags = Array.from(tagMap.entries()).sort((a, b) => b[1].size - a[1].size);
+    sortedTags.forEach(([tag, videoIdSet]) => {
+      const videoIds = Array.from(videoIdSet);
+      const tagColor = getTagColor([tag]);
+      const section = document.createElement('div');
+      section.className = 'gv-section gv-section--auto';
+      section.style.setProperty('--gv-color', tagColor);
+
+      const videoCards = videoIds.map(videoId => {
+        const bookmarks = allBookmarks.filter(b => b.videoId === videoId);
+        const title = bookmarks[0]?.videoTitle || videoTitles[videoId] || videoId;
+        const count = bookmarks.length;
+        const thumb = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+        const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        return `
+          <div class="gv-video-card">
+            <a href="${ytUrl}" target="_blank" rel="noopener">
+              <img src="${thumb}" class="gv-thumb" loading="lazy">
+            </a>
+            <div class="gv-video-meta">
+              <a class="gv-video-title" href="${ytUrl}" target="_blank" rel="noopener">${title}</a>
+              <span class="gv-video-count">${count} bookmark${count !== 1 ? 's' : ''}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+      section.innerHTML = `
+        <div class="gv-section-header">
+          <span class="gv-tag-pill" style="background:${tagColor}22;color:${tagColor}">#${tag}</span>
+          <span class="gv-section-stats">${videoIds.length} video${videoIds.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="gv-videos">${videoCards}</div>`;
+      container.appendChild(section);
+    });
+  }
 }
 
-// ─── Revisit Queue badge ──────────────────────────────────────────────────────
+// ─── Reminders badge ─────────────────────────────────────────────────────────
 async function updateRevisitBadge() {
-  const badge = document.getElementById('revisit-badge');
-  if (!badge) return;
-  const result = await new Promise(resolve => chrome.storage.sync.get(null, resolve));
-  const now    = new Date();
-  let count = 0;
-  for (const [key, val] of Object.entries(result)) {
-    if (key.startsWith('rem_') && val && val.nextDue) {
-      if (new Date(val.nextDue) <= now) count++;
-    }
-  }
-  badge.textContent   = count;
-  badge.style.display = count > 0 ? '' : 'none';
+  const badges = [
+    document.getElementById('revisit-badge'),
+    document.getElementById('revisit-badge-side'),
+  ].filter(Boolean);
+  if (!badges.length) return;
+
+  const token = await getValidToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/reminders`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return;
+    const { due } = await res.json();
+    const count = (due ?? []).length;
+    badges.forEach(b => {
+      b.textContent   = count;
+      b.style.display = count > 0 ? '' : 'none';
+    });
+  } catch {}
 }
 
 // ─── Main load ────────────────────────────────────────────────────────────────
@@ -1292,86 +1365,121 @@ function setActiveNav(id) {
   if (el) el.classList.add('subnav-link--active');
 }
 
-// ─── Revisit Queue View ───────────────────────────────────────────────────────
+// ─── Reminders View ──────────────────────────────────────────────────────────
 async function renderRevisitView(container) {
-  container.innerHTML = '';
-  container.className = '';
+  container.innerHTML = '<div class="loading-spinner">Loading reminders…</div>';
+  container.className = 'reminders-view';
 
-  if (allBookmarks.length === 0) {
+  const token = await getValidToken();
+  if (!token) {
     container.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">📅</div>
-        <h3>Your queue is empty</h3>
-        <p>Save bookmarks from YouTube videos to build your revisit queue.</p>
+        <div class="empty-state-icon">🔒</div>
+        <h3>Sign in to view reminders</h3>
+        <p>Reminders sync with your Clipmark account.</p>
       </div>`;
     return;
   }
 
-  const videoTitles = await getVideoTitles();
-  const sorted = [...allBookmarks].sort((a, b) => a.id - b.id);
-  const total = sorted.length;
-
-  // Clamp index in case bookmarks were deleted
-  if (revisitIndex >= total) revisitIndex = total - 1;
-  if (revisitIndex < 0) revisitIndex = 0;
-
-  function renderCard(idx) {
-    const b     = sorted[idx];
-    const title = b.videoTitle || videoTitles[b.videoId] || `Video: ${b.videoId}`;
-    const ytUrl = `https://www.youtube.com/watch?v=${b.videoId}&t=${Math.floor(b.timestamp)}`;
-    const thumb = `https://img.youtube.com/vi/${b.videoId}/mqdefault.jpg`;
-    const c     = b.color || '#4da1ee';
-
+  let due = [], upcoming = [];
+  try {
+    const res = await fetch(`${API_BASE}/api/reminders`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    ({ due, upcoming } = await res.json());
+  } catch {
     container.innerHTML = `
-      <div class="rq-header">
-        <h2 class="rq-title">Revisit Queue</h2>
-        <p class="rq-sub">Your saved moments — use arrows or keyboard ← → to browse.</p>
-      </div>
-      <div class="rq-carousel">
-        <button class="rq-arrow rq-arrow-prev" id="rq-prev" ${idx === 0 ? 'disabled' : ''} title="Previous (←)">
-          <span class="material-symbols-outlined">arrow_back_ios</span>
-        </button>
-        <div class="rq-card">
-          <a href="${ytUrl}" target="_blank" rel="noopener" class="rq-thumb-wrap rq-thumb-wrap--large">
-            <img src="${thumb}" alt="${title}" class="rq-thumb" loading="lazy">
-            <span class="rq-ts">${formatTimestamp(b.timestamp)}</span>
-          </a>
-          <div class="rq-item-body">
-            <div class="rq-item-title">${title}</div>
-            <div class="rq-item-note" style="border-left-color:${c}">${b.description || 'No note added.'}</div>
-            ${b.tags && b.tags.length
-              ? `<div class="rq-tags">${b.tags.map(t =>
-                  `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
-                ).join('')}</div>`
-              : ''}
-            <div class="rq-item-meta">${relativeTime(b.id)} · <a href="${ytUrl}" target="_blank" rel="noopener" class="rq-jump">Jump to moment ↗</a></div>
-          </div>
-        </div>
-        <button class="rq-arrow rq-arrow-next" id="rq-next" ${idx === total - 1 ? 'disabled' : ''} title="Next (→)">
-          <span class="material-symbols-outlined">arrow_forward_ios</span>
-        </button>
-      </div>
-      <div class="rq-counter">${idx + 1} / ${total}</div>`;
-
-    document.getElementById('rq-prev')?.addEventListener('click', () => {
-      if (revisitIndex > 0) { revisitIndex--; renderCard(revisitIndex); }
-    });
-    document.getElementById('rq-next')?.addEventListener('click', () => {
-      if (revisitIndex < total - 1) { revisitIndex++; renderCard(revisitIndex); }
-    });
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Could not load reminders</h3>
+        <p>Check your connection and try again.</p>
+      </div>`;
+    return;
   }
 
-  renderCard(revisitIndex);
+  container.innerHTML = '';
 
-  // Keyboard arrow navigation (only active while revisit view is shown)
-  function onKeyDown(e) {
-    if (viewMode !== 'revisit') { document.removeEventListener('keydown', onKeyDown); return; }
-    if (e.key === 'ArrowLeft'  && revisitIndex > 0)          { revisitIndex--; renderCard(revisitIndex); }
-    if (e.key === 'ArrowRight' && revisitIndex < total - 1)  { revisitIndex++; renderCard(revisitIndex); }
+  if (!due.length && !upcoming.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📅</div>
+        <h3>No reminders yet</h3>
+        <p>Set them up in the Clipmark dashboard.</p>
+        <a href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener" class="rm-webapp-link">Create reminders ↗</a>
+      </div>`;
+    return;
   }
-  // Remove any previous listener then add fresh one
-  document.removeEventListener('keydown', onKeyDown);
-  document.addEventListener('keydown', onKeyDown);
+
+  async function markDone(reminderId, cardEl) {
+    cardEl.style.opacity = '0.5';
+    cardEl.style.pointerEvents = 'none';
+    try {
+      const t = await getValidToken();
+      await fetch(`${API_BASE}/api/reminders/${reminderId}/done`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${t}` },
+      });
+    } catch {}
+    renderRevisitView(container);
+    updateRevisitBadge();
+  }
+
+  function makeCard(r, isDue) {
+    const dueDate = new Date(r.next_due_at);
+    const now = new Date();
+    const diffDays = Math.round((dueDate - now) / 86400000);
+    let dateLabel;
+    if (isDue) {
+      dateLabel = '<span class="rm-date-label rm-date-due">DUE NOW</span>';
+    } else if (diffDays === 0) {
+      dateLabel = `<span class="rm-date-label">TODAY, ${dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+    } else if (diffDays === 1) {
+      dateLabel = `<span class="rm-date-label">TOMORROW, ${dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+    } else {
+      dateLabel = `<span class="rm-date-label">${dueDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span>`;
+    }
+
+    const freqMap = { once: 'One-time', daily: 'Daily', weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly' };
+    const freqLabel = freqMap[r.frequency] || r.frequency;
+
+    const card = document.createElement('div');
+    card.className = `rm-card${isDue ? ' rm-card--due' : ''}`;
+    card.innerHTML = `
+      <div class="rm-card-meta">
+        ${dateLabel}
+        <span class="rm-freq-badge">${freqLabel}</span>
+      </div>
+      <div class="rm-card-title">${r.targetLabel ?? 'Unknown'}</div>
+      <div class="rm-card-actions">
+        ${r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
+        <button class="rm-btn rm-btn-done">Mark Done</button>
+      </div>`;
+
+    card.querySelector('.rm-btn-done').addEventListener('click', () => markDone(r.id, card));
+    return card;
+  }
+
+  if (due.length) {
+    const section = document.createElement('div');
+    section.className = 'rm-section';
+    section.innerHTML = '<h3 class="rm-section-title rm-section-title--due">Due Now</h3>';
+    due.forEach(r => section.appendChild(makeCard(r, true)));
+    container.appendChild(section);
+  }
+
+  if (upcoming.length) {
+    const section = document.createElement('div');
+    section.className = 'rm-section';
+    section.innerHTML = '<h3 class="rm-section-title">Upcoming</h3>';
+    upcoming.forEach(r => section.appendChild(makeCard(r, false)));
+    container.appendChild(section);
+  }
+
+  const footer = document.createElement('p');
+  footer.className = 'rm-footer';
+  footer.innerHTML = `<a href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener">Create or edit reminders ↗</a>`;
+  container.appendChild(footer);
 }
 
 // ─── Videos View ─────────────────────────────────────────────────────────────
@@ -1429,6 +1537,96 @@ async function renderVideosView(container) {
       setActiveNav('subnav-all-side');
       updateViewToggle();
       renderBookmarks();
+    });
+
+    grid.appendChild(card);
+  });
+
+  container.appendChild(grid);
+}
+
+// ─── Shared Collections View ──────────────────────────────────────────────────
+async function renderSharedView(container) {
+  container.innerHTML = '<div class="loading-spinner">Loading shared collections…</div>';
+  container.className = 'shared-view';
+
+  const token = await getValidToken();
+  if (!token) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔒</div>
+        <h3>Sign in to view shared collections</h3>
+        <p>Collections you share from YouTube will appear here.</p>
+      </div>`;
+    return;
+  }
+
+  let collections = [];
+  try {
+    const res = await fetch(`${API_BASE}/api/shared`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    collections = await res.json();
+  } catch {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Could not load collections</h3>
+        <p>Check your connection and try again.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+
+  const header = document.createElement('div');
+  header.className = 'sh-header';
+  header.innerHTML = `<span class="sh-header-title">Shared Collections</span><span class="sh-header-count">${collections.length}</span>`;
+  container.appendChild(header);
+
+  if (!collections.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <div class="empty-state-icon">📤</div>
+      <h3>No shared collections yet</h3>
+      <p>Use the popup on a YouTube video to share your bookmarks.</p>`;
+    container.appendChild(empty);
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'sh-grid';
+
+  collections.forEach(col => {
+    const thumb = col.video_id
+      ? `https://img.youtube.com/vi/${col.video_id}/mqdefault.jpg`
+      : '';
+    const shareUrl = `${API_BASE}/v/${col.id}`;
+
+    const card = document.createElement('div');
+    card.className = 'sh-card';
+    card.innerHTML = `
+      ${thumb ? `<img src="${thumb}" alt="${col.video_title}" class="sh-thumb" loading="lazy">` : '<div class="sh-thumb sh-thumb--placeholder"></div>'}
+      <div class="sh-card-body">
+        <div class="sh-card-title">${col.video_title}</div>
+        <div class="sh-card-meta">
+          <span>${col.bookmark_count} bookmark${col.bookmark_count !== 1 ? 's' : ''}</span>
+          <span>${col.view_count} view${col.view_count !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="sh-card-actions">
+          <button class="sh-btn sh-btn-copy" data-url="${shareUrl}">Copy Link</button>
+          <a class="sh-btn sh-btn-open" href="${shareUrl}" target="_blank" rel="noopener">Open ↗</a>
+        </div>
+      </div>`;
+
+    card.querySelector('.sh-btn-copy').addEventListener('click', async function() {
+      try {
+        await navigator.clipboard.writeText(this.dataset.url);
+        this.textContent = 'Copied!';
+        setTimeout(() => { this.textContent = 'Copy Link'; }, 2000);
+      } catch {}
     });
 
     grid.appendChild(card);
@@ -1791,9 +1989,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBookmarks();
   });
 
-  // Subnav — Shared (sidebar) → opens external Clipmark page
+  // Subnav — Shared (sidebar) → inline shared collections view
   document.getElementById('subnav-shared-side').addEventListener('click', () => {
-    window.open('https://clipmark.mithahara.com', '_blank', 'noopener');
+    filterVideoId = null;
+    setActiveNav('subnav-shared-side');
+    const container = document.getElementById('bookmarks-container');
+    renderSharedView(container);
   });
 
   // Mobile bottom nav

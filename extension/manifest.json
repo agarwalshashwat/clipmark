@@ -3,13 +3,13 @@
     "name": "Clipmark",
     "version": "1.0",
     "description": "Bookmark, tag, and revisit YouTube moments with AI-powered notes and cloud sync.",
-    "permissions": ["storage", "tabs", "activeTab", "contextMenus", "sidePanel", "alarms"],
+    "permissions": ["storage", "tabs", "activeTab", "contextMenus", "sidePanel", "alarms", "notifications"],
     "host_permissions": [
         "*://www.youtube.com/*",
         "https://clipmark.mithahara.com/*"
     ],
     "web_accessible_resources": [{
-      "resources": ["src/pages/bookmarks.html", "src/popup/bookmarks.js", "styles/bookmarks.css"],
+      "resources": ["src/pages/dashboard.html", "src/popup/dashboard.js", "styles/dashboard.css"],
       "matches": ["<all_urls>"]
     }],
     "action": {

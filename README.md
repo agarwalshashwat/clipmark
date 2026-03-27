@@ -4,7 +4,7 @@
 
 A Chrome extension + Next.js webapp that lets you bookmark timestamps in YouTube videos, replay only what matters, and share structured knowledge with the world.
 
-Live at **[clipmark-chi.vercel.app](https://clipmark-chi.vercel.app)**
+Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 
 ---
 

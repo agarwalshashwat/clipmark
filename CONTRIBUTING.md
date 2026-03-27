@@ -12,13 +12,13 @@ youtube-vid-bookmarker/
 │   ├── src/
 │   │   ├── background/background.js   # Service worker: auth token storage, messaging
 │   │   ├── content/content.js         # YouTube page: markers, keyboard shortcuts, revisit mode
-│   │   ├── pages/                     # popup.html, bookmarks.html, side-panel.html
+│   │   ├── pages/                     # popup.html, dashboard.html, side-panel.html
 │   │   └── popup/
 │   │       ├── popup.js               # Bookmark CRUD, AI features, auth, reminders
-│   │       ├── bookmarks.js           # Dashboard: cards, timeline, groups, export/import
+│   │       ├── dashboard.js           # Dashboard: cards, timeline, groups, export/import
 │   │       ├── side-panel.js
 │   │       └── theme-loader.js
-│   └── styles/                        # popup.css, bookmarks.css, side-panel.css, design-tokens.css
+│   └── styles/                        # popup.css, dashboard.css, side-panel.css, design-tokens.css
 │
 ├── packages/design-system/            # Shared CSS design tokens (extension + webapp)
 │

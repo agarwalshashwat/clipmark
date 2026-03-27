@@ -298,7 +298,134 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
       }
     }, () => {
       sendResponse({ ok: true });
+      scheduleReminderAlarms();
     });
     return true; // async
   }
 });
+
+// ─── Reminder Alarms ──────────────────────────────────────────────────────────
+const REMINDERS_API = 'https://clipmark.mithahara.com/api/reminders';
+const REMINDER_HORIZON_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+async function scheduleReminderAlarms() {
+  const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
+  if (!bmUser?.accessToken) return;
+
+  let reminders;
+  try {
+    const res = await fetch(REMINDERS_API, {
+      headers: { Authorization: `Bearer ${bmUser.accessToken}` },
+    });
+    if (!res.ok) return;
+    const json = await res.json();
+    reminders = [...(json.due ?? []), ...(json.upcoming ?? [])];
+  } catch {
+    return;
+  }
+
+  // Clear all existing reminder alarms
+  const allAlarms = await chrome.alarms.getAll();
+  for (const alarm of allAlarms) {
+    if (alarm.name.startsWith('reminder_')) {
+      await chrome.alarms.clear(alarm.name);
+    }
+  }
+
+  // Store reminder metadata keyed by id for notification use
+  const reminderMeta = {};
+  const now = Date.now();
+  const horizon = now + REMINDER_HORIZON_MS;
+
+  for (const r of reminders) {
+    const dueMs = new Date(r.next_due_at).getTime();
+    reminderMeta[r.id] = {
+      id: r.id,
+      targetLabel: r.targetLabel,
+      videoId: r.videoId,
+      frequency: r.frequency,
+    };
+    // Only schedule alarms for future reminders within the horizon
+    if (dueMs > now && dueMs <= horizon) {
+      chrome.alarms.create(`reminder_${r.id}`, { when: dueMs });
+    }
+  }
+  await chrome.storage.local.set({ reminderMeta });
+
+  // Schedule daily re-sync at 9AM local time if not already set
+  const syncAlarm = await chrome.alarms.get('reminder_sync');
+  if (!syncAlarm) {
+    const next9AM = new Date();
+    next9AM.setHours(9, 0, 0, 0);
+    if (next9AM.getTime() <= now) next9AM.setDate(next9AM.getDate() + 1);
+    chrome.alarms.create('reminder_sync', {
+      when: next9AM.getTime(),
+      periodInMinutes: 1440,
+    });
+  }
+}
+
+function frequencyLabel(frequency) {
+  const map = { once: 'one-time', daily: 'daily', weekly: 'weekly', biweekly: 'every 2 weeks', monthly: 'monthly' };
+  return map[frequency] || frequency;
+}
+
+// Wire reminder alarms into the existing alarm listener
+const _originalAlarmListener = chrome.alarms.onAlarm.hasListeners()
+  ? null : null; // keep existing keepalive listener — we add a second listener below
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'reminder_sync') {
+    await scheduleReminderAlarms();
+    return;
+  }
+
+  if (alarm.name.startsWith('reminder_')) {
+    const reminderId = alarm.name.slice('reminder_'.length);
+    const { reminderMeta } = await chrome.storage.local.get({ reminderMeta: {} });
+    const meta = reminderMeta[reminderId];
+    if (!meta) return;
+
+    chrome.notifications.create(`reminder_notif_${reminderId}`, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('assets/icons/icon-48.png'),
+      title: 'Time to revisit 🔖',
+      message: `${meta.targetLabel} — ${frequencyLabel(meta.frequency)}`,
+      buttons: [
+        { title: 'Revisit now' },
+        { title: 'Mark Done' },
+      ],
+      requireInteraction: true,
+    });
+  }
+});
+
+chrome.notifications.onButtonClicked.addListener(async (notifId, buttonIndex) => {
+  if (!notifId.startsWith('reminder_notif_')) return;
+  const reminderId = notifId.slice('reminder_notif_'.length);
+  chrome.notifications.clear(notifId);
+
+  const { reminderMeta } = await chrome.storage.local.get({ reminderMeta: {} });
+  const meta = reminderMeta[reminderId];
+  if (!meta) return;
+
+  if (buttonIndex === 0 && meta.videoId) {
+    // Revisit now — open YouTube
+    chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${meta.videoId}` });
+  } else if (buttonIndex === 1) {
+    // Mark Done — call API then reschedule
+    const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
+    if (bmUser?.accessToken) {
+      try {
+        await fetch(`${REMINDERS_API}/${reminderId}/done`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${bmUser.accessToken}` },
+        });
+      } catch {}
+    }
+    await scheduleReminderAlarms();
+  }
+});
+
+// Schedule alarms on service worker startup (fires when SW wakes up)
+scheduleReminderAlarms();

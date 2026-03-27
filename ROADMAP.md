@@ -14,7 +14,7 @@
 | Storage | `chrome.storage.sync` + Supabase `user_bookmarks` (when signed in) |
 | Auth | Google OAuth via Supabase; token stored in sync storage |
 | AI | Claude Haiku — transcript auto-fill, summaries, tag suggestions, social posts |
-| Live at | https://clipmark-chi.vercel.app |
+| Live at | https://clipmark.mithahara.com |
 
 ---
 
