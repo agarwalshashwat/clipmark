@@ -1,0 +1,75 @@
+import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase, createServerSupabase } from '@/lib/supabase';
+
+async function getAuthenticatedUser(request: NextRequest) {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    const userClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+    return { user, client: userClient };
+  }
+  const serverClient = await createServerSupabase();
+  const { data: { user } } = await serverClient.auth.getUser();
+  if (!user) return null;
+  return { user, client: serverClient };
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 });
+}
+
+// GET /api/reminders — returns { due, upcoming } for the authenticated user
+export async function GET(request: NextRequest) {
+  const auth = await getAuthenticatedUser(request);
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { client } = auth;
+  const now = new Date().toISOString();
+
+  const { data: reminders, error } = await client
+    .from('revisit_reminders')
+    .select('*')
+    .order('next_due_at', { ascending: true });
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Enrich with target labels
+  type BookmarkRow = { video_id: string; bookmarks: { videoTitle?: string }[] };
+  type GroupRow = { id: string; name: string };
+
+  const [{ data: userBookmarks }, { data: groups }] = await Promise.all([
+    client.from('user_bookmarks').select('video_id, bookmarks'),
+    client.from('groups').select('id, name'),
+  ]);
+
+  const bookmarkMap = new Map<string, string>(
+    (userBookmarks as BookmarkRow[] ?? []).map(r => [r.video_id, r.bookmarks?.[0]?.videoTitle ?? 'Untitled Video'])
+  );
+  const groupMap = new Map<string, string>(
+    (groups as GroupRow[] ?? []).map(g => [g.id, g.name])
+  );
+
+  const enriched = (reminders ?? []).map(r => {
+    let targetLabel = 'Unknown';
+    let videoId: string | undefined;
+    if (r.target_type === 'collection') {
+      targetLabel = bookmarkMap.get(r.target_id) ?? 'Untitled Video';
+      videoId = r.target_id;
+    } else {
+      targetLabel = groupMap.get(r.target_id) ?? 'Unknown Group';
+    }
+    return { ...r, targetLabel, videoId };
+  });
+
+  return NextResponse.json({
+    due: enriched.filter(r => r.next_due_at <= now),
+    upcoming: enriched.filter(r => r.next_due_at > now),
+  });
+}
