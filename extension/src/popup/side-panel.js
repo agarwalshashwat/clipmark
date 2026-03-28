@@ -665,9 +665,30 @@ async function loadComments(videoId) {
             ${likesText}
           </div>
           <p class="comment-text">${sanitizeCommentHtml(c.text)}</p>
+          <button class="comment-expand-btn" data-expanded="false">Show more</button>
         </div>
       `;
     }).join('');
+
+    // Hide expand buttons for comments that aren't actually clamped
+    list.querySelectorAll('.comment-card').forEach(card => {
+      const textEl = card.querySelector('.comment-text');
+      const btn = card.querySelector('.comment-expand-btn');
+      if (textEl.scrollHeight <= textEl.clientHeight) {
+        btn.style.display = 'none';
+      }
+    });
+
+    // Toggle expand / collapse
+    list.addEventListener('click', e => {
+      const btn = e.target.closest('.comment-expand-btn');
+      if (!btn) return;
+      const textEl = btn.closest('.comment-card').querySelector('.comment-text');
+      const isExpanded = btn.dataset.expanded === 'true';
+      textEl.classList.toggle('expanded', !isExpanded);
+      btn.dataset.expanded = String(!isExpanded);
+      btn.textContent = isExpanded ? 'Show more' : 'Show less';
+    });
   } catch (error) {
     list.innerHTML = `<div class="no-bookmarks">${error.message}</div>`;
   }

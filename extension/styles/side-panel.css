@@ -1386,10 +1386,33 @@ body {
   color: var(--text-sub);
   line-height: 1.5;
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
+  max-height: 72px; /* 4 lines × 12px × 1.5 */
   overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.comment-text.expanded {
+  max-height: 800px;
+  transition: max-height 0.45s ease;
+}
+
+.comment-expand-btn {
+  background: none;
+  border: none;
+  padding: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent, #14B8A6);
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: left;
+  opacity: 0.85;
+}
+
+.comment-expand-btn:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .comment-skeleton {
