@@ -466,7 +466,7 @@ async function renderBookmarks() {
                     </div>
                     <div class="vc-notes-panel" id="notes-${b.id}" data-bookmark-id="${b.id}" data-video-id="${videoId}">
                       <textarea class="vc-notes-textarea" placeholder="Add a longer note, context, or key insight…" rows="2">${b.notes || ''}</textarea>
-                      <div class="vc-notes-hint">Ctrl+Enter to save · Esc to close</div>
+                      <div class="vc-notes-hint">Auto-saves · Esc to close</div>
                     </div>
                   </div>
                 </div>`;
@@ -499,7 +499,7 @@ async function renderBookmarks() {
                     </div>
                     <div class="vc-notes-panel" id="notes-${b.id}" data-bookmark-id="${b.id}" data-video-id="${videoId}">
                       <textarea class="vc-notes-textarea" placeholder="Add a longer note, context, or key insight…" rows="2">${b.notes || ''}</textarea>
-                      <div class="vc-notes-hint">Ctrl+Enter to save · Esc to close</div>
+                      <div class="vc-notes-hint">Auto-saves · Esc to close</div>
                     </div>
                   </div>
                 </div>`;
@@ -804,27 +804,60 @@ function attachEventListeners() {
     const panel      = ta.closest('.vc-notes-panel');
     const bookmarkId = parseInt(panel.dataset.bookmarkId);
     const videoId    = panel.dataset.videoId;
+    const hint       = panel.querySelector('.vc-notes-hint');
+    const hintDefault = hint ? hint.textContent : '';
 
     ta.addEventListener('input', () => {
       ta.style.height = 'auto';
       ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
     });
 
+    let saveTimer = null;
+    let isDirty   = false;
+
+    const setHint = (text, temporary = false) => {
+      if (!hint) return;
+      hint.textContent = text;
+      if (temporary) setTimeout(() => { hint.textContent = hintDefault; }, 1800);
+    };
+
     const saveNotes = async () => {
+      if (!isDirty) return;
+      isDirty = false;
+      clearTimeout(saveTimer);
       const notes = ta.value;
+      ta.classList.add('vc-notes-textarea--saving');
+      ta.classList.remove('vc-notes-textarea--saved');
+      setHint('Saving…');
       try {
         await updateBookmark(videoId, bookmarkId, { notes });
         const bm = allBookmarks.find(b => b.id === bookmarkId);
         if (bm) bm.notes = notes;
-        showToast('Notes saved', 'success');
+        ta.classList.remove('vc-notes-textarea--saving');
+        ta.classList.add('vc-notes-textarea--saved');
+        setHint('Saved ✓', true);
+        setTimeout(() => ta.classList.remove('vc-notes-textarea--saved'), 1800);
       } catch {
+        ta.classList.remove('vc-notes-textarea--saving');
+        setHint('Failed to save', true);
         showToast('Failed to save notes');
       }
     };
 
-    ta.addEventListener('blur', saveNotes);
+    ta.addEventListener('input', () => {
+      isDirty = true;
+      ta.classList.remove('vc-notes-textarea--saved');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNotes, 800);
+    });
+
+    ta.addEventListener('blur', () => {
+      clearTimeout(saveTimer);
+      saveNotes();
+    });
+
     ta.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); ta.blur(); }
+      if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); clearTimeout(saveTimer); saveNotes(); }
       if (e.key === 'Escape') { panel.classList.remove('vc-notes-panel--open'); }
     });
   });

@@ -1772,11 +1772,31 @@
     box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
 }
 
+.vc-notes-textarea--saving {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+}
+
+.vc-notes-textarea--saved {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
 .vc-notes-hint {
     font-size: 11px;
     color: #6b7280;
     margin-top: 5px;
     letter-spacing: 0.1px;
+    transition: color 0.2s;
+}
+
+.vc-notes-panel .vc-notes-textarea--saving ~ .vc-notes-hint {
+    color: #f59e0b;
+}
+
+.vc-notes-panel .vc-notes-textarea--saved ~ .vc-notes-hint {
+    color: #10b981;
 }
 
 .vc-notes-btn--has-notes {

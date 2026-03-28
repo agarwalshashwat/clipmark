@@ -315,6 +315,7 @@ async function deleteBookmark(videoId, bookmarkId) {
 
 async function updateBookmarkDescription(videoId, bookmarkId, newDescription) {
   try {
+    showStatus('Saving…');
     const bookmarks = await getVideoBookmarks(videoId);
     const updated = bookmarks.map(b => {
       if (b.id !== parseInt(bookmarkId)) return b;
@@ -324,6 +325,7 @@ async function updateBookmarkDescription(videoId, bookmarkId, newDescription) {
     });
     await saveVideoBookmarks(videoId, updated);
     await loadBookmarks();
+    showStatus('Saved ✓');
     try {
       const tab = await getCurrentTab();
       await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' });
@@ -819,6 +821,8 @@ async function loadBookmarks() {
 
         const save = () => {
           const val = input.value.trim() || `Bookmark at ${formatTimestamp(parseFloat(timestamp))}`;
+          input.disabled = true;
+          input.classList.add('sp-input--saving');
           updateBookmarkDescription(vId, id, val);
         };
 
