@@ -1415,6 +1415,58 @@ body {
   text-decoration: underline;
 }
 
+/* ── Timestamp sync ──────────────────────────────────────────────────────── */
+.comment-sync-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent, #14B8A6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 0 4px;
+  opacity: 0.9;
+}
+
+.comment-sync-icon {
+  font-size: 13px;
+}
+
+.comment-card--synced {
+  border-color: var(--accent, #14B8A6);
+  background: linear-gradient(
+    135deg,
+    rgba(20, 184, 166, 0.07) 0%,
+    var(--bg-card) 60%
+  );
+  animation: syncPulse 0.4s ease;
+}
+
+@keyframes syncPulse {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.comment-sync-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent, #14B8A6);
+  background: rgba(20, 184, 166, 0.12);
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.comment-sync-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0 8px;
+  opacity: 0.6;
+}
+
 .comment-skeleton {
   height: 72px;
   border-radius: 10px;
