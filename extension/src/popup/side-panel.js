@@ -636,7 +636,7 @@ async function pruneOldResumeEntries() {
 // Sync state
 let allComments = [];          // { author, likeCount, text, timestamps[] }
 let commentSyncInterval = null;
-let lastSyncedIdxs = new Set();
+let lastSyncedIdxs = null; // null = never rendered yet → always force first render
 const COMMENT_SYNC_WINDOW = 30; // seconds either side of current time
 
 /** Extract all mm:ss / hh:mm:ss timestamps from a comment string → array of seconds */
@@ -699,8 +699,10 @@ function renderCommentList(currentTime) {
   synced.sort((a, b) => a.dist - b.dist);
 
   // Only re-render when the set of synced comments actually changes
+  // (lastSyncedIdxs === null means never rendered yet — always proceed)
   const newIdxs = new Set(synced.map(e => e.idx));
-  const changed = newIdxs.size !== lastSyncedIdxs.size ||
+  const changed = lastSyncedIdxs === null ||
+    newIdxs.size !== lastSyncedIdxs.size ||
     [...newIdxs].some(i => !lastSyncedIdxs.has(i));
   if (!changed) return;
   lastSyncedIdxs = newIdxs;
@@ -740,7 +742,7 @@ async function startCommentSync(tabId) {
 /** Stop the sync polling and reset synced state */
 function stopCommentSync() {
   if (commentSyncInterval) { clearInterval(commentSyncInterval); commentSyncInterval = null; }
-  lastSyncedIdxs = new Set();
+  lastSyncedIdxs = null; // reset sentinel so next render always proceeds
 }
 
 async function loadComments(videoId, tabId) {
@@ -1042,6 +1044,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       lastCommentVideoId = videoId;
       if (videoId) loadComments(videoId, tab.id);
       else document.getElementById('comment-list').innerHTML = '<div class="no-bookmarks">Open a YouTube video first.</div>';
+    } else if (videoId && allComments.length > 0) {
+      // Same video — comments already loaded, just restart the sync polling
+      startCommentSync(tab.id);
     }
   });
 
