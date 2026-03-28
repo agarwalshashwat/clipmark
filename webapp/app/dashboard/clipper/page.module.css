@@ -1,0 +1,435 @@
+/* ── Page wrapper ─────────────────────────────────────────────────────────── */
+.wrap {
+  padding: 48px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.pageHeader { margin-bottom: 36px; }
+
+.pageTitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #1a1c1d;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+@media (min-width: 768px) { .pageTitle { font-size: 48px; } }
+
+.titleIcon { font-size: 0.85em; line-height: 1; }
+
+.pageSub { font-size: 15px; color: #545f6c; margin: 0; }
+
+/* ── URL bar ──────────────────────────────────────────────────────────────── */
+.urlBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid rgba(26, 28, 29, 0.1);
+  border-radius: 16px;
+  padding: 10px 16px;
+  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.05);
+  margin-bottom: 8px;
+}
+
+.urlInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #1a1c1d;
+  background: transparent;
+  font-family: inherit;
+}
+.urlInput::placeholder { color: #9ca3af; }
+
+.loadBtn {
+  background: linear-gradient(135deg, #14B8A6 0%, #006b5f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+.loadBtn:hover { opacity: 0.9; transform: translateY(-1px); }
+.loadBtn:active { transform: translateY(0); }
+
+.urlError {
+  font-size: 12px;
+  color: #ef4444;
+  margin: 0 0 16px 4px;
+}
+
+/* ── Editor layout ────────────────────────────────────────────────────────── */
+.editorLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 28px;
+}
+@media (min-width: 900px) {
+  .editorLayout {
+    grid-template-columns: 1fr 360px;
+    align-items: start;
+  }
+}
+
+/* ── Player section ───────────────────────────────────────────────────────── */
+.playerSection {}
+
+.playerWrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  background: #0f0f0f;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+.player {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Make the YouTube iframe fill its container */
+.player iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none;
+}
+
+.videoMeta {
+  font-size: 13px;
+  color: #545f6c;
+  margin: 10px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Controls panel ───────────────────────────────────────────────────────── */
+.controlsPanel {
+  background: #ffffff;
+  border: 1px solid rgba(26, 28, 29, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(26, 28, 29, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.controlBlock { display: flex; flex-direction: column; gap: 8px; }
+
+.controlLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #545f6c;
+}
+
+.titleInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(26, 28, 29, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1c1d;
+  background: #f9f9fa;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.titleInput:focus { border-color: #14B8A6; background: #fff; }
+.titleInput::placeholder { color: #9ca3af; }
+
+/* ── Time row ─────────────────────────────────────────────────────────────── */
+.timeRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.timeInput {
+  width: 80px;
+  border: 1.5px solid rgba(26, 28, 29, 0.1);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: #1a1c1d;
+  background: #f9f9fa;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.timeInput:focus { border-color: #14B8A6; background: #fff; }
+
+.setBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: rgba(20, 184, 166, 0.08);
+  color: #006b5f;
+  border: 1.5px solid rgba(20, 184, 166, 0.25);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+}
+.setBtn:hover { background: rgba(20, 184, 166, 0.15); border-color: rgba(20, 184, 166, 0.4); }
+
+.previewSmBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(26, 28, 29, 0.05);
+  border: 1.5px solid rgba(26, 28, 29, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #545f6c;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.previewSmBtn:hover { background: rgba(26, 28, 29, 0.1); }
+
+/* ── Duration chip ────────────────────────────────────────────────────────── */
+.durationChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(243, 243, 244, 0.8);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #545f6c;
+}
+
+/* ── Preview button ───────────────────────────────────────────────────────── */
+.previewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(26, 28, 29, 0.12);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: #1a1c1d;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.previewBtn:hover:not(:disabled) { background: #f9f9fa; border-color: rgba(26, 28, 29, 0.2); transform: translateY(-1px); }
+.previewBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Divider ──────────────────────────────────────────────────────────────── */
+.divider {
+  border: none;
+  border-top: 1px solid rgba(26, 28, 29, 0.07);
+  margin: 0;
+}
+
+/* ── Action buttons ───────────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.downloadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #14B8A6 0%, #006b5f 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 107, 95, 0.22);
+  transition: opacity 0.2s, transform 0.15s;
+}
+.downloadBtn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+.downloadBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.shareBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(26, 28, 29, 0.12);
+  background: #fff;
+  color: #1a1c1d;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.shareBtn:hover:not(:disabled) { background: #f9f9fa; border-color: rgba(26, 28, 29, 0.2); transform: translateY(-1px); }
+.shareBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Share box ────────────────────────────────────────────────────────────── */
+.shareBox {
+  background: rgba(20, 184, 166, 0.05);
+  border: 1.5px solid rgba(20, 184, 166, 0.2);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shareLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #006b5f;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shareRow {
+  display: flex;
+  gap: 8px;
+}
+
+.shareInput {
+  flex: 1;
+  border: 1.5px solid rgba(20, 184, 166, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: #1a1c1d;
+  background: #fff;
+  outline: none;
+  min-width: 0;
+}
+
+.copyBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(20, 184, 166, 0.1);
+  border: 1.5px solid rgba(20, 184, 166, 0.25);
+  color: #006b5f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.copyBtn:hover { background: rgba(20, 184, 166, 0.2); }
+
+.sharePreviewLink {
+  font-size: 12px;
+  color: #14B8A6;
+  text-decoration: none;
+  font-weight: 600;
+}
+.sharePreviewLink:hover { text-decoration: underline; }
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.emptyState {
+  margin-top: 48px;
+  background: rgba(243, 243, 244, 0.6);
+  border: 2px dashed rgba(187, 202, 198, 0.4);
+  border-radius: 24px;
+  padding: 80px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.emptyTitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1c1d;
+  margin: 0;
+}
+
+.emptyText {
+  font-size: 14px;
+  color: #6c7a77;
+  max-width: 360px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.emptyExamples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.exampleChip {
+  background: #fff;
+  border: 1.5px solid rgba(26, 28, 29, 0.1);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #545f6c;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}

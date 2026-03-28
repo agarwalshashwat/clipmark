@@ -94,3 +94,36 @@ CREATE POLICY "Users can delete own bookmarks"
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_pro BOOLEAN DEFAULT false;
 
 -- Admin can flip is_pro manually via Supabase dashboard or a future billing webhook.
+
+-- ─── Clipper: Video Clips ─────────────────────────────────────────────────────
+-- Run this migration in Supabase SQL Editor to enable the Clipper feature.
+
+CREATE TABLE public.clips (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  video_id    TEXT        NOT NULL,
+  video_title TEXT,
+  start_time  FLOAT       NOT NULL,  -- seconds from start
+  end_time    FLOAT       NOT NULL,  -- seconds from start
+  title       TEXT,                  -- user-provided clip title
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  view_count  INTEGER     DEFAULT 0,
+  user_id     UUID        REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_clips_video_id ON public.clips (video_id);
+CREATE INDEX idx_clips_user_id  ON public.clips (user_id);
+
+-- RLS: clips are public-read; only owner can update/delete
+ALTER TABLE public.clips ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view clips"
+  ON public.clips FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can create clips"
+  ON public.clips FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+CREATE POLICY "Clips: increment view_count"
+  ON public.clips FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Users can delete own clips"
+  ON public.clips FOR DELETE USING (auth.uid() = user_id);

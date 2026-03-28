@@ -43,6 +43,12 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
               Reminders
             </a>
             <a
+              href="/dashboard/clipper"
+              className={`${styles.topNavLink} ${isActive('/dashboard/clipper') ? styles.topNavLinkActive : ''}`}
+            >
+              ✂️ Clipper
+            </a>
+            <a
               href="/dashboard/shared"
               className={`${styles.topNavLink} ${isActive('/dashboard/shared') ? styles.topNavLinkActive : ''}`}
             >
@@ -108,6 +114,13 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>schedule</span>
             <span>Reminders</span>
             {dueReminderCount > 0 && <span className={styles.dueBadge}>{dueReminderCount}</span>}
+          </a>
+          <a
+            href="/dashboard/clipper"
+            className={`${styles.sideNavItem} ${isActive('/dashboard/clipper') ? styles.sideNavItemActive : ''}`}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>content_cut</span>
+            <span>Clipper</span>
           </a>
           <p className={styles.sideNavSection}>Curations</p>
           <a
