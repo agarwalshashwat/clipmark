@@ -45,18 +45,36 @@ async function getAuthenticatedUser(request: NextRequest) {
   return { user, client: serverClient };
 }
 
-// GET /api/bookmarks?videoId=xxx
+// GET /api/bookmarks?videoId=xxx  — single video
+// GET /api/bookmarks               — all videos (for full cross-device sync)
 export async function GET(request: NextRequest) {
   const videoId = request.nextUrl.searchParams.get('videoId');
-  if (!videoId) {
-    return NextResponse.json({ error: 'videoId is required' }, { status: 400 });
-  }
 
   const auth = await getAuthenticatedUser(request);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   if (!await isProUser(auth.user.id)) {
     return NextResponse.json({ error: 'pro_required' }, { status: 403 });
+  }
+
+  if (!videoId) {
+    // Return all bookmarks for the user (used by extension dashboard on load)
+    const { data, error } = await auth.client
+      .from('user_bookmarks')
+      .select('video_id, bookmarks, updated_at')
+      .eq('user_id', auth.user.id);
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to fetch bookmarks' }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      videos: (data ?? []).map(row => ({
+        videoId: row.video_id,
+        bookmarks: row.bookmarks,
+        updatedAt: row.updated_at,
+      })),
+    });
   }
 
   const { data, error } = await auth.client
