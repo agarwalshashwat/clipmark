@@ -715,6 +715,10 @@ function sanitizeCommentHtml(html) {
     .trim();
 }
 
+// ─── Module-level state ───────────────────────────────────────────────────────
+let hasLoadedVideo = false;
+let lastCommentVideoId = null;
+
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
 function showUnsupportedScreen() {
   const screen = document.getElementById('sp-unsupported-screen');
@@ -730,13 +734,23 @@ async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
+      if (hasLoadedVideo) return;
       showUnsupportedScreen();
       return;
     }
     hideUnsupportedScreen();
+    hasLoadedVideo = true;
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
+
+    // Auto-refresh comments if Comments tab is currently visible and video changed
+    const commentsPanel = document.getElementById('comments-panel');
+    const commentsVisible = commentsPanel && commentsPanel.style.display !== 'none';
+    if (commentsVisible && videoId !== lastCommentVideoId) {
+      lastCommentVideoId = videoId;
+      loadComments(videoId);
+    }
 
     // Resume playback pill + entry cleanup
     loadResumePosition(videoId, tab.id);
@@ -938,7 +952,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
   // Tab switching: Bookmarks / Comments
-  let lastCommentVideoId = null;
   document.getElementById('tab-bookmarks').addEventListener('click', () => {
     document.getElementById('tab-bookmarks').classList.add('sp-tab--active');
     document.getElementById('tab-comments').classList.remove('sp-tab--active');
