@@ -24,23 +24,26 @@ function calcTimeLeft(target: Date): TimeLeft {
 }
 
 export default function LifetimeCountdown() {
-  const [target, setTarget]     = useState<Date>(() => getNextSunday());
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft(getNextSunday()));
+  // null on server — only populated after client mount to avoid hydration mismatch
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [extended, setExtended] = useState(false);
 
   useEffect(() => {
+    let currentTarget = getNextSunday();
+    setTimeLeft(calcTimeLeft(currentTarget));
+
     const tick = setInterval(() => {
-      if (Date.now() >= target.getTime()) {
+      if (Date.now() >= currentTarget.getTime()) {
         setExtended(true);
-        const next = getNextSunday();
-        setTarget(next);
-        setTimeLeft(calcTimeLeft(next));
-      } else {
-        setTimeLeft(calcTimeLeft(target));
+        currentTarget = getNextSunday();
       }
+      setTimeLeft(calcTimeLeft(currentTarget));
     }, 1000);
+
     return () => clearInterval(tick);
-  }, [target]);
+  }, []);
+
+  if (timeLeft === null) return null;
 
   const pad = (n: number) => String(n).padStart(2, '0');
 

@@ -28,6 +28,11 @@ function extractCentPrice(p: { type: string; price?: number; fixed_price?: numbe
   return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
 }
 
+function centsToDisplay(cents: number): string {
+  const dollars = cents / 100;
+  return dollars % 1 === 0 ? String(dollars) : dollars.toFixed(2);
+}
+
 export const fetchProductPrices = unstable_cache(
   async (): Promise<ProductPrices> => {
     try {
@@ -37,9 +42,9 @@ export const fetchProductPrices = unstable_cache(
         dodo.products.retrieve(PRODUCT_IDS.lifetime),
       ]);
       return {
-        monthly:  String(Math.round(extractCentPrice(monthly.price  as { type: string; price?: number; fixed_price?: number }) / 100)),
-        annual:   String(Math.round(extractCentPrice(annual.price   as { type: string; price?: number; fixed_price?: number }) / 100)),
-        lifetime: String(Math.round(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number }) / 100)),
+        monthly:  centsToDisplay(extractCentPrice(monthly.price  as { type: string; price?: number; fixed_price?: number })),
+        annual:   centsToDisplay(extractCentPrice(annual.price   as { type: string; price?: number; fixed_price?: number })),
+        lifetime: centsToDisplay(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number })),
       };
     } catch (err) {
       console.error('[fetchProductPrices] Dodo API error, using defaults:', err);
