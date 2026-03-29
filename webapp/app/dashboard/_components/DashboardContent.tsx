@@ -138,6 +138,12 @@ export default function DashboardContent({ collections, isPro, initialView, succ
     initialView === 'timeline' ? 'timeline' : 'library'
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [cardSize, setCardSize] = useState<'large' | 'medium' | 'small'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('dash_cardSize') as 'large' | 'medium' | 'small') || 'large';
+    }
+    return 'large';
+  });
   const [exportOpen, setExportOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
@@ -191,6 +197,13 @@ export default function DashboardContent({ collections, isPro, initialView, succ
     const params = new URLSearchParams(searchParams.toString());
     params.set('view', mode);
     router.replace(`/dashboard?${params.toString()}`);
+  };
+
+  const cycleCardSize = () => {
+    const cycle: Record<string, 'large' | 'medium' | 'small'> = { large: 'medium', medium: 'small', small: 'large' };
+    const next = cycle[cardSize] || 'large';
+    setCardSize(next);
+    localStorage.setItem('dash_cardSize', next);
   };
 
   // ── Selection ───────────────────────────────────────────────────────────────
@@ -321,6 +334,18 @@ export default function DashboardContent({ collections, isPro, initialView, succ
             </button>
           </div>
 
+          {/* Card size toggle */}
+          {viewMode === 'library' && (
+            <button
+              className={toolbarStyles.toolbarBtn}
+              onClick={cycleCardSize}
+              title={`Card size: ${cardSize}`}
+              style={{ fontSize: 13, fontWeight: 700, fontFamily: 'inherit', minWidth: 32 }}
+            >
+              {cardSize === 'large' ? 'L' : cardSize === 'medium' ? 'M' : 'S'}
+            </button>
+          )}
+
           {/* Export / Import */}
           <div className={toolbarStyles.exportWrap}>
             <button
@@ -435,7 +460,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
 
       {/* ── Library view ── */}
       {viewMode === 'library' && filteredCollections.length > 0 && (
-        <div className={styles.videoGrid}>
+        <div className={`${styles.videoGrid}${cardSize === 'medium' ? ' ' + styles.videoGridMedium : cardSize === 'small' ? ' ' + styles.videoGridSmall : ''}`}>
           {filteredCollections.map(c => (
             <div key={c.id} className={styles.videoCard}>
               <div className={styles.videoLeft}>
