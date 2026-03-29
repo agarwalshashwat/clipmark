@@ -242,14 +242,14 @@ function groupByVideo(bookmarks) {
   return groups;
 }
 
-// Groups bookmarks by videoId + calendar day (YYYY-MM-DD).
-// Returns an ordered array of { key, videoId, dayKey, bookmarks }.
+// Groups bookmarks by videoId only — all bookmarks for the same video
+// appear as a single card, regardless of which day they were saved.
+// Returns an ordered array of { key, videoId, bookmarks }.
 function groupByVideoAndDay(bookmarks) {
   const map = new Map();
   bookmarks.forEach(b => {
-    const day = b.createdAt ? b.createdAt.slice(0, 10) : new Date(b.id).toISOString().slice(0, 10);
-    const key = `${b.videoId}__${day}`;
-    if (!map.has(key)) map.set(key, { key, videoId: b.videoId, dayKey: day, bookmarks: [] });
+    const key = b.videoId;
+    if (!map.has(key)) map.set(key, { key, videoId: b.videoId, bookmarks: [] });
     map.get(key).bookmarks.push(b);
   });
   return Array.from(map.values());
@@ -367,9 +367,12 @@ async function renderBookmarks() {
     groups.sort((a, b) => Math.min(...a.bookmarks.map(x => x.id)) - Math.min(...b.bookmarks.map(x => x.id)));
   } else if (sortOrder === 'timestamp') {
     groups.sort((a, b) => {
-      const ta = (a.bookmarks[0].videoTitle || videoTitles[a.videoId] || a.videoId).toLowerCase();
-      const tb = (b.bookmarks[0].videoTitle || videoTitles[b.videoId] || b.videoId).toLowerCase();
-      return ta.localeCompare(tb);
+      const latestTitle = g => g.bookmarks
+        .slice()
+        .sort((x, y) => (y.createdAt ? new Date(y.createdAt).getTime() : y.id) - (x.createdAt ? new Date(x.createdAt).getTime() : x.id))
+        .map(b => b.videoTitle)
+        .find(t => t) || videoTitles[g.videoId] || g.videoId;
+      return latestTitle(a).toLowerCase().localeCompare(latestTitle(b).toLowerCase());
     });
   } else {
     groups.sort((a, b) => Math.max(...b.bookmarks.map(x => x.id)) - Math.max(...a.bookmarks.map(x => x.id)));
@@ -381,7 +384,11 @@ async function renderBookmarks() {
     : null;
 
   groups.forEach(({ key, videoId, bookmarks }) => {
-    const title  = bookmarks[0].videoTitle || videoTitles[videoId] || `Video: ${videoId}`;
+    const title  = bookmarks
+      .slice()
+      .sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : b.id) - (a.createdAt ? new Date(a.createdAt).getTime() : a.id))
+      .map(b => b.videoTitle)
+      .find(t => t) || videoTitles[videoId] || `Video: ${videoId}`;
     const ytUrl  = `https://www.youtube.com/watch?v=${videoId}`;
     const thumb  = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
     const count  = bookmarks.length;

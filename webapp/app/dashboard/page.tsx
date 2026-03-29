@@ -34,7 +34,10 @@ export default async function DashboardPage({
   const collections: Collection[] = (userBookmarksData ?? []).map(row => ({
     id: row.video_id as string,
     video_id: row.video_id as string,
-    video_title: ((row.bookmarks as Bookmark[])?.[0]?.videoTitle) ?? null,
+    video_title: ((row.bookmarks as Bookmark[]) ?? [])
+      .slice()
+      .sort((a: Bookmark, b: Bookmark) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .find((b: Bookmark) => b.videoTitle)?.videoTitle ?? null,
     bookmarks: (row.bookmarks as Bookmark[]) ?? [],
     created_at: row.updated_at as string,
     view_count: 0,
