@@ -35,6 +35,7 @@ function centsToDisplay(cents: number): string {
 
 export const fetchProductPrices = unstable_cache(
   async (): Promise<ProductPrices> => {
+    // Prices are in smallest currency unit (cents per Dodo API docs)
     try {
       const [monthly, annual, lifetime] = await Promise.all([
         dodo.products.retrieve(PRODUCT_IDS.monthly),
@@ -52,7 +53,7 @@ export const fetchProductPrices = unstable_cache(
     }
   },
   ['dodo-product-prices'],
-  { revalidate: 3600 }
+  { revalidate: 300, tags: ['dodo-product-prices'] }
 );
 
 export async function cancelSubscription() {
