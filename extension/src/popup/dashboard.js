@@ -514,6 +514,12 @@ async function renderBookmarks() {
               <span class="material-symbols-outlined vc-expand-arrow">expand_more</span>
             </button>
           </div>` : ''}
+          <div class="vc-pill-row">
+            ${bookmarks.map(b => {
+              const c = b.color || '#14B8A6';
+              return `<button class="vc-pill jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" style="background:${c}18;color:${c};border:1px solid ${c}30">${formatTimestamp(b.timestamp)}</button>`;
+            }).join('')}
+          </div>
         </div>
       </div>`;
 

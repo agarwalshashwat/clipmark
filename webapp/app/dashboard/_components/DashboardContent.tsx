@@ -630,6 +630,25 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                     );
                   })()}
                 </div>
+                <div className={styles.pillRow}>
+                  {(c.bookmarks ?? []).map((b: Bookmark, i: number) => (
+                    <a
+                      key={i}
+                      href={`https://www.youtube.com/watch?v=${c.video_id}&t=${Math.floor(b.timestamp)}s`}
+                      className={styles.pillChip}
+                      style={{
+                        background: `${b.color || '#006b5f'}18`,
+                        color: b.color || '#006b5f',
+                        border: `1px solid ${b.color || '#006b5f'}30`,
+                      }}
+                      title={b.description || formatTimestamp(b.timestamp)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {formatTimestamp(b.timestamp)}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           ))}

@@ -2873,6 +2873,35 @@
     line-height: 1;
 }
 
+/* ── Pill chips: compact timestamp buttons for medium/small cards ─────────── */
+.vc-pill-row {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 2px 0;
+    margin-top: 4px;
+}
+
+.vc-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.4;
+    transition: transform 0.12s, filter 0.12s;
+    /* background, color, border set inline per bookmark color */
+}
+
+.vc-pill:hover {
+    transform: scale(1.06);
+    filter: brightness(0.88);
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    CARD SIZE CLASSES  (large = default 1-col, medium = 2-col, small = 3-col)
    ══════════════════════════════════════════════════════════════════════════ */
@@ -2932,9 +2961,10 @@
     font-size: 12px;
 }
 
-/* hide overflow & limit visible entries to 3 in medium */
-.card-size-medium .vc-vt > .vc-chapter:nth-child(n+4) { display: none; }
-.card-size-medium .vc-vt-overflow { display: none; }
+/* medium: swap full thread for pill row */
+.card-size-medium .vc-vt         { display: none; }
+.card-size-medium .vc-expand-row { display: none; }
+.card-size-medium .vc-pill-row   { display: flex; }
 
 /* ── Small: 3-column grid, compact card ───────────────────────────────────── */
 #bookmarks-container.card-size-small {
@@ -3004,9 +3034,11 @@
     font-size: 10px;
 }
 
-/* limit to 2 visible entries in small */
-.card-size-small .vc-vt > .vc-chapter:nth-child(n+3) { display: none; }
-.card-size-small .vc-vt-overflow { display: none; }
+/* small: swap full thread for pill row */
+.card-size-small .vc-vt          { display: none; }
+.card-size-small .vc-expand-row  { display: none; }
+.card-size-small .vc-pill-row    { display: flex; }
+.card-size-small .vc-pill        { padding: 2px 8px; font-size: 10px; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    MOBILE BOTTOM NAV
