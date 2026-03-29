@@ -203,7 +203,7 @@ let filterQuery   = '';
 let filterVideoId = null;
 let sortOrder     = 'newest';
 let viewMode      = localStorage.getItem('bm_viewMode') || 'cards';
-let density       = localStorage.getItem('bm_density')  || 'default';
+let cardSize      = localStorage.getItem('bm_cardSize') || 'large';
 let selectedIds   = new Set();
 let revisitIndex  = 0;
 
@@ -332,8 +332,8 @@ async function renderBookmarks() {
 
   const filtered = applyFiltersAndSort(allBookmarks);
 
-  // Apply density class for card/timeline views
-  container.className = density === 'default' ? '' : `density-${density}`;
+  // Apply card-size class for card/timeline views
+  container.className = cardSize === 'large' ? '' : `card-size-${cardSize}`;
 
   if (filtered.length === 0) {
     container.innerHTML = allBookmarks.length === 0
@@ -514,6 +514,12 @@ async function renderBookmarks() {
               <span class="material-symbols-outlined vc-expand-arrow">expand_more</span>
             </button>
           </div>` : ''}
+          <div class="vc-pill-row">
+            ${bookmarks.map(b => {
+              const c = b.color || '#14B8A6';
+              return `<button class="vc-pill jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" style="background:${c}18;color:${c};border:1px solid ${c}30">${formatTimestamp(b.timestamp)}</button>`;
+            }).join('')}
+          </div>
         </div>
       </div>`;
 
@@ -1680,12 +1686,12 @@ function updateViewToggle() {
   document.getElementById('sort-select').style.display  = hideToolbar ? 'none' : '';
 }
 
-function updateDensityBtn() {
+function updateCardSizeBtn() {
   const btn = document.getElementById('density-btn');
   if (!btn) return;
-  const icons = { compact: '⊠', default: '⊟', comfortable: '▤' };
-  btn.title       = `Density: ${density}`;
-  btn.textContent = icons[density] || '⊟';
+  const labels = { large: 'L', medium: 'M', small: 'S' };
+  btn.title       = `Card size: ${cardSize}`;
+  btn.textContent = labels[cardSize] || 'L';
 }
 
 // ─── Export popover ───────────────────────────────────────────────────────────
@@ -1860,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   updateViewToggle();
-  updateDensityBtn();
+  updateCardSizeBtn();
   // Silently pull all cloud bookmarks on open so cross-device data is available immediately
   loadAllBookmarks();
   syncAllWithCloud().then(updated => {
@@ -1933,12 +1939,12 @@ document.addEventListener('DOMContentLoaded', () => {
     updateViewToggle(); renderBookmarks();
   });
 
-  // Density toggle
+  // Card size toggle
   document.getElementById('density-btn').addEventListener('click', () => {
-    const cycle = { compact: 'default', default: 'comfortable', comfortable: 'compact' };
-    density = cycle[density] || 'default';
-    localStorage.setItem('bm_density', density);
-    updateDensityBtn();
+    const cycle = { large: 'medium', medium: 'small', small: 'large' };
+    cardSize = cycle[cardSize] || 'large';
+    localStorage.setItem('bm_cardSize', cardSize);
+    updateCardSizeBtn();
     renderBookmarks();
   });
 
@@ -1973,10 +1979,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Subnav — All Bookmarks (header)
   document.getElementById('subnav-all').addEventListener('click', () => {
     filterVideoId = null;
-    if (viewMode === 'revisit' || viewMode === 'videos') {
-      viewMode = localStorage.getItem('bm_viewMode') || 'cards';
-      if (viewMode === 'revisit' || viewMode === 'videos') viewMode = 'cards';
-    }
+    viewMode = 'cards';
+    localStorage.setItem('bm_viewMode', 'cards');
     setActiveNav('subnav-all');
     updateViewToggle();
     renderBookmarks();
@@ -1985,10 +1989,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Subnav — All Bookmarks (sidebar)
   document.getElementById('subnav-all-side').addEventListener('click', () => {
     filterVideoId = null;
-    if (viewMode === 'revisit' || viewMode === 'videos') {
-      viewMode = localStorage.getItem('bm_viewMode') || 'cards';
-      if (viewMode === 'revisit' || viewMode === 'videos') viewMode = 'cards';
-    }
+    viewMode = 'cards';
+    localStorage.setItem('bm_viewMode', 'cards');
     setActiveNav('subnav-all-side');
     updateViewToggle();
     renderBookmarks();

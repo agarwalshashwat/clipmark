@@ -275,6 +275,116 @@
 /* ── Video Cards ──────────────────────────────────────────────────────────── */
 .videoGrid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 
+/* medium: 2-column grid — cards stack vertically */
+.videoGridMedium {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.videoGridMedium .videoCard {
+  flex-direction: column;
+  border-radius: 18px;
+}
+
+@media (min-width: 1024px) {
+  .videoGridMedium .videoCard { flex-direction: column; }
+}
+
+.videoGridMedium .videoLeft {
+  padding: 14px 14px 10px;
+  gap: 10px;
+  border-right: none;
+  border-bottom: 1px solid rgba(187,202,198,0.2);
+}
+
+@media (min-width: 1024px) {
+  .videoGridMedium .videoLeft { width: 100%; }
+}
+
+.videoGridMedium .videoRight {
+  padding: 16px 18px 14px;
+  border-left: none;
+  border-top: 1px solid rgba(187,202,198,0.2);
+}
+
+@media (min-width: 1024px) {
+  .videoGridMedium .videoRight {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid rgba(187,202,198,0.2);
+  }
+}
+
+.videoGridMedium .videoTitle {
+  font-size: 15px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.videoGridMedium .videoInfo       { margin-bottom: 12px; }
+.videoGridMedium .bookmarkThread  { display: none; }
+.videoGridMedium .pillRow         { display: flex; }
+
+/* small: 3-column grid — compact cards */
+.videoGridSmall {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.videoGridSmall .videoCard {
+  flex-direction: column;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(26,28,29,0.05);
+}
+
+@media (min-width: 1024px) {
+  .videoGridSmall .videoCard { flex-direction: column; }
+}
+
+.videoGridSmall .videoLeft {
+  padding: 10px 10px 8px;
+  gap: 0;
+  border-right: none;
+  border-bottom: 1px solid rgba(187,202,198,0.2);
+}
+
+@media (min-width: 1024px) {
+  .videoGridSmall .videoLeft { width: 100%; }
+}
+
+.videoGridSmall .scrubber,
+.videoGridSmall .videoActionBtn {
+  display: none;
+}
+
+.videoGridSmall .videoRight {
+  padding: 10px 12px;
+  border-left: none;
+  border-top: 1px solid rgba(187,202,198,0.2);
+}
+
+@media (min-width: 1024px) {
+  .videoGridSmall .videoRight {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid rgba(187,202,198,0.2);
+  }
+}
+
+.videoGridSmall .videoTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.videoGridSmall .videoInfo {
+  margin-bottom: 10px;
+}
+.videoGridSmall .bookmarkThread { display: none; }
+.videoGridSmall .pillRow        { display: flex; }
+.videoGridSmall .pillChip       { padding: 2px 8px; font-size: 10px; }
+
 .videoCard {
   background: #ffffff;
   border-radius: 24px;
@@ -518,6 +628,31 @@
 }
 .extraBookmarksInner {
   overflow: hidden;
+}
+
+/* ── Pill chips: compact timestamp links for medium/small cards ──────────── */
+.pillRow {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0;
+  margin-top: 2px;
+}
+.pillChip {
+  border-radius: 9999px;
+  padding: 3px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: transform 0.12s, filter 0.12s;
+  /* background, color, border set inline via JSX style prop */
+}
+.pillChip:hover {
+  transform: scale(1.06);
+  filter: brightness(0.88);
 }
 
 /* ── Timeline grouped clips ──────────────────────────────────────────────── */

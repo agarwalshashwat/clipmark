@@ -1526,11 +1526,9 @@
     flex-direction: column;
     gap: 20px;
 }
-/* density overrides */
-.density-compact     .vc-vt-overflow__inner          { gap: 14px; }
-.density-compact     .vc-vt-overflow--collapsed      { margin-top: -14px; }
-.density-comfortable .vc-vt-overflow__inner          { gap: 24px; }
-.density-comfortable .vc-vt-overflow--collapsed      { margin-top: -24px; }
+/* card-size overflow overrides */
+.card-size-medium .vc-vt-overflow__inner  { gap: 14px; }
+.card-size-medium .vc-vt-overflow--collapsed { margin-top: -14px; }
 
 /* Dot circle — absolutely positioned to sit on the thread */
 .vc-vt-circle {
@@ -2875,16 +2873,172 @@
     line-height: 1;
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   DENSITY CLASSES
-   ══════════════════════════════════════════════════════════════════════════ */
-.density-compact .vc-left          { width: 40%; padding: 16px; }
-.density-compact .vc-vt-note       { font-size: 12px; }
-.density-compact .vc-vt            { gap: 14px; }
+/* ── Pill chips: compact timestamp buttons for medium/small cards ─────────── */
+.vc-pill-row {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 2px 0;
+    margin-top: 4px;
+}
 
-.density-comfortable .vc-left      { width: 55%; }
-.density-comfortable .vc-vt-note   { font-size: 14px; }
-.density-comfortable .vc-vt        { gap: 24px; }
+.vc-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.4;
+    transition: transform 0.12s, filter 0.12s;
+    /* background, color, border set inline per bookmark color */
+}
+
+.vc-pill:hover {
+    transform: scale(1.06);
+    filter: brightness(0.88);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CARD SIZE CLASSES  (large = default 1-col, medium = 2-col, small = 3-col)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Medium: 2-column grid, stacked card layout ───────────────────────────── */
+#bookmarks-container.card-size-medium {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.card-size-medium .vc-card {
+    border-radius: 18px;
+}
+
+.card-size-medium .vc-body {
+    flex-direction: column;
+}
+
+.card-size-medium .vc-left {
+    width: 100%;
+    padding: 14px 14px 10px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26, 28, 29, 0.06);
+    gap: 10px;
+}
+
+[data-theme="dark"] .card-size-medium .vc-left {
+    border-bottom-color: var(--border);
+    border-right: none;
+}
+
+.card-size-medium .vc-right {
+    padding: 16px 18px 14px;
+}
+
+.card-size-medium .vc-title {
+    font-size: 15px;
+    -webkit-line-clamp: 2;
+}
+
+.card-size-medium .vc-meta-row {
+    margin-bottom: 14px;
+}
+
+.card-size-medium .vc-vt {
+    gap: 14px;
+}
+
+.card-size-medium .vc-vt-note {
+    font-size: 12px;
+}
+
+.card-size-medium .vc-revisit-btn,
+.card-size-medium .vc-group-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+}
+
+/* medium: swap full thread for pill row */
+.card-size-medium .vc-vt         { display: none; }
+.card-size-medium .vc-expand-row { display: none; }
+.card-size-medium .vc-pill-row   { display: flex; }
+
+/* ── Small: 3-column grid, compact card ───────────────────────────────────── */
+#bookmarks-container.card-size-small {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.card-size-small .vc-card {
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(26, 28, 29, 0.05);
+}
+
+.card-size-small .vc-body {
+    flex-direction: column;
+}
+
+.card-size-small .vc-left {
+    width: 100%;
+    padding: 10px 10px 8px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26, 28, 29, 0.06);
+    gap: 0;
+}
+
+[data-theme="dark"] .card-size-small .vc-left {
+    border-bottom-color: var(--border);
+    border-right: none;
+}
+
+.card-size-small .vc-scrubber,
+.card-size-small .vc-card-btns {
+    display: none;
+}
+
+.card-size-small .vc-right {
+    padding: 10px 12px 10px;
+}
+
+.card-size-small .vc-title {
+    font-size: 12px;
+    font-weight: 700;
+    -webkit-line-clamp: 2;
+    letter-spacing: 0;
+}
+
+.card-size-small .vc-meta-row {
+    margin-bottom: 8px;
+}
+
+.card-size-small .vc-count-badge,
+.card-size-small .vc-added-date {
+    font-size: 11px;
+}
+
+.card-size-small .vc-vt {
+    gap: 10px;
+    padding-left: 18px;
+}
+
+.card-size-small .vc-vt-note {
+    font-size: 11px;
+    -webkit-line-clamp: 1;
+}
+
+.card-size-small .vc-vt-time {
+    font-size: 10px;
+}
+
+/* small: swap full thread for pill row */
+.card-size-small .vc-vt          { display: none; }
+.card-size-small .vc-expand-row  { display: none; }
+.card-size-small .vc-pill-row    { display: flex; }
+.card-size-small .vc-pill        { padding: 2px 8px; font-size: 10px; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    MOBILE BOTTOM NAV
