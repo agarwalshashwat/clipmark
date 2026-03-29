@@ -325,8 +325,11 @@ export default async function Home({
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, marginBottom: 32, lineHeight: 1.2, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 Effortless curation powered by Intelligence.
               </h2>
-              <p style={{ color: '#9ca3af', fontSize: 18, lineHeight: 1.75, marginBottom: 40 }}>
+              <p style={{ color: '#9ca3af', fontSize: 18, lineHeight: 1.75, marginBottom: 16 }}>
                 The &ldquo;Digital Curator&rdquo; doesn&apos;t just store; it understands. Our AI engine analyzes transcripts in real-time to surface the gold nuggets so you don&apos;t have to.
+              </p>
+              <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 40, fontStyle: 'italic' }}>
+                * AI features use Chrome&apos;s built-in AI (Gemini Nano). Availability is subject to Google&apos;s support and may vary by Chrome version.
               </p>
               <a href="/upgrade" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
