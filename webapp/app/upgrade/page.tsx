@@ -270,7 +270,7 @@ export default async function UpgradePage({
                   with no recurring charges. Ever.
                 </p>
                 <p style={{ fontSize: 13, color: '#64748b' }}>
-                  Price increases to $79 after the launch window. Early supporters lock in forever at $40.
+                  Price increases to $79.99 after the launch window. Early supporters lock in forever at $39.99.
                 </p>
               </div>
 
@@ -281,7 +281,7 @@ export default async function UpgradePage({
                     fontSize: 14, color: '#64748b',
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     textDecoration: 'line-through', marginRight: 8,
-                  }}>$79</span>
+                  }}>$79.99</span>
                   <span style={{
                     fontSize: 56, fontWeight: 800, color: '#f9fafb',
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -456,6 +456,14 @@ export default async function UpgradePage({
                           </li>
                         </ul>
                       </div>
+                      <p style={{
+                        fontSize: 11, color: '#64748b', marginTop: 12, lineHeight: 1.6,
+                        fontStyle: 'italic',
+                      }}>
+                        * AI features are powered by Chrome&apos;s built-in AI (Gemini Nano).
+                        Availability depends on your Chrome version and Google&apos;s support —
+                        feature access may change if Google updates or discontinues the built-in AI API.
+                      </p>
                     </div>
 
                     {/* CTAs */}
@@ -615,6 +623,10 @@ export default async function UpgradePage({
                 {
                   q: 'Do you offer educational discounts?',
                   a: 'Yes! We support students and educators. Contact our support team with your .edu email for a special discount code.',
+                },
+                {
+                  q: 'How reliable are the AI features?',
+                  a: 'AI features run on Chrome\'s built-in AI model (Gemini Nano), processed locally in your browser — your data never leaves your device for AI tasks. Availability depends on your Chrome version and Google\'s ongoing support for the built-in AI API. If Google updates or discontinues this capability, AI features may be temporarily or permanently affected. We\'ll always communicate any changes that impact your subscription.',
                 },
               ].map(({ q, a }) => (
                 <div key={q} className="faq-card">
