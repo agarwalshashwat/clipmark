@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useTransition } from 'react';
+import { useState, useEffect, useRef, useCallback, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from '../page.module.css';
 import toolbarStyles from './toolbar.module.css';
@@ -138,12 +138,11 @@ export default function DashboardContent({ collections, isPro, initialView, succ
     initialView === 'timeline' ? 'timeline' : 'library'
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [cardSize, setCardSize] = useState<'large' | 'medium' | 'small'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('dash_cardSize') as 'large' | 'medium' | 'small') || 'large';
-    }
-    return 'large';
-  });
+  const [cardSize, setCardSize] = useState<'large' | 'medium' | 'small'>('large');
+  useEffect(() => {
+    const stored = localStorage.getItem('dash_cardSize') as 'large' | 'medium' | 'small' | null;
+    if (stored) setCardSize(stored);
+  }, []);
   const [exportOpen, setExportOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());

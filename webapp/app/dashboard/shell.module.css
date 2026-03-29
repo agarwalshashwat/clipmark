@@ -81,6 +81,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .searchBox {
@@ -106,6 +107,10 @@
   width: 180px;
 }
 
+@media (min-width: 640px) and (max-width: 899px) {
+  .searchInput { width: 110px; }
+}
+
 .searchInput::placeholder { color: #9ca3af; }
 
 .iconBtn {
@@ -123,6 +128,12 @@
 }
 
 .iconBtn:hover { background: rgba(26, 28, 29, 0.06); }
+
+/* Hide topbar sign-out on tablet — sidebar has it */
+.signOutTopBarForm { display: contents; }
+@media (min-width: 768px) {
+  .signOutTopBarForm { display: none; }
+}
 
 .upgradeCta {
   display: none;
@@ -157,6 +168,7 @@
   outline: 2px solid rgba(20, 184, 166, 0.3);
   outline-offset: 1px;
   margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .avatarFallback {
@@ -184,24 +196,73 @@
   top: 0;
   height: 100%;
   width: 256px;
-  padding: 80px 16px 24px;
+  padding: 80px 0 24px;
   background: rgba(243, 243, 244, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-right: 1px solid rgba(26, 28, 29, 0.06);
   z-index: 40;
+  overflow: hidden;
+  transition: width 0.25s ease;
 }
 
 @media (min-width: 768px) {
   .sidebar { display: flex; }
 }
 
+/* ── Sidebar top row: brand + collapse toggle ─────────────────────────────── */
+.sidebarTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 16px 16px;
+  flex-shrink: 0;
+}
+
+.sidebarCollapsed .sidebarTopRow {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ── Collapse toggle button ───────────────────────────────────────────────── */
+.collapseBtn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid rgba(187, 202, 198, 0.4);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(26, 28, 29, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6c7a77;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.collapseBtn:hover {
+  background: #f3f3f4;
+  color: #1a1c1d;
+  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.12);
+}
+
 .sidebarBrand {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 16px 24px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
+
+.sidebarBrandText {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sidebarCollapsed .sidebarBrand { display: none; }
 
 .sidebarBrandIcon {
   width: 32px;
@@ -321,16 +382,33 @@
   margin: 0;
 }
 
+/* ── Sidebar collapsed state ──────────────────────────────────────────────── */
+.sidebarCollapsed { width: 64px; }
+
+.sidebarCollapsed .sideNavSection { display: none; }
+.sidebarCollapsed .sideNavItemLabel { display: none; }
+.sidebarCollapsed .dueBadge { display: none; }
+
+.sidebarCollapsed .sideNavItem {
+  justify-content: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 /* ── Main ─────────────────────────────────────────────────────────────────── */
 .main {
   padding-top: 64px;
   padding-bottom: 80px;
+  transition: margin-left 0.25s ease;
 }
 
 @media (min-width: 768px) {
   .main {
     margin-left: 256px;
     padding-bottom: 48px;
+  }
+  .mainCollapsed {
+    margin-left: 64px;
   }
 }
 

@@ -29,6 +29,14 @@
   margin: 0 auto;
   padding: 48px 24px;
 }
+@media (max-width: 639px) {
+  .timelineWrap { padding: 24px 16px; }
+}
+@media (max-width: 479px) {
+  .timelineLine { display: none; }
+  .entryDate    { display: none; }
+  .timelineEntry { gap: 0; }
+}
 
 .timeline { position: relative; }
 
@@ -223,12 +231,18 @@
   max-width: 1280px;
   margin: 0 auto;
 }
+@media (max-width: 639px) {
+  .libraryWrap { padding: 24px 16px; }
+}
 
 .libraryHeader {
   display: flex;
   flex-direction: column;
   gap: 24px;
   margin-bottom: 48px;
+}
+@media (max-width: 639px) {
+  .libraryHeader { margin-bottom: 24px; }
 }
 @media (min-width: 768px) {
   .libraryHeader {
@@ -280,6 +294,9 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 18px;
 }
+@media (max-width: 479px) {
+  .videoGridMedium { grid-template-columns: 1fr; }
+}
 
 .videoGridMedium .videoCard {
   flex-direction: column;
@@ -330,6 +347,14 @@
 .videoGridSmall {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+/* ≤479px: single column */
+@media (max-width: 479px) {
+  .videoGridSmall { grid-template-columns: 1fr; }
+}
+/* 480–1199px: 2 columns (sidebar eats space on tablet) */
+@media (min-width: 480px) and (max-width: 1199px) {
+  .videoGridSmall { grid-template-columns: repeat(2, 1fr); }
 }
 
 .videoGridSmall .videoCard {
