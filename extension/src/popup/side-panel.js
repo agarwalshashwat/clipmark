@@ -632,9 +632,124 @@ async function pruneOldResumeEntries() {
 }
 
 // ─── Comments View ────────────────────────────────────────────────────────────
-async function loadComments(videoId) {
+
+// Sync state
+let allComments = [];          // { author, likeCount, text, timestamps[] }
+let commentSyncInterval = null;
+let lastSyncedIdxs = null; // null = never rendered yet → always force first render
+const COMMENT_SYNC_WINDOW = 30; // seconds either side of current time
+
+/** Extract all mm:ss / hh:mm:ss timestamps from a comment string → array of seconds */
+function parseCommentTimestamps(text) {
+  const re = /\b(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\b/g;
+  const stamps = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const secs = (parseInt(m[1] || '0') * 3600) + (parseInt(m[2]) * 60) + parseInt(m[3]);
+    stamps.push(secs);
+  }
+  return stamps;
+}
+
+/** Build HTML for a single comment card. syncTs = matched seconds or null */
+function commentCardHtml(c, syncTs) {
+  const initials = (c.author || '?').charAt(0).toUpperCase();
+  const likesText = c.likeCount > 0
+    ? `<span class="comment-likes">♥ ${c.likeCount.toLocaleString()}</span>`
+    : '';
+  const syncBadge = syncTs != null
+    ? `<span class="comment-sync-badge">⏱ ${formatTimestamp(syncTs)}</span>`
+    : '';
+  return `
+    <div class="comment-card${syncTs != null ? ' comment-card--synced' : ''}">
+      <div class="comment-header">
+        <div class="comment-avatar">${initials}</div>
+        <span class="comment-author">${escapeHtml(c.author)}</span>
+        ${syncBadge}
+        ${likesText}
+      </div>
+      <p class="comment-text">${sanitizeCommentHtml(c.text)}</p>
+      <button class="comment-expand-btn" data-expanded="false">Show more</button>
+    </div>
+  `;
+}
+
+/** Re-sort comments by proximity to currentTime and re-render only when synced set changes */
+function renderCommentList(currentTime) {
+  const list = document.getElementById('comment-list');
+  if (!list || allComments.length === 0) return;
+
+  const synced = [];
+  const rest = [];
+
+  allComments.forEach((c, idx) => {
+    if (c.timestamps.length === 0) { rest.push({ c, syncTs: null }); return; }
+    let best = { dist: Infinity, ts: null };
+    for (const ts of c.timestamps) {
+      const d = Math.abs(ts - currentTime);
+      if (d < best.dist) best = { dist: d, ts };
+    }
+    if (best.dist <= COMMENT_SYNC_WINDOW) {
+      synced.push({ c, idx, syncTs: best.ts, dist: best.dist });
+    } else {
+      rest.push({ c, syncTs: null });
+    }
+  });
+
+  synced.sort((a, b) => a.dist - b.dist);
+
+  // Only re-render when the set of synced comments actually changes
+  // (lastSyncedIdxs === null means never rendered yet — always proceed)
+  const newIdxs = new Set(synced.map(e => e.idx));
+  const changed = lastSyncedIdxs === null ||
+    newIdxs.size !== lastSyncedIdxs.size ||
+    [...newIdxs].some(i => !lastSyncedIdxs.has(i));
+  if (!changed) return;
+  lastSyncedIdxs = newIdxs;
+
+  let html = '';
+  if (synced.length > 0) {
+    html += `<div class="comment-sync-header"><span class="comment-sync-icon">⏱</span> Relevant to this moment</div>`;
+    html += synced.map(({ c, syncTs }) => commentCardHtml(c, syncTs)).join('');
+    html += `<div class="comment-sync-divider"></div>`;
+  }
+  html += rest.map(({ c }) => commentCardHtml(c, null)).join('');
+  list.innerHTML = html;
+
+  // Hide expand buttons on short comments that don't overflow
+  list.querySelectorAll('.comment-card').forEach(card => {
+    const textEl = card.querySelector('.comment-text');
+    const btn = card.querySelector('.comment-expand-btn');
+    if (textEl.scrollHeight <= textEl.clientHeight) btn.style.display = 'none';
+  });
+}
+
+/** Start polling current video time and re-sorting comments */
+async function startCommentSync(tabId) {
+  stopCommentSync();
+  try {
+    const r = await sendMessageToTab(tabId, { action: 'getCurrentTime' });
+    if (r?.currentTime !== undefined) renderCommentList(r.currentTime);
+  } catch {}
+  commentSyncInterval = setInterval(async () => {
+    try {
+      const r = await sendMessageToTab(tabId, { action: 'getCurrentTime' });
+      if (r?.currentTime !== undefined) renderCommentList(r.currentTime);
+    } catch {}
+  }, 2000);
+}
+
+/** Stop the sync polling and reset synced state */
+function stopCommentSync() {
+  if (commentSyncInterval) { clearInterval(commentSyncInterval); commentSyncInterval = null; }
+  lastSyncedIdxs = null; // reset sentinel so next render always proceeds
+}
+
+async function loadComments(videoId, tabId) {
   const list = document.getElementById('comment-list');
   if (!list) return;
+  stopCommentSync();
+  allComments = [];
 
   list.innerHTML = '<div class="comment-skeleton"></div><div class="comment-skeleton"></div><div class="comment-skeleton"></div>';
 
@@ -652,43 +767,15 @@ async function loadComments(videoId) {
       return;
     }
 
-    list.innerHTML = comments.map(c => {
-      const initials = (c.author || '?').charAt(0).toUpperCase();
-      const likesText = c.likeCount > 0
-        ? `<span class="comment-likes">♥ ${c.likeCount.toLocaleString()}</span>`
-        : '';
-      return `
-        <div class="comment-card">
-          <div class="comment-header">
-            <div class="comment-avatar">${initials}</div>
-            <span class="comment-author">${escapeHtml(c.author)}</span>
-            ${likesText}
-          </div>
-          <p class="comment-text">${sanitizeCommentHtml(c.text)}</p>
-          <button class="comment-expand-btn" data-expanded="false">Show more</button>
-        </div>
-      `;
-    }).join('');
+    // Store parsed comments globally so renderCommentList can re-sort them
+    allComments = comments.map(c => ({
+      ...c,
+      timestamps: parseCommentTimestamps(String(c.text || '')),
+    }));
 
-    // Hide expand buttons for comments that aren't actually clamped
-    list.querySelectorAll('.comment-card').forEach(card => {
-      const textEl = card.querySelector('.comment-text');
-      const btn = card.querySelector('.comment-expand-btn');
-      if (textEl.scrollHeight <= textEl.clientHeight) {
-        btn.style.display = 'none';
-      }
-    });
-
-    // Toggle expand / collapse
-    list.addEventListener('click', e => {
-      const btn = e.target.closest('.comment-expand-btn');
-      if (!btn) return;
-      const textEl = btn.closest('.comment-card').querySelector('.comment-text');
-      const isExpanded = btn.dataset.expanded === 'true';
-      textEl.classList.toggle('expanded', !isExpanded);
-      btn.dataset.expanded = String(!isExpanded);
-      btn.textContent = isExpanded ? 'Show more' : 'Show less';
-    });
+    // Initial render at t=0, then start live sync if we have a tab
+    renderCommentList(0);
+    if (tabId) startCommentSync(tabId);
   } catch (error) {
     list.innerHTML = `<div class="no-bookmarks">${error.message}</div>`;
   }
@@ -957,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('tab-comments').classList.remove('sp-tab--active');
     document.getElementById('bookmarks-panel').style.display = '';
     document.getElementById('comments-panel').style.display = 'none';
+    stopCommentSync();
   });
   document.getElementById('tab-comments').addEventListener('click', async () => {
     document.getElementById('tab-comments').classList.add('sp-tab--active');
@@ -967,9 +1055,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const videoId = tab?.url ? extractVideoId(tab.url) : null;
     if (videoId !== lastCommentVideoId) {
       lastCommentVideoId = videoId;
-      if (videoId) loadComments(videoId);
+      if (videoId) loadComments(videoId, tab.id);
       else document.getElementById('comment-list').innerHTML = '<div class="no-bookmarks">Open a YouTube video first.</div>';
+    } else if (videoId && allComments.length > 0) {
+      // Same video — comments already loaded, just restart the sync polling
+      startCommentSync(tab.id);
     }
+  });
+
+  // Expand / collapse comment text (delegated — survives comment list re-renders)
+  document.getElementById('comment-list')?.addEventListener('click', e => {
+    const btn = e.target.closest('.comment-expand-btn');
+    if (!btn) return;
+    const textEl = btn.closest('.comment-card').querySelector('.comment-text');
+    const isExpanded = btn.dataset.expanded === 'true';
+    textEl.classList.toggle('expanded', !isExpanded);
+    btn.dataset.expanded = String(!isExpanded);
+    btn.textContent = isExpanded ? 'Show more' : 'Show less';
   });
 
   // Quick tags
