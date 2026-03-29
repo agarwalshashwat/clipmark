@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { createServerSupabase, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
+import VideosSortSelect from './VideosSortSelect';
 
 export const metadata = { title: 'Videos — Clipmark' };
 
@@ -12,7 +14,21 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(days / 30)}mo ago`;
 }
 
-export default async function VideosPage() {
+function formatTs(s: number): string {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+export default async function VideosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
+  const { sort = 'recently_updated' } = await searchParams;
+
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -25,22 +41,41 @@ export default async function VideosPage() {
 
   const videos = (rows ?? []).map(row => {
     const bookmarks = (row.bookmarks as Bookmark[]) ?? [];
+    const timestamps = bookmarks.map(b => b.timestamp).sort((a, b) => a - b);
     return {
       videoId: row.video_id as string,
-      videoTitle: bookmarks[0]?.videoTitle ?? null,
+      videoTitle: bookmarks
+        .slice()
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .find(b => b.videoTitle)?.videoTitle ?? null,
       bookmarkCount: bookmarks.length,
       lastSaved: row.updated_at as string,
+      tags: Array.from(new Set(bookmarks.flatMap(b => b.tags ?? []))).slice(0, 4),
+      timeRange: timestamps.length >= 2
+        ? `${formatTs(timestamps[0])} – ${formatTs(timestamps[timestamps.length - 1])}`
+        : timestamps.length === 1 ? formatTs(timestamps[0]) : null,
     };
   });
+
+  const sorted = sort === 'most_bookmarks'
+    ? [...videos].sort((a, b) => b.bookmarkCount - a.bookmarkCount)
+    : sort === 'oldest_first'
+    ? [...videos].sort((a, b) => new Date(a.lastSaved).getTime() - new Date(b.lastSaved).getTime())
+    : videos;
 
   return (
     <div className={styles.wrap}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Videos</h1>
-        <p className={styles.pageSub}>{videos.length} video{videos.length !== 1 ? 's' : ''} with bookmarks</p>
+        <div className={styles.pageHeaderLeft}>
+          <h1 className={styles.pageTitle}>Videos</h1>
+          <p className={styles.pageSub}>{sorted.length} video{sorted.length !== 1 ? 's' : ''} with bookmarks</p>
+        </div>
+        <Suspense fallback={null}>
+          <VideosSortSelect current={sort} className={styles.sortSelect} />
+        </Suspense>
       </div>
 
-      {videos.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className={styles.empty}>
           <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>video_library</span>
           <h3>No videos yet</h3>
@@ -48,7 +83,7 @@ export default async function VideosPage() {
         </div>
       ) : (
         <div className={styles.grid}>
-          {videos.map(v => (
+          {sorted.map(v => (
             <a
               key={v.videoId}
               href={`https://www.youtube.com/watch?v=${v.videoId}`}
@@ -71,6 +106,14 @@ export default async function VideosPage() {
               </div>
               <div className={styles.cardBody}>
                 <h3 className={styles.title}>{v.videoTitle ?? 'Untitled Video'}</h3>
+                {v.timeRange && <p className={styles.timeRange}>{v.timeRange}</p>}
+                {v.tags.length > 0 && (
+                  <div className={styles.tagRow}>
+                    {v.tags.map(tag => (
+                      <span key={tag} className={styles.tagChip}>#{tag}</span>
+                    ))}
+                  </div>
+                )}
                 <p className={styles.meta}>{timeAgo(v.lastSaved)}</p>
               </div>
             </a>
