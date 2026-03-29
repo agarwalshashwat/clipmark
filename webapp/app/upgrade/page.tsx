@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase';
-import { createCheckoutSession } from './actions';
+import { createCheckoutSession, fetchProductPrices } from './actions';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
+import LifetimeCountdown from './LifetimeCountdown';
 // import { ThemeToggle } from '../components/ThemeToggle';
 
 const FEATURES = [
@@ -60,6 +61,11 @@ export default async function UpgradePage({
     subscriptionPeriodEnd = profile?.subscription_period_end ?? null;
     cancelAtPeriodEnd = profile?.cancel_at_period_end ?? false;
   }
+
+  const prices = await fetchProductPrices();
+  const savingsPct = Math.round(
+    (1 - (Number(prices.annual) / 12) / Number(prices.monthly)) * 100
+  );
 
   const daysSinceStart = subscriptionStartedAt
     ? (Date.now() - new Date(subscriptionStartedAt).getTime()) / 86400000
@@ -251,6 +257,7 @@ export default async function UpgradePage({
                 }}>
                   ✦ Launch Special — Limited Time
                 </div>
+                <LifetimeCountdown />
                 <h2 style={{
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
                   fontSize: 32, fontWeight: 800, letterSpacing: '-0.5px',
@@ -279,7 +286,7 @@ export default async function UpgradePage({
                     fontSize: 56, fontWeight: 800, color: '#f9fafb',
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     letterSpacing: '-2px',
-                  }}>$40</span>
+                  }}>${prices.lifetime}</span>
                 </div>
                 <p style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>one-time · no subscription</p>
                 <form action={createCheckoutSession}>
@@ -418,7 +425,7 @@ export default async function UpgradePage({
                           fontFamily: "'Plus Jakarta Sans', sans-serif",
                           letterSpacing: '-2px',
                         }}>
-                          $5
+                          ${prices.monthly}
                         </span>
                         <span style={{ color: '#545f6c', fontWeight: 500 }}>/month</span>
                       </div>
@@ -454,7 +461,7 @@ export default async function UpgradePage({
                     {/* CTAs */}
                     <div style={{ marginTop: 32 }}>
                       <p style={{ fontSize: 12, color: '#545f6c', marginBottom: 12, fontStyle: 'italic' }}>
-                        Billed annually at $40/yr (Save 33%)
+                        Billed annually at ${prices.annual}/yr (Save {savingsPct}%)
                       </p>
                       <form action={createCheckoutSession}>
                         <input type="hidden" name="plan" value="annual" />
@@ -465,7 +472,7 @@ export default async function UpgradePage({
                       <form action={createCheckoutSession}>
                         <input type="hidden" name="plan" value="monthly" />
                         <button type="submit" className="switch-link" disabled={isPro}>
-                          Switch to Monthly ($5/mo)
+                          Switch to Monthly (${prices.monthly}/mo)
                         </button>
                       </form>
                     </div>

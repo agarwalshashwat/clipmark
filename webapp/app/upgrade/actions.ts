@@ -1,6 +1,7 @@
 'use server';
 
 import DodoPayments from 'dodopayments';
+import { unstable_cache } from 'next/cache';
 import { createServerSupabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
 
@@ -14,6 +15,40 @@ const PRODUCT_IDS: Record<string, string> = {
   annual:   process.env.DODO_ANNUAL_PRODUCT_ID!,
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
+
+export interface ProductPrices {
+  monthly:  string;
+  annual:   string;
+  lifetime: string;
+}
+
+const PRICE_DEFAULTS: ProductPrices = { monthly: '5', annual: '40', lifetime: '40' };
+
+function extractCentPrice(p: { type: string; price?: number; fixed_price?: number }): number {
+  return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
+}
+
+export const fetchProductPrices = unstable_cache(
+  async (): Promise<ProductPrices> => {
+    try {
+      const [monthly, annual, lifetime] = await Promise.all([
+        dodo.products.retrieve(PRODUCT_IDS.monthly),
+        dodo.products.retrieve(PRODUCT_IDS.annual),
+        dodo.products.retrieve(PRODUCT_IDS.lifetime),
+      ]);
+      return {
+        monthly:  String(Math.round(extractCentPrice(monthly.price  as { type: string; price?: number; fixed_price?: number }) / 100)),
+        annual:   String(Math.round(extractCentPrice(annual.price   as { type: string; price?: number; fixed_price?: number }) / 100)),
+        lifetime: String(Math.round(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number }) / 100)),
+      };
+    } catch (err) {
+      console.error('[fetchProductPrices] Dodo API error, using defaults:', err);
+      return PRICE_DEFAULTS;
+    }
+  },
+  ['dodo-product-prices'],
+  { revalidate: 3600 }
+);
 
 export async function cancelSubscription() {
   const supabase = await createServerSupabase();
