@@ -1755,44 +1755,49 @@ async function syncAllWithCloud() {
   const token = await getValidToken();
   if (!token) return 0;
 
+  // Fetch all bookmarks from cloud in a single request
+  const cloudRes = await fetch(`${API_BASE}/api/bookmarks`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!cloudRes.ok) return 0;
+  const { videos: cloudVideos } = await cloudRes.json();
+
   const allData = await new Promise(resolve => chrome.storage.sync.get(null, resolve));
-  const videoIds = Object.keys(allData)
+  const cloudVideoIds = new Set((cloudVideos || []).map(v => v.videoId));
+  const localVideoIds = Object.keys(allData)
     .filter(k => k.startsWith('bm_') && Array.isArray(allData[k]))
     .map(k => k.slice(3));
 
-  if (!videoIds.length) return 0;
-
   let updatedCount = 0;
-  for (const videoId of videoIds) {
+
+  // Merge cloud → local for every video in cloud (handles new-device case where local is empty)
+  for (const { videoId, bookmarks: cloudBms } of (cloudVideos || [])) {
     try {
       const localBms = allData[bmKey(videoId)] || [];
-      if (!localBms.length) continue;
-
-      const res = await fetch(`${API_BASE}/api/bookmarks?videoId=${encodeURIComponent(videoId)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) continue;
-      const { bookmarks: cloudBms } = await res.json();
-
-      const cloudIds = new Set((cloudBms || []).map(b => b.id));
       const localIds = new Set(localBms.map(b => b.id));
       const newFromCloud = (cloudBms || []).filter(b => !localIds.has(b.id));
-      const newFromLocal = localBms.filter(b => !cloudIds.has(b.id));
-
-      if (!newFromCloud.length && !newFromLocal.length) continue;
+      if (!newFromCloud.length) continue;
 
       const merged = [...localBms, ...newFromCloud];
-      if (newFromCloud.length) {
-        await new Promise(resolve => chrome.storage.sync.set({ [bmKey(videoId)]: merged }, resolve));
-      }
-      await fetch(`${API_BASE}/api/bookmarks`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ videoId, bookmarks: merged }),
-      });
+      await new Promise(resolve => chrome.storage.sync.set({ [bmKey(videoId)]: merged }, resolve));
       updatedCount++;
     } catch { /* skip this video */ }
   }
+
+  // Push any local-only videos to cloud
+  for (const videoId of localVideoIds) {
+    if (cloudVideoIds.has(videoId)) continue;
+    const localBms = allData[bmKey(videoId)] || [];
+    if (!localBms.length) continue;
+    try {
+      await fetch(`${API_BASE}/api/bookmarks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ videoId, bookmarks: localBms }),
+      });
+    } catch { /* skip this video */ }
+  }
+
   return updatedCount;
 }
 
@@ -1856,7 +1861,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateViewToggle();
   updateDensityBtn();
+  // Silently pull all cloud bookmarks on open so cross-device data is available immediately
   loadAllBookmarks();
+  syncAllWithCloud().then(updated => {
+    if (updated > 0) loadAllBookmarks();
+  }).catch(() => {});
   renderSavedFilterPills();
   updateRevisitBadge();
 
