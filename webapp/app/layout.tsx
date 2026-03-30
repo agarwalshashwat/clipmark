@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: 'Clipmark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer'],
+  verification: {
+    google: 'chJnY3idU4qZvir3ZZ3NAcVF3mde32n0AMYk2SJNt1k',
+  },
   openGraph: {
     title: 'Clipmark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
