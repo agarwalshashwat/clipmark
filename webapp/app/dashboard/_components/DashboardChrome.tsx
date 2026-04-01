@@ -47,6 +47,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             </a>
             <a href="/dashboard/queue" className={`${styles.topNavLink} ${isActive('/dashboard/queue') ? styles.topNavLinkActive : ''}`}>
               Reminders
+              {dueReminderCount > 0 && <span className={styles.topNavBadge}>{dueReminderCount}</span>}
             </a>
             <a href="/dashboard/shared" className={`${styles.topNavLink} ${isActive('/dashboard/shared') ? styles.topNavLinkActive : ''}`}>
               Shared ↗

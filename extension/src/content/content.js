@@ -29,12 +29,12 @@ let cachedTranscriptVideoId = null;
 
 // ─── Tag colours (must match popup.js) ───────────────────────────────────────
 const TAG_COLORS = {
-  important: '#ff6b6b',
-  review:    '#ffa94d',
-  note:      '#74c0fc',
-  question:  '#a9e34b',
-  todo:      '#da77f2',
-  key:       '#f783ac',
+  important: '#ef4444',
+  review:    '#f97316',
+  note:      '#3b82f6',
+  question:  '#22c55e',
+  todo:      '#a855f7',
+  key:       '#ec4899',
 };
 
 function parseTags(description) {
@@ -48,7 +48,7 @@ function stringToColor(str) {
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return `hsl(${Math.abs(hash) % 360}, 60%, 60%)`;
+  return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
 }
 
 function getTagColor(tags) {

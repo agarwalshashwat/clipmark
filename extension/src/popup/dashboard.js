@@ -30,12 +30,12 @@ async function getValidToken() {
 
 // ─── Tag colours (must match popup.js / content.js) ──────────────────────────
 const TAG_COLORS = {
-  important: '#ff6b6b',
-  review:    '#ffa94d',
-  note:      '#74c0fc',
-  question:  '#a9e34b',
-  todo:      '#da77f2',
-  key:       '#f783ac',
+  important: '#ef4444',
+  review:    '#f97316',
+  note:      '#3b82f6',
+  question:  '#22c55e',
+  todo:      '#a855f7',
+  key:       '#ec4899',
 };
 
 function stringToColor(str) {
@@ -43,7 +43,7 @@ function stringToColor(str) {
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return `hsl(${Math.abs(hash) % 360}, 60%, 60%)`;
+  return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
 }
 
 function getTagColor(tags) {
@@ -462,7 +462,7 @@ async function renderBookmarks() {
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
                       ? `<div class="vc-tags">${b.tags.map(t =>
-                          `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
+                          `<span class="tag-badge">#${t}</span>`
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
@@ -495,7 +495,7 @@ async function renderBookmarks() {
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
                       ? `<div class="vc-tags">${b.tags.map(t =>
-                          `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
+                          `<span class="tag-badge">#${t}</span>`
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
@@ -659,7 +659,7 @@ function renderTimelineView(bookmarks, container) {
       const thumb    = `https://img.youtube.com/vi/${b.videoId}/mqdefault.jpg`;
       const tagsHtml = b.tags?.length
         ? `<div class="tl-tags">${b.tags.map(t =>
-            `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
+            `<span class="tag-badge">#${t}</span>`
           ).join('')}</div>`
         : '';
 
@@ -1688,6 +1688,13 @@ function updateViewToggle() {
   document.getElementById('view-groups').classList.toggle('view-btn--active',    viewMode === 'groups');
   document.getElementById('view-analytics').classList.toggle('view-btn--active', viewMode === 'analytics');
 
+  // Sync sidebar active state with toolbar view toggles
+  if (viewMode === 'analytics') setActiveNav('subnav-analytics-side');
+  else if (viewMode === 'groups') setActiveNav('subnav-groups-side');
+  else if (viewMode === 'revisit') setActiveNav('subnav-revisit-side');
+  else if (viewMode === 'videos') setActiveNav('subnav-videos-side');
+  else setActiveNav('subnav-all-side');
+
   const hideToolbar = viewMode === 'groups' || viewMode === 'videos';
   document.getElementById('search-input').style.display = hideToolbar ? 'none' : '';
   document.getElementById('sort-select').style.display  = hideToolbar ? 'none' : '';
@@ -1740,14 +1747,22 @@ async function loadAuthState() {
   const upgradeBtn = document.getElementById('dashboard-upgrade-btn');
   if (!signinBtn || !userChip) return;
 
+  const signoutBtnSide = document.getElementById('signout-btn-side');
+  const upgradeLink    = document.querySelector('.side-nav-upgrade');
+
   if (bmUser) {
     signinBtn.style.display  = 'none';
     userChip.style.display   = '';
     userChip.textContent     = bmUser.userEmail?.split('@')[0] || 'Signed in';
     userChip.title           = bmUser.userEmail || '';
-    if (signoutBtn) signoutBtn.style.display = '';
-    if (syncBtn)    syncBtn.style.display    = '';
-    if (upgradeBtn) upgradeBtn.style.display = bmUser.isPro ? 'none' : '';
+    if (signoutBtn)     signoutBtn.style.display     = '';
+    if (signoutBtnSide) signoutBtnSide.style.display = '';
+    if (syncBtn)        syncBtn.style.display        = '';
+    if (upgradeBtn)     upgradeBtn.style.display     = bmUser.isPro ? 'none' : '';
+    if (upgradeLink) {
+      upgradeLink.querySelector('span:last-child').textContent =
+        bmUser.isPro ? 'Manage Subscription' : 'Upgrade';
+    }
 
     // Silently validate/refresh token — sign out if session is fully expired
     const token = await getValidToken();
@@ -1758,9 +1773,13 @@ async function loadAuthState() {
   } else {
     signinBtn.style.display  = '';
     userChip.style.display   = 'none';
-    if (signoutBtn) signoutBtn.style.display = 'none';
-    if (syncBtn)    syncBtn.style.display    = 'none';
-    if (upgradeBtn) upgradeBtn.style.display = '';
+    if (signoutBtn)     signoutBtn.style.display     = 'none';
+    if (signoutBtnSide) signoutBtnSide.style.display = 'none';
+    if (syncBtn)        syncBtn.style.display        = 'none';
+    if (upgradeBtn)     upgradeBtn.style.display     = '';
+    if (upgradeLink) {
+      upgradeLink.querySelector('span:last-child').textContent = 'Upgrade';
+    }
   }
 }
 
@@ -1839,6 +1858,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // const themeToggleBtn = document.getElementById('theme-toggle');
   // if (themeToggleBtn) { themeToggleBtn.addEventListener('click', toggleTheme); }
 
+  // ── Sidebar collapse ────────────────────────────────────────────────────────
+  const sideNav  = document.querySelector('.bm-side-nav');
+  const mainEl   = document.querySelector('.bm-main');
+  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+
+  function applySidebarCollapse(collapsed) {
+    sideNav?.classList.toggle('bm-side-nav--collapsed', collapsed);
+    mainEl?.classList.toggle('bm-main--nav-collapsed', collapsed);
+    if (collapseBtn) {
+      const icon = collapseBtn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = collapsed ? 'chevron_right' : 'chevron_left';
+    }
+  }
+
+  const storedCollapse = localStorage.getItem('sidebarCollapsed') === 'true';
+  applySidebarCollapse(storedCollapse);
+
+  collapseBtn?.addEventListener('click', () => {
+    const next = !sideNav?.classList.contains('bm-side-nav--collapsed');
+    applySidebarCollapse(next);
+    localStorage.setItem('sidebarCollapsed', String(next));
+  });
+
   // ── Auth ────────────────────────────────────────────────────────────────────
   loadAuthState();
 
@@ -1847,6 +1889,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('signout-btn')?.addEventListener('click', () => {
+    chrome.storage.sync.remove('bmUser', () => loadAuthState());
+  });
+
+  document.getElementById('signout-btn-side')?.addEventListener('click', () => {
     chrome.storage.sync.remove('bmUser', () => loadAuthState());
   });
 
@@ -1882,9 +1928,20 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSavedFilterPills();
   updateRevisitBadge();
 
-  // Search
+  // Search (header input)
   document.getElementById('search-input').addEventListener('input', e => {
     filterQuery = e.target.value.trim();
+    const toolbarInput = document.getElementById('search-input-toolbar');
+    if (toolbarInput) toolbarInput.value = e.target.value;
+    updateSaveFilterBtn();
+    renderBookmarks();
+  });
+
+  // Search (toolbar input — synced to header search)
+  document.getElementById('search-input-toolbar')?.addEventListener('input', e => {
+    filterQuery = e.target.value.trim();
+    const headerInput = document.getElementById('search-input');
+    if (headerInput) headerInput.value = e.target.value;
     updateSaveFilterBtn();
     renderBookmarks();
   });
@@ -2036,6 +2093,16 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'groups';
     localStorage.setItem('bm_viewMode', viewMode);
     setActiveNav('subnav-groups-side');
+    updateViewToggle();
+    renderBookmarks();
+  });
+
+  // Subnav — Analytics (sidebar)
+  document.getElementById('subnav-analytics-side')?.addEventListener('click', () => {
+    filterVideoId = null;
+    viewMode = 'analytics';
+    localStorage.setItem('bm_viewMode', viewMode);
+    setActiveNav('subnav-analytics-side');
     updateViewToggle();
     renderBookmarks();
   });

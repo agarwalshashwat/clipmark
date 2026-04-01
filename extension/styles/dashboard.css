@@ -317,6 +317,56 @@
     padding: 0 16px 24px;
 }
 
+/* Collapse toggle button */
+.side-nav-collapse-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c7a77;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+.side-nav-collapse-btn:hover {
+    background: rgba(0, 107, 95, 0.08);
+    color: #006b5f;
+}
+
+/* Collapsed sidebar state */
+.bm-side-nav--collapsed {
+    width: 60px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+.bm-side-nav--collapsed .side-nav-subtitle,
+.bm-side-nav--collapsed .side-nav-section-label,
+.bm-side-nav--collapsed .side-nav-title,
+.bm-side-nav--collapsed .side-nav-link span:last-child {
+    display: none;
+}
+.bm-side-nav--collapsed .side-nav-header {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+.bm-side-nav--collapsed .side-nav-collapse-btn {
+    margin-left: 0;
+}
+.bm-side-nav--collapsed .side-nav-link {
+    justify-content: center;
+    padding: 10px;
+}
+
+/* Main content offset when sidebar collapsed */
+.bm-main--nav-collapsed {
+    margin-left: 60px !important;
+}
+
 .side-nav-curator-icon {
     width: 32px;
     height: 32px;
@@ -434,6 +484,19 @@
 
 .side-nav-upgrade {
     margin-top: 16px !important;
+}
+
+.side-nav-signout-btn {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    color: #6c7a77;
+}
+.side-nav-signout-btn:hover {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.06) !important;
 }
 
 
@@ -589,7 +652,7 @@
     flex: 1;
     min-width: 0;
     background: #f3f3f4;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 6px 12px;
 }
 
@@ -620,35 +683,35 @@
     color: #6b7280;
 }
 
-/* The hidden duplicate input in toolbar (search-input is the canonical one in header) */
-.toolbar-search--inner {
-    display: none !important;
-}
+/* toolbar search input is now visible and synced with header search */
 
 .toolbar-sort {
     padding: 7px 10px;
-    background: #f3f3f4;
-    border: none;
-    border-radius: 8px;
+    background: #fff;
+    border: 1px solid rgba(187, 202, 198, 0.4);
+    border-radius: 10px;
     font-size: 13px;
+    font-weight: 600;
     font-family: var(--font);
-    color: var(--text);
+    color: #545f6c;
     cursor: pointer;
     outline: none;
     flex-shrink: 0;
-    transition: background 0.15s;
+    transition: border-color 0.15s;
 }
 
 .toolbar-sort:hover {
-    background: #edeeef;
+    border-color: rgba(0, 107, 95, 0.3);
 }
 
 [data-theme="dark"] .toolbar-sort {
     background: var(--bg-sub);
+    border-color: var(--border);
+    color: var(--text);
 }
 
 [data-theme="dark"] .toolbar-sort:hover {
-    background: var(--surface-alt);
+    border-color: rgba(77, 184, 168, 0.4);
 }
 
 /* ── View toggle ──────────────────────────────────────────────────────────── */
@@ -974,9 +1037,13 @@
     font-size: 22px;
     font-weight: 800;
     font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
-    color: var(--text);
+    color: #006b5f;
     line-height: 1;
     letter-spacing: -0.5px;
+}
+
+[data-theme="dark"] .stat-value {
+    color: #4db8a8;
 }
 
 .stat-value--sm {
@@ -2322,13 +2389,18 @@
 }
 
 .tag-badge {
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 9999px;
     font-size: 10px;
     font-weight: 700;
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    background: rgba(0, 107, 95, 0.08);
+    color: #006b5f;
+    letter-spacing: 0.3px;
+}
+
+[data-theme="dark"] .tag-badge {
+    background: rgba(77, 184, 168, 0.12);
+    color: #4db8a8;
 }
 
 .card-actions {
