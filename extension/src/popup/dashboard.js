@@ -462,7 +462,7 @@ async function renderBookmarks() {
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
                       ? `<div class="vc-tags">${b.tags.map(t =>
-                          `<span class="tag-badge">#${t}</span>`
+                          `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
@@ -495,7 +495,7 @@ async function renderBookmarks() {
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
                       ? `<div class="vc-tags">${b.tags.map(t =>
-                          `<span class="tag-badge">#${t}</span>`
+                          `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
@@ -659,7 +659,7 @@ function renderTimelineView(bookmarks, container) {
       const thumb    = `https://img.youtube.com/vi/${b.videoId}/mqdefault.jpg`;
       const tagsHtml = b.tags?.length
         ? `<div class="tl-tags">${b.tags.map(t =>
-            `<span class="tag-badge">#${t}</span>`
+            `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
           ).join('')}</div>`
         : '';
 
@@ -1683,10 +1683,8 @@ async function renderSharedView(container) {
 
 // ─── View toggle ──────────────────────────────────────────────────────────────
 function updateViewToggle() {
-  document.getElementById('view-cards').classList.toggle('view-btn--active',     viewMode === 'cards');
-  document.getElementById('view-timeline').classList.toggle('view-btn--active',  viewMode === 'timeline');
-  document.getElementById('view-groups').classList.toggle('view-btn--active',    viewMode === 'groups');
-  document.getElementById('view-analytics').classList.toggle('view-btn--active', viewMode === 'analytics');
+  document.getElementById('view-cards').classList.toggle('view-btn--active',    viewMode === 'cards');
+  document.getElementById('view-timeline').classList.toggle('view-btn--active', viewMode === 'timeline');
 
   // Sync sidebar active state with toolbar view toggles
   if (viewMode === 'analytics') setActiveNav('subnav-analytics-side');
@@ -1753,7 +1751,7 @@ async function loadAuthState() {
   if (bmUser) {
     signinBtn.style.display  = 'none';
     userChip.style.display   = '';
-    userChip.textContent     = bmUser.userEmail?.split('@')[0] || 'Signed in';
+    userChip.textContent     = (bmUser.userEmail?.[0] || '?').toUpperCase();
     userChip.title           = bmUser.userEmail || '';
     if (signoutBtn)     signoutBtn.style.display     = '';
     if (signoutBtnSide) signoutBtnSide.style.display = '';
@@ -1994,15 +1992,6 @@ document.addEventListener('DOMContentLoaded', () => {
     viewMode = 'timeline'; localStorage.setItem('bm_viewMode', viewMode);
     updateViewToggle(); renderBookmarks();
   });
-  document.getElementById('view-groups').addEventListener('click', () => {
-    viewMode = 'groups'; localStorage.setItem('bm_viewMode', viewMode);
-    updateViewToggle(); renderBookmarks();
-  });
-  document.getElementById('view-analytics').addEventListener('click', () => {
-    viewMode = 'analytics'; localStorage.setItem('bm_viewMode', viewMode);
-    updateViewToggle(); renderBookmarks();
-  });
-
   // Card size toggle
   document.getElementById('density-btn').addEventListener('click', () => {
     const cycle = { large: 'medium', medium: 'small', small: 'large' };

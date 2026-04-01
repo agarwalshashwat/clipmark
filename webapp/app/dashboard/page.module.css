@@ -201,13 +201,12 @@
 
 .entryTag {
   padding: 3px 10px;
-  background: rgba(0, 107, 95, 0.08);
-  color: #006b5f;
   font-size: 10px;
   font-weight: 700;
   border-radius: 9999px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  /* background and color set via inline style (per-tag) */
 }
 
 .jumpLink {

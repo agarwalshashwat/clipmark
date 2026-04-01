@@ -16,7 +16,7 @@ export default async function DashboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: userBookmarksData }, { data: profileData }] = await Promise.all([
+  const [{ data: userBookmarksData }, { data: profileData }, { data: groupsData }] = await Promise.all([
     supabase
       .from('user_bookmarks')
       .select('*')
@@ -27,6 +27,12 @@ export default async function DashboardPage({
       .select('is_pro')
       .eq('id', user.id)
       .single(),
+    supabase
+      .from('groups')
+      .select('id, name, type')
+      .eq('user_id', user.id)
+      .eq('type', 'custom')
+      .order('created_at', { ascending: false }),
   ]);
 
   const isPro = (profileData?.is_pro as boolean | null) ?? false;
@@ -62,6 +68,7 @@ export default async function DashboardPage({
         isPro={isPro}
         initialView={view}
         successBanner={successBanner}
+        groups={(groupsData ?? []).map(g => ({ id: g.id as string, name: g.name as string }))}
       />
     </Suspense>
   );

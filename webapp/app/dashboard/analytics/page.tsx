@@ -4,26 +4,7 @@ import styles from './page.module.css';
 
 export const metadata = { title: 'Analytics — Clipmark' };
 
-// Tag color system — mirrors extension logic
-const TAG_COLORS: Record<string, string> = {
-  important: '#ef4444',
-  review: '#f97316',
-  note: '#3b82f6',
-  question: '#22c55e',
-  todo: '#a855f7',
-  key: '#ec4899',
-};
-
-function stringToColor(str: string): string {
-  let hash = 0;
-  for (const ch of str) hash = ((hash << 5) - hash) + ch.charCodeAt(0);
-  const h = Math.abs(hash) % 360;
-  return `hsl(${h},55%,45%)`;
-}
-
-function getTagColor(tag: string): string {
-  return TAG_COLORS[tag.toLowerCase()] ?? stringToColor(tag);
-}
+import { getTagColor } from '../_utils/tagColors';
 
 export default async function AnalyticsPage() {
   const supabase = await createServerSupabase();

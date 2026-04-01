@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import styles from '../page.module.css';
 import toolbarStyles from './toolbar.module.css';
 import { deleteBookmark, bulkDeleteBookmarks, importBookmarks } from '../actions';
+import { getTagColor } from '../_utils/tagColors';
+import GroupPickerModal from './GroupPickerModal';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -118,16 +120,19 @@ function exportMarkdown(collections: Collection[]) {
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
+interface Group { id: string; name: string; }
+
 interface Props {
   collections: Collection[];
   isPro: boolean;
   initialView: string;
   successBanner?: React.ReactNode;
+  groups?: Group[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function DashboardContent({ collections, isPro, initialView, successBanner }: Props) {
+export default function DashboardContent({ collections, isPro, initialView, successBanner, groups = [] }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -146,6 +151,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
   const [exportOpen, setExportOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
+  const [groupingVideo, setGroupingVideo] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // ── Filtering ───────────────────────────────────────────────────────────────
@@ -283,7 +289,23 @@ export default function DashboardContent({ collections, isPro, initialView, succ
 
   return (
     <div className={viewMode === 'timeline' ? styles.timelineWrap : styles.libraryWrap}>
+      {groupingVideo && (
+        <GroupPickerModal
+          videoId={groupingVideo}
+          videoTitle={filteredCollections.find(c => c.video_id === groupingVideo)?.video_title ?? null}
+          groups={groups}
+          onClose={() => setGroupingVideo(null)}
+        />
+      )}
       {successBanner}
+
+      {/* ── Page Heading ── */}
+      {(viewMode === 'library' || viewMode === 'timeline') && (
+        <div className={styles.pageHeader}>
+          <h1 className={styles.pageTitle}>Knowledge Stream</h1>
+          <p className={styles.pageSub}>Your curated editorial journey through the web.</p>
+        </div>
+      )}
 
       {/* ── Toolbar ── */}
       <div className={toolbarStyles.toolbar}>
@@ -399,10 +421,6 @@ export default function DashboardContent({ collections, isPro, initialView, succ
       {/* ── Library header (stats) ── */}
       {viewMode === 'library' && (
         <section className={styles.libraryHeader}>
-          <div>
-            <h1 className={styles.pageTitle}>Knowledge Stream</h1>
-            <p className={styles.pageSub}>Your curated editorial journey through the web.</p>
-          </div>
           <div className={styles.statsRow}>
             <div className={styles.statItem}>
               <span className={styles.statLabel}>Bookmarks</span>
@@ -424,14 +442,6 @@ export default function DashboardContent({ collections, isPro, initialView, succ
             </div>
           </div>
         </section>
-      )}
-
-      {/* ── Timeline header ── */}
-      {viewMode === 'timeline' && (
-        <div className={styles.pageHeader}>
-          <h1 className={styles.pageTitle}>Knowledge Stream</h1>
-          <p className={styles.pageSub}>Your curated editorial journey through the web.</p>
-        </div>
       )}
 
       {/* ── Empty state ── */}
@@ -460,7 +470,9 @@ export default function DashboardContent({ collections, isPro, initialView, succ
       {/* ── Library view ── */}
       {viewMode === 'library' && filteredCollections.length > 0 && (
         <div className={`${styles.videoGrid}${cardSize === 'medium' ? ' ' + styles.videoGridMedium : cardSize === 'small' ? ' ' + styles.videoGridSmall : ''}`}>
-          {filteredCollections.map(c => (
+          {filteredCollections.map(c => {
+            const sortedBookmarks = [...(c.bookmarks ?? [])].sort((a: Bookmark, b: Bookmark) => a.timestamp - b.timestamp);
+            return (
             <div key={c.id} className={styles.videoCard}>
               <div className={styles.videoLeft}>
                 <a href={`https://www.youtube.com/watch?v=${c.video_id}`} className={styles.videoThumbWrap}>
@@ -480,7 +492,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                 </a>
                 <div className={styles.scrubber}>
                   <div className={styles.scrubberTrack}>
-                    {(c.bookmarks ?? []).map((b: Bookmark, i: number, arr: Bookmark[]) => {
+                    {sortedBookmarks.map((b: Bookmark, i: number, arr: Bookmark[]) => {
                       const pos = arr.length > 1 ? (i / (arr.length - 1)) * 90 + 5 : 50;
                       return (
                         <div
@@ -498,6 +510,14 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                     <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
                     Revisit
                   </a>
+                  <button
+                    className={`${styles.videoActionBtn} ${styles.videoActionBtnSecondary}`}
+                    onClick={() => setGroupingVideo(c.video_id)}
+                    title="Add to group"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>folder</span>
+                    Group
+                  </button>
                 </div>
               </div>
 
@@ -512,7 +532,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                 </div>
                 <div className={styles.bookmarkThread}>
                   <div className={styles.threadLine} />
-                  {(c.bookmarks ?? []).slice(0, 4).map((b: Bookmark, i: number) => {
+                  {sortedBookmarks.slice(0, 4).map((b: Bookmark, i: number) => {
                     const selKey = `${c.video_id}:${b.id}`;
                     const isSelected = selectedIds.has(selKey);
                     return (
@@ -555,7 +575,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                           {(b.tags ?? []).length > 0 && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                               {(b.tags ?? []).map((tag: string) => (
-                                <span key={tag} className={styles.entryTag}>#{tag}</span>
+                                <span key={tag} className={styles.entryTag} style={{ color: getTagColor(tag), background: `${getTagColor(tag)}18` }}>#{tag}</span>
                               ))}
                             </div>
                           )}
@@ -563,9 +583,9 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                       </div>
                     );
                   })}
-                  {(c.bookmarks?.length ?? 0) > 4 && (() => {
+                  {sortedBookmarks.length > 4 && (() => {
                     const isExpanded = expandedVideos.has(c.video_id);
-                    const remaining = (c.bookmarks?.length ?? 0) - 4;
+                    const remaining = sortedBookmarks.length - 4;
                     const toggle = () => setExpandedVideos(prev => {
                       const next = new Set(prev);
                       if (next.has(c.video_id)) next.delete(c.video_id); else next.add(c.video_id);
@@ -575,7 +595,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                       <>
                         <div className={`${styles.extraBookmarks} ${isExpanded ? styles.extraBookmarksOpen : ''}`}>
                           <div className={styles.extraBookmarksInner}>
-                            {(c.bookmarks ?? []).slice(4).map((b: Bookmark, i: number) => {
+                            {sortedBookmarks.slice(4).map((b: Bookmark, i: number) => {
                               const selKey = `${c.video_id}:${b.id}`;
                               const isSelected = selectedIds.has(selKey);
                               return (
@@ -609,7 +629,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                                     {(b.tags ?? []).length > 0 && (
                                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                                         {(b.tags ?? []).map((tag: string) => (
-                                          <span key={tag} className={styles.entryTag}>#{tag}</span>
+                                          <span key={tag} className={styles.entryTag} style={{ color: getTagColor(tag), background: `${getTagColor(tag)}18` }}>#{tag}</span>
                                         ))}
                                       </div>
                                     )}
@@ -630,7 +650,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   })()}
                 </div>
                 <div className={styles.pillRow}>
-                  {(c.bookmarks ?? []).map((b: Bookmark, i: number) => (
+                  {sortedBookmarks.map((b: Bookmark, i: number) => (
                     <a
                       key={i}
                       href={`https://www.youtube.com/watch?v=${c.video_id}&t=${Math.floor(b.timestamp)}s`}
@@ -650,7 +670,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                 </div>
               </div>
             </div>
-          ))}
+            ); })}
 
           <div className={styles.suggestionCard}>
             <div className={styles.suggestionIcon}>
