@@ -72,6 +72,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
   const [selectedTargetId, setSelectedTargetId] = useState(collections[0]?.id ?? '');
   const [frequency, setFrequency] = useState('once');
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const allReminders = [...dueReminders, ...upcomingReminders];
@@ -108,41 +109,54 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
 
         {/* Left — Active Clip preview */}
         <div className={styles.leftPanel}>
-          {previewCollection?.videoId ? (
-            <>
-              <div className={styles.clipThumbWrap}>
-                <span className={styles.clipBadge}>ACTIVE CLIP</span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.youtube.com/vi/${previewCollection.videoId}/hqdefault.jpg`}
-                  alt={previewCollection.label}
-                  className={styles.clipThumb}
-                />
-              </div>
-              <div className={styles.clipInfo}>
-                <p className={styles.clipTitle}>{previewCollection.label}</p>
-                {(previewCollection.tags ?? []).length > 0 && (
-                  <div className={styles.clipTags}>
-                    {(previewCollection.tags ?? []).map(t => (
-                      <span key={t} className={styles.clipTag}>{t.toUpperCase()}</span>
-                    ))}
-                  </div>
-                )}
+          <div className={styles.clipPanelHeader}>
+            <span className={styles.clipPanelLabel}>Content Preview</span>
+            <button
+              type="button"
+              className={styles.clipCollapseBtn}
+              onClick={() => setPreviewCollapsed(c => !c)}
+              title={previewCollapsed ? 'Expand preview' : 'Collapse preview'}
+            >
+              {previewCollapsed ? 'Show ↓' : 'Hide ↑'}
+            </button>
+          </div>
+          {!previewCollapsed && (
+            previewCollection?.videoId ? (
+              <>
+                <div className={styles.clipThumbWrap}>
+                  <span className={styles.clipBadge}>ACTIVE CLIP</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://img.youtube.com/vi/${previewCollection.videoId}/hqdefault.jpg`}
+                    alt={previewCollection.label}
+                    className={styles.clipThumb}
+                  />
+                </div>
+                <div className={styles.clipInfo}>
+                  <p className={styles.clipTitle}>{previewCollection.label}</p>
+                  {(previewCollection.tags ?? []).length > 0 && (
+                    <div className={styles.clipTags}>
+                      {(previewCollection.tags ?? []).map(t => (
+                        <span key={t} className={styles.clipTag}>{t.toUpperCase()}</span>
+                      ))}
+                    </div>
+                  )}
+                  <blockquote className={styles.clipQuote}>
+                    &ldquo;The purpose of a reminder is not to complete a task, but to re-enter a state of curiosity.&rdquo;
+                  </blockquote>
+                </div>
+              </>
+            ) : (
+              <div className={styles.clipPlaceholder}>
+                <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.2)' }}>auto_stories</span>
+                <p className={styles.clipPlaceholderText}>
+                  {targetType === 'group' ? 'Select a group to revisit its full collection.' : 'Select a video to preview it here.'}
+                </p>
                 <blockquote className={styles.clipQuote}>
                   &ldquo;The purpose of a reminder is not to complete a task, but to re-enter a state of curiosity.&rdquo;
                 </blockquote>
               </div>
-            </>
-          ) : (
-            <div className={styles.clipPlaceholder}>
-              <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.2)' }}>auto_stories</span>
-              <p className={styles.clipPlaceholderText}>
-                {targetType === 'group' ? 'Select a group to revisit its full collection.' : 'Select a video to preview it here.'}
-              </p>
-              <blockquote className={styles.clipQuote}>
-                &ldquo;The purpose of a reminder is not to complete a task, but to re-enter a state of curiosity.&rdquo;
-              </blockquote>
-            </div>
+            )
           )}
         </div>
 
@@ -272,6 +286,14 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
               const ytUrl = r.videoId ? `https://www.youtube.com/watch?v=${r.videoId}` : null;
               return (
                 <div key={r.id} className={`${styles.scheduleCard} ${isDue ? styles.scheduleCardDue : ''}`}>
+                  {r.videoId && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`https://img.youtube.com/vi/${r.videoId}/mqdefault.jpg`}
+                      alt={r.targetLabel}
+                      className={styles.scheduleCardThumb}
+                    />
+                  )}
                   <div className={styles.scheduleCardLeft}>
                     <span className={`${styles.scheduleDate} ${isDue ? styles.scheduleDateDue : ''}`}>
                       {formatScheduleDate(r.next_due_at)}

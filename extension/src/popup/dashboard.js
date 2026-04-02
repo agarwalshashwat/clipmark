@@ -301,7 +301,9 @@ function buildTimeline(bookmarks, trackMax) {
 async function renderBookmarks() {
   const container = document.getElementById('bookmarks-container');
 
-  renderStatsBar();
+  // Let CSS show/hide the heading, toolbar, and stats bar per view
+  document.querySelector('.bm-main')?.setAttribute('data-view', viewMode);
+
   updateSaveFilterBtn();
 
   // Groups, analytics, revisit, and videos manage their own container
@@ -329,6 +331,9 @@ async function renderBookmarks() {
     await renderVideosView(container);
     return;
   }
+
+  // Only card/timeline views need the stats bar
+  renderStatsBar();
 
   const filtered = applyFiltersAndSort(allBookmarks);
 
@@ -402,6 +407,7 @@ async function renderBookmarks() {
     const addedStr = new Date(addedTs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const COLLAPSE_AFTER = 3;
     const hasMore  = bookmarks.length > COLLAPSE_AFTER;
+    const sortedBookmarks = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
 
     card.innerHTML = `
       <div class="vc-body">
@@ -447,7 +453,7 @@ async function renderBookmarks() {
           </div>
           <div class="vc-vt">
             <div class="vc-vt-thread"></div>
-            ${bookmarks.map((b, i) => {
+            ${sortedBookmarks.map((b, i) => {
               if (hasMore && i >= COLLAPSE_AFTER) return '';
               const c         = b.color || '#14B8A6';
               const hasNotes  = b.notes && b.notes.trim();
@@ -481,7 +487,7 @@ async function renderBookmarks() {
             ${hasMore ? `
             <div class="vc-vt-overflow vc-vt-overflow--collapsed">
               <div class="vc-vt-overflow__inner">
-                ${bookmarks.slice(COLLAPSE_AFTER).map(b => {
+                ${sortedBookmarks.slice(COLLAPSE_AFTER).map(b => {
                   const c         = b.color || '#14B8A6';
                   const hasNotes  = b.notes && b.notes.trim();
                   return `
@@ -522,7 +528,7 @@ async function renderBookmarks() {
             </button>
           </div>` : ''}
           <div class="vc-pill-row">
-            ${bookmarks.map(b => {
+            ${sortedBookmarks.map(b => {
               const c = b.color || '#14B8A6';
               return `<button class="vc-pill jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" style="background:${c}18;color:${c};border:1px solid ${c}30">${formatTimestamp(b.timestamp)}</button>`;
             }).join('')}
@@ -1446,14 +1452,163 @@ async function renderRevisitView(container) {
 
   container.innerHTML = '';
 
+  // Page header
+  const pageHeader = document.createElement('div');
+  pageHeader.className = 'rm-page-header';
+  pageHeader.innerHTML = `
+    <h2 class="rm-page-title">Reminders &amp; Re-engagement</h2>
+    <p class="rm-page-sub">Set intentional moments to revisit your curated content and keep your learning loop continuous.</p>`;
+  container.appendChild(pageHeader);
+
+  function buildCreateForm() {
+    const videoOptions = [...new Map(
+      allBookmarks
+        .filter(b => b.videoId && b.videoTitle)
+        .map(b => [b.videoId, b.videoTitle])
+    ).entries()]
+      .map(([vid, title]) => `<option value="${vid}">${title.substring(0, 60)}</option>`)
+      .join('');
+
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    const defaultDt = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    const minDt     = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+    const section = document.createElement('div');
+    section.className = 'rm-create-section';
+    section.innerHTML = `
+      <div class="rm-create-header">
+        <span class="rm-create-title">Schedule a Reminder</span>
+        <button class="rm-create-toggle" type="button">− Close</button>
+      </div>
+      <form class="rm-create-form">
+        <div class="rm-form-row">
+          <label>Video</label>
+          <select name="target_id" class="rm-form-select rm-video-select">
+            ${videoOptions || '<option value="">No videos yet</option>'}
+          </select>
+        </div>
+        <div class="rm-preview-card" style="display:none">
+          <img class="rm-preview-thumb" src="" alt="">
+          <div class="rm-preview-info">
+            <p class="rm-preview-title"></p>
+            <div class="rm-preview-tags"></div>
+          </div>
+        </div>
+        <div class="rm-form-row">
+          <label>Frequency</label>
+          <div class="rm-radio-group">
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="once"> One-time</label>
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="weekly" checked> Weekly</label>
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="biweekly"> Every 2 weeks</label>
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="monthly"> Monthly</label>
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="daily"> Daily</label>
+          </div>
+        </div>
+        <div class="rm-form-row">
+          <label>Due Date &amp; Time</label>
+          <input type="datetime-local" name="next_due_at" class="rm-form-input" value="${defaultDt}" min="${minDt}">
+        </div>
+        <div class="rm-form-row">
+          <label>Label <span class="rm-form-optional">(optional)</span></label>
+          <input type="text" name="label" class="rm-form-input" placeholder="e.g. Review key points" maxlength="80">
+        </div>
+        <div class="rm-form-actions">
+          <span class="rm-form-note">Your reminder will appear in your dashboard at the scheduled time.</span>
+          <button type="submit" class="rm-form-submit">Set Reminder</button>
+        </div>
+      </form>`;
+
+    const toggle = section.querySelector('.rm-create-toggle');
+    const form   = section.querySelector('.rm-create-form');
+
+    toggle.addEventListener('click', () => {
+      const open = form.style.display !== 'none';
+      form.style.display = open ? 'none' : '';
+      toggle.textContent = open ? '+ New' : '− Close';
+    });
+
+    // Video preview card
+    const videoSelect  = form.querySelector('.rm-video-select');
+    const previewCard  = form.querySelector('.rm-preview-card');
+    const previewThumb = form.querySelector('.rm-preview-thumb');
+    const previewTitle = form.querySelector('.rm-preview-title');
+    const previewTags  = form.querySelector('.rm-preview-tags');
+
+    function updateVideoPreview(videoId) {
+      if (!videoId) { previewCard.style.display = 'none'; return; }
+      const bms = allBookmarks.filter(b => b.videoId === videoId);
+      if (!bms.length) { previewCard.style.display = 'none'; return; }
+      previewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+      previewTitle.textContent = bms[0].videoTitle || '';
+      const tags = [...new Set(bms.flatMap(b => b.tags || []))].slice(0, 4);
+      previewTags.innerHTML = tags.map(t =>
+        `<span class="rm-preview-tag" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+      ).join('');
+      previewCard.style.display = 'flex';
+    }
+
+    updateVideoPreview(videoSelect?.value);
+    videoSelect?.addEventListener('change', e => updateVideoPreview(e.target.value));
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const submit     = form.querySelector('.rm-form-submit');
+      const formData   = new FormData(form);
+      const target_id  = formData.get('target_id');
+      const frequency  = formData.get('frequency');
+      const next_due_at = formData.get('next_due_at');
+      const label      = formData.get('label');
+
+      if (!target_id || !next_due_at) {
+        showToast('Please fill in all required fields');
+        return;
+      }
+
+      submit.disabled = true;
+      submit.textContent = 'Creating…';
+      try {
+        const t = await getValidToken();
+        const res = await fetch(`${API_BASE}/api/reminders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+          body: JSON.stringify({
+            target_type: 'collection',
+            target_id,
+            frequency,
+            next_due_at: new Date(next_due_at).toISOString(),
+            label: label || null,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        showToast('Reminder created!', 'success');
+        form.reset();
+        form.style.display = 'none';
+        toggle.textContent = '+ New';
+        renderRevisitView(container);
+        updateRevisitBadge();
+      } catch {
+        showToast('Failed to create reminder — try again');
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'Create Reminder';
+      }
+    });
+
+    return section;
+  }
+
+  container.appendChild(buildCreateForm());
+
   if (!due.length && !upcoming.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📅</div>
-        <h3>No reminders yet</h3>
-        <p>Set them up in the Clipmark dashboard.</p>
-        <a href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener" class="rm-webapp-link">Create reminders ↗</a>
-      </div>`;
+    const empty = document.createElement('p');
+    empty.className = 'rm-empty-note';
+    empty.textContent = 'No reminders scheduled yet.';
+    container.appendChild(empty);
+    const footer = document.createElement('p');
+    footer.className = 'rm-footer';
+    footer.innerHTML = `<a href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener">Manage in dashboard ↗</a>`;
+    container.appendChild(footer);
     return;
   }
 
@@ -1488,18 +1643,24 @@ async function renderRevisitView(container) {
 
     const freqMap = { once: 'One-time', daily: 'Daily', weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly' };
     const freqLabel = freqMap[r.frequency] || r.frequency;
+    const thumbHtml = r.videoId
+      ? `<img class="rm-card-thumb" src="https://img.youtube.com/vi/${r.videoId}/mqdefault.jpg" loading="lazy" alt="">`
+      : '';
 
     const card = document.createElement('div');
     card.className = `rm-card${isDue ? ' rm-card--due' : ''}`;
     card.innerHTML = `
-      <div class="rm-card-meta">
-        ${dateLabel}
-        <span class="rm-freq-badge">${freqLabel}</span>
-      </div>
-      <div class="rm-card-title">${r.targetLabel ?? 'Unknown'}</div>
-      <div class="rm-card-actions">
-        ${r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
-        <button class="rm-btn rm-btn-done">Mark Done</button>
+      ${thumbHtml}
+      <div class="rm-card-body">
+        <div class="rm-card-meta">
+          ${dateLabel}
+          <span class="rm-freq-badge">${freqLabel}</span>
+        </div>
+        <div class="rm-card-title">${r.targetLabel ?? 'Unknown'}</div>
+        <div class="rm-card-actions">
+          ${r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
+          <button class="rm-btn rm-btn-done">Mark Done</button>
+        </div>
       </div>`;
 
     card.querySelector('.rm-btn-done').addEventListener('click', () => markDone(r.id, card));
@@ -1517,14 +1678,18 @@ async function renderRevisitView(container) {
   if (upcoming.length) {
     const section = document.createElement('div');
     section.className = 'rm-section';
-    section.innerHTML = '<h3 class="rm-section-title">Upcoming</h3>';
+    section.innerHTML = `
+      <div class="rm-section-header">
+        <h3 class="rm-section-title">Active Schedule</h3>
+        <a class="rm-section-link" href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener">View Full Calendar ↗</a>
+      </div>`;
     upcoming.forEach(r => section.appendChild(makeCard(r, false)));
     container.appendChild(section);
   }
 
   const footer = document.createElement('p');
   footer.className = 'rm-footer';
-  footer.innerHTML = `<a href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener">Create or edit reminders ↗</a>`;
+  footer.innerHTML = `<a href="${API_BASE}/dashboard/queue" target="_blank" rel="noopener">Manage all reminders ↗</a>`;
   container.appendChild(footer);
 }
 
@@ -1564,6 +1729,11 @@ async function renderVideosView(container) {
     const count     = bookmarks.length;
     const lastSaved = Math.max(...bookmarks.map(b => b.id));
 
+    const allTags = [...new Set(bookmarks.flatMap(b => b.tags || []))];
+    const tagBadges = allTags.slice(0, 4).map(t =>
+      `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+    ).join('');
+
     const card = document.createElement('div');
     card.className = 'vv-card';
     card.innerHTML = `
@@ -1574,6 +1744,7 @@ async function renderVideosView(container) {
       <div class="vv-meta">
         <div class="vv-title">${title}</div>
         <div class="vv-sub">${relativeTime(lastSaved)}</div>
+        ${tagBadges ? `<div class="vv-tags">${tagBadges}</div>` : ''}
       </div>`;
 
     card.addEventListener('click', () => {

@@ -50,6 +50,33 @@
   border: 1px solid rgba(26, 28, 29, 0.06);
 }
 
+.clipPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(26, 28, 29, 0.06);
+}
+
+.clipPanelLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.clipCollapseBtn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #14B8A6;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.clipCollapseBtn:hover { text-decoration: underline; }
+
 .clipThumbWrap {
   position: relative;
   width: 100%;
@@ -381,7 +408,6 @@
 .scheduleCard {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   background: #fff;
   border-radius: 14px;
@@ -389,6 +415,15 @@
   border: 1px solid rgba(26, 28, 29, 0.07);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.2s;
+}
+
+.scheduleCardThumb {
+  width: 88px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #f0f0f0;
 }
 .scheduleCard:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
 
@@ -402,6 +437,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  justify-content: center;
 }
 
 .scheduleDate {

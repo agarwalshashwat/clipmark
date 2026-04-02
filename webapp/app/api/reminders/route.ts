@@ -73,3 +73,40 @@ export async function GET(request: NextRequest) {
     upcoming: enriched.filter(r => r.next_due_at > now),
   });
 }
+
+// POST /api/reminders — create a reminder (called from extension)
+export async function POST(request: NextRequest) {
+  const auth = await getAuthenticatedUser(request);
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { client } = auth;
+  let body: { target_type?: string; target_id?: string; frequency?: string; next_due_at?: string; label?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const { target_type, target_id, frequency, next_due_at, label } = body;
+  const validTypes = ['collection', 'group'];
+  const validFreqs = ['once', 'daily', 'weekly', 'biweekly', 'monthly'];
+
+  if (!validTypes.includes(target_type ?? '') || !target_id || !validFreqs.includes(frequency ?? '') || !next_due_at) {
+    return NextResponse.json({ error: 'Invalid fields' }, { status: 400 });
+  }
+
+  const { data, error } = await client
+    .from('revisit_reminders')
+    .insert({
+      target_type,
+      target_id,
+      frequency,
+      next_due_at: new Date(next_due_at).toISOString(),
+      label: label?.trim() || null,
+    })
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
+}
