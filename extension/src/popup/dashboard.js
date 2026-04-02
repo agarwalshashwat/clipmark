@@ -1460,6 +1460,26 @@ async function renderRevisitView(container) {
     <p class="rm-page-sub">Set intentional moments to revisit your curated content and keep your learning loop continuous.</p>`;
   container.appendChild(pageHeader);
 
+  // Outer-scope refs shared between buildCreateForm() and makeCard()
+  let rmVideoSelect, rmPreviewCard, rmPreviewEmpty, rmPreviewThumb, rmPreviewTitle, rmPreviewTags;
+
+  function updateVideoPreview(videoId) {
+    if (!videoId || !allBookmarks.some(b => b.videoId === videoId)) {
+      if (rmPreviewCard)  rmPreviewCard.style.display  = 'none';
+      if (rmPreviewEmpty) rmPreviewEmpty.style.display = 'flex';
+      return;
+    }
+    const bms = allBookmarks.filter(b => b.videoId === videoId);
+    rmPreviewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    rmPreviewTitle.textContent = bms[0].videoTitle || '';
+    const tags = [...new Set(bms.flatMap(b => b.tags || []))].slice(0, 4);
+    rmPreviewTags.innerHTML = tags.map(t =>
+      `<span class="rm-preview-tag" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+    ).join('');
+    rmPreviewCard.style.display  = 'flex';
+    rmPreviewEmpty.style.display = 'none';
+  }
+
   function buildCreateForm() {
     const videoOptions = [...new Map(
       allBookmarks
@@ -1474,26 +1494,32 @@ async function renderRevisitView(container) {
     const defaultDt = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     const minDt     = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
+    // ── Content preview block — standalone, ABOVE form ──
+    const previewBlock = document.createElement('div');
+    previewBlock.className = 'rm-content-preview';
+    previewBlock.innerHTML = `
+      <div class="rm-content-preview-empty">
+        <span class="material-symbols-outlined" style="font-size:32px;color:rgba(20,184,166,0.3)">auto_stories</span>
+        <p class="rm-preview-empty-text">Select a video below to preview it here.</p>
+      </div>
+      <div class="rm-preview-card" style="display:none">
+        <img class="rm-preview-thumb" src="" alt="">
+        <div class="rm-preview-info">
+          <p class="rm-preview-title"></p>
+          <div class="rm-preview-tags"></div>
+        </div>
+      </div>`;
+
+    // ── Form section — no toggle header ──
     const section = document.createElement('div');
     section.className = 'rm-create-section';
     section.innerHTML = `
-      <div class="rm-create-header">
-        <span class="rm-create-title">Schedule a Reminder</span>
-        <button class="rm-create-toggle" type="button">− Close</button>
-      </div>
-      <form class="rm-create-form">
+      <form class="rm-create-form" id="rm-create-form">
         <div class="rm-form-row">
           <label>Video</label>
           <select name="target_id" class="rm-form-select rm-video-select">
             ${videoOptions || '<option value="">No videos yet</option>'}
           </select>
-        </div>
-        <div class="rm-preview-card" style="display:none">
-          <img class="rm-preview-thumb" src="" alt="">
-          <div class="rm-preview-info">
-            <p class="rm-preview-title"></p>
-            <div class="rm-preview-tags"></div>
-          </div>
         </div>
         <div class="rm-form-row">
           <label>Frequency</label>
@@ -1511,49 +1537,40 @@ async function renderRevisitView(container) {
         </div>
         <div class="rm-form-row">
           <label>Label <span class="rm-form-optional">(optional)</span></label>
-          <input type="text" name="label" class="rm-form-input" placeholder="e.g. Review key points" maxlength="80">
+          <input type="text" name="label" class="rm-form-input rm-label-input" placeholder="e.g. Review key points" maxlength="80">
         </div>
         <div class="rm-form-actions">
           <span class="rm-form-note">Your reminder will appear in your dashboard at the scheduled time.</span>
-          <button type="submit" class="rm-form-submit">Set Reminder</button>
+          <button type="submit" class="rm-form-submit" id="rm-form-submit">Set Reminder</button>
         </div>
       </form>`;
 
-    const toggle = section.querySelector('.rm-create-toggle');
-    const form   = section.querySelector('.rm-create-form');
+    // Assign outer-scope refs
+    rmVideoSelect  = section.querySelector('.rm-video-select');
+    rmPreviewCard  = previewBlock.querySelector('.rm-preview-card');
+    rmPreviewEmpty = previewBlock.querySelector('.rm-content-preview-empty');
+    rmPreviewThumb = previewBlock.querySelector('.rm-preview-thumb');
+    rmPreviewTitle = previewBlock.querySelector('.rm-preview-title');
+    rmPreviewTags  = previewBlock.querySelector('.rm-preview-tags');
 
-    toggle.addEventListener('click', () => {
-      const open = form.style.display !== 'none';
-      form.style.display = open ? 'none' : '';
-      toggle.textContent = open ? '+ New' : '− Close';
+    rmVideoSelect?.addEventListener('change', e => updateVideoPreview(e.target.value));
+
+    // Auto-detect active YouTube tab and pre-fill
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const url   = tabs?.[0]?.url ?? '';
+      const match = url.match(/[?&]v=([^&]+)/);
+      if (match && rmVideoSelect) {
+        const vId = match[1];
+        const opt = [...rmVideoSelect.querySelectorAll('option')].find(o => o.value === vId);
+        if (opt) { rmVideoSelect.value = vId; updateVideoPreview(vId); }
+      }
     });
 
-    // Video preview card
-    const videoSelect  = form.querySelector('.rm-video-select');
-    const previewCard  = form.querySelector('.rm-preview-card');
-    const previewThumb = form.querySelector('.rm-preview-thumb');
-    const previewTitle = form.querySelector('.rm-preview-title');
-    const previewTags  = form.querySelector('.rm-preview-tags');
-
-    function updateVideoPreview(videoId) {
-      if (!videoId) { previewCard.style.display = 'none'; return; }
-      const bms = allBookmarks.filter(b => b.videoId === videoId);
-      if (!bms.length) { previewCard.style.display = 'none'; return; }
-      previewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-      previewTitle.textContent = bms[0].videoTitle || '';
-      const tags = [...new Set(bms.flatMap(b => b.tags || []))].slice(0, 4);
-      previewTags.innerHTML = tags.map(t =>
-        `<span class="rm-preview-tag" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
-      ).join('');
-      previewCard.style.display = 'flex';
-    }
-
-    updateVideoPreview(videoSelect?.value);
-    videoSelect?.addEventListener('change', e => updateVideoPreview(e.target.value));
-
+    const form = section.querySelector('.rm-create-form');
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const submit     = form.querySelector('.rm-form-submit');
+      const submitBtn  = form.querySelector('#rm-form-submit');
+      const editId     = submitBtn.dataset.editId;
       const formData   = new FormData(form);
       const target_id  = formData.get('target_id');
       const frequency  = formData.get('frequency');
@@ -1565,10 +1582,17 @@ async function renderRevisitView(container) {
         return;
       }
 
-      submit.disabled = true;
-      submit.textContent = 'Creating…';
+      submitBtn.disabled = true;
+      submitBtn.textContent = editId ? 'Updating…' : 'Creating…';
       try {
         const t = await getValidToken();
+        if (editId) {
+          await fetch(`${API_BASE}/api/reminders/${editId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${t}` },
+          });
+          delete submitBtn.dataset.editId;
+        }
         const res = await fetch(`${API_BASE}/api/reminders`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
@@ -1581,21 +1605,20 @@ async function renderRevisitView(container) {
           }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        showToast('Reminder created!', 'success');
-        form.reset();
-        form.style.display = 'none';
-        toggle.textContent = '+ New';
+        showToast(editId ? 'Reminder updated!' : 'Reminder created!', 'success');
         renderRevisitView(container);
         updateRevisitBadge();
       } catch {
-        showToast('Failed to create reminder — try again');
-      } finally {
-        submit.disabled = false;
-        submit.textContent = 'Create Reminder';
+        showToast('Failed to save reminder — try again');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Set Reminder';
       }
     });
 
-    return section;
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(previewBlock);
+    fragment.appendChild(section);
+    return fragment;
   }
 
   container.appendChild(buildCreateForm());
@@ -1660,10 +1683,24 @@ async function renderRevisitView(container) {
         <div class="rm-card-actions">
           ${r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
           <button class="rm-btn rm-btn-done">Mark Done</button>
+          <button class="rm-btn rm-btn-edit">Edit →</button>
         </div>
       </div>`;
 
     card.querySelector('.rm-btn-done').addEventListener('click', () => markDone(r.id, card));
+    card.querySelector('.rm-btn-edit').addEventListener('click', () => {
+      if (rmVideoSelect) rmVideoSelect.value = r.target_id;
+      const freqRadio = container.querySelector(`input[name="frequency"][value="${r.frequency}"]`);
+      if (freqRadio) freqRadio.checked = true;
+      const dateInput = container.querySelector('input[name="next_due_at"]');
+      if (dateInput) dateInput.value = r.next_due_at.replace('Z', '').slice(0, 16);
+      const labelInput = container.querySelector('.rm-label-input');
+      if (labelInput) labelInput.value = r.label ?? '';
+      const submitBtn = container.querySelector('#rm-form-submit');
+      if (submitBtn) { submitBtn.textContent = 'Update Reminder'; submitBtn.dataset.editId = r.id; }
+      updateVideoPreview(r.target_id);
+      container.querySelector('.rm-create-section')?.scrollIntoView({ behavior: 'smooth' });
+    });
     return card;
   }
 

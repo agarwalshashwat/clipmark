@@ -73,6 +73,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
   const [frequency, setFrequency] = useState('once');
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [highlightTargetId, setHighlightTargetId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const allReminders = [...dueReminders, ...upcomingReminders];
@@ -82,12 +83,15 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
     : null;
 
   const handleCreate = (formData: FormData) => {
+    const tid = formData.get('target_id') as string;
     startTransition(async () => {
       if (editingReminder) {
         await deleteReminder(editingReminder.id);
       }
       await createReminder(formData);
       setEditingReminder(null);
+      setHighlightTargetId(tid);
+      setTimeout(() => setHighlightTargetId(null), 2000);
     });
   };
 
@@ -148,10 +152,18 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
               </>
             ) : (
               <div className={styles.clipPlaceholder}>
-                <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.2)' }}>auto_stories</span>
-                <p className={styles.clipPlaceholderText}>
-                  {targetType === 'group' ? 'Select a group to revisit its full collection.' : 'Select a video to preview it here.'}
-                </p>
+                {targetType === 'group' && selectedTargetId ? (
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: 36, color: 'rgba(20,184,166,0.4)' }}>collections_bookmark</span>
+                    <p className={styles.clipPlaceholderTitle}>{groups.find(g => g.id === selectedTargetId)?.label ?? 'Group'}</p>
+                    <p className={styles.clipPlaceholderText}>Shuffle through this thematic series.</p>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.2)' }}>auto_stories</span>
+                    <p className={styles.clipPlaceholderText}>Select a video to preview it here.</p>
+                  </>
+                )}
                 <blockquote className={styles.clipQuote}>
                   &ldquo;The purpose of a reminder is not to complete a task, but to re-enter a state of curiosity.&rdquo;
                 </blockquote>
@@ -285,7 +297,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
               const isDue = dueReminders.some(d => d.id === r.id);
               const ytUrl = r.videoId ? `https://www.youtube.com/watch?v=${r.videoId}` : null;
               return (
-                <div key={r.id} className={`${styles.scheduleCard} ${isDue ? styles.scheduleCardDue : ''}`}>
+                <div key={r.id} className={`${styles.scheduleCard} ${isDue ? styles.scheduleCardDue : ''} ${r.target_id === highlightTargetId ? styles.scheduleCardHighlight : ''}`}>
                   {r.videoId && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img

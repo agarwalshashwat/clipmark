@@ -156,6 +156,15 @@
   gap: 12px;
 }
 
+.clipPlaceholderTitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1c1d;
+  margin: 0 0 4px;
+  text-align: center;
+}
+
 .clipPlaceholderText {
   font-size: 13px;
   color: #9ca3af;
@@ -538,6 +547,15 @@
   flex-shrink: 0;
 }
 .scheduleDeleteBtn:hover { background: rgba(239, 68, 68, 0.06); border-color: #ef4444; color: #ef4444; }
+
+@keyframes scheduleHighlight {
+  0%   { background: rgba(20, 184, 166, 0.14); box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.3); }
+  100% { background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+}
+
+.scheduleCardHighlight {
+  animation: scheduleHighlight 2s ease forwards;
+}
 
 /* ── Legacy classes kept for safety ─────────────────────────────────────── */
 .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px; }
