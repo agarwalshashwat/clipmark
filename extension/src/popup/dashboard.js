@@ -1418,7 +1418,7 @@ function setActiveNav(id) {
 }
 
 // ─── Reminders View ──────────────────────────────────────────────────────────
-async function renderRevisitView(container) {
+async function renderRevisitView(container, highlightTargetId = null) {
   container.innerHTML = '<div class="loading-spinner">Loading reminders…</div>';
   container.className = 'reminders-view';
 
@@ -1461,26 +1461,44 @@ async function renderRevisitView(container) {
   container.appendChild(pageHeader);
 
   // Outer-scope refs shared between buildCreateForm() and makeCard()
-  let rmVideoSelect, rmPreviewCard, rmPreviewEmpty, rmPreviewThumb, rmPreviewTitle, rmPreviewTags;
+  let rmVideoSelect, rmPreviewCard, rmPreviewEmpty, rmPreviewGroup, rmPreviewGroupName;
+  let rmPreviewThumb, rmPreviewTitle, rmPreviewTags;
+  let rmActiveTargetType = 'collection';
 
-  function updateVideoPreview(videoId) {
-    if (!videoId || !allBookmarks.some(b => b.videoId === videoId)) {
+  function updatePreview(targetId, targetType) {
+    if (!targetId) {
       if (rmPreviewCard)  rmPreviewCard.style.display  = 'none';
+      if (rmPreviewGroup) rmPreviewGroup.style.display = 'none';
       if (rmPreviewEmpty) rmPreviewEmpty.style.display = 'flex';
       return;
     }
-    const bms = allBookmarks.filter(b => b.videoId === videoId);
-    rmPreviewThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    if (targetType === 'group') {
+      if (rmPreviewCard)  rmPreviewCard.style.display  = 'none';
+      if (rmPreviewEmpty) rmPreviewEmpty.style.display = 'none';
+      if (rmPreviewGroupName) rmPreviewGroupName.textContent = rmVideoSelect?.options[rmVideoSelect.selectedIndex]?.text ?? 'Group';
+      if (rmPreviewGroup) rmPreviewGroup.style.display = 'flex';
+      return;
+    }
+    // collection / video
+    if (!allBookmarks.some(b => b.videoId === targetId)) {
+      if (rmPreviewCard)  rmPreviewCard.style.display  = 'none';
+      if (rmPreviewGroup) rmPreviewGroup.style.display = 'none';
+      if (rmPreviewEmpty) rmPreviewEmpty.style.display = 'flex';
+      return;
+    }
+    const bms = allBookmarks.filter(b => b.videoId === targetId);
+    rmPreviewThumb.src = `https://img.youtube.com/vi/${targetId}/mqdefault.jpg`;
     rmPreviewTitle.textContent = bms[0].videoTitle || '';
     const tags = [...new Set(bms.flatMap(b => b.tags || []))].slice(0, 4);
     rmPreviewTags.innerHTML = tags.map(t =>
       `<span class="rm-preview-tag" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
     ).join('');
-    rmPreviewCard.style.display  = 'flex';
-    rmPreviewEmpty.style.display = 'none';
+    if (rmPreviewGroup) rmPreviewGroup.style.display = 'none';
+    if (rmPreviewEmpty) rmPreviewEmpty.style.display = 'none';
+    if (rmPreviewCard)  rmPreviewCard.style.display  = 'block';
   }
 
-  function buildCreateForm() {
+  async function buildCreateForm() {
     const videoOptions = [...new Map(
       allBookmarks
         .filter(b => b.videoId && b.videoTitle)
@@ -1489,34 +1507,76 @@ async function renderRevisitView(container) {
       .map(([vid, title]) => `<option value="${vid}">${title.substring(0, 60)}</option>`)
       .join('');
 
-    const d = new Date();
-    d.setHours(d.getHours() + 1, 0, 0, 0);
-    const defaultDt = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    const minDt     = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    // Fetch groups for the Collection/Group tab
+    let groups = [];
+    try {
+      const t = await getValidToken();
+      if (t) {
+        const res = await fetch(`${API_BASE}/api/groups`, { headers: { Authorization: `Bearer ${t}` } });
+        if (res.ok) groups = await res.json();
+      }
+    } catch {}
+    const groupOptions = groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
 
-    // ── Content preview block — standalone, ABOVE form ──
-    const previewBlock = document.createElement('div');
-    previewBlock.className = 'rm-content-preview';
-    previewBlock.innerHTML = `
-      <div class="rm-content-preview-empty">
-        <span class="material-symbols-outlined" style="font-size:32px;color:rgba(20,184,166,0.3)">auto_stories</span>
-        <p class="rm-preview-empty-text">Select a video below to preview it here.</p>
+    const defaultDate = new Date().toISOString().split('T')[0];
+
+    // ── Two-column wrapper ──
+    const twoCol = document.createElement('div');
+    twoCol.className = 'rm-two-col';
+
+    // ── Left panel — Content Preview ──
+    const leftPanel = document.createElement('div');
+    leftPanel.className = 'rm-left-panel';
+    leftPanel.innerHTML = `
+      <div class="rm-preview-header">
+        <span class="rm-preview-label">Content Preview</span>
+        <button type="button" class="rm-preview-toggle">Hide ↑</button>
       </div>
-      <div class="rm-preview-card" style="display:none">
-        <img class="rm-preview-thumb" src="" alt="">
-        <div class="rm-preview-info">
-          <p class="rm-preview-title"></p>
-          <div class="rm-preview-tags"></div>
+      <div class="rm-preview-body">
+        <div class="rm-content-preview-empty">
+          <span class="material-symbols-outlined" style="font-size:36px;color:rgba(20,184,166,0.3)">auto_stories</span>
+          <p class="rm-preview-empty-text">Select content below to preview it here.</p>
+        </div>
+        <div class="rm-preview-card" style="display:none">
+          <div class="rm-preview-thumb-wrap">
+            <span class="rm-clip-badge">ACTIVE CLIP</span>
+            <img class="rm-preview-thumb" src="" alt="">
+          </div>
+          <div class="rm-preview-info">
+            <p class="rm-preview-title"></p>
+            <div class="rm-preview-tags"></div>
+            <blockquote class="rm-preview-quote">&ldquo;The purpose of a reminder is not to complete a task, but to re-enter a state of curiosity.&rdquo;</blockquote>
+          </div>
+        </div>
+        <div class="rm-preview-group" style="display:none">
+          <span class="material-symbols-outlined rm-preview-group-icon">collections_bookmark</span>
+          <p class="rm-preview-group-name"></p>
+          <p class="rm-preview-group-sub">Shuffle through this thematic series.</p>
+          <blockquote class="rm-preview-quote">&ldquo;The purpose of a reminder is not to complete a task, but to re-enter a state of curiosity.&rdquo;</blockquote>
         </div>
       </div>`;
 
-    // ── Form section — no toggle header ──
-    const section = document.createElement('div');
-    section.className = 'rm-create-section';
-    section.innerHTML = `
+    // ── Right panel — Form ──
+    const rightPanel = document.createElement('div');
+    rightPanel.className = 'rm-right-panel';
+    rightPanel.innerHTML = `
       <form class="rm-create-form" id="rm-create-form">
         <div class="rm-form-row">
-          <label>Video</label>
+          <label>Target Type</label>
+          <div class="rm-target-tabs">
+            <button type="button" class="rm-target-tab rm-target-tab--active" data-type="collection">
+              <span class="rm-target-tab-title">Specific Video</span>
+              <span class="rm-target-tab-sub">Revisit a single curated masterpiece</span>
+            </button>
+            <button type="button" class="rm-target-tab" data-type="group">
+              <span class="rm-target-tab-title">Collection/Group</span>
+              <span class="rm-target-tab-sub">Shuffle through a thematic series</span>
+            </button>
+          </div>
+          <input type="hidden" name="target_type" value="collection">
+        </div>
+        <div class="rm-form-row">
+          <label>Select Content</label>
           <select name="target_id" class="rm-form-select rm-video-select">
             ${videoOptions || '<option value="">No videos yet</option>'}
           </select>
@@ -1524,65 +1584,103 @@ async function renderRevisitView(container) {
         <div class="rm-form-row">
           <label>Frequency</label>
           <div class="rm-radio-group">
-            <label class="rm-radio-label"><input type="radio" name="frequency" value="once"> One-time</label>
-            <label class="rm-radio-label"><input type="radio" name="frequency" value="weekly" checked> Weekly</label>
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="once" checked> One-time</label>
+            <label class="rm-radio-label"><input type="radio" name="frequency" value="weekly"> Weekly</label>
             <label class="rm-radio-label"><input type="radio" name="frequency" value="biweekly"> Every 2 weeks</label>
             <label class="rm-radio-label"><input type="radio" name="frequency" value="monthly"> Monthly</label>
             <label class="rm-radio-label"><input type="radio" name="frequency" value="daily"> Daily</label>
           </div>
         </div>
         <div class="rm-form-row">
-          <label>Due Date &amp; Time</label>
-          <input type="datetime-local" name="next_due_at" class="rm-form-input" value="${defaultDt}" min="${minDt}">
+          <label>Start Date</label>
+          <input type="date" name="next_due_at" class="rm-form-input" value="${defaultDate}">
         </div>
         <div class="rm-form-row">
           <label>Label <span class="rm-form-optional">(optional)</span></label>
           <input type="text" name="label" class="rm-form-input rm-label-input" placeholder="e.g. Review key points" maxlength="80">
         </div>
         <div class="rm-form-actions">
-          <span class="rm-form-note">Your reminder will appear in your dashboard at the scheduled time.</span>
-          <button type="submit" class="rm-form-submit" id="rm-form-submit">Set Reminder</button>
+          <span class="rm-form-note">Your reminder will appear in your dashboard and inbox at 9:00 AM.</span>
+          <div class="rm-form-btns">
+            <button type="button" class="rm-btn-cancel-edit" id="rm-btn-cancel-edit" style="display:none">Cancel</button>
+            <button type="submit" class="rm-form-submit" id="rm-form-submit">Set Reminder</button>
+          </div>
         </div>
       </form>`;
 
+    twoCol.appendChild(leftPanel);
+    twoCol.appendChild(rightPanel);
+
     // Assign outer-scope refs
-    rmVideoSelect  = section.querySelector('.rm-video-select');
-    rmPreviewCard  = previewBlock.querySelector('.rm-preview-card');
-    rmPreviewEmpty = previewBlock.querySelector('.rm-content-preview-empty');
-    rmPreviewThumb = previewBlock.querySelector('.rm-preview-thumb');
-    rmPreviewTitle = previewBlock.querySelector('.rm-preview-title');
-    rmPreviewTags  = previewBlock.querySelector('.rm-preview-tags');
+    rmVideoSelect      = rightPanel.querySelector('.rm-video-select');
+    rmPreviewCard      = leftPanel.querySelector('.rm-preview-card');
+    rmPreviewEmpty     = leftPanel.querySelector('.rm-content-preview-empty');
+    rmPreviewGroup     = leftPanel.querySelector('.rm-preview-group');
+    rmPreviewGroupName = leftPanel.querySelector('.rm-preview-group-name');
+    rmPreviewThumb     = leftPanel.querySelector('.rm-preview-thumb');
+    rmPreviewTitle     = leftPanel.querySelector('.rm-preview-title');
+    rmPreviewTags      = leftPanel.querySelector('.rm-preview-tags');
 
-    rmVideoSelect?.addEventListener('change', e => updateVideoPreview(e.target.value));
+    // Toggle collapse
+    const previewBody    = leftPanel.querySelector('.rm-preview-body');
+    const toggleBtn      = leftPanel.querySelector('.rm-preview-toggle');
+    let previewCollapsed = false;
+    toggleBtn.addEventListener('click', () => {
+      previewCollapsed = !previewCollapsed;
+      previewBody.style.display = previewCollapsed ? 'none' : '';
+      toggleBtn.textContent = previewCollapsed ? 'Show ↓' : 'Hide ↑';
+    });
 
-    // Auto-detect active YouTube tab and pre-fill
+    // Target type tab switching
+    const typeInput = rightPanel.querySelector('input[name="target_type"]');
+    rightPanel.querySelectorAll('.rm-target-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const type = tab.dataset.type;
+        rmActiveTargetType = type;
+        typeInput.value = type;
+        rightPanel.querySelectorAll('.rm-target-tab').forEach(t => t.classList.remove('rm-target-tab--active'));
+        tab.classList.add('rm-target-tab--active');
+        if (type === 'group') {
+          rmVideoSelect.innerHTML = groupOptions || '<option value="">No groups yet</option>';
+        } else {
+          rmVideoSelect.innerHTML = videoOptions || '<option value="">No videos yet</option>';
+        }
+        updatePreview(rmVideoSelect.value, type);
+      });
+    });
+
+    rmVideoSelect?.addEventListener('change', e => updatePreview(e.target.value, rmActiveTargetType));
+
+    // Auto-detect active YouTube tab and pre-fill (collection only)
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const url   = tabs?.[0]?.url ?? '';
       const match = url.match(/[?&]v=([^&]+)/);
-      if (match && rmVideoSelect) {
-        const vId = match[1];
-        const opt = [...rmVideoSelect.querySelectorAll('option')].find(o => o.value === vId);
-        if (opt) { rmVideoSelect.value = vId; updateVideoPreview(vId); }
+      if (match && rmVideoSelect && rmActiveTargetType === 'collection') {
+        const opt = [...rmVideoSelect.querySelectorAll('option')].find(o => o.value === match[1]);
+        if (opt) { rmVideoSelect.value = match[1]; updatePreview(match[1], 'collection'); }
       }
     });
 
-    const form = section.querySelector('.rm-create-form');
+    const form      = rightPanel.querySelector('.rm-create-form');
+    const submitBtn = form.querySelector('#rm-form-submit');
+    const cancelBtn = form.querySelector('#rm-btn-cancel-edit');
+
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const submitBtn  = form.querySelector('#rm-form-submit');
       const editId     = submitBtn.dataset.editId;
       const formData   = new FormData(form);
+      const target_type = formData.get('target_type');
       const target_id  = formData.get('target_id');
       const frequency  = formData.get('frequency');
-      const next_due_at = formData.get('next_due_at');
+      const dateRaw    = formData.get('next_due_at');
       const label      = formData.get('label');
 
-      if (!target_id || !next_due_at) {
+      if (!target_id || !dateRaw) {
         showToast('Please fill in all required fields');
         return;
       }
 
-      submitBtn.disabled = true;
+      submitBtn.disabled    = true;
       submitBtn.textContent = editId ? 'Updating…' : 'Creating…';
       try {
         const t = await getValidToken();
@@ -1597,31 +1695,39 @@ async function renderRevisitView(container) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
           body: JSON.stringify({
-            target_type: 'collection',
+            target_type,
             target_id,
             frequency,
-            next_due_at: new Date(next_due_at).toISOString(),
+            next_due_at: new Date(dateRaw + 'T09:00:00').toISOString(),
             label: label || null,
           }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        cancelBtn.style.display = 'none';
         showToast(editId ? 'Reminder updated!' : 'Reminder created!', 'success');
-        renderRevisitView(container);
+        renderRevisitView(container, target_id);
         updateRevisitBadge();
       } catch {
         showToast('Failed to save reminder — try again');
-        submitBtn.disabled = false;
+        submitBtn.disabled    = false;
         submitBtn.textContent = 'Set Reminder';
       }
     });
 
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(previewBlock);
-    fragment.appendChild(section);
-    return fragment;
+    cancelBtn.addEventListener('click', () => {
+      delete submitBtn.dataset.editId;
+      submitBtn.textContent   = 'Set Reminder';
+      cancelBtn.style.display = 'none';
+      form.reset();
+      form.querySelector('input[name="next_due_at"]').value               = defaultDate;
+      form.querySelector('input[name="frequency"][value="once"]').checked = true;
+      updatePreview(rmVideoSelect?.value ?? '', rmActiveTargetType);
+    });
+
+    return twoCol;
   }
 
-  container.appendChild(buildCreateForm());
+  container.appendChild(await buildCreateForm());
 
   if (!due.length && !upcoming.length) {
     const empty = document.createElement('p');
@@ -1671,7 +1777,7 @@ async function renderRevisitView(container) {
       : '';
 
     const card = document.createElement('div');
-    card.className = `rm-card${isDue ? ' rm-card--due' : ''}`;
+    card.className = `rm-card${isDue ? ' rm-card--due' : ''}${r.target_id === highlightTargetId ? ' rm-card--highlight' : ''}`;
     card.innerHTML = `
       ${thumbHtml}
       <div class="rm-card-body">
@@ -1679,27 +1785,52 @@ async function renderRevisitView(container) {
           ${dateLabel}
           <span class="rm-freq-badge">${freqLabel}</span>
         </div>
-        <div class="rm-card-title">${r.targetLabel ?? 'Unknown'}</div>
+        <div class="rm-card-title">${r.label || r.targetLabel || 'Unknown'}</div>
+        ${r.label ? `<div class="rm-card-sub">${r.targetLabel}</div>` : ''}
         <div class="rm-card-actions">
-          ${r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
-          <button class="rm-btn rm-btn-done">Mark Done</button>
+          ${isDue && r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
+          ${isDue ? `<button class="rm-btn rm-btn-done">Mark Done</button>` : ''}
           <button class="rm-btn rm-btn-edit">Edit →</button>
+          <button class="rm-btn-delete" title="Delete">×</button>
         </div>
       </div>`;
 
-    card.querySelector('.rm-btn-done').addEventListener('click', () => markDone(r.id, card));
+    if (isDue) card.querySelector('.rm-btn-done').addEventListener('click', () => markDone(r.id, card));
     card.querySelector('.rm-btn-edit').addEventListener('click', () => {
+      // Switch to correct target type tab
+      const targetType = r.target_type ?? 'collection';
+      rmActiveTargetType = targetType;
+      container.querySelectorAll('.rm-target-tab').forEach(t => {
+        t.classList.toggle('rm-target-tab--active', t.dataset.type === targetType);
+      });
+      const typeInput = container.querySelector('input[name="target_type"]');
+      if (typeInput) typeInput.value = targetType;
       if (rmVideoSelect) rmVideoSelect.value = r.target_id;
       const freqRadio = container.querySelector(`input[name="frequency"][value="${r.frequency}"]`);
       if (freqRadio) freqRadio.checked = true;
       const dateInput = container.querySelector('input[name="next_due_at"]');
-      if (dateInput) dateInput.value = r.next_due_at.replace('Z', '').slice(0, 16);
+      if (dateInput) dateInput.value = r.next_due_at.split('T')[0];
       const labelInput = container.querySelector('.rm-label-input');
       if (labelInput) labelInput.value = r.label ?? '';
       const submitBtn = container.querySelector('#rm-form-submit');
       if (submitBtn) { submitBtn.textContent = 'Update Reminder'; submitBtn.dataset.editId = r.id; }
-      updateVideoPreview(r.target_id);
-      container.querySelector('.rm-create-section')?.scrollIntoView({ behavior: 'smooth' });
+      const cancelBtn = container.querySelector('#rm-btn-cancel-edit');
+      if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+      updatePreview(r.target_id, targetType);
+      container.querySelector('.rm-two-col')?.scrollIntoView({ behavior: 'smooth' });
+    });
+    card.querySelector('.rm-btn-delete').addEventListener('click', async () => {
+      card.style.opacity = '0.5';
+      card.style.pointerEvents = 'none';
+      try {
+        const t = await getValidToken();
+        await fetch(`${API_BASE}/api/reminders/${r.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${t}` },
+        });
+      } catch {}
+      renderRevisitView(container);
+      updateRevisitBadge();
     });
     return card;
   }

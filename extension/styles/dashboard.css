@@ -3775,20 +3775,58 @@
 }
 .rm-footer a:hover, .rm-webapp-link:hover { text-decoration: underline; }
 
-/* ─── Content Preview (standalone, above form) ────────────────────────────── */
-.rm-content-preview {
-    margin-bottom: 16px;
+/* ─── Two-column layout ───────────────────────────────────────────────────── */
+.rm-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 14px;
+    align-items: start;
+    margin-bottom: 20px;
 }
+
+/* ─── Left panel — Content Preview ───────────────────────────────────────── */
+.rm-left-panel {
+    background: var(--bg-card, #fff);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(26,28,29,0.06);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+
+.rm-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(26,28,29,0.06);
+}
+
+.rm-preview-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+
+.rm-preview-toggle {
+    font-size: 11px;
+    font-weight: 600;
+    color: #14B8A6;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+.rm-preview-toggle:hover { text-decoration: underline; }
 
 .rm-content-preview-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    padding: 20px 16px;
-    background: rgba(20,184,166,0.03);
-    border: 1px dashed rgba(20,184,166,0.25);
-    border-radius: 12px;
+    padding: 28px 16px;
     text-align: center;
 }
 
@@ -3798,11 +3836,118 @@
     margin: 0;
 }
 
-/* ─── Reminder Create Form ─────────────────────────────────────────────────── */
-.rm-create-section {
-    margin-bottom: 24px;
+/* ─── Video Preview Card (inside left panel, block layout) ────────────────── */
+.rm-preview-card {
+    display: block;
+    overflow: hidden;
+    animation: rm-fade-slide 0.2s ease;
 }
 
+.rm-preview-thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #1a1c1d;
+}
+
+.rm-clip-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #14B8A6;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.rm-preview-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rm-preview-info {
+    padding: 12px 14px 14px;
+}
+
+.rm-preview-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary, #1a1a1a);
+    margin: 0 0 6px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.rm-preview-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.rm-preview-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    letter-spacing: 0.02em;
+}
+
+.rm-preview-quote {
+    margin: 0;
+    padding-left: 8px;
+    border-left: 2px solid #14B8A6;
+    font-size: 10px;
+    font-style: italic;
+    color: var(--text-muted, #aaa);
+    line-height: 1.5;
+}
+
+/* ─── Group preview state ─────────────────────────────────────────────────── */
+.rm-preview-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 14px 16px;
+    text-align: center;
+    animation: rm-fade-slide 0.2s ease;
+}
+
+.rm-preview-group-icon {
+    font-size: 36px;
+    color: rgba(20,184,166,0.4);
+}
+
+.rm-preview-group-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary, #1a1a1a);
+    margin: 0;
+    line-height: 1.35;
+}
+
+.rm-preview-group-sub {
+    font-size: 11px;
+    color: var(--text-muted, #aaa);
+    margin: 0;
+}
+
+/* ─── Right panel — Form ──────────────────────────────────────────────────── */
+.rm-right-panel { /* form card styling lives on .rm-create-form */ }
+
+/* ─── Reminder Create Form ─────────────────────────────────────────────────── */
 .rm-create-form {
     display: flex;
     flex-direction: column;
@@ -3833,6 +3978,51 @@
     letter-spacing: 0;
 }
 
+/* ─── Target type tabs ─────────────────────────────────────────────────────── */
+.rm-target-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid rgba(26,28,29,0.12);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 2px;
+}
+
+.rm-target-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border: none;
+    background: #f9f9fa;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+    border-right: 1px solid rgba(26,28,29,0.1);
+    font-family: inherit;
+}
+.rm-target-tab:last-child { border-right: none; }
+.rm-target-tab:hover { background: #f0f0f1; }
+
+.rm-target-tab--active {
+    background: #fff;
+    border-bottom: 2px solid #14B8A6;
+}
+
+.rm-target-tab-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary, #1a1a1a);
+    line-height: 1.3;
+}
+
+.rm-target-tab-sub {
+    font-size: 10px;
+    color: var(--text-muted, #aaa);
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
 .rm-form-select,
 .rm-form-input {
     font-size: 13px;
@@ -3850,61 +4040,9 @@
     border-color: #14B8A6;
 }
 
-/* ─── Video Preview Card (standalone, above form) ─────────────────────────── */
-.rm-preview-card {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    background: rgba(20, 184, 166, 0.04);
-    border: 1px solid rgba(20, 184, 166, 0.18);
-    border-radius: 12px;
-    padding: 14px;
-    animation: rm-fade-slide 0.2s ease;
-}
-
 @keyframes rm-fade-slide {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
-}
-
-.rm-preview-thumb {
-    width: 96px;
-    height: 54px;
-    object-fit: cover;
-    border-radius: 6px;
-    flex-shrink: 0;
-    background: #eee;
-}
-
-.rm-preview-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.rm-preview-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-primary, #1a1a1a);
-    margin: 0 0 6px;
-    line-height: 1.35;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.rm-preview-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.rm-preview-tag {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 9999px;
-    letter-spacing: 0.02em;
 }
 
 .rm-radio-group {
@@ -3976,6 +4114,57 @@
     transition: opacity 0.12s;
 }
 .rm-btn-edit:hover { opacity: 0.7; }
+
+/* ─── Form button group ───────────────────────────────────────────────────── */
+.rm-form-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.rm-btn-cancel-edit {
+    background: transparent;
+    border: 1px solid rgba(26,28,29,0.15);
+    border-radius: 7px;
+    color: #545f6c;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* ─── Card enhancements ───────────────────────────────────────────────────── */
+.rm-btn-delete {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #c4cac8;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.rm-btn-delete:hover { background: rgba(239,68,68,0.06); border-color: #ef4444; color: #ef4444; }
+
+.rm-card-sub {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    margin: 2px 0 4px;
+}
+
+@keyframes rm-card-highlight {
+    0%   { background: rgba(20,184,166,0.12); box-shadow: 0 0 0 2px rgba(20,184,166,0.3); }
+    100% { background: var(--bg-card, #fff);  box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+}
+.rm-card--highlight { animation: rm-card-highlight 2s ease forwards; }
 
 /* ─── Shared Collections View ─────────────────────────────────────────────── */
 .shared-view { padding: 0 0 40px; }
