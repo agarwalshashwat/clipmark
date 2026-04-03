@@ -59,7 +59,6 @@ webapp/.env
 next-env.d.ts
 .claude/
 deep-research-*
-.stitch/
 clipmark-extension.zip
 
 # Playwright

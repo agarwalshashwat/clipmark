@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clipmark Side Panel</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed-variant": "#005048",
+              "on-tertiary-fixed": "#25005a",
+              "secondary-fixed-dim": "#bcc8d6",
+              "tertiary-fixed-dim": "#d2bbff",
+              "surface": "#f9f9fa",
+              "inverse-primary": "#4fdbc8",
+              "secondary-container": "#d8e4f3",
+              "on-error": "#ffffff",
+              "surface-container-highest": "#e2e2e3",
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "error": "#ba1a1a",
+              "primary-container": "#14b8a6",
+              "outline-variant": "#bbcac6",
+              "on-secondary-container": "#5a6572",
+              "surface-container-low": "#f3f3f4",
+              "secondary": "#545f6c",
+              "outline": "#6c7a77",
+              "background": "#f9f9fa",
+              "on-tertiary-fixed-variant": "#5a00c6",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#3d4854",
+              "on-secondary-fixed": "#111d27",
+              "on-error-container": "#93000a",
+              "on-background": "#1a1c1d",
+              "on-surface-variant": "#3c4947",
+              "inverse-on-surface": "#f0f1f2",
+              "on-primary-fixed": "#00201c",
+              "primary-fixed": "#71f8e4",
+              "surface-container": "#edeeef",
+              "surface-tint": "#006b5f",
+              "on-tertiary-container": "#4b00a7",
+              "tertiary-fixed": "#eaddff",
+              "tertiary": "#732ee4",
+              "surface-variant": "#e2e2e3",
+              "surface-container-high": "#e8e8e9",
+              "surface-container-lowest": "#ffffff",
+              "inverse-surface": "#2f3132",
+              "tertiary-container": "#b591ff",
+              "primary": "#006b5f",
+              "on-surface": "#1a1c1d",
+              "surface-dim": "#d9dadb",
+              "secondary-fixed": "#d8e4f3",
+              "primary-fixed-dim": "#4fdbc8",
+              "on-secondary": "#ffffff",
+              "on-primary-container": "#00423b",
+              "surface-bright": "#f9f9fa"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"],
+              "mono": ["JetBrains Mono"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e2e3;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="bg-slate-200 font-body text-on-background antialiased flex justify-end min-h-screen">
+<!-- Clipmark Side Panel Container -->
+<aside class="w-[360px] h-screen glass-panel flex flex-col shadow-2xl overflow-hidden relative border-l border-white/20">
+<!-- Header Section -->
+<header class="p-5 flex flex-col gap-4 bg-surface-container-lowest/40">
+<div class="flex items-center justify-between">
+<span class="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-400 bg-clip-text text-transparent font-headline tracking-tight">Clipmark</span>
+<div class="flex gap-2">
+<button class="p-2 rounded-xl hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="p-2 rounded-xl hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+</div>
+</div>
+<div class="space-y-3">
+<h1 class="font-headline font-bold text-lg leading-tight text-on-surface tracking-tight">How to Build a High-End Editorial Design System in 2024</h1>
+<button class="w-full py-2.5 px-4 bg-tertiary-container/20 text-tertiary font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-tertiary-container/30 transition-all border border-tertiary/10 group">
+<span class="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-sm tracking-wide">Summary</span>
+</button>
+</div>
+</header>
+<!-- One-Click Save Section -->
+<section class="px-5 py-4 bg-surface-container-low/50">
+<div class="p-4 bg-surface-container-lowest rounded-2xl shadow-sm border border-white/50 flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold uppercase tracking-[0.15em] text-secondary">Quick Capture</span>
+<span class="font-mono text-xs font-semibold bg-primary-container/10 text-primary px-2 py-0.5 rounded-lg">12:45</span>
+</div>
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined" data-icon="bookmark_add" style="font-variation-settings: 'FILL' 1;">bookmark_add</span>
+<span>Save Moment</span>
+</button>
+</div>
+</section>
+<!-- Bookmarks List (Scrollable) -->
+<section class="flex-1 overflow-y-auto custom-scrollbar px-5 py-2">
+<div class="flex items-center justify-between py-4">
+<h2 class="font-headline font-bold text-sm text-on-surface-variant">Bookmarks for this video</h2>
+<span class="text-[10px] bg-surface-container-highest px-2 py-0.5 rounded-full font-bold">4 ITEMS</span>
+</div>
+<div class="space-y-1">
+<!-- Bookmark Item 1 -->
+<div class="group relative p-4 rounded-xl hover:bg-white transition-all cursor-default flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<button class="font-mono text-xs font-bold text-primary hover:underline transition-all">02:14</button>
+<div class="flex-1 h-[1px] bg-slate-100"></div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-error/60 hover:text-error">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span>
+</button>
+</div>
+<div class="relative">
+<p class="text-sm text-on-surface leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary/20 rounded-md p-1 -m-1 transition-all" contenteditable="true">Defining the Creative North Star for the brand identity.</p>
+</div>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-container/10 text-primary uppercase tracking-wider">Strategy</span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-container/30 text-secondary uppercase tracking-wider">Identity</span>
+</div>
+</div>
+<!-- Bookmark Item 2 -->
+<div class="group relative p-4 rounded-xl hover:bg-white transition-all cursor-default flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<button class="font-mono text-xs font-bold text-primary hover:underline transition-all">05:42</button>
+<div class="flex-1 h-[1px] bg-slate-100"></div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-error/60 hover:text-error">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span>
+</button>
+</div>
+<p class="text-sm text-on-surface leading-relaxed" contenteditable="true">The "No-Line" rule explanation: why borders are design failures.</p>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-error-container/15 text-error uppercase tracking-wider">UI Rules</span>
+</div>
+</div>
+<!-- Bookmark Item 3 -->
+<div class="group relative p-4 rounded-xl hover:bg-white transition-all cursor-default flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<button class="font-mono text-xs font-bold text-primary hover:underline transition-all">08:19</button>
+<div class="flex-1 h-[1px] bg-slate-100"></div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-error/60 hover:text-error">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span>
+</button>
+</div>
+<p class="text-sm text-on-surface leading-relaxed" contenteditable="true">Glassmorphism implementation techniques for modern interfaces.</p>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-tertiary-container/15 text-tertiary uppercase tracking-wider">Visuals</span>
+</div>
+</div>
+<!-- Bookmark Item 4 -->
+<div class="group relative p-4 rounded-xl hover:bg-white transition-all cursor-default flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<button class="font-mono text-xs font-bold text-primary hover:underline transition-all">14:55</button>
+<div class="flex-1 h-[1px] bg-slate-100"></div>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-error/60 hover:text-error">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span>
+</button>
+</div>
+<p class="text-sm text-on-surface leading-relaxed" contenteditable="true">Typography scales and contrasting pairings.</p>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-container/10 text-primary uppercase tracking-wider">Typography</span>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Social Post Section (Sticky Bottom) -->
+<footer class="p-5 bg-surface-container-lowest border-t border-slate-100/50">
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-[20px]" data-icon="drawing_glow" style="font-variation-settings: 'FILL' 1;">draw</span>
+<h3 class="font-headline font-bold text-xs uppercase tracking-widest">Generate Social Post</h3>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group">
+<div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-[10px] font-bold group-hover:scale-110 transition-transform">X</div>
+<span class="text-[10px] font-bold text-secondary">X</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group">
+<div class="w-8 h-8 rounded-full bg-[#0077b5] flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[18px]" data-icon="work">work</span>
+</div>
+<span class="text-[10px] font-bold text-secondary">LinkedIn</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group">
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[18px]" data-icon="alternate_email">alternate_email</span>
+</div>
+<span class="text-[10px] font-bold text-secondary">Threads</span>
+</button>
+</div>
+</div>
+</footer>
+<!-- Bottom Navigation Shell (SideNav Semantic) -->
+<nav class="hidden md:flex flex-col absolute left-0 top-0 h-full p-2 gap-4 pointer-events-none">
+<!-- Floating Side Nav Mockup - Just Icons for Narrow Context -->
+<div class="flex flex-col gap-2 p-1.5 bg-white/40 backdrop-blur-md rounded-2xl pointer-events-auto shadow-sm mt-20">
+<div class="p-2 bg-white text-primary rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-[20px]" data-icon="bookmarks" style="font-variation-settings: 'FILL' 1;">bookmarks</span>
+</div>
+<div class="p-2 text-slate-400 hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]" data-icon="schedule">schedule</span>
+</div>
+<div class="p-2 text-slate-400 hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]" data-icon="folder_shared">folder_shared</span>
+</div>
+</div>
+</nav>
+</aside>
+<!-- Visual Anchor / Background Content Mock -->
+<main class="fixed inset-0 -z-10 bg-slate-100 overflow-hidden flex items-center justify-center">
+<div class="w-full max-w-5xl aspect-video bg-black rounded-3xl shadow-2xl relative overflow-hidden">
+<img alt="YouTube Video Mockup" class="w-full h-full object-cover opacity-60" data-alt="Cyberpunk workspace with multiple screens and neon lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDulZ6TSpxKy0dpJsdmzMxg_rtzXfVgzScvU1pJQj4dH0wkR-ZMelBQGbtjH4wXiHf_cVzLUehKATkrEyztZg3GNdWgfrk_Sb8K2b16aUHNKHP_R0g7fKzOEWMvj7SbhoZTcOPhIL10z-gEv7SgovXvBw7m7I2IZX82UrUHSMhPIQi4GSWbXnWMCk5S5eAaxWOSB-QVumBA9v1KZpQ5PyeS1d2huZfRhSJg6APn9fTmu_TG8IqLkfTUhqA2-981y5nhfVkI-tc7"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-5xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<!-- Video Controls Overlays -->
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/80 to-transparent p-6 flex items-end">
+<div class="w-full h-1 bg-white/30 rounded-full relative">
+<div class="absolute top-0 left-0 h-full w-[45%] bg-primary rounded-full"></div>
+<div class="absolute top-1/2 left-[45%] -translate-y-1/2 w-4 h-4 bg-primary rounded-full shadow-lg"></div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

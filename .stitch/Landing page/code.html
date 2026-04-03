@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clipmark — The Digital Curator for YouTube</title>
+<meta content="Turn long YouTube videos into searchable, revisable knowledge with Clipmark." name="description"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        [data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); }
+        .bg-grid-slate-100 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(241 245 249 / 0.5)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E"); }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "on-tertiary-container": "#4b00a7",
+                        "on-surface": "#1a1c1d",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed-dim": "#bcc8d6",
+                        "primary-fixed": "#71f8e4",
+                        "surface-variant": "#e2e2e3",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "on-secondary-fixed-variant": "#3d4854",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-container": "#d8e4f3",
+                        "primary-container": "#14b8a6",
+                        "secondary-fixed": "#d8e4f3",
+                        "on-primary-fixed": "#00201c",
+                        "primary-fixed-dim": "#4fdbc8",
+                        "outline-variant": "#bbcac6",
+                        "on-secondary-container": "#5a6572",
+                        "on-background": "#1a1c1d",
+                        "inverse-surface": "#2f3132",
+                        "on-surface-variant": "#3c4947",
+                        "tertiary-container": "#b591ff",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f3f4",
+                        "tertiary-fixed": "#eaddff",
+                        "surface-container-highest": "#e2e2e3",
+                        "on-primary-fixed-variant": "#005048",
+                        "primary": "#006b5f",
+                        "error": "#ba1a1a",
+                        "background": "#f9f9fa",
+                        "on-secondary-fixed": "#111d27",
+                        "surface-bright": "#f9f9fa",
+                        "on-primary-container": "#00423b",
+                        "inverse-primary": "#4fdbc8",
+                        "surface-container-high": "#e8e8e9",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "surface": "#f9f9fa",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#732ee4",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#6c7a77",
+                        "surface-tint": "#006b5f",
+                        "surface-container": "#edeeef",
+                        "secondary": "#545f6c",
+                        "on-tertiary-fixed": "#25005a"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary-container/30">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-8 h-20">
+<div class="text-2xl font-bold text-teal-600 dark:text-teal-400 tracking-tighter font-['Plus_Jakarta_Sans']">Clipmark</div>
+<div class="hidden md:flex items-center gap-10">
+<a class="text-teal-700 dark:text-teal-300 border-b-2 border-teal-500 pb-1 font-['Plus_Jakarta_Sans'] font-semibold tracking-tight transition-all" href="#features">Features</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-['Plus_Jakarta_Sans'] font-semibold tracking-tight transition-all" href="#testimonials">Testimonials</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-['Plus_Jakarta_Sans'] font-semibold tracking-tight transition-all" href="#pricing">Pricing</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-container text-white font-semibold active:scale-95 duration-200 ease-in-out">
+                    Get Started
+                </button>
+</div>
+</div>
+</nav>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-20 pb-32">
+<div class="absolute inset-0 bg-grid-slate-100 -z-10"></div>
+<div class="max-w-7xl mx-auto px-8 text-center">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-container/10 text-primary font-medium text-sm mb-8">
+<span class="material-symbols-outlined text-sm" data-weight="fill">verified</span>
+<span>The Digital Curator for YouTube Professionals</span>
+</div>
+<h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-on-surface mb-8 leading-[1.1]">
+                    Turn Long YouTube Videos into <br/>
+<span class="text-primary italic">Searchable, Revisable</span> Knowledge.
+                </h1>
+<p class="text-xl text-secondary max-w-2xl mx-auto mb-12 font-body leading-relaxed">
+                    Stop scrubbing through hours of footage. Clipmark's Chrome extension and Next.js dashboard curate your learning journey instantly.
+                </p>
+<div class="flex flex-col md:flex-row items-center justify-center gap-6">
+<button class="px-8 py-4 bg-primary text-white rounded-xl font-bold text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all flex items-center gap-2">
+                        Get Started for Free <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="px-8 py-4 bg-surface-container-low text-on-surface rounded-xl font-bold text-lg hover:bg-surface-container-high transition-all flex items-center gap-2">
+<span class="material-symbols-outlined" data-weight="fill">play_circle</span> Watch Demo
+                    </button>
+</div>
+<!-- Cinematic UI Visual -->
+<div class="mt-24 relative max-w-5xl mx-auto">
+<div class="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-tertiary/20 rounded-[2rem] blur-3xl -z-10"></div>
+<div class="bg-on-surface rounded-[2rem] p-4 shadow-2xl overflow-hidden border border-white/10">
+<div class="aspect-video bg-slate-900 rounded-xl relative group overflow-hidden">
+<img class="w-full h-full object-cover opacity-80" data-alt="Cinematic shot of a high-tech video player interface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0n90KTLUH1RkfB6XCWCHbaZfNh1aI_YzhkQ_K9vBVQ65EWSGAnB42b3I7qp5q2xkjdIHOK--04FQTqxgxAnDcxytz2ErY0FIMuoKk8bNzOl_KLd9SF_SxnOb1blEucPiXIR5qKJSbuLXdqjs_JvjNFnn5pC31s9CItIhMK_SBNYG0ySeECKhBMP_hqy7asMUqPpPU1wWIeA_Xfwa7cX3_3GuGuXr_j3KnYK_ihmAzELSXPqTBaIRC3JZYaebrUMHr9ULcZxMx"/>
+<!-- Extension UI Overlay -->
+<div class="absolute inset-0 flex">
+<!-- Main Player Markers -->
+<div class="absolute bottom-12 left-8 right-8 h-1.5 bg-white/20 rounded-full">
+<div class="absolute left-[15%] top-0 bottom-0 w-24 bg-primary rounded-full ring-4 ring-primary/20"></div>
+<div class="absolute left-[45%] top-0 bottom-0 w-12 bg-tertiary rounded-full ring-4 ring-tertiary/20"></div>
+<div class="absolute left-[70%] top-0 bottom-0 w-32 bg-primary rounded-full ring-4 ring-primary/20"></div>
+</div>
+<!-- Side Panel -->
+<div class="absolute top-4 right-4 bottom-4 w-72 glass rounded-2xl p-4 shadow-xl flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="font-bold text-sm">Clipmark Curator</span>
+<span class="material-symbols-outlined text-slate-400 text-sm">close</span>
+</div>
+<div class="space-y-3">
+<div class="p-3 bg-white rounded-lg shadow-sm border-l-4 border-primary">
+<p class="text-xs font-bold text-primary mb-1">04:12 — Architecture</p>
+<p class="text-[10px] text-slate-600">The key to scaling Next.js is effective server component hydration...</p>
+</div>
+<div class="p-3 bg-white/50 rounded-lg">
+<p class="text-xs font-bold text-slate-400 mb-1">12:45 — State Management</p>
+</div>
+<div class="p-3 bg-white/50 rounded-lg">
+<p class="text-xs font-bold text-slate-400 mb-1">28:10 — Deployment</p>
+</div>
+</div>
+<button class="mt-auto w-full py-2 bg-primary text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-xs">add_circle</span> New Bookmark (Alt+B)
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Problem/Solution -->
+<section class="py-32 bg-surface-container-lowest">
+<div class="max-w-7xl mx-auto px-8">
+<div class="grid md:grid-cols-2 gap-20 items-center">
+<div>
+<h2 class="text-4xl font-extrabold mb-8">2 Hours → 6 Minutes</h2>
+<p class="text-lg text-secondary mb-8 leading-relaxed">
+                            Stop wasting time re-watching entire lectures just to find that one 30-second explanation. Clipmark's **Revisit Mode** automatically skips the fluff and only plays your saved clips.
+                        </p>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">timer_off</span>
+</div>
+<div>
+<h4 class="font-bold">Standard Watching</h4>
+<p class="text-sm text-secondary italic">"Where was that part about database indexing again?"</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<h4 class="font-bold">Curated Revisit</h4>
+<p class="text-sm text-secondary italic">"Replaying 4 specific bookmarks in 6 minutes. Knowledge locked in."</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface p-8 rounded-[2rem] border-2 border-primary-container/10">
+<div class="flex items-end gap-1 h-48 mb-6">
+<div class="flex-1 bg-surface-container-high h-[100%] rounded-t-lg relative group">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-mono font-bold text-slate-400">120m</span>
+</div>
+<div class="w-12"></div>
+<div class="flex-1 bg-primary h-[5%] rounded-t-lg relative">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-mono font-bold text-primary">6m</span>
+</div>
+</div>
+<div class="flex justify-between font-bold text-sm tracking-widest text-secondary uppercase">
+<span>Traditional</span>
+<span class="text-primary">With Clipmark</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature Showcases (Personas) -->
+<section class="py-32" id="features">
+<div class="max-w-7xl mx-auto px-8">
+<div class="text-center mb-24">
+<h2 class="text-4xl font-extrabold mb-4">Curated For Your Workflow</h2>
+<p class="text-secondary max-w-xl mx-auto">Whether you're building, studying, or creating, Clipmark adapts to your mental model.</p>
+</div>
+<div class="grid md:grid-cols-3 gap-8">
+<!-- Developers -->
+<div class="p-8 rounded-[2rem] bg-surface-container-low border border-transparent hover:border-primary/20 transition-all">
+<div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-8">
+<span class="material-symbols-outlined">code</span>
+</div>
+<h3 class="text-xl font-bold mb-4">For Developers</h3>
+<p class="text-secondary text-sm mb-6 leading-relaxed">Instantly capture code snippets from tutorial videos. Search by keyword across 100+ saved tutorials in your library.</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider">#react</span>
+<span class="px-3 py-1 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-wider">#tutorial</span>
+</div>
+</div>
+<!-- Students -->
+<div class="p-8 rounded-[2rem] bg-surface-container-low border border-transparent hover:border-primary/20 transition-all">
+<div class="w-12 h-12 rounded-xl bg-primary-container text-white flex items-center justify-center mb-8">
+<span class="material-symbols-outlined">school</span>
+</div>
+<h3 class="text-xl font-bold mb-4">For Students</h3>
+<p class="text-secondary text-sm mb-6 leading-relaxed">Physics lecture revisit with **Spaced Revisit**. Automatically get notified to review bookmarks after 1, 3, and 7 days.</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold uppercase tracking-wider">#quantum</span>
+<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider">#review_active</span>
+</div>
+</div>
+<!-- Creators -->
+<div class="p-8 rounded-[2rem] bg-surface-container-low border border-transparent hover:border-primary/20 transition-all">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container text-white flex items-center justify-center mb-8">
+<span class="material-symbols-outlined">edit_square</span>
+</div>
+<h3 class="text-xl font-bold mb-4">For Creators</h3>
+<p class="text-secondary text-sm mb-6 leading-relaxed">AI-powered social post generation. Turn your favorite video segments into viral X/Twitter and LinkedIn threads instantly.</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold uppercase tracking-wider">✍️ Post_Ready</span>
+<span class="px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-[10px] font-bold uppercase tracking-wider">#inspo</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Features (Pro) -->
+<section class="py-32 bg-on-surface text-white rounded-[4rem] mx-4 md:mx-8">
+<div class="max-w-7xl mx-auto px-8">
+<div class="grid md:grid-cols-2 gap-20 items-center">
+<div class="relative">
+<div class="absolute -top-10 -left-10 w-40 h-40 bg-tertiary/20 blur-[100px]"></div>
+<div class="space-y-4">
+<button class="flex items-center gap-3 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl w-full hover:bg-white/10 transition-all text-left">
+<span class="material-symbols-outlined text-tertiary-container">auto_awesome</span>
+<div>
+<p class="font-bold">✦ Auto Bookmark</p>
+<p class="text-xs text-slate-400">AI detects key topic shifts and marks them for you.</p>
+</div>
+</button>
+<button class="flex items-center gap-3 px-6 py-4 bg-white/10 border border-tertiary/40 rounded-2xl w-full shadow-[0_0_30px_rgba(115,46,228,0.2)] text-left">
+<span class="material-symbols-outlined text-tertiary-container">summarize</span>
+<div>
+<p class="font-bold">✦ Smart Summary</p>
+<p class="text-xs text-slate-300">Generate context-aware notes for every clip saved.</p>
+</div>
+</button>
+<button class="flex items-center gap-3 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl w-full hover:bg-white/10 transition-all text-left">
+<span class="material-symbols-outlined text-tertiary-container">label</span>
+<div>
+<p class="font-bold">✦ Auto Tagging</p>
+<p class="text-xs text-slate-400">Categorize your library with intelligent taxonomy.</p>
+</div>
+</button>
+</div>
+</div>
+<div>
+<span class="px-4 py-1.5 rounded-full bg-tertiary/20 text-tertiary-container text-xs font-bold tracking-widest uppercase mb-6 inline-block">Pro Features</span>
+<h2 class="text-4xl md:text-5xl font-extrabold mb-8 leading-tight">Effortless curation powered by Intelligence.</h2>
+<p class="text-slate-400 text-lg leading-relaxed mb-10">
+                            The "Digital Curator" doesn't just store; it understands. Our AI engine analyzes transcripts in real-time to highlight the gold nuggets so you don't have to.
+                        </p>
+<button class="text-tertiary-container font-bold flex items-center gap-2 hover:gap-4 transition-all">
+                            Explore Pro Features <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- How It Works -->
+<section class="py-32">
+<div class="max-w-7xl mx-auto px-8">
+<h2 class="text-4xl font-extrabold text-center mb-24">The Curator's Journey</h2>
+<div class="grid md:grid-cols-3 gap-16 relative">
+<!-- Timeline Connector -->
+<div class="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-surface-container-high -z-10"></div>
+<div class="text-center group">
+<div class="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center mx-auto mb-8 border-4 border-surface ring-8 ring-surface-container-low transition-transform group-hover:scale-110">
+<span class="text-3xl font-black text-primary">01</span>
+</div>
+<h4 class="text-xl font-bold mb-4">Bookmark Instantly</h4>
+<p class="text-secondary text-sm">Hit <span class="mono px-2 py-0.5 bg-slate-100 rounded border">Alt+B</span> as you watch. No distractions, just capture.</p>
+</div>
+<div class="text-center group">
+<div class="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center mx-auto mb-8 border-4 border-surface ring-8 ring-surface-container-low transition-transform group-hover:scale-110">
+<span class="text-3xl font-black text-primary">02</span>
+</div>
+<h4 class="text-xl font-bold mb-4">Organize with AI</h4>
+<p class="text-secondary text-sm">Clipmark adds titles, summaries, and tags to your clips automatically.</p>
+</div>
+<div class="text-center group">
+<div class="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center mx-auto mb-8 border-4 border-surface ring-8 ring-surface-container-low transition-transform group-hover:scale-110">
+<span class="text-3xl font-black text-primary">03</span>
+</div>
+<h4 class="text-xl font-bold mb-4">Revisit What Matters</h4>
+<p class="text-secondary text-sm">Your knowledge is synced to a beautiful dashboard for focused study.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="py-20 border-y border-slate-200/50">
+<div class="max-w-7xl mx-auto px-8">
+<p class="text-center text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mb-12">Integrated with the Modern Stack</p>
+<div class="flex flex-wrap justify-center gap-12 md:gap-24 grayscale opacity-60">
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">video_library</span> YouTube</div>
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">chrome_reader_mode</span> Chrome</div>
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">data_object</span> Next.js</div>
+<div class="flex items-center gap-2 font-bold text-xl"><span class="material-symbols-outlined">database</span> Supabase</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-32 text-center relative overflow-hidden">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 blur-[120px] -z-10 rounded-full"></div>
+<div class="max-w-3xl mx-auto px-8">
+<h2 class="text-4xl md:text-5xl font-extrabold mb-8">Ready to curate your knowledge?</h2>
+<p class="text-xl text-secondary mb-12">Join 15,000+ power learners turning YouTube into their second brain.</p>
+<button class="px-12 py-5 bg-primary text-white rounded-2xl font-bold text-xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
+                    Install Extension &amp; Get Started
+                </button>
+<p class="mt-6 text-sm text-slate-400">Available on Chrome, Edge, and Brave. Free forever for individuals.</p>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 px-8 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-950">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex flex-col items-center md:items-start gap-2">
+<div class="text-lg font-bold text-slate-900 dark:text-slate-100">Clipmark</div>
+<div class="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">© 2024 Clipmark. The Digital Curator.</div>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:underline decoration-teal-500 underline-offset-4 transition-all duration-300" href="#">Product</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:underline decoration-teal-500 underline-offset-4 transition-all duration-300" href="#">Company</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:underline decoration-teal-500 underline-offset-4 transition-all duration-300" href="#">Legal</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:underline decoration-teal-500 underline-offset-4 transition-all duration-300" href="#">Privacy</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:underline decoration-teal-500 underline-offset-4 transition-all duration-300" href="#">Twitter</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:underline decoration-teal-500 underline-offset-4 transition-all duration-300" href="#">Support</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border border-slate-200">
+<span class="material-symbols-outlined text-slate-600 text-sm">language</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border border-slate-200">
+<span class="material-symbols-outlined text-slate-600 text-sm">dark_mode</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>

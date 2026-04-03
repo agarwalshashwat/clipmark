@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign In - Clipmark</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-primary": "#4fdbc8",
+              "surface-container": "#edeeef",
+              "primary": "#006b5f",
+              "tertiary-fixed": "#eaddff",
+              "surface-variant": "#e2e2e3",
+              "on-surface": "#1a1c1d",
+              "surface-container-highest": "#e2e2e3",
+              "on-tertiary-container": "#4b00a7",
+              "on-primary-fixed": "#00201c",
+              "surface": "#f9f9fa",
+              "tertiary-fixed-dim": "#d2bbff",
+              "on-primary-fixed-variant": "#005048",
+              "error-container": "#ffdad6",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#e8e8e9",
+              "background": "#f9f9fa",
+              "secondary-fixed-dim": "#bcc8d6",
+              "outline": "#6c7a77",
+              "on-error-container": "#93000a",
+              "inverse-on-surface": "#f0f1f2",
+              "secondary-container": "#d8e4f3",
+              "primary-fixed": "#71f8e4",
+              "on-secondary-fixed": "#111d27",
+              "on-primary": "#ffffff",
+              "on-background": "#1a1c1d",
+              "surface-bright": "#f9f9fa",
+              "tertiary": "#732ee4",
+              "on-secondary-fixed-variant": "#3d4854",
+              "on-secondary": "#ffffff",
+              "secondary-fixed": "#d8e4f3",
+              "error": "#ba1a1a",
+              "surface-tint": "#006b5f",
+              "on-tertiary-fixed": "#25005a",
+              "tertiary-container": "#b591ff",
+              "on-surface-variant": "#3c4947",
+              "on-primary-container": "#00423b",
+              "surface-container-low": "#f3f3f4",
+              "surface-dim": "#d9dadb",
+              "on-error": "#ffffff",
+              "primary-fixed-dim": "#4fdbc8",
+              "on-tertiary": "#ffffff",
+              "inverse-surface": "#2f3132",
+              "secondary": "#545f6c",
+              "outline-variant": "#bbcac6",
+              "primary-container": "#14b8a6",
+              "on-tertiary-fixed-variant": "#5a00c6",
+              "on-secondary-container": "#5a6572"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-bg {
+            background-image: radial-gradient(at 0% 0%, rgba(20, 184, 166, 0.05) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(115, 46, 228, 0.05) 0px, transparent 50%);
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface editorial-bg min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-bold text-teal-700 dark:text-teal-500 tracking-tighter font-headline">
+                Clipmark
+            </div>
+<div class="hidden md:flex items-center space-x-6">
+<a class="font-['Plus_Jakarta_Sans'] font-semibold tracking-tight text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 transition-colors active:scale-95 duration-200" href="#">Sign Up</a>
+</div>
+</div>
+</header>
+<!-- Main Content: Login Canvas -->
+<main class="flex-grow flex items-center justify-center px-6 pt-24 pb-32">
+<div class="w-full max-w-md">
+<!-- Glassmorphic Card -->
+<div class="bg-surface-container-lowest rounded-[1rem] p-8 md:p-12 shadow-[0_12px_40px_rgba(26,28,29,0.06)] backdrop-blur-sm border border-outline-variant/15">
+<div class="text-center mb-10">
+<h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-4">
+                        Welcome Back
+                    </h1>
+<p class="text-on-surface-variant text-sm leading-relaxed max-w-[280px] mx-auto">
+                        Sign in to manage your bookmark collections.
+                    </p>
+</div>
+<div class="space-y-4">
+<!-- Google SSO Action -->
+<button class="w-full flex items-center justify-center space-x-3 py-3.5 px-6 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 border border-outline-variant/20 active:scale-[0.98]">
+<img alt="Google Logo" class="w-5 h-5" data-alt="Google colorful letter G logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmstVCvKCjxeqxtJ_c8HEXPPFLl82uBBsjkshBlPQNaDObe2SVbaiWQQnOx1ioEmNazc3kJwNi2qoOTuC3uKcBbob1EPNlAAagLyiYxjS7bnL-9TCMKc3IGZQmQYu7vGqiHtpTPk534oXVAAvpcYUANF4Cr_pzZS9yweWRzEEEqNkxEFuoinK_eEcCPnYQQn0LTP-EDekNklndHazR2gKlWCAbnHxGG0u8JIErgEuJnqF_Osngnxm37Kg8TgeJo1Jctjt-kswh"/>
+<span class="font-semibold text-on-surface font-headline">Continue with Google</span>
+</button>
+<div class="relative py-4">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant/20"></div>
+</div>
+<div class="relative flex justify-center text-xs uppercase tracking-widest text-outline">
+<span class="bg-surface-container-lowest px-4">OR</span>
+</div>
+</div>
+<!-- Traditional Login Form -->
+<form class="space-y-6">
+<div class="space-y-1.5">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1">Email Address</label>
+<input class="w-full px-0 py-3 bg-transparent border-b-2 border-surface-container-highest focus:border-primary focus:ring-0 transition-colors placeholder:text-outline/50 font-body outline-none" placeholder="curator@clipmark.com" type="email"/>
+</div>
+<div class="space-y-1.5">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1">Password</label>
+<a class="text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-70" href="#">Forgot?</a>
+</div>
+<input class="w-full px-0 py-3 bg-transparent border-b-2 border-surface-container-highest focus:border-primary focus:ring-0 transition-colors placeholder:text-outline/50 font-body outline-none" placeholder="••••••••" type="password"/>
+</div>
+<button class="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all duration-200" type="submit">
+                            Sign In
+                        </button>
+</form>
+</div>
+<!-- Contextual Footer Information -->
+<div class="mt-10 text-center space-y-4">
+<p class="text-[11px] text-on-surface-variant/80 font-medium">
+                        By signing in you agree to our <a class="text-primary underline" href="#">terms</a>.
+                    </p>
+<div class="flex items-center justify-center space-x-2 text-primary/60">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Your bookmarks are private by default</span>
+</div>
+</div>
+</div>
+<p class="mt-8 text-center text-sm text-on-surface-variant">
+                Don't have an account? <a class="text-primary font-bold hover:underline" href="#">Create collection</a>
+</p>
+</div>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 w-full flex justify-center space-x-8 pb-8 w-full text-center bg-transparent">
+<div class="flex flex-col items-center space-y-4">
+<div class="flex space-x-8">
+<a class="font-['Inter'] text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-teal-500 transition-opacity duration-300 hover:opacity-80 cursor-pointer" href="#">Privacy</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-teal-500 transition-opacity duration-300 hover:opacity-80 cursor-pointer" href="#">Terms</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest font-medium text-slate-400 hover:text-teal-500 transition-opacity duration-300 hover:opacity-80 cursor-pointer" href="#">Help</a>
+</div>
+<div class="font-['Inter'] text-[10px] uppercase tracking-widest font-medium text-slate-400/60">
+                © 2024 Clipmark. The Digital Curator.
+            </div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clipmark Side Panel</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-container": "#d8e4f3",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "primary-fixed": "#71f8e4",
+                        "on-secondary-fixed": "#111d27",
+                        "on-primary-fixed-variant": "#005048",
+                        "tertiary-fixed": "#eaddff",
+                        "tertiary-container": "#b591ff",
+                        "surface-container-low": "#f3f3f4",
+                        "on-background": "#1a1c1d",
+                        "on-surface-variant": "#3c4947",
+                        "on-tertiary-fixed": "#25005a",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed-dim": "#4fdbc8",
+                        "on-error-container": "#93000a",
+                        "primary": "#006b5f",
+                        "primary-container": "#14b8a6",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#4b00a7",
+                        "surface-container": "#edeeef",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1a1c1d",
+                        "inverse-surface": "#2f3132",
+                        "surface-container-high": "#e8e8e9",
+                        "background": "#f9f9fa",
+                        "on-primary-container": "#00423b",
+                        "on-primary-fixed": "#00201c",
+                        "tertiary": "#732ee4",
+                        "outline-variant": "#bbcac6",
+                        "surface": "#f9f9fa",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e2e2e3",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-fixed": "#d8e4f3",
+                        "on-secondary-container": "#5a6572",
+                        "surface-bright": "#f9f9fa",
+                        "surface-container-highest": "#e2e2e3",
+                        "surface-tint": "#006b5f",
+                        "inverse-primary": "#4fdbc8",
+                        "outline": "#6c7a77",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#3d4854",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#bcc8d6",
+                        "secondary": "#545f6c"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar Fragment (Source: Shared Components JSON) -->
+<header class="fixed top-0 left-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(26,28,29,0.06)] flex justify-between items-center w-full px-4 h-16">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-teal-600 dark:text-teal-400" data-icon="bookmarks">bookmarks</span>
+<h1 class="text-xl font-bold text-teal-700 dark:text-teal-300 font-['Plus_Jakarta_Sans'] tracking-tight">Clipmark</h1>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-2 rounded-xl hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-colors active:scale-95 duration-200 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</button>
+<button class="p-2 rounded-xl hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-colors active:scale-95 duration-200 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<main class="pt-20 pb-24 px-4 max-w-md mx-auto space-y-6">
+<!-- Primary Action Section -->
+<section class="space-y-4">
+<button class="w-full group relative overflow-hidden bg-gradient-to-br from-primary to-primary-container text-white p-6 rounded-2xl shadow-lg active:scale-95 transition-transform duration-200">
+<div class="relative z-10 flex flex-col items-center gap-1">
+<span class="font-headline font-bold text-xs uppercase tracking-widest opacity-80">Capture Current</span>
+<span class="font-headline font-extrabold text-3xl">Save Moment</span>
+<div class="mt-2 flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full backdrop-blur-md">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+<span class="font-mono text-sm font-semibold tracking-tighter">14:42:09</span>
+</div>
+</div>
+<!-- Abstract subtle pattern -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
+</button>
+</section>
+<!-- Input Section -->
+<section class="space-y-4">
+<div class="relative group">
+<div class="absolute top-3 left-4 text-primary pointer-events-none">
+<span class="material-symbols-outlined text-lg" data-icon="edit_note">edit_note</span>
+</div>
+<textarea class="w-full bg-surface-container-low border-none rounded-2xl pl-12 pr-12 py-4 text-on-surface placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 min-h-[100px] resize-none font-body transition-all" placeholder="Add a note..."></textarea>
+<button class="absolute bottom-3 right-3 p-2 bg-tertiary-container/20 text-tertiary rounded-xl hover:bg-tertiary-container/40 transition-colors flex items-center gap-1 group/ai">
+<span class="material-symbols-outlined text-lg" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-[10px] font-bold tracking-tighter uppercase pr-1">Auto</span>
+</button>
+</div>
+<!-- Tags Section -->
+<div class="flex flex-wrap items-center gap-2">
+<span class="bg-error-container/15 text-error px-3 py-1.5 rounded-full text-xs font-semibold font-label flex items-center gap-1 cursor-pointer hover:bg-error-container/25 transition-colors">
+                    #important
+                </span>
+<span class="bg-primary-container/15 text-primary px-3 py-1.5 rounded-full text-xs font-semibold font-label flex items-center gap-1 cursor-pointer hover:bg-primary-container/25 transition-colors">
+                    #review
+                </span>
+<span class="bg-secondary-container/30 text-secondary px-3 py-1.5 rounded-full text-xs font-semibold font-label flex items-center gap-1 cursor-pointer hover:bg-secondary-container/50 transition-colors">
+                    #note
+                </span>
+<button class="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+</button>
+</div>
+</section>
+<!-- Quick Links Grid -->
+<section class="grid grid-cols-2 gap-3">
+<button class="flex flex-col items-center justify-center gap-2 p-4 bg-surface-container-lowest rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="space_dashboard">space_dashboard</span>
+<span class="font-headline text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-4 bg-surface-container-lowest rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="ios_share">ios_share</span>
+<span class="font-headline text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Share</span>
+</button>
+<button class="col-span-2 flex items-center justify-between p-4 bg-tertiary text-on-tertiary rounded-2xl shadow-lg shadow-tertiary/10 group active:scale-[0.98] transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="summarize" style="font-variation-settings: 'FILL' 1;">summarize</span>
+</div>
+<div class="text-left">
+<p class="font-headline font-bold text-sm tracking-tight">AI SUMMARY</p>
+<p class="text-[10px] opacity-80 font-body">Extract core insights instantly</p>
+</div>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</button>
+</section>
+<!-- Revisit Alert Card -->
+<section>
+<div class="bg-surface-container-low rounded-2xl p-4 flex gap-4 items-start relative overflow-hidden border-l-4 border-primary">
+<div class="flex-shrink-0 w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="history_toggle_off">history_toggle_off</span>
+</div>
+<div class="flex-1 space-y-2">
+<div>
+<h3 class="font-headline font-bold text-sm text-on-surface">Revisit Today</h3>
+<p class="text-xs text-on-surface-variant font-body">3 items from last week are due for your second review cycle.</p>
+</div>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-lg text-xs font-bold font-headline shadow-sm hover:shadow-md transition-all active:scale-95">
+                        Review Now
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Pro Upsell -->
+<footer class="fixed bottom-0 left-0 w-full glass-panel z-50">
+<div class="max-w-md mx-auto px-4 py-4 space-y-3">
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] font-extrabold text-error font-headline tracking-tighter uppercase">Limit Reached</span>
+<span class="text-[10px] font-medium text-on-surface-variant font-mono">45/50 clips</span>
+</div>
+<div class="w-32 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-error h-full w-[90%] rounded-full"></div>
+</div>
+</div>
+<button class="bg-on-surface text-surface-container-lowest px-5 py-2.5 rounded-xl text-xs font-bold font-headline hover:bg-slate-800 transition-colors flex items-center gap-2">
+<span>Upgrade to Pro</span>
+<span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</button>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar Fragment (Hidden on Desktop/Wide as per prompt focus on side panel, but included for system integrity) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-4 pt-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg z-[60] shadow-[0_-4px_20px_rgba(0,0,0,0.03)] rounded-t-2xl pointer-events-none opacity-0">
+<!-- Kept here for structure logic, but suppressed by opacity as per Side Panel focus -->
+</nav>
+</body></html>

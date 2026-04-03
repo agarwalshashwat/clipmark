@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clipmark | Shared Collection</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#f3f3f4",
+              "surface": "#f9f9fa",
+              "primary-fixed-dim": "#4fdbc8",
+              "on-tertiary-fixed-variant": "#5a00c6",
+              "primary-container": "#14b8a6",
+              "surface-tint": "#006b5f",
+              "on-tertiary-fixed": "#25005a",
+              "on-secondary-fixed-variant": "#3d4854",
+              "on-error-container": "#93000a",
+              "primary-fixed": "#71f8e4",
+              "error-container": "#ffdad6",
+              "inverse-primary": "#4fdbc8",
+              "outline": "#6c7a77",
+              "on-tertiary-container": "#4b00a7",
+              "on-tertiary": "#ffffff",
+              "inverse-surface": "#2f3132",
+              "tertiary-container": "#b591ff",
+              "secondary-container": "#d8e4f3",
+              "on-secondary": "#ffffff",
+              "surface-container-highest": "#e2e2e3",
+              "background": "#f9f9fa",
+              "secondary": "#545f6c",
+              "on-primary-fixed-variant": "#005048",
+              "on-primary": "#ffffff",
+              "on-primary-fixed": "#00201c",
+              "tertiary": "#732ee4",
+              "secondary-fixed-dim": "#bcc8d6",
+              "on-primary-container": "#00423b",
+              "inverse-on-surface": "#f0f1f2",
+              "tertiary-fixed-dim": "#d2bbff",
+              "surface-bright": "#f9f9fa",
+              "surface-container-high": "#e8e8e9",
+              "surface-dim": "#d9dadb",
+              "on-error": "#ffffff",
+              "outline-variant": "#bbcac6",
+              "on-surface": "#1a1c1d",
+              "on-surface-variant": "#3c4947",
+              "tertiary-fixed": "#eaddff",
+              "surface-container": "#edeeef",
+              "secondary-fixed": "#d8e4f3",
+              "primary": "#006b5f",
+              "on-secondary-container": "#5a6572",
+              "surface-variant": "#e2e2e3",
+              "on-secondary-fixed": "#111d27",
+              "error": "#ba1a1a",
+              "surface-container-lowest": "#ffffff",
+              "on-background": "#1a1c1d"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "1rem", "xl": "1.25rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopAppBar Navigation Shell -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 max-w-7xl mx-auto left-1/2 -translate-x-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm shadow-teal-900/5">
+<div class="flex items-center gap-2">
+<span class="text-xl font-bold tracking-tight text-teal-600 dark:text-teal-400 font-headline">Clipmark</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors px-3 py-1 rounded-lg text-sm font-medium" href="#">Explore</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors px-3 py-1 rounded-lg text-sm font-medium" href="#">Pricing</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="bg-primary-container text-on-primary px-5 py-2 rounded-xl text-sm font-semibold scale-95 active:duration-150 transition-all hover:opacity-90 shadow-sm">Try Clipmark</button>
+</div>
+</header>
+<main class="pt-24 pb-20 px-6 max-w-7xl mx-auto">
+<!-- Hero Section -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
+<div class="lg:col-span-8 space-y-8">
+<!-- Video Player Placeholder -->
+<div class="relative aspect-video rounded-xl overflow-hidden bg-surface-container-highest shadow-lg group">
+<img alt="YouTube Video Thumbnail" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" data-alt="A high quality cinematic video thumbnail of a technology interview" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDncqG5UN1BZuQ_o7RjvDFQmHofLu0MwGlF2mhS8DnDlOK32_IgJ_hmQSDvW7JDNqioOB4MURY6NtdaSUiFwNualdzoxAY_iicT9kW3oLtBf4AMJQZpeJwg3xI-xJcAqOV6Ar-noc-1ofXRdRSZNAAvSsVd8iDXlQZxy0g3kOC00aZGLYyJfkqNYlUpC3EktvPXsaaI3QXGeOhoB8Y0lUTpcutSvlQhRt8iQw6zQA8Hh1vwxJuN4VrKXIP43UA38Go5IZae0UnZ"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+<div class="w-20 h-20 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+</div>
+<!-- Editorial Header -->
+<div class="space-y-4">
+<h1 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface leading-tight">
+                        Deep Dive: The Future of Neural Architectures in 2024
+                    </h1>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-sm">TC</div>
+<p class="text-secondary font-medium">Shared by <span class="text-primary font-bold">@the_curator</span></p>
+</div>
+</div>
+<!-- AI Summary Section -->
+<div class="p-8 rounded-xl bg-tertiary/5 border-l-4 border-tertiary-container relative overflow-hidden">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-tertiary text-xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h2 class="font-headline font-bold text-tertiary uppercase tracking-wider text-xs">AI Insight Summary</h2>
+</div>
+<p class="text-lg font-body text-on-surface-variant leading-relaxed italic">
+                        "This collection focuses on the shift from transformer-only models to hybrid state-space architectures. The curator highlights key technical breakthroughs in memory efficiency and real-time processing that are set to redefine edge computing applications."
+                    </p>
+</div>
+<!-- Curation Highlights (Timeline) -->
+<div class="space-y-12 relative pt-8">
+<h3 class="text-2xl font-headline font-bold text-on-surface flex items-center gap-3">
+                        Curation Highlights
+                        <span class="text-xs font-medium px-2 py-1 bg-surface-container-high rounded-full text-secondary">6 Clips</span>
+</h3>
+<!-- Timeline Line -->
+<div class="absolute left-6 top-24 bottom-0 w-[0.5px] bg-primary/20"></div>
+<!-- Bookmark Items -->
+<div class="space-y-10">
+<!-- Item 1 -->
+<div class="relative pl-16 group">
+<div class="absolute left-[20px] top-1.5 w-3 h-3 rounded-full border-2 border-primary bg-surface-container-lowest z-10"></div>
+<div class="space-y-3">
+<a class="inline-block text-primary font-mono font-bold text-sm tracking-widest hover:underline" href="#">05:42</a>
+<h4 class="text-xl font-headline font-bold text-on-surface">The Attention Bottleneck Problem</h4>
+<p class="text-on-surface-variant leading-relaxed max-w-2xl">
+                                    A clear explanation of why current transformer models struggle with infinitely long sequences and the quadratic scaling issues.
+                                </p>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold rounded-full uppercase tracking-tighter">#important</span>
+<span class="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase tracking-tighter">#technical</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="relative pl-16 group">
+<div class="absolute left-[20px] top-1.5 w-3 h-3 rounded-full border-2 border-primary bg-surface-container-lowest z-10"></div>
+<div class="space-y-3">
+<a class="inline-block text-primary font-mono font-bold text-sm tracking-widest hover:underline" href="#">12:15</a>
+<h4 class="text-xl font-headline font-bold text-on-surface">Introduction to Mamba Architectures</h4>
+<p class="text-on-surface-variant leading-relaxed max-w-2xl">
+                                    Gu and Dao's work on selective State Space Models. This represents the first viable alternative to the Transformer in half a decade.
+                                </p>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full uppercase tracking-tighter">#breakthrough</span>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="relative pl-16 group">
+<div class="absolute left-[20px] top-1.5 w-3 h-3 rounded-full border-2 border-primary bg-surface-container-lowest z-10"></div>
+<div class="space-y-3">
+<a class="inline-block text-primary font-mono font-bold text-sm tracking-widest hover:underline" href="#">28:50</a>
+<h4 class="text-xl font-headline font-bold text-on-surface">Practical Implementation at Scale</h4>
+<p class="text-on-surface-variant leading-relaxed max-w-2xl">
+                                    Discussion on how these models are being deployed in production environments and the hardware requirements for inference.
+                                </p>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase tracking-tighter">#review</span>
+<span class="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase tracking-tighter">#industry</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar -->
+<aside class="lg:col-span-4 space-y-6">
+<!-- Metadata Card -->
+<div class="p-8 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/15 space-y-8 sticky top-28">
+<div>
+<h5 class="text-xs font-bold text-secondary uppercase tracking-widest mb-6">Collection Details</h5>
+<ul class="space-y-5">
+<li class="flex items-center justify-between">
+<span class="text-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+                                    Shared Date
+                                </span>
+<span class="text-sm font-mono font-semibold">May 24, 2024</span>
+</li>
+<li class="flex items-center justify-between">
+<span class="text-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">list_alt</span>
+                                    Total Clips
+                                </span>
+<span class="text-sm font-mono font-semibold">06</span>
+</li>
+<li class="flex items-center justify-between">
+<span class="text-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    Reading Time
+                                </span>
+<span class="text-sm font-mono font-semibold">4 mins</span>
+</li>
+<li class="flex items-center justify-between">
+<span class="text-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">group</span>
+                                    Total Views
+                                </span>
+<span class="text-sm font-mono font-semibold">1,242</span>
+</li>
+</ul>
+</div>
+<div class="pt-6 border-t border-outline-variant/10 space-y-4">
+<button class="w-full bg-primary text-white py-4 rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 hover:bg-surface-tint transition-all shadow-md">
+<span class="material-symbols-outlined text-base">bookmark_add</span>
+                            Save this collection
+                        </button>
+<button class="w-full bg-surface-container-high text-on-surface py-4 rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined text-base">share</span>
+                            Share with others
+                        </button>
+</div>
+<!-- Promo Content -->
+<div class="mt-8 p-6 bg-primary-container/10 rounded-xl border border-primary-container/20">
+<h6 class="font-headline font-bold text-primary mb-2">Want to clip your own?</h6>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">
+                            Clipmark makes it easy to save, organize, and share highlights from any video instantly.
+                        </p>
+<a class="text-xs font-bold text-primary hover:underline flex items-center gap-1" href="#">
+                            Get the Browser Extension
+                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</a>
+</div>
+</div>
+</aside>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="bg-slate-50 dark:bg-slate-950 border-t border-slate-200/15 dark:border-slate-800/15">
+<div class="w-full flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto gap-8 md:gap-0">
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="text-lg font-bold text-slate-900 dark:text-slate-100 font-headline">Clipmark</span>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium font-body">© 2024 Clipmark. The Digital Curator.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-slate-500 dark:text-slate-400 text-xs font-medium hover:text-teal-500 dark:hover:text-teal-300 transition-opacity opacity-80 hover:opacity-100" href="#">Privacy</a>
+<a class="text-slate-500 dark:text-slate-400 text-xs font-medium hover:text-teal-500 dark:hover:text-teal-300 transition-opacity opacity-80 hover:opacity-100" href="#">Terms</a>
+<a class="text-slate-500 dark:text-slate-400 text-xs font-medium hover:text-teal-500 dark:hover:text-teal-300 transition-opacity opacity-80 hover:opacity-100" href="#">Support</a>
+<a class="text-slate-500 dark:text-slate-400 text-xs font-medium hover:text-teal-500 dark:hover:text-teal-300 transition-opacity opacity-80 hover:opacity-100" href="#">Twitter</a>
+</div>
+</div>
+</footer>
+</body></html>

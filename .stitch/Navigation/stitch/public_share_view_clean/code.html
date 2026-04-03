@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#bbcac6",
+              "inverse-surface": "#2f3132",
+              "tertiary-fixed-dim": "#d2bbff",
+              "on-surface": "#1a1c1d",
+              "surface-container-low": "#f3f3f4",
+              "surface-container-highest": "#e2e2e3",
+              "on-background": "#1a1c1d",
+              "on-secondary": "#ffffff",
+              "surface-dim": "#d9dadb",
+              "on-secondary-fixed": "#111d27",
+              "surface-container-high": "#e8e8e9",
+              "surface": "#f9f9fa",
+              "outline": "#6c7a77",
+              "on-tertiary-fixed-variant": "#5a00c6",
+              "primary-fixed-dim": "#4fdbc8",
+              "tertiary": "#732ee4",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary-fixed": "#25005a",
+              "error-container": "#ffdad6",
+              "tertiary-container": "#b591ff",
+              "secondary-container": "#d8e4f3",
+              "primary-fixed": "#71f8e4",
+              "on-primary-fixed-variant": "#005048",
+              "inverse-primary": "#4fdbc8",
+              "primary-container": "#14b8a6",
+              "on-tertiary-container": "#4b00a7",
+              "on-primary-container": "#00423b",
+              "on-primary-fixed": "#00201c",
+              "surface-variant": "#e2e2e3",
+              "on-error": "#ffffff",
+              "tertiary-fixed": "#eaddff",
+              "on-secondary-fixed-variant": "#3d4854",
+              "on-secondary-container": "#5a6572",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "secondary-fixed": "#d8e4f3",
+              "surface-container": "#edeeef",
+              "secondary": "#545f6c",
+              "error": "#ba1a1a",
+              "surface-bright": "#f9f9fa",
+              "secondary-fixed-dim": "#bcc8d6",
+              "primary": "#006b5f",
+              "inverse-on-surface": "#f0f1f2",
+              "on-surface-variant": "#3c4947",
+              "background": "#f9f9fa",
+              "surface-tint": "#006b5f"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f9f9fa;
+        }
+    </style>
+</head>
+<body class="font-body text-on-surface antialiased">
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 tonal-shift bg-slate-50/50 dark:bg-slate-800/50 shadow-sm dark:shadow-none">
+<nav class="flex justify-between items-center w-full px-6 py-4 max-w-5xl mx-auto">
+<a class="flex items-center gap-2 hover:opacity-80 transition-opacity" href="/">
+<span class="text-lg font-bold text-slate-900 dark:text-slate-50 font-headline tracking-tight">The Digital Curator</span>
+</a>
+<div class="flex items-center gap-3">
+<button class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-on-surface-variant font-headline font-semibold text-sm hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+                    Save this Collection
+</button>
+<button class="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary-container text-on-primary-container font-headline font-semibold text-sm hover:opacity-90 transition-all active:scale-95">
+                    Get Extension
+                    <span class="material-symbols-outlined text-sm">download</span>
+</button>
+<div class="flex items-center gap-1 border-l border-on-surface/10 ml-1 pl-1">
+<button class="p-2 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-500 transition-colors">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</div>
+</nav>
+</header>
+<main class="max-w-[800px] mx-auto px-6 pt-12">
+<!-- Video Info Card -->
+<section class="mb-12">
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_40px_rgba(26,28,29,0.04)] ring-1 ring-on-surface/[0.03]">
+<div class="flex flex-col gap-4">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-secondary-container/30 text-secondary w-fit rounded-full text-[10px] font-bold uppercase tracking-widest font-label">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                        Collection
+                    </div>
+<h1 class="text-3xl md:text-4xl font-headline font-extrabold text-on-surface leading-tight tracking-tight">
+                        How to burn $30m on a JavaScript framework...
+                    </h1>
+<div class="flex flex-wrap items-center gap-y-2 gap-x-6 text-sm font-medium text-on-surface-variant font-label">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-lg">format_list_bulleted</span>
+                            4 bookmarks
+                        </div>
+<div class="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-primary text-lg">link</span>
+                            youtube.com/watch?v=ReAnFFqvCeA
+                        </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bookmark List -->
+<section class="space-y-0 relative">
+<!-- Timeline Line -->
+<div class="absolute left-[2.25rem] top-4 bottom-4 w-[1px] bg-primary/20"></div>
+<!-- Bookmark Item 1 -->
+<div class="group relative flex items-start gap-6 py-6 px-4 hover:bg-surface-container-low transition-colors rounded-xl">
+<div class="z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest border-2 border-primary flex items-center justify-center shadow-sm">
+<span class="text-[10px] font-bold text-primary font-mono tracking-tighter">00:06</span>
+</div>
+</div>
+<div class="flex-1 pt-2">
+<p class="text-on-surface font-medium text-lg leading-relaxed">Bookmark at 0:06</p>
+<p class="text-on-surface-variant text-sm mt-1 opacity-60">High-level architectural overview starts here.</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-2 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+<!-- Bookmark Item 2 -->
+<div class="group relative flex items-start gap-6 py-6 px-4 hover:bg-surface-container-low transition-colors rounded-xl">
+<div class="z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest border-2 border-primary flex items-center justify-center shadow-sm">
+<span class="text-[10px] font-bold text-primary font-mono tracking-tighter">00:18</span>
+</div>
+</div>
+<div class="flex-1 pt-2">
+<p class="text-on-surface font-medium text-lg leading-relaxed">Bookmark at 0:18</p>
+<p class="text-on-surface-variant text-sm mt-1 opacity-60">Discussion regarding initial funding and series A.</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-2 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+<!-- Bookmark Item 3 -->
+<div class="group relative flex items-start gap-6 py-6 px-4 hover:bg-surface-container-low transition-colors rounded-xl">
+<div class="z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest border-2 border-primary flex items-center justify-center shadow-sm">
+<span class="text-[10px] font-bold text-primary font-mono tracking-tighter">00:57</span>
+</div>
+</div>
+<div class="flex-1 pt-2">
+<p class="text-on-surface-variant italic text-lg leading-relaxed">No description</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-2 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+<!-- Bookmark Item 4 -->
+<div class="group relative flex items-start gap-6 py-6 px-4 hover:bg-surface-container-low transition-colors rounded-xl">
+<div class="z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest border-2 border-primary flex items-center justify-center shadow-sm">
+<span class="text-[10px] font-bold text-primary font-mono tracking-tighter">01:05</span>
+</div>
+</div>
+<div class="flex-1 pt-2">
+<p class="text-on-surface font-medium text-lg leading-relaxed">Bookmark at 1:05</p>
+<p class="text-on-surface-variant text-sm mt-1 opacity-60">Technical debt deep-dive begins.</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-2 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+</section>
+<!-- Pro CTA Section -->
+<section class="mt-20">
+<div class="bg-gradient-to-br from-tertiary/10 to-transparent p-8 rounded-xl border border-tertiary/10 text-center">
+<h3 class="font-headline font-bold text-xl text-on-surface mb-2">Curate Your Own YouTube Library</h3>
+<p class="text-on-surface-variant text-sm mb-6 max-w-md mx-auto">Transform messy YouTube watch histories into organized, searchable knowledge collections with AI-powered tagging.</p>
+<button class="bg-tertiary text-on-tertiary px-8 py-3 rounded-full font-headline font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-tertiary/20">
+                    Get Started for Free
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer Implementation from JSON -->
+<footer class="bg-slate-50 dark:bg-slate-950 full-width py-12 mt-20 tonal-shift top-border-only border-slate-100 dark:border-slate-800">
+<div class="flex flex-col items-center gap-6 w-full px-4 text-center">
+<div class="text-sm font-black text-slate-400 font-headline uppercase tracking-widest">
+                The Digital Curator
+            </div>
+<p class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-400">
+                © 2024 The Digital Curator. Curate your digital world.
+            </p>
+<div class="flex gap-8">
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-400 hover:text-teal-500 underline-offset-4 hover:underline transition-opacity duration-300" href="#">Privacy</a>
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-slate-400 hover:text-teal-500 underline-offset-4 hover:underline transition-opacity duration-300" href="#">Terms</a>
+<a class="font-['Inter'] text-xs font-medium uppercase tracking-widest text-teal-600 dark:text-teal-400 hover:text-teal-500 underline-offset-4 hover:underline transition-opacity duration-300" href="#">Install Extension</a>
+</div>
+<div class="mt-4 opacity-50 text-[10px] font-mono uppercase tracking-[0.2em]">
+                Made with Clipmark • Bookmark your own videos — it's free
+            </div>
+</div>
+</footer>
+</body></html>
