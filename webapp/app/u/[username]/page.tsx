@@ -35,7 +35,33 @@ export async function generateMetadata(
   if (!profile) return { title: 'User not found — Clipmark' };
   return {
     title: `@${username} — Clipmark`,
-    description: `Bookmark collections by @${username}`,
+    description: `Browse ${username}'s public YouTube bookmark collections on Clipmark.`,
+    alternates: {
+      canonical: `/u/${username}`,
+    },
+    openGraph: {
+      title: `@${username} — Clipmark`,
+      description: `Public shared collections by @${username}`,
+      type: 'profile',
+      username: username,
+    },
+  };
+}
+
+// ─── Structured Data (JSON-LD) ────────────────────────────────────────────────
+function generateJsonLd(username: string, profile: Profile) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    'mainEntity': {
+      '@type': 'Person',
+      'name': username,
+      'alternateName': `@${username}`,
+      'identifier': profile.id,
+      'image': profile.avatar_url,
+      'url': `${baseUrl}/u/${username}`,
+    }
   };
 }
 
@@ -47,6 +73,7 @@ export default async function UserProfilePage(
   if (!profile) notFound();
 
   const collections = await getUserCollections(profile.id);
+  const jsonLd = generateJsonLd(username, profile);
 
   // Derive stats
   const totalClips = collections.reduce((sum, c) => sum + (c.bookmarks?.length ?? 0), 0);
@@ -56,6 +83,10 @@ export default async function UserProfilePage(
 
   return (
     <div className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* ── Fixed glass header ── */}
       <nav className={styles.nav}>

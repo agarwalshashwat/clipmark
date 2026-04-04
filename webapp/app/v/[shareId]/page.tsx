@@ -68,11 +68,45 @@ export async function generateMetadata(
   return {
     title: `${title} — Clipmark`,
     description: `${collection.bookmarks.length} timestamped bookmarks for "${title}"`,
+    alternates: {
+      canonical: `/v/${shareId}`,
+    },
     openGraph: {
       title: `${title} — Clipmark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
-      type: 'website',
+      type: 'video.other',
+      images: [ytThumbnailUrl(collection.video_id)],
     },
+  };
+}
+
+// ─── Structured Data (JSON-LD) ────────────────────────────────────────────────
+function generateJsonLd(collection: Collection, shareId: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const url = `${baseUrl}/v/${shareId}`;
+  
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'name': collection.video_title,
+    'description': `${collection.bookmarks.length} timestamped bookmarks for this video`,
+    'url': url,
+    'numberOfItems': collection.bookmarks.length,
+    'itemListElement': collection.bookmarks.map((bm, index) => ({
+      '@type': 'ListItem',
+      'position': index + 1,
+      'name': bm.description || `Bookmark at ${formatTimestamp(bm.timestamp)}`,
+      'url': `${url}#bm-${bm.id}`,
+    })),
+    'mainEntity': {
+      '@type': 'VideoObject',
+      'name': collection.video_title,
+      'description': collection.video_title,
+      'thumbnailUrl': ytThumbnailUrl(collection.video_id),
+      'uploadDate': collection.created_at,
+      'contentUrl': `https://www.youtube.com/watch?v=${collection.video_id}`,
+      'embedUrl': `https://www.youtube.com/embed/${collection.video_id}`,
+    }
   };
 }
 
@@ -89,8 +123,14 @@ export default async function SharePage(
   const ytBase = `https://www.youtube.com/watch?v=${video_id}`;
   const thumbnailUrl = ytThumbnailUrl(video_id);
 
+  const jsonLd = generateJsonLd(collection, shareId);
+
   return (
     <div className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* ── Fixed glass nav ── */}
       <header className={styles.nav}>

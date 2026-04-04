@@ -1,8 +1,9 @@
 {
     "manifest_version": 3,
     "name": "Clipmark",
+    "short_name": "Clipmark",
     "version": "1.0",
-    "description": "Bookmark, tag, and revisit YouTube moments with AI-powered notes and cloud sync.",
+    "description": "Smart YouTube bookmarks with timestamps, AI notes, and tags. Cloud sync, share public collections, and save moments for study or development.",
     "permissions": ["storage", "tabs", "activeTab", "contextMenus", "sidePanel", "alarms", "notifications"],
     "host_permissions": [
         "*://www.youtube.com/*",

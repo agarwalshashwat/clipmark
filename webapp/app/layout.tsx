@@ -3,9 +3,13 @@ import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'),
   title: 'Clipmark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
-  keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer'],
+  keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
+  alternates: {
+    canonical: '/',
+  },
   verification: {
     google: 'chJnY3idU4qZvir3ZZ3NAcVF3mde32n0AMYk2SJNt1k',
   },
