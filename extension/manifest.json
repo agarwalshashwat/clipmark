@@ -1,63 +1,74 @@
 {
-    "manifest_version": 3,
-    "name": "Clipmark",
-    "short_name": "Clipmark",
-    "version": "1.0",
-    "description": "Smart YouTube bookmarks with timestamps, AI notes, and tags. Cloud sync, share public collections, and save moments for study or development.",
-    "permissions": ["storage", "tabs", "activeTab", "contextMenus", "sidePanel", "alarms", "notifications"],
-    "host_permissions": [
-        "*://www.youtube.com/*",
-        "https://clipmark.mithahara.com/*"
-    ],
-    "web_accessible_resources": [{
-      "resources": ["src/pages/dashboard.html", "src/popup/dashboard.js", "styles/dashboard.css"],
+  "manifest_version": 3,
+  "name": "Clipmark",
+  "short_name": "Clipmark",
+  "version": "1.0",
+  "description": "Smart YouTube bookmarks with timestamps, AI notes, and tags. Cloud sync, share public collections, and save moments for study or development.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "contextMenus",
+    "sidePanel",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "*://www.youtube.com/*",
+    "https://clipmark.mithahara.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/pages/dashboard.html",
+        "src/popup/dashboard.js",
+        "styles/dashboard.css"
+      ],
       "matches": ["<all_urls>"]
-    }],
-    "action": {
-      "default_icon": {
-        "16": "assets/icons/icon-16.png",
-        "48": "assets/icons/icon-48.png",
-        "128": "assets/icons/icon-128.png"
-      }
-    },
-    "background": {
-      "service_worker": "src/background/background.js"
-    },
-    "side_panel": {
-      "default_path": "src/pages/side-panel.html"
-    },
-    "content_scripts": [
-      {
-        "matches": ["*://*.youtube.com/*"],
-        "js": ["src/content/content.js"],
-        "run_at": "document_end",
-        "css": []
-      }
-    ],
-    "commands": {
-      "silent_save": {
-        "suggested_key": {
-          "default": "Alt+B"
-        },
-        "description": "Silent save bookmark"
-      },
-      "quick_save": {
-        "suggested_key": {
-          "default": "Ctrl+Shift+S",
-          "mac": "Command+Shift+S"
-        },
-        "description": "Quick save bookmark"
-      }
-    },
-    "icons": {
+    }
+  ],
+  "action": {
+    "default_icon": {
       "16": "assets/icons/icon-16.png",
       "48": "assets/icons/icon-48.png",
       "128": "assets/icons/icon-128.png"
-    },
-    "externally_connectable": {
-      "matches": [
-        "http://localhost:3000/*",
-        "https://clipmark.mithahara.com/*"
-      ]
     }
+  },
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "side_panel": {
+    "default_path": "src/pages/side-panel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["src/content/content.js"],
+      "run_at": "document_end",
+      "css": []
+    }
+  ],
+  "commands": {
+    "silent_save": {
+      "suggested_key": {
+        "default": "Alt+B"
+      },
+      "description": "Silent save bookmark"
+    },
+    "quick_save": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Quick save bookmark"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "externally_connectable": {
+    "matches": ["http://localhost:3000/*", "https://clipmark.mithahara.com/*"]
+  }
 }
