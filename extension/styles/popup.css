@@ -111,6 +111,7 @@ body {
 .popup-main {
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
   flex: 1;
   scrollbar-width: thin;
   scrollbar-color: rgba(20, 184, 166, 0.25) transparent;

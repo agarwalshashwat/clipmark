@@ -104,6 +104,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
   transition: background 0.2s, color 0.2s;
 }
 

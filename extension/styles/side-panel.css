@@ -171,6 +171,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
   padding-bottom: 72px; /* account for bottom nav */
   scrollbar-width: thin;
   scrollbar-color: rgba(20, 184, 166, 0.2) transparent;

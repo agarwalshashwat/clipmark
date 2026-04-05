@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { createServerSupabase, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import VideosSortSelect from './VideosSortSelect';
+import { VideosClient } from './VideosClient';
 
 export const metadata = { title: 'Videos — Clipmark' };
 
@@ -33,6 +34,15 @@ export default async function VideosPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  const { data: userGroups } = await supabase
+    .from('groups')
+    .select('id, name')
+    .eq('user_id', user.id)
+    .eq('type', 'custom')
+    .order('name');
+
+  const groups = (userGroups ?? []) as { id: string; name: string }[];
+
   const { data: rows } = await supabase
     .from('user_bookmarks')
     .select('video_id, bookmarks, updated_at')
@@ -50,10 +60,12 @@ export default async function VideosPage({
         .find(b => b.videoTitle)?.videoTitle ?? null,
       bookmarkCount: bookmarks.length,
       lastSaved: row.updated_at as string,
+      timeAgoStr: timeAgo(row.updated_at as string),
       tags: Array.from(new Set(bookmarks.flatMap(b => b.tags ?? []))).slice(0, 4),
       timeRange: timestamps.length >= 2
         ? `${formatTs(timestamps[0])} – ${formatTs(timestamps[timestamps.length - 1])}`
         : timestamps.length === 1 ? formatTs(timestamps[0]) : null,
+      bookmarks,
     };
   });
 
@@ -82,43 +94,7 @@ export default async function VideosPage({
           <p>Bookmark moments from YouTube videos to see them here.</p>
         </div>
       ) : (
-        <div className={styles.grid}>
-          {sorted.map(v => (
-            <a
-              key={v.videoId}
-              href={`https://www.youtube.com/watch?v=${v.videoId}`}
-              className={styles.card}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className={styles.thumbWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`}
-                  alt={v.videoTitle ?? 'Video'}
-                  className={styles.thumb}
-                />
-                <div className={styles.thumbOverlay} />
-                <span className={styles.badge}>{v.bookmarkCount} {v.bookmarkCount === 1 ? 'bookmark' : 'bookmarks'}</span>
-                <div className={styles.playBtn}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
-                </div>
-              </div>
-              <div className={styles.cardBody}>
-                <h3 className={styles.title}>{v.videoTitle ?? 'Untitled Video'}</h3>
-                {v.timeRange && <p className={styles.timeRange}>{v.timeRange}</p>}
-                {v.tags.length > 0 && (
-                  <div className={styles.tagRow}>
-                    {v.tags.map(tag => (
-                      <span key={tag} className={styles.tagChip}>#{tag}</span>
-                    ))}
-                  </div>
-                )}
-                <p className={styles.meta}>{timeAgo(v.lastSaved)}</p>
-              </div>
-            </a>
-          ))}
-        </div>
+        <VideosClient videos={sorted} groups={groups} userId={user.id} />
       )}
     </div>
   );
