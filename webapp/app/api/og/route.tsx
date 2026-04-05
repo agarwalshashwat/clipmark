@@ -10,6 +10,11 @@ export async function GET(req: NextRequest) {
     const count = searchParams.get('count') || '0';
     const videoId = searchParams.get('videoId');
 
+    // Fallback image if YouTube thumbnail doesn't respond
+    const imageUrl = videoId 
+      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` 
+      : null;
+
     return new ImageResponse(
       (
         <div style={{
@@ -56,7 +61,7 @@ export async function GET(req: NextRequest) {
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                src={imageUrl!}
                 alt="Thumbnail"
                 width="640"
                 height="360"

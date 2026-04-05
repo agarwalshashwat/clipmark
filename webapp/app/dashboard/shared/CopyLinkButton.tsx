@@ -24,15 +24,17 @@ export function DashboardCopyLinkButton({ url }: { url: string }) {
         gap: '8px',
         padding: '10px 16px',
         borderRadius: '12px',
-        background: copied ? '#006B5F15' : '#f3f3f4',
+        background: copied ? '#006B5F' : '#f3f3f4',
         border: '1px solid rgba(26,28,29,0.06)',
-        color: copied ? '#006B5F' : '#1A1C1D',
+        color: copied ? 'white' : '#1A1C1D',
         cursor: 'pointer',
         fontSize: '14px',
         fontWeight: 600,
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        minWidth: '120px',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        minWidth: '130px',
         justifyContent: 'center',
+        boxShadow: copied ? '0 4px 12px rgba(0, 107, 95, 0.25)' : 'none',
+        transform: copied ? 'scale(1.02)' : 'scale(1)',
       }}
     >
       <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
