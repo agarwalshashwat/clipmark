@@ -33,6 +33,10 @@ export async function generateMetadata(
   const { username } = await params;
   const profile = await getProfile(username);
   if (!profile) return { title: 'User not found — Clipmark' };
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`;
+
   return {
     title: `@${username} — Clipmark`,
     description: `Browse ${username}'s public YouTube bookmark collections on Clipmark.`,
@@ -46,7 +50,7 @@ export async function generateMetadata(
       username: username,
       images: [
         {
-          url: `/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`,
+          url: ogUrl,
           width: 1200,
           height: 630,
         },
@@ -56,7 +60,7 @@ export async function generateMetadata(
       card: 'summary_large_image',
       title: `@${username} — Clipmark`,
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
-      images: [`/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`],
+      images: [ogUrl],
     },
   };
 }

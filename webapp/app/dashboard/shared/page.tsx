@@ -1,5 +1,6 @@
 import { createServerSupabase, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
+import { DashboardCopyLinkButton } from './CopyLinkButton';
 
 export const metadata = { title: 'Shared Collections — Clipmark' };
 
@@ -72,14 +73,7 @@ export default async function SharedPage() {
                       </div>
                     </div>
                     <div className={styles.cardActions}>
-                      <button
-                        className={styles.copyBtn}
-                        onClick={undefined}
-                        title="Copy link"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>content_copy</span>
-                        Copy Link
-                      </button>
+                      <DashboardCopyLinkButton url={`${origin}/v/${c.id}`} />
                     </div>
                   </div>
                 ))}

@@ -66,6 +66,9 @@ export async function generateMetadata(
   if (!collection) return { title: 'Not found — Clipmark' };
 
   const title = collection.video_title || 'YouTube Video';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`;
+
   return {
     title: `${title} — Clipmark`,
     description: `${collection.bookmarks.length} timestamped bookmarks for "${title}"`,
@@ -78,7 +81,7 @@ export async function generateMetadata(
       type: 'video.other',
       images: [
         {
-          url: `/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`,
+          url: ogUrl,
           width: 1200,
           height: 630,
           alt: `Clipmark shared bookmarks for ${title}`,
@@ -89,7 +92,7 @@ export async function generateMetadata(
       card: 'summary_large_image',
       title: `${title} — Clipmark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
-      images: [`/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`],
+      images: [ogUrl],
     },
   };
 }
