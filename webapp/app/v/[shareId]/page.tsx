@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
@@ -75,7 +76,20 @@ export async function generateMetadata(
       title: `${title} — Clipmark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
       type: 'video.other',
-      images: [ytThumbnailUrl(collection.video_id)],
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`,
+          width: 1200,
+          height: 630,
+          alt: `Clipmark shared bookmarks for ${title}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} — Clipmark`,
+      description: `${collection.bookmarks.length} curated moments from this video.`,
+      images: [`/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`],
     },
   };
 }
@@ -154,12 +168,17 @@ export default async function SharePage(
 
             {/* Video area */}
             <div className={styles.videoArea}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={thumbnailUrl}
-                alt={`Thumbnail for ${title}`}
-                className={styles.videoThumb}
-              />
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                <Image
+                  src={thumbnailUrl}
+                  alt={`Thumbnail for ${title}`}
+                  fill
+                  className={styles.videoThumb}
+                  style={{ objectFit: 'cover' }}
+                  priority
+                  sizes="(max-width: 768px) 100vw, 800px"
+                />
+              </div>
               <div className={styles.videoOverlay}>
                 <a
                   href={ytBase}

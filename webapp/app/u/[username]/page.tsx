@@ -41,9 +41,22 @@ export async function generateMetadata(
     },
     openGraph: {
       title: `@${username} — Clipmark`,
-      description: `Public shared collections by @${username}`,
+      description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       type: 'profile',
       username: username,
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `@${username} — Clipmark`,
+      description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
+      images: [`/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`],
     },
   };
 }

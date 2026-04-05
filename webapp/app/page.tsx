@@ -1,6 +1,37 @@
 import { redirect } from 'next/navigation';
-// import { ThemeToggle } from './components/ThemeToggle';
+import { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase';
+import { Navigation } from './components/Navigation';
+import { Footer } from './components/Footer';
+
+export const metadata: Metadata = {
+  title: 'Clipmark — The Digital Curator for YouTube Professionals',
+  description: 'Turn long YouTube videos into searchable, revisable knowledge. Bookmark moments, get AI summaries, and revisit key insights instantly.',
+  keywords: ['youtube bookmarks', 'video notes', 'study tool', 'chrome extension', 'ai summaries', 'timestamp bookmarks'],
+};
+
+const FAQ_DATA = [
+  {
+    q: 'Can I cancel my subscription at any time?',
+    a: 'Absolutely. If you cancel, your Pro features will remain active until the end of your current billing period. No hidden fees or lock-ins.',
+  },
+  {
+    q: 'How does AI Auto-fill work?',
+    a: 'Our AI analyzes the content of the page you\'re clipping to automatically extract the author, primary topic, and key tags, saving you minutes per clip.',
+  },
+  {
+    q: 'What happens to my clips if I downgrade?',
+    a: 'Your data is yours. You will always have access to your existing clips, even if you downgrade to the Free tier. You just won\'t be able to add more beyond the free limit.',
+  },
+  {
+    q: 'Do you offer educational discounts?',
+    a: 'Yes! We support students and educators. Contact our support team with your .edu email for a special discount code.',
+  },
+  {
+    q: 'How reliable are the AI features?',
+    a: 'AI features run on Chrome\'s built-in AI model (Gemini Nano), processed locally in your browser — your data never leaves your device for AI tasks.',
+  },
+];
 
 export default async function Home({
   searchParams,
@@ -22,44 +53,55 @@ export default async function Home({
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect('/dashboard');
 
+  const howToLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Use Clipmark for YouTube Bookmarking",
+    "description": "Follow the Curator's Journey to capture and organize your favorite YouTube moments with AI-powered tools.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Bookmark Instantly",
+        "text": "Hit Alt+B as you watch. No distractions, no friction — just capture the moment."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Organize with AI",
+        "text": "Clipmark adds titles, summaries, and tags to your clips automatically."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Revisit What Matters",
+        "text": "Your knowledge syncs to a beautiful dashboard for focused, distraction-free study."
+      }
+    ]
+  };
+
+  const faqLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQ_DATA.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
+
   return (
     <main style={{ background: '#f9f9fa', color: '#1A1C1D', fontFamily: "'Inter', sans-serif", minHeight: '100vh', overflowX: 'hidden' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
 
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav style={{
-        position: 'fixed', top: 0, width: '100%', zIndex: 50,
-        background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 1px 0 rgba(26,28,29,0.06)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 72 }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#14B8A6', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px' }}>
-            Clipmark
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
-            <a href="#features" style={{ color: '#006B5F', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, borderBottom: '2px solid #14B8A6', paddingBottom: 2 }}>Features</a>
-            <a href="#how-it-works" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14 }}>How It Works</a>
-            <a href="/upgrade" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14 }}>Pricing</a>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* <ThemeToggle /> */}
-            <a href="/signin" style={{
-              color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 600, fontSize: 14, textDecoration: 'none',
-              padding: '10px 16px',
-            }}>
-              Log In
-            </a>
-            <a href="https://chrome.google.com/webstore" style={{
-              padding: '10px 22px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-              color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-            }}>
-              Add to Chrome — Free
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section style={{ paddingTop: 72, position: 'relative', overflow: 'hidden' }}>
@@ -96,22 +138,27 @@ export default async function Home({
             Stop scrubbing through hours of footage. Clipmark&apos;s Chrome extension and dashboard curate your learning journey instantly.
           </p>
 
-          {/* CTAs */}
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="https://chrome.google.com/webstore" style={{
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 40 }}>
+            <a href="https://chrome.google.com/webstore" 
+               aria-label="Install Clipmark Chrome Extension"
+               style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '16px 32px', background: '#006B5F', color: 'white',
-              borderRadius: 12, fontSize: 17, fontWeight: 700, textDecoration: 'none',
-              boxShadow: '0 8px 32px rgba(0,107,95,0.20)',
+              padding: '20px 48px',
+              background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+              color: 'white', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
+              boxShadow: '0 16px 48px rgba(20,184,166,0.28)',
             }}>
-              Get Started for Free <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+              Get Started for Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
-            <button style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '16px 32px', background: '#f3f3f4', color: '#1A1C1D',
-              borderRadius: 12, fontSize: 17, fontWeight: 700, border: 'none',
+            <button 
+              aria-label="Watch product demo video"
+              style={{
+              display: 'inline-flex', alignItems: 'center', gap: 12,
+              padding: '20px 48px', background: 'white', border: '1px solid #e8e8e9',
+              color: '#1A1C1D', borderRadius: 16, fontSize: 18, fontWeight: 700,
             }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>play_circle</span> Watch Demo
+              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>play_circle</span>
+              Watch Demo
             </button>
           </div>
 
@@ -376,22 +423,51 @@ export default async function Home({
         </div>
       </section>
 
-      {/* ── Integrations strip ──────────────────────────────────────────── */}
+      {/* ── Compatibility strip ────────────────────────────────────────── */}
       <section style={{ padding: '72px 32px', borderTop: '1px solid rgba(26,28,29,0.06)', borderBottom: '1px solid rgba(26,28,29,0.06)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <p style={{ textAlign: 'center', color: '#9ca3af', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 48 }}>
-            Integrated with the Modern Stack
+            Built for Your Ecosystem
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 56, opacity: 0.5, filter: 'grayscale(1)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 56, opacity: 0.8 }}>
             {[
-              { icon: 'video_library',   label: 'YouTube'  },
-              { icon: 'chrome_reader_mode', label: 'Chrome' },
-              { icon: 'data_object',     label: 'Next.js'  },
-              { icon: 'database',        label: 'Supabase' },
-            ].map(({ icon, label }) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 18, color: '#1A1C1D' }}>
-                <span className="material-symbols-outlined">{icon}</span>
+              { icon: 'brand_family',    label: 'YouTube Web', color: '#FF0000' },
+              { icon: 'browser_updated', label: 'Chrome & Edge', color: '#4285F4' },
+              { icon: 'cloud_sync',      label: 'Cloud Sync', color: '#14B8A6' },
+              { icon: 'devices',         label: 'Cross-Device', color: '#8B5CF6' },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 16, color: '#1A1C1D' }}>
+                <span className="material-symbols-outlined" style={{ color }}>{icon}</span>
                 {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ Section ────────────────────────────────────────────────── */}
+      <section id="faq" style={{ padding: '96px 32px', background: '#fcfcfd' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <h2 style={{
+            fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, textAlign: 'center',
+            marginBottom: 64, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D'
+          }}>
+            Questions? We have answers.
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {FAQ_DATA.map(({ q, a }) => (
+              <div key={q} style={{
+                background: 'white', padding: '32px', borderRadius: 20,
+                boxShadow: '0 4px 20px rgba(26,28,29,0.04)',
+                border: '1px solid rgba(26,28,29,0.06)'
+              }}>
+                <h3 style={{
+                  fontSize: 18, fontWeight: 700, marginBottom: 12,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D'
+                }}>
+                  {q}
+                </h3>
+                <p style={{ color: '#545f6c', fontSize: 15, lineHeight: 1.7 }}>{a}</p>
               </div>
             ))}
           </div>
@@ -408,7 +484,9 @@ export default async function Home({
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
             Join 15,000+ power learners turning YouTube into their second brain.
           </p>
-          <a href="https://chrome.google.com/webstore" style={{
+          <a href="https://chrome.google.com/webstore" 
+             aria-label="Install Clipmark Chrome Extension"
+             style={{
             display: 'inline-block', padding: '20px 48px',
             background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
             color: 'white', borderRadius: 16, fontWeight: 700, fontSize: 18, textDecoration: 'none',
@@ -420,23 +498,7 @@ export default async function Home({
         </div>
       </section>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer style={{ padding: '48px 32px', borderTop: '1px solid rgba(26,28,29,0.06)', background: '#f3f3f4' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>Clipmark</div>
-            <div style={{ fontSize: 13, color: '#545f6c' }}>© 2025 Clipmark. The Digital Curator.</div>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
-            <a href="/upgrade" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Pricing</a>
-            <a href="/privacy" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Privacy</a>
-            <a href="/terms" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Terms</a>
-            <a href="mailto:support@clipmark.app" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Support</a>
-          </div>
-          {/* <ThemeToggle /> */}
-        </div>
-      </footer>
-
+      <Footer />
     </main>
   );
 }
