@@ -17,6 +17,27 @@ function formatTimestamp(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+function youtubeTimestampUrl(videoId: string, timestamp: number): string {
+  return `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(timestamp)}s`;
+}
+
+interface OpenAtTimestampLinkProps { videoId: string; timestamp: number; className: string; }
+
+function OpenAtTimestampLink({ videoId, timestamp, className }: OpenAtTimestampLinkProps) {
+  return (
+    <a
+      className={className}
+      href={youtubeTimestampUrl(videoId, timestamp)}
+      title="Open at timestamp"
+      aria-label={`Open at timestamp ${formatTimestamp(timestamp)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>open_in_new</span>
+    </a>
+  );
+}
+
 function formatMonthLabel(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 }
@@ -111,7 +132,7 @@ function exportMarkdown(collections: Collection[]) {
     for (const b of (c.bookmarks ?? [])) {
       const ts = formatTimestamp(b.timestamp);
       const tags = (b.tags ?? []).map((t: string) => `#${t}`).join(' ');
-      lines.push(`- **[${ts}](https://www.youtube.com/watch?v=${c.video_id}&t=${Math.floor(b.timestamp)}s)** — ${b.description || 'No note'} ${tags}`);
+      lines.push(`- **[${ts}](${youtubeTimestampUrl(c.video_id, b.timestamp)})** — ${b.description || 'No note'} ${tags}`);
     }
     lines.push('');
   }
@@ -554,16 +575,19 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               {b.description ? 'Annotated Bookmark' : 'Quick Clip'}
                             </span>
                             <div className={toolbarStyles.bookmarkActions}>
+                              <OpenAtTimestampLink videoId={c.video_id} timestamp={b.timestamp} className={toolbarStyles.actionBtn} />
                               <button
                                 className={toolbarStyles.actionBtn}
                                 title="Copy timestamp link"
+                                aria-label="Copy timestamp link"
                                 onClick={() => copyLink(c.video_id, b.timestamp)}
                               >
-                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                               </button>
                               <button
                                 className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`}
                                 title="Delete bookmark"
+                                aria-label="Delete bookmark"
                                 onClick={() => handleDelete(c.video_id, b.id)}
                                 disabled={isPending}
                               >
@@ -617,10 +641,11 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                                         {b.description ? 'Annotated Bookmark' : 'Quick Clip'}
                                       </span>
                                       <div className={toolbarStyles.bookmarkActions}>
-                                        <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(c.video_id, b.timestamp)}>
-                                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                                        <OpenAtTimestampLink videoId={c.video_id} timestamp={b.timestamp} className={toolbarStyles.actionBtn} />
+                                        <button className={toolbarStyles.actionBtn} title="Copy timestamp link" aria-label="Copy timestamp link" onClick={() => copyLink(c.video_id, b.timestamp)}>
+                                          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                                         </button>
-                                        <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
+                                        <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
                                           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                                         </button>
                                       </div>
@@ -740,10 +765,11 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                             </a>
                             <span className={styles.clipRowNote}>{b.description || 'No note added.'}</span>
                             <div className={toolbarStyles.bookmarkActions}>
-                              <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(group.collection.video_id, b.timestamp)}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                              <OpenAtTimestampLink videoId={group.collection.video_id} timestamp={b.timestamp} className={toolbarStyles.actionBtn} />
+                              <button className={toolbarStyles.actionBtn} title="Copy timestamp link" aria-label="Copy timestamp link" onClick={() => copyLink(group.collection.video_id, b.timestamp)}>
+                                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                               </button>
-                              <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
+                              <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                               </button>
                             </div>
