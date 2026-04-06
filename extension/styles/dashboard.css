@@ -1745,7 +1745,7 @@
 
 .vc-actions {
     display: flex;
-    gap: 6px;
+    gap: 2px;
     align-items: center;
     margin-top: 8px;
     opacity: 0;
@@ -1756,40 +1756,41 @@
     opacity: 1;
 }
 
-.vc-jump {
-    padding: 4px 10px;
-    background: #14b8a6;
-    color: white;
+/* ── Unified action icon button ───────────────────────────────────────────── */
+.vc-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
     border: none;
     border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    font-family: inherit;
     cursor: pointer;
-    transition: background 0.12s;
-    white-space: nowrap;
+    color: #9ca3af;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
 }
 
-.vc-jump:hover {
-    background: #006b5f;
+.vc-action-btn svg {
+    width: 15px;
+    height: 15px;
+    display: block;
 }
 
-.vc-del {
-    padding: 4px 8px;
-    background: transparent;
-    color: #6b7280;
-    border: 1px solid rgba(26, 28, 29, 0.1);
-    border-radius: 6px;
-    font-size: 12px;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
+.vc-action-btn:hover {
+    background: rgba(20, 184, 166, 0.1);
+    color: #14b8a6;
 }
 
-.vc-del:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #f87171;
-    border-color: transparent;
+.vc-notes-btn--has-notes {
+    color: #14b8a6;
+}
+
+.vc-action-del:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
 }
 
 /* ── Notes panel ──────────────────────────────────────────────────────────── */
@@ -2449,103 +2450,9 @@
     box-shadow: 0 6px 20px rgba(20, 184, 166, 0.35);
 }
 
-/* ── Icon button ──────────────────────────────────────────────────────────── */
-.btn-icon {
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 8px;
-    font-size: 14px;
-    cursor: pointer;
-    color: #6b7280;
-    transition: all 0.15s;
-    flex-shrink: 0;
-}
-
-.btn-icon:hover {
-    background: rgba(20, 184, 166, 0.1);
-    color: #14b8a6;
-}
-
-/* ── JS class for "Jump to video" and "Copy link" ─────────────────────────── */
-.jump-to-video {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
-    color: #006b5f;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    text-decoration: none;
-    transition: transform 0.15s, color 0.15s;
-}
-
-.jump-to-video:hover {
-    color: #14b8a6;
-    transform: translateX(2px);
-}
-
-.copy-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #6b7280;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    transition: color 0.15s;
-}
-
-.copy-link:hover {
-    color: #14b8a6;
-}
-
-/* ── Delete bookmark ──────────────────────────────────────────────────────── */
-.delete-bookmark {
-    background: transparent;
-    border: none;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 4px;
-    font-size: 13px;
-    transition: color 0.12s, background 0.12s;
-}
-
-.delete-bookmark:hover {
-    color: #f87171;
-    background: rgba(248, 113, 113, 0.1);
-}
-
-/* ── Notes button ─────────────────────────────────────────────────────────── */
-.vc-notes-btn {
-    background: transparent;
-    border: 1px solid rgba(26, 28, 29, 0.08);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 12px;
-    color: #6b7280;
-    cursor: pointer;
-    transition: color 0.12s, border-color 0.12s;
-}
-
-[data-theme="dark"] .vc-notes-btn {
-    border-color: var(--border);
-}
-
-.vc-notes-btn:hover {
-    color: #14b8a6;
-    border-color: rgba(20, 184, 166, 0.3);
-}
+/* ── .btn-icon, .jump-to-video, .copy-link, .delete-bookmark, .vc-notes-btn ─
+   Replaced by .vc-action-btn and its modifiers (defined near .vc-actions).
+   ──────────────────────────────────────────────────────────────────────────── */
 
 /* ══════════════════════════════════════════════════════════════════════════
    TIMELINE VIEW

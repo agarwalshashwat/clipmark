@@ -554,6 +554,15 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               {b.description ? 'Annotated Bookmark' : 'Quick Clip'}
                             </span>
                             <div className={toolbarStyles.bookmarkActions}>
+                              <a
+                                className={toolbarStyles.actionBtn}
+                                href={`https://www.youtube.com/watch?v=${c.video_id}&t=${Math.floor(b.timestamp)}s`}
+                                title="Open at timestamp"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
+                              </a>
                               <button
                                 className={toolbarStyles.actionBtn}
                                 title="Copy timestamp link"
@@ -617,6 +626,9 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                                         {b.description ? 'Annotated Bookmark' : 'Quick Clip'}
                                       </span>
                                       <div className={toolbarStyles.bookmarkActions}>
+                                        <a className={toolbarStyles.actionBtn} href={`https://www.youtube.com/watch?v=${c.video_id}&t=${Math.floor(b.timestamp)}s`} title="Open at timestamp" target="_blank" rel="noopener noreferrer">
+                                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
+                                        </a>
                                         <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(c.video_id, b.timestamp)}>
                                           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
                                         </button>
@@ -740,6 +752,9 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                             </a>
                             <span className={styles.clipRowNote}>{b.description || 'No note added.'}</span>
                             <div className={toolbarStyles.bookmarkActions}>
+                              <a className={toolbarStyles.actionBtn} href={`https://www.youtube.com/watch?v=${group.collection.video_id}&t=${Math.floor(b.timestamp)}s`} title="Open at timestamp" target="_blank" rel="noopener noreferrer">
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
+                              </a>
                               <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(group.collection.video_id, b.timestamp)}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
                               </button>
