@@ -21,8 +21,6 @@
     {
       "resources": [
         "src/pages/dashboard.html",
-        "src/constants.js",
-        "src/config.js",
         "src/popup/dashboard.js",
         "styles/dashboard.css"
       ],
