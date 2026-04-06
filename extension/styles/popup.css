@@ -124,6 +124,10 @@ body {
   border-radius: 3px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .popup-main { scroll-behavior: auto; }
+}
+
 /* ── Video Context Strip ─────────────────────────────────────────────────────── */
 .video-context {
   display: flex;

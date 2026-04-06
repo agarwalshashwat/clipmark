@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { ShareCollectionButton } from './ShareCollectionButton';
 import { AddToGroupDropdown } from './AddToGroupDropdown';
@@ -14,7 +15,7 @@ export type VideoData = {
   timeAgoStr: string;
   tags: string[];
   timeRange: string | null;
-  bookmarks: any[];
+  bookmarks: Bookmark[];
 };
 
 interface VideosClientProps {

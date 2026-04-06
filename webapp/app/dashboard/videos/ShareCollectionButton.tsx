@@ -1,18 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 
 interface ShareCollectionProps {
   videoId: string;
   videoTitle: string;
-  bookmarks: any[];
+  bookmarks: Bookmark[];
   userId: string;
 }
 
 export function ShareCollectionButton({ videoId, videoTitle, bookmarks, userId }: ShareCollectionProps) {
   const [sharing, setSharing] = useState(false);
   const [shareId, setShareId] = useState<string | null>(null);
+  const router = useRouter();
 
   async function handleShare() {
     setSharing(true);
@@ -25,13 +28,13 @@ export function ShareCollectionButton({ videoId, videoTitle, bookmarks, userId }
 
       if (!response.ok) {
         const err = await response.json();
-        alert(err.message || 'Failed to share collection');
+        alert(err.message || err.error || 'Failed to share collection');
         return;
       }
 
       const { shareId } = await response.json();
       setShareId(shareId);
-      window.location.href = `/v/${shareId}`;
+      router.push(`/v/${shareId}`);
     } catch (err) {
       console.error('Share error:', err);
       alert('An unexpected error occurred');

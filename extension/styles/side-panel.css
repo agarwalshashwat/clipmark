@@ -184,6 +184,10 @@ body {
   border-radius: 3px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .sp-main { scroll-behavior: auto; }
+}
+
 /* ── Shared section spacing ──────────────────────────────────────────────────── */
 .sp-section {
   padding: 12px 14px 0;
