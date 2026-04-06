@@ -185,6 +185,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html, body { scroll-behavior: auto; }
   .sp-main { scroll-behavior: auto; }
 }
 

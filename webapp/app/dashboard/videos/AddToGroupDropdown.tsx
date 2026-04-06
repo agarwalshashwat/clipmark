@@ -59,7 +59,7 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
           e.stopPropagation();
           setOpen(!open);
         }}
-        aria-haspopup="listbox"
+        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         title="Add to Group"
@@ -73,7 +73,7 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
       {open && (
         <div
           id={menuId}
-          role="listbox"
+          role="menu"
           aria-label="Add to group"
           className={styles.dropdownMenu}
         >
@@ -86,8 +86,7 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
               {initialGroups.map(g => (
                 <button
                   key={g.id}
-                  role="option"
-                  aria-selected={false}
+                  role="menuitem"
                   className={styles.dropdownMenuItem}
                   onClick={(e) => {
                     e.preventDefault();

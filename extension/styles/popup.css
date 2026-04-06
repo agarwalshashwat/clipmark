@@ -125,6 +125,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html, body { scroll-behavior: auto; }
   .popup-main { scroll-behavior: auto; }
 }
 
