@@ -277,6 +277,12 @@ function buildTimeline(bookmarks, trackMax) {
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
+// ── Bookmark action button SVG icons ────────────────────────────────────────
+const ICON_NOTES = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="1.5" width="11" height="13" rx="1.5"/><path d="M5 5h6M5 8h6M5 11h3.5"/></svg>`;
+const ICON_LINK  = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5L7.5 3.5"/><path d="M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5L8.5 12.5"/></svg>`;
+const ICON_JUMP  = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3.5A1.5 1.5 0 0 0 2 4.5v8A1.5 1.5 0 0 0 3.5 14h8A1.5 1.5 0 0 0 13 12.5V9"/><path d="M10 2h4v4"/><path d="M14 2 8 8"/></svg>`;
+const ICON_TRASH = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h11M6 4.5V3h4v1.5M5.5 4.5l.5 8h4l.5-8"/></svg>`;
+
 async function renderBookmarks() {
   const container = document.getElementById('bookmarks-container');
 
@@ -451,10 +457,10 @@ async function renderBookmarks() {
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
-                      <button class="vc-notes-btn btn-icon${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}">📝</button>
-                      <button class="btn-icon copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link">⎘</button>
-                      <button class="vc-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}">Jump</button>
-                      <button class="vc-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}">×</button>
+                      <button class="vc-action-btn vc-notes-btn${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
+                      <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
+                      <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
+                      <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
                     </div>
                     <div class="vc-notes-panel" id="notes-${b.id}" data-bookmark-id="${b.id}" data-video-id="${videoId}">
                       <textarea class="vc-notes-textarea" placeholder="Add a longer note, context, or key insight…" rows="2">${b.notes || ''}</textarea>
@@ -484,10 +490,10 @@ async function renderBookmarks() {
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
-                      <button class="vc-notes-btn btn-icon${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}">📝</button>
-                      <button class="btn-icon copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link">⎘</button>
-                      <button class="vc-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}">Jump</button>
-                      <button class="vc-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}">×</button>
+                      <button class="vc-action-btn vc-notes-btn${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
+                      <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
+                      <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
+                      <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
                     </div>
                     <div class="vc-notes-panel" id="notes-${b.id}" data-bookmark-id="${b.id}" data-video-id="${videoId}">
                       <textarea class="vc-notes-textarea" placeholder="Add a longer note, context, or key insight…" rows="2">${b.notes || ''}</textarea>
@@ -656,9 +662,9 @@ function renderTimelineView(bookmarks, container) {
           <div class="tl-desc">${b.description || 'No note added.'}</div>
           ${tagsHtml}
           <div class="tl-actions">
-            <button class="btn-icon copy-link" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Copy link">⎘</button>
-            <button class="vc-jump jump-to-video" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}">Jump</button>
-            <button class="vc-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${b.videoId}">×</button>
+            <button class="vc-action-btn copy-link" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
+            <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
+            <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${b.videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
           </div>
         </div>`;
       const nodeHtml = `<div class="tl-node"><div class="tl-dot" style="background:${color}"></div></div>`;
@@ -725,7 +731,7 @@ function attachEventListeners() {
 
   document.querySelectorAll('.jump-to-video').forEach(btn => {
     btn.addEventListener('click', e => {
-      jumpToVideo(e.target.dataset.videoId, parseFloat(e.target.dataset.timestamp));
+      jumpToVideo(e.currentTarget.dataset.videoId, parseFloat(e.currentTarget.dataset.timestamp));
     });
   });
 
@@ -753,8 +759,8 @@ function attachEventListeners() {
 
   document.querySelectorAll('.delete-bookmark').forEach(btn => {
     btn.addEventListener('click', async e => {
-      const bookmarkId = parseInt(e.target.dataset.bookmarkId);
-      const videoId    = e.target.dataset.videoId;
+      const bookmarkId = parseInt(e.currentTarget.dataset.bookmarkId);
+      const videoId    = e.currentTarget.dataset.videoId;
       const card       = e.target.closest('.vc-chapter, .tl-entry');
 
       card.classList.add('deleting');

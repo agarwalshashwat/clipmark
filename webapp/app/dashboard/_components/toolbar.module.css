@@ -244,6 +244,7 @@
   align-items: center;
   padding: 4px;
   border-radius: 6px;
+  text-decoration: none;
   transition: background 0.12s, color 0.12s;
 }
 .actionBtn:hover { background: #f3f3f4; color: #545f6c; }
