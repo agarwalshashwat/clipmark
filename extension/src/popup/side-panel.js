@@ -33,34 +33,7 @@ async function getValidToken() {
   }
 }
 
-// ─── Tag colours ────────────────────────────────────────────────────────────
-const TAG_COLORS = {
-  important: '#ff6b6b',
-  review:    '#ffa94d',
-  note:      '#74c0fc',
-  question:  '#a9e34b',
-  todo:      '#da77f2',
-  key:       '#f783ac',
-};
-
-function parseTags(description) {
-  if (!description) return [];
-  const matches = description.match(/#(\w+)/g);
-  return matches ? matches.map(t => t.slice(1).toLowerCase()) : [];
-}
-
-function stringToColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return `hsl(${Math.abs(hash) % 360}, 60%, 60%)`;
-}
-
-function getTagColor(tags) {
-  if (!tags || tags.length === 0) return '#4da1ee';
-  return TAG_COLORS[tags[0]] || stringToColor(tags[0]);
-}
+// TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
 
 function formatTimestamp(seconds) {
   const m = Math.floor(seconds / 60);
@@ -188,7 +161,7 @@ function sendMessageToTab(tabId, message) {
   });
 }
 
-async function waitForContentScript(tabId, maxRetries = 3, delay = 1000) {
+async function waitForContentScript(tabId, maxRetries = MAX_RECONNECT_ATTEMPTS, delay = RECONNECT_DELAY) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const r = await sendMessageToTab(tabId, { action: 'ping' });
@@ -905,7 +878,7 @@ async function loadBookmarks() {
       // Copy link
       el.querySelector('.copy-link').addEventListener('click', async e => {
         e.stopPropagation();
-        const url = `https://www.youtube.com/watch?v=${vId}&t=${Math.floor(parseFloat(timestamp))}`;
+        const url = ytWatchUrl(vId, parseFloat(timestamp));
         await navigator.clipboard.writeText(url);
         showStatus('Link copied!');
       });

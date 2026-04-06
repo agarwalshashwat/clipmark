@@ -21,6 +21,8 @@
     {
       "resources": [
         "src/pages/dashboard.html",
+        "src/constants.js",
+        "src/config.js",
         "src/popup/dashboard.js",
         "styles/dashboard.css"
       ],
@@ -43,7 +45,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["src/content/content.js"],
+      "js": ["src/constants.js", "src/content/content.js"],
       "run_at": "document_end",
       "css": []
     }

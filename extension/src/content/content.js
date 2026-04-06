@@ -10,8 +10,7 @@ let video = null;
 let progressBar = null;
 let isInitialized = false;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 3;
-const RECONNECT_DELAY = 1000;
+// MAX_RECONNECT_ATTEMPTS and RECONNECT_DELAY are defined in constants.js
 
 // ─── Revisit mode state ───────────────────────────────────────────────────────
 let revisionState = null; // { segments, index, countdownTimer, speed }
@@ -27,34 +26,7 @@ let cachedTranscript       = null; // null = not fetched yet, [] = fetched but e
 let transcriptFetchPromise = null;
 let cachedTranscriptVideoId = null;
 
-// ─── Tag colours (must match popup.js) ───────────────────────────────────────
-const TAG_COLORS = {
-  important: '#ef4444',
-  review:    '#f97316',
-  note:      '#3b82f6',
-  question:  '#22c55e',
-  todo:      '#a855f7',
-  key:       '#ec4899',
-};
-
-function parseTags(description) {
-  if (!description) return [];
-  const matches = description.match(/#(\w+)/g);
-  return matches ? matches.map(t => t.slice(1).toLowerCase()) : [];
-}
-
-function stringToColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
-}
-
-function getTagColor(tags) {
-  if (!tags || tags.length === 0) return '#4da1ee';
-  return TAG_COLORS[tags[0]] || stringToColor(tags[0]);
-}
+// TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
 
 function bmKey(videoId) { return `bm_${videoId}`; }
 
@@ -435,8 +407,8 @@ function cleanTranscriptText(text) {
   // Capitalize first letter
   t = t.charAt(0).toUpperCase() + t.slice(1);
   // Truncate at word boundary to ~120 chars
-  if (t.length > 120) {
-    t = t.substring(0, 120).replace(/\s+\S*$/, '') + '…';
+  if (t.length > TRANSCRIPT_TRUNCATE_LENGTH) {
+    t = t.substring(0, TRANSCRIPT_TRUNCATE_LENGTH).replace(/\s+\S*$/, '') + '…';
   }
   return t || null;
 }
