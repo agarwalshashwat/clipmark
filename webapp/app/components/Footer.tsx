@@ -6,7 +6,7 @@ export function Footer() {
       <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>Clipmark</div>
-          <div style={{ fontSize: 13, color: '#545f6c' }}>© 2025 Clipmark. The Digital Curator.</div>
+          <div style={{ fontSize: 13, color: '#545f6c' }}>© {new Date().getFullYear()} Clipmark. The Digital Curator.</div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
           <a href="/upgrade" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Pricing</a>

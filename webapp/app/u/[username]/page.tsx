@@ -225,7 +225,7 @@ export default async function UserProfilePage(
       {/* ── Footer ── */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
-          <span className={styles.footerCopy}>© 2025 Clipmark. The Digital Curator.</span>
+          <span className={styles.footerCopy}>© {new Date().getFullYear()} Clipmark. The Digital Curator.</span>
           <nav className={styles.footerLinks}>
             {['Privacy', 'Terms', 'Support'].map(label => (
               <a key={label} href={`/${label.toLowerCase()}`} className={styles.footerLink}>

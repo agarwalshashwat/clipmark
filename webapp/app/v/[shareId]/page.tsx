@@ -378,7 +378,7 @@ export default async function SharePage(
         <div className={styles.footerInner}>
           <div className={styles.footerBrand}>
             <span className={styles.footerLogo}>Clipmark</span>
-            <span className={styles.footerTagline}>© 2025 Clipmark. The Digital Curator.</span>
+            <span className={styles.footerTagline}>© {new Date().getFullYear()} Clipmark. The Digital Curator.</span>
           </div>
           <ul className={styles.footerLinks}>
             <li><a href="/privacy" className={styles.footerLink}>Privacy</a></li>

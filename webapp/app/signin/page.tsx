@@ -195,7 +195,7 @@ export default async function SignInPage({
           fontSize: 10, fontWeight: 500, textTransform: 'uppercase',
           letterSpacing: '0.1em', color: 'rgba(156,163,175,0.6)',
         }}>
-          © 2025 Clipmark. The Digital Curator.
+          © {new Date().getFullYear()} Clipmark. The Digital Curator.
         </div>
       </footer>
 
