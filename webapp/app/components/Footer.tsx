@@ -1,4 +1,5 @@
 import React from 'react';
+import { SUPPORT_EMAIL } from '@/app/lib/constants';
 
 export function Footer() {
   return (
@@ -12,7 +13,7 @@ export function Footer() {
           <a href="/upgrade" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Pricing</a>
           <a href="/privacy" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Privacy</a>
           <a href="/terms" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Terms</a>
-          <a href="mailto:support@clipmark.app" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Support</a>
+          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Support</a>
         </div>
       </div>
     </footer>

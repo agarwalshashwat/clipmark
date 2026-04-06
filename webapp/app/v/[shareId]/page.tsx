@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
+import { SUPPORT_EMAIL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -383,7 +384,7 @@ export default async function SharePage(
           <ul className={styles.footerLinks}>
             <li><a href="/privacy" className={styles.footerLink}>Privacy</a></li>
             <li><a href="/terms" className={styles.footerLink}>Terms</a></li>
-            <li><a href="mailto:support@clipmark.app" className={styles.footerLink}>Support</a></li>
+            <li><a href={`mailto:${SUPPORT_EMAIL}`} className={styles.footerLink}>Support</a></li>
           </ul>
         </div>
       </footer>

@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
+
 export const metadata = {
   title: 'Terms of Service — Clipmark',
   description: 'Terms and conditions for using Clipmark.',
@@ -113,7 +115,7 @@ export default function TermsPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Billing</strong> — subscriptions are billed monthly or annually as selected. Payments are processed by Dodo Payments.</li>
             <li style={LI_STYLE}><strong>Cancellation</strong> — you may cancel at any time. Pro features remain active until the end of the current billing period. No prorated refunds for partial periods on monthly plans.</li>
-            <li style={LI_STYLE}><strong>Refunds</strong> — we offer a 7-day money-back guarantee for new subscribers. Contact <a href="mailto:support@clipmark.app" style={{ color: '#14B8A6' }}>support@clipmark.app</a> within 7 days of your first payment to request a full refund.</li>
+            <li style={LI_STYLE}><strong>Refunds</strong> — we offer a 7-day money-back guarantee for new subscribers. Contact <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#14B8A6' }}>{SUPPORT_EMAIL}</a> within 7 days of your first payment to request a full refund.</li>
             <li style={LI_STYLE}><strong>Lifetime plans</strong> — one-time payment grants lifetime access to Pro features available at time of purchase. Future features may require a subscription upgrade.</li>
             <li style={LI_STYLE}><strong>Price changes</strong> — we may change subscription prices with 30 days&apos; notice. Existing subscribers will be grandfathered at their current rate for one additional billing cycle.</li>
           </ul>
@@ -181,7 +183,7 @@ export default function TermsPage() {
           <h2 style={H2_STYLE}>11. Contact</h2>
           <p style={P_STYLE}>
             Questions about these Terms? Contact us at:<br />
-            <a href="mailto:legal@clipmark.app" style={{ color: '#14B8A6', fontWeight: 600 }}>legal@clipmark.app</a>
+            <a href={`mailto:${LEGAL_EMAIL}`} style={{ color: '#14B8A6', fontWeight: 600 }}>{LEGAL_EMAIL}</a>
           </p>
         </div>
 

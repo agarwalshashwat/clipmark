@@ -28,28 +28,7 @@ async function getValidToken() {
   }
 }
 
-// ─── Tag colours (must match popup.js / content.js) ──────────────────────────
-const TAG_COLORS = {
-  important: '#ef4444',
-  review:    '#f97316',
-  note:      '#3b82f6',
-  question:  '#22c55e',
-  todo:      '#a855f7',
-  key:       '#ec4899',
-};
-
-function stringToColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
-}
-
-function getTagColor(tags) {
-  if (!tags || tags.length === 0) return '#4da1ee';
-  return TAG_COLORS[tags[0]] || stringToColor(tags[0]);
-}
+// TAG_COLORS, stringToColor, getTagColor are defined in constants.js
 
 function bmKey(videoId) { return `bm_${videoId}`; }
 
@@ -400,8 +379,8 @@ async function renderBookmarks() {
       .sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : b.id) - (a.createdAt ? new Date(a.createdAt).getTime() : a.id))
       .map(b => b.videoTitle)
       .find(t => t) || videoTitles[videoId] || `Video: ${videoId}`;
-    const ytUrl  = `https://www.youtube.com/watch?v=${videoId}`;
-    const thumb  = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    const ytUrl  = ytWatchUrl(videoId);
+    const thumb  = ytThumbnailUrl(videoId);
     const count  = bookmarks.length;
 
     const card = document.createElement('div');
@@ -668,7 +647,7 @@ function renderTimelineView(bookmarks, container) {
     items.forEach(b => {
       const side     = idx % 2 === 0 ? 'tl-left' : 'tl-right';
       const color    = b.color || getTagColor(b.tags);
-      const thumb    = `https://img.youtube.com/vi/${b.videoId}/mqdefault.jpg`;
+      const thumb    = ytThumbnailUrl(b.videoId);
       const tagsHtml = b.tags?.length
         ? `<div class="tl-tags">${b.tags.map(t =>
             `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
@@ -746,7 +725,7 @@ function attachEventListeners() {
         .sort((a, b) => a.timestamp - b.timestamp);
       if (!bookmarks.length) return;
       await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks } });
-      chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${videoId}` });
+      chrome.tabs.create({ url: ytWatchUrl(videoId) });
     });
   });
 
@@ -760,7 +739,7 @@ function attachEventListeners() {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
       const { videoId, timestamp } = e.currentTarget.dataset;
-      const url = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(parseFloat(timestamp))}`;
+      const url = ytWatchUrl(videoId, parseFloat(timestamp));
       await navigator.clipboard.writeText(url);
       showToast('Link copied!', 'success');
     });
@@ -906,7 +885,7 @@ function attachEventListeners() {
 }
 
 function jumpToVideo(videoId, timestamp) {
-  window.open(`https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(timestamp)}`, '_blank');
+  window.open(ytWatchUrl(videoId, timestamp), '_blank');
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────
@@ -921,7 +900,7 @@ function downloadFile(content, filename, mimeType) {
 }
 
 function exportJSON() {
-  downloadFile(JSON.stringify(allBookmarks, null, 2), 'clipmark-bookmarks.json', 'application/json');
+  downloadFile(JSON.stringify(allBookmarks, null, 2), `${APP_EXPORT_PREFIX}-bookmarks.json`, 'application/json');
 }
 
 function exportCSV() {
@@ -934,7 +913,7 @@ function exportCSV() {
      b.createdAt]
     .map(v => `"${v}"`).join(',')
   ).join('\n');
-  downloadFile(header + rows, 'clipmark-bookmarks.csv', 'text/csv');
+  downloadFile(header + rows, `${APP_EXPORT_PREFIX}-bookmarks.csv`, 'text/csv');
 }
 
 function exportMarkdown() {
@@ -946,17 +925,17 @@ function exportMarkdown() {
 
   for (const [videoId, bookmarks] of Object.entries(groups)) {
     const title = videoTitles[videoId] || videoId;
-    lines.push(`## [${title}](https://www.youtube.com/watch?v=${videoId})\n`);
+    lines.push(`## [${title}](${ytWatchUrl(videoId)})\n`);
     bookmarks.sort((a, b) => a.timestamp - b.timestamp).forEach(b => {
       const tagStr = b.tags && b.tags.length ? ` ${b.tags.map(t => `#${t}`).join(' ')}` : '';
-      const url    = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(b.timestamp)}`;
+      const url    = ytWatchUrl(videoId, b.timestamp);
       lines.push(`- [${formatTimestamp(b.timestamp)}](${url}) — ${b.description || 'No description'}${tagStr}`);
       if (b.notes && b.notes.trim()) lines.push(`  > ${b.notes.replace(/\n/g, '\n  > ')}`);
     });
     lines.push('');
   }
 
-  downloadFile(lines.join('\n'), 'clipmark-bookmarks.md', 'text/markdown');
+  downloadFile(lines.join('\n'), `${APP_EXPORT_PREFIX}-bookmarks.md`, 'text/markdown');
 }
 
 async function exportObsidian() {
@@ -968,10 +947,10 @@ async function exportObsidian() {
 
   for (const [videoId, bookmarks] of Object.entries(groups)) {
     const title = bookmarks[0].videoTitle || videoId;
-    const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const ytUrl = ytWatchUrl(videoId);
     lines.push(`> [!note] [${title}](${ytUrl})\n`);
     bookmarks.sort((a, b) => a.timestamp - b.timestamp).forEach(b => {
-      const url    = `${ytUrl}&t=${Math.floor(b.timestamp)}`;
+      const url    = ytWatchUrl(videoId, b.timestamp);
       const tagStr = b.tags?.length ? ` ${b.tags.map(t => `#${t}`).join(' ')}` : '';
       lines.push(`> - [${formatTimestamp(b.timestamp)}](${url}) — ${b.description || 'No note'}${tagStr}`);
       if (b.notes?.trim()) lines.push(`>   > ${b.notes.replace(/\n/g, '\n>   > ')}`);
@@ -979,7 +958,7 @@ async function exportObsidian() {
     lines.push('');
   }
 
-  downloadFile(lines.join('\n'), 'clipmark-obsidian.md', 'text/markdown');
+  downloadFile(lines.join('\n'), `${APP_EXPORT_PREFIX}-obsidian.md`, 'text/markdown');
 }
 
 async function exportNotionCSV() {
@@ -988,7 +967,7 @@ async function exportNotionCSV() {
 
   const header = 'Name,Video,URL,Tags,Notes,Date\n';
   const rows   = allBookmarks.map(b => {
-    const url = `https://www.youtube.com/watch?v=${b.videoId}&t=${Math.floor(b.timestamp)}`;
+    const url = ytWatchUrl(b.videoId, b.timestamp);
     return [
       `${formatTimestamp(b.timestamp)} — ${(b.description || '').replace(/"/g, '""')}`,
       (b.videoTitle || '').replace(/"/g, '""'),
@@ -999,7 +978,7 @@ async function exportNotionCSV() {
     ].map(v => `"${v}"`).join(',');
   }).join('\n');
 
-  downloadFile(header + rows, 'clipmark-notion.csv', 'text/csv');
+  downloadFile(header + rows, `${APP_EXPORT_PREFIX}-notion.csv`, 'text/csv');
 }
 
 async function exportReadingList() {
@@ -1011,7 +990,7 @@ async function exportReadingList() {
 
   for (const [videoId, bookmarks] of Object.entries(groups)) {
     const title = bookmarks[0].videoTitle || videoId;
-    lines.push(`▶ ${title}`, `   https://www.youtube.com/watch?v=${videoId}`, '');
+    lines.push(`▶ ${title}`, `   ${ytWatchUrl(videoId)}`, '');
     bookmarks.sort((a, b) => a.timestamp - b.timestamp).forEach(b => {
       lines.push(`   ${formatTimestamp(b.timestamp)}  ${b.description || 'No note'}`);
       if (b.notes?.trim()) lines.push(`   Note: ${b.notes}`);
@@ -1019,7 +998,7 @@ async function exportReadingList() {
     lines.push('');
   }
 
-  downloadFile(lines.join('\n'), 'clipmark-reading-list.txt', 'text/plain');
+  downloadFile(lines.join('\n'), `${APP_EXPORT_PREFIX}-reading-list.txt`, 'text/plain');
 }
 
 // ─── Import ───────────────────────────────────────────────────────────────────
@@ -1236,8 +1215,8 @@ async function renderGroupsView() {
       const bookmarks = allBookmarks.filter(b => b.videoId === videoId);
       const title     = bookmarks[0]?.videoTitle || videoTitles[videoId] || videoId;
       const count     = bookmarks.length;
-      const thumb     = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-      const ytUrl     = `https://www.youtube.com/watch?v=${videoId}`;
+      const thumb     = ytThumbnailUrl(videoId);
+      const ytUrl     = ytWatchUrl(videoId);
       return `
         <div class="gv-video-card">
           <a href="${ytUrl}" target="_blank" rel="noopener">
@@ -1355,8 +1334,8 @@ async function renderGroupsView() {
         const bookmarks = allBookmarks.filter(b => b.videoId === videoId);
         const title = bookmarks[0]?.videoTitle || videoTitles[videoId] || videoId;
         const count = bookmarks.length;
-        const thumb = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-        const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        const thumb = ytThumbnailUrl(videoId);
+        const ytUrl = ytWatchUrl(videoId);
         return `
           <div class="gv-video-card">
             <a href="${ytUrl}" target="_blank" rel="noopener">
@@ -1493,7 +1472,7 @@ async function renderRevisitView(container, highlightTargetId = null) {
       return;
     }
     const bms = allBookmarks.filter(b => b.videoId === targetId);
-    rmPreviewThumb.src = `https://img.youtube.com/vi/${targetId}/mqdefault.jpg`;
+    rmPreviewThumb.src = ytThumbnailUrl(targetId);
     rmPreviewTitle.textContent = bms[0].videoTitle || '';
     const tags = [...new Set(bms.flatMap(b => b.tags || []))].slice(0, 4);
     rmPreviewTags.innerHTML = tags.map(t =>
@@ -1510,7 +1489,7 @@ async function renderRevisitView(container, highlightTargetId = null) {
         .filter(b => b.videoId && b.videoTitle)
         .map(b => [b.videoId, b.videoTitle])
     ).entries()]
-      .map(([vid, title]) => `<option value="${vid}">${title.substring(0, 60)}</option>`)
+      .map(([vid, title]) => `<option value="${vid}">${title.substring(0, TITLE_TRUNCATE_LENGTH)}</option>`)
       .join('');
 
     // Fetch groups for the Collection/Group tab
@@ -1779,7 +1758,7 @@ async function renderRevisitView(container, highlightTargetId = null) {
     const freqMap = { once: 'One-time', daily: 'Daily', weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly' };
     const freqLabel = freqMap[r.frequency] || r.frequency;
     const thumbHtml = r.videoId
-      ? `<img class="rm-card-thumb" src="https://img.youtube.com/vi/${r.videoId}/mqdefault.jpg" loading="lazy" alt="">`
+      ? `<img class="rm-card-thumb" src="${ytThumbnailUrl(r.videoId)}" loading="lazy" alt="">`
       : '';
 
     const card = document.createElement('div');
@@ -1794,7 +1773,7 @@ async function renderRevisitView(container, highlightTargetId = null) {
         <div class="rm-card-title">${r.label || r.targetLabel || 'Unknown'}</div>
         ${r.label ? `<div class="rm-card-sub">${r.targetLabel}</div>` : ''}
         <div class="rm-card-actions">
-          ${isDue && r.videoId ? `<a class="rm-btn rm-btn-revisit" href="https://www.youtube.com/watch?v=${r.videoId}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
+          ${isDue && r.videoId ? `<a class="rm-btn rm-btn-revisit" href="${ytWatchUrl(r.videoId)}" target="_blank" rel="noopener">Revisit ↗</a>` : ''}
           ${isDue ? `<button class="rm-btn rm-btn-done">Mark Done</button>` : ''}
           <button class="rm-btn rm-btn-edit">Edit →</button>
           <button class="rm-btn-delete" title="Delete">×</button>
@@ -1899,7 +1878,7 @@ async function renderVideosView(container) {
   videoIds.forEach(videoId => {
     const bookmarks = grouped[videoId];
     const title     = bookmarks[0].videoTitle || videoTitles[videoId] || `Video: ${videoId}`;
-    const thumb     = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    const thumb     = ytThumbnailUrl(videoId);
     const count     = bookmarks.length;
     const lastSaved = Math.max(...bookmarks.map(b => b.id));
 
@@ -1991,9 +1970,7 @@ async function renderSharedView(container) {
   grid.className = 'sh-grid';
 
   collections.forEach(col => {
-    const thumb = col.video_id
-      ? `https://img.youtube.com/vi/${col.video_id}/mqdefault.jpg`
-      : '';
+    const thumb = col.video_id ? ytThumbnailUrl(col.video_id) : '';
     const shareUrl = `${API_BASE}/v/${col.id}`;
 
     const card = document.createElement('div');
