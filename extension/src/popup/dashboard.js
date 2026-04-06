@@ -683,9 +683,9 @@ function renderTimelineView(bookmarks, container) {
           <div class="tl-desc">${b.description || 'No note added.'}</div>
           ${tagsHtml}
           <div class="tl-actions">
-            <button class="btn-icon copy-link" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Copy link">⎘</button>
-            <button class="vc-jump jump-to-video" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}">Jump</button>
-            <button class="vc-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${b.videoId}">×</button>
+            <button class="vc-action-btn copy-link" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Copy link">${ICON_LINK}</button>
+            <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp">${ICON_JUMP}</button>
+            <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${b.videoId}" title="Delete bookmark">${ICON_TRASH}</button>
           </div>
         </div>`;
       const nodeHtml = `<div class="tl-node"><div class="tl-dot" style="background:${color}"></div></div>`;
