@@ -1,3 +1,5 @@
+import { PRIVACY_EMAIL } from '@/app/lib/constants';
+
 export const metadata = {
   title: 'Privacy Policy — Clipmark',
   description: 'How Clipmark collects, uses, and protects your data.',
@@ -170,7 +172,7 @@ export default function PrivacyPage() {
           <h2 style={H2_STYLE}>9. Contact</h2>
           <p style={P_STYLE}>
             If you have questions or requests regarding your data, please contact us at:<br />
-            <a href="mailto:privacy@clipmark.app" style={{ color: '#14B8A6', fontWeight: 600 }}>privacy@clipmark.app</a>
+            <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: '#14B8A6', fontWeight: 600 }}>{PRIVACY_EMAIL}</a>
           </p>
         </div>
 
