@@ -579,13 +579,15 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               <button
                                 className={toolbarStyles.actionBtn}
                                 title="Copy timestamp link"
+                                aria-label="Copy timestamp link"
                                 onClick={() => copyLink(c.video_id, b.timestamp)}
                               >
-                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                               </button>
                               <button
                                 className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`}
                                 title="Delete bookmark"
+                                aria-label="Delete bookmark"
                                 onClick={() => handleDelete(c.video_id, b.id)}
                                 disabled={isPending}
                               >
@@ -640,10 +642,10 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                                       </span>
                                       <div className={toolbarStyles.bookmarkActions}>
                                         <OpenAtTimestampLink videoId={c.video_id} timestamp={b.timestamp} className={toolbarStyles.actionBtn} />
-                                        <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(c.video_id, b.timestamp)}>
-                                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                                        <button className={toolbarStyles.actionBtn} title="Copy timestamp link" aria-label="Copy timestamp link" onClick={() => copyLink(c.video_id, b.timestamp)}>
+                                          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                                         </button>
-                                        <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
+                                        <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
                                           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                                         </button>
                                       </div>
@@ -764,10 +766,10 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                             <span className={styles.clipRowNote}>{b.description || 'No note added.'}</span>
                             <div className={toolbarStyles.bookmarkActions}>
                               <OpenAtTimestampLink videoId={group.collection.video_id} timestamp={b.timestamp} className={toolbarStyles.actionBtn} />
-                              <button className={toolbarStyles.actionBtn} title="Copy timestamp link" onClick={() => copyLink(group.collection.video_id, b.timestamp)}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>link</span>
+                              <button className={toolbarStyles.actionBtn} title="Copy timestamp link" aria-label="Copy timestamp link" onClick={() => copyLink(group.collection.video_id, b.timestamp)}>
+                                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                               </button>
-                              <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
+                              <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                               </button>
                             </div>
