@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
+import { APP_URL } from './lib/constants';
 
 const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -19,7 +20,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'),
+  metadataBase: new URL(APP_URL),
   title: 'Clipmark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
@@ -33,11 +34,11 @@ export const metadata: Metadata = {
     title: 'Clipmark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     type: 'website',
-    url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com',
+    url: APP_URL,
     siteName: 'Clipmark',
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/clipmark-logo.png`,
+        url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
         alt: 'Clipmark — YouTube Bookmark Extension',
@@ -48,7 +49,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Clipmark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
-    images: [`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/clipmark-logo.png`],
+    images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
 

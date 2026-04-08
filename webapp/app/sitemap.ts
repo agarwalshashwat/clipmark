@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { APP_URL } from '@/app/lib/constants';
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+const baseUrl = APP_URL;
 
 // Direct Supabase client for sitemap generation (read-only)
 const supabase = createClient(

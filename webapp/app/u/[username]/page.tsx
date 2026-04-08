@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { supabase, type Profile, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
+import { APP_URL } from '@/app/lib/constants';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -34,7 +35,7 @@ export async function generateMetadata(
   const profile = await getProfile(username);
   if (!profile) return { title: 'User not found — Clipmark' };
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const baseUrl = APP_URL;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`;
 
   return {
@@ -67,7 +68,7 @@ export async function generateMetadata(
 
 // ─── Structured Data (JSON-LD) ────────────────────────────────────────────────
 function generateJsonLd(username: string, profile: Profile) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const baseUrl = APP_URL;
   return {
     '@context': 'https://schema.org',
     '@type': 'ProfilePage',
