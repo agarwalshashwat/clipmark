@@ -1398,7 +1398,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
       if (res?.timestamp != null) {
         clipStartTime = res.timestamp;
-        document.getElementById('clip-start-display').textContent = formatTimestamp(clipStartTime);
+        const startEl = document.getElementById('clip-start-display');
+        if (startEl) startEl.textContent = formatTimestamp(clipStartTime);
         updateClipDuration();
         // Update progress bar markers
         if (clipEndTime != null && clipEndTime > clipStartTime) {
@@ -1416,7 +1417,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
       if (res?.timestamp != null) {
         clipEndTime = res.timestamp;
-        document.getElementById('clip-end-display').textContent = formatTimestamp(clipEndTime);
+        const endEl = document.getElementById('clip-end-display');
+        if (endEl) endEl.textContent = formatTimestamp(clipEndTime);
         updateClipDuration();
         // Update progress bar markers
         if (clipStartTime != null && clipEndTime > clipStartTime) {
@@ -1435,10 +1437,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       showError('Please open a YouTube video first'); return;
     }
     const videoId = extractVideoId(tab.url);
-    const label   = document.getElementById('clip-label-input').value.trim();
+    const labelInput = document.getElementById('clip-label-input');
+    const label = labelInput ? labelInput.value.trim() : '';
     const clip    = await saveClip(videoId, clipStartTime, clipEndTime, label);
     if (clip) {
-      document.getElementById('clip-label-input').value = '';
+      if (labelInput) labelInput.value = '';
       showStatus('Clip saved ✓');
       await loadClipList(videoId);
     }

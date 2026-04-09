@@ -40,8 +40,8 @@
 
   <div id="status-message" class="status-message"></div>
 
-  <!-- Summary Panel Overlay -->
-  <div id="summary-panel" class="summary-panel" style="display:none;">
+  <!-- Summary Panel Overlay (Minimal) -->
+  <div id="summary-panel" class="summary-panel-minimal" style="display:none;">
     <div class="summary-panel-header">
       <span class="summary-panel-title">✦ AI Summary</span>
       <button id="summary-close" class="summary-close" title="Close">&times;</button>
@@ -49,16 +49,16 @@
     <div id="summary-content" class="summary-content"></div>
   </div>
 
-  <!-- Social Panel Overlay -->
-  <div id="social-panel" class="social-panel" style="display:none;">
+  <!-- Social Panel Overlay (Minimal) -->
+  <div id="social-panel" class="social-panel-minimal" style="display:none;">
     <div class="social-panel-header">
       <span class="social-panel-title">✍ Post Insights</span>
       <button id="social-close" class="summary-close" title="Close">&times;</button>
     </div>
     <div id="social-platform-row" class="social-platform-row">
-      <button class="social-platform-btn" data-platform="twitter">𝕏 Twitter</button>
-      <button class="social-platform-btn" data-platform="linkedin">in LinkedIn</button>
-      <button class="social-platform-btn" data-platform="threads">@ Threads</button>
+      <button class="social-platform-btn" data-platform="twitter">𝕏</button>
+      <button class="social-platform-btn" data-platform="linkedin">in</button>
+      <button class="social-platform-btn" data-platform="threads">@</button>
     </div>
     <div id="social-output" class="social-output" style="display:none;">
       <textarea id="social-post-text" class="social-post-textarea" readonly></textarea>
@@ -69,42 +69,34 @@
     </div>
   </div>
 
-  <!-- Clip Panel Overlay -->
-  <div id="clip-panel" class="clip-panel" style="display:none;">
+  <!-- Clip Panel Overlay (Minimal) -->
+  <div id="clip-panel" class="clip-panel-minimal" style="display:none;">
     <div class="clip-panel-header">
-      <span class="clip-panel-title">✂ Clip &amp; Download</span>
+      <span class="clip-panel-title">✂ Clip Moment</span>
       <button id="clip-close" class="summary-close" title="Close">&times;</button>
     </div>
     <div class="clip-panel-body">
-      <!-- Define clip start / end -->
       <div class="clip-time-row">
         <div class="clip-time-item">
-          <span class="clip-time-label">Start</span>
           <span class="clip-time-display" id="clip-start-display">--:--</span>
-          <button class="clip-time-set-btn" id="clip-set-start" title="Set start to current time">Set</button>
+          <button class="clip-time-set-btn" id="clip-set-start">Start</button>
         </div>
         <span class="clip-duration-display" id="clip-duration-display">–</span>
-        <div class="clip-time-item clip-time-item--end">
-          <span class="clip-time-label">End</span>
+        <div class="clip-time-item">
           <span class="clip-time-display" id="clip-end-display">--:--</span>
-          <button class="clip-time-set-btn" id="clip-set-end" title="Set end to current time">Set</button>
+          <button class="clip-time-set-btn" id="clip-set-end">End</button>
         </div>
       </div>
-      <div class="clip-label-row">
-        <input type="text" id="clip-label-input" class="clip-label-input" placeholder="Clip label (optional)">
-      </div>
       <div class="clip-actions-row">
-        <button id="clip-save-btn" class="clip-action-btn clip-save-btn" title="Save clip without downloading">
+        <button id="clip-save-btn" class="clip-action-btn clip-save-btn">
           <span class="material-symbols-outlined" style="font-size:14px">bookmark_add</span>
-          Save
         </button>
-        <button id="clip-download-btn" class="clip-action-btn clip-download-btn--primary" title="Record and download this clip">
+        <button id="clip-download-btn" class="clip-action-btn clip-download-btn--primary">
           <span class="material-symbols-outlined" style="font-size:14px">download</span>
           Download
         </button>
       </div>
       <div id="clip-record-status" class="clip-record-status" style="display:none;"></div>
-      <!-- Saved clips list -->
       <div id="clip-list" class="clip-list"></div>
     </div>
   </div>
@@ -128,29 +120,6 @@
         <div class="ai-insights-bg" aria-hidden="true"></div>
       </button>
     </section>
-
-    <!-- Quick Links Grid -->
-    <section class="quick-links-grid-sp">
-      <a href="dashboard.html" class="quick-link-card-sp">
-        <span class="material-symbols-outlined">space_dashboard</span>
-        <span class="quick-link-label-sp">Dash</span>
-      </a>
-      <button class="quick-link-card-sp" id="share-btn-sp">
-        <span class="material-symbols-outlined">ios_share</span>
-        <span class="quick-link-label-sp">Share</span>
-      </button>
-      <button class="quick-link-card-sp" id="clip-btn-sp">
-        <span class="material-symbols-outlined">content_cut</span>
-        <span class="quick-link-label-sp">Clip</span>
-      </button>
-      <button class="quick-link-card-sp" id="social-btn-sp">
-        <span class="material-symbols-outlined">post_add</span>
-        <span class="quick-link-label-sp">Post</span>
-      </button>
-    </section>
-
-    <!-- Resume pill -->
-    <div id="resume-pill" class="resume-pill" style="display:none;"></div>
 
     <!-- Quick Capture Section -->
     <section class="sp-section sp-capture-section">
@@ -184,8 +153,11 @@
             <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:18px;vertical-align:middle;">add_circle</span>
             Save Moment
           </button>
-          <button id="revisit-mode-btn" class="sp-btn-revisit" title="Start Revisit Mode for this video">
-            <span class="material-symbols-outlined" style="font-size:20px;">history</span>
+          <button id="clip-btn-sp" class="sp-btn-secondary" title="Clip segment">
+            <span class="material-symbols-outlined" style="font-size:18px;">content_cut</span>
+          </button>
+          <button id="social-btn-sp" class="sp-btn-secondary" title="Post highlights">
+            <span class="material-symbols-outlined" style="font-size:18px;">post_add</span>
           </button>
         </div>
       </div>

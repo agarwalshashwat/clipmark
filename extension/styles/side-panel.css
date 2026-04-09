@@ -1938,3 +1938,102 @@ body {
 .clip-item-times { font-size: 9px; color: var(--accent); font-family: var(--font-mono); }
 .clip-item-dl-btn { background: var(--accent-light); color: var(--accent); border: none; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; }
 .clip-item-del-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; }
+
+/* ── Minimalist SidePanel Overrides ────────────────────────────────────────── */
+.sp-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sp-btn-secondary:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.summary-panel-minimal,
+.social-panel-minimal,
+.clip-panel-minimal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.summary-panel-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.clip-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-sub);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+
+.clip-time-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.clip-time-display {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent);
+}
+
+.clip-time-set-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clip-actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.clip-save-btn {
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  width: 42px;
+}
+
+.clip-download-btn--primary {
+  flex: 1;
+  background: var(--accent);
+  color: white;
+}
