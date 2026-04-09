@@ -585,6 +585,14 @@ function initializeMessageListener() {
         });
         return;
       }
+      if (request.action === 'getVideoTitle') {
+        const titleEl = document.querySelector('h1.ytd-video-primary-info-renderer') ||
+                        document.querySelector('yt-formatted-string.ytd-watch-metadata') ||
+                        document.title;
+        const title = (typeof titleEl === 'string') ? titleEl : (titleEl ? titleEl.textContent.trim() : null);
+        sendResponse({ title });
+        return;
+      }
       if (request.action === 'getCurrentChapter') {
         sendResponse({ chapter: getCurrentChapter() });
         return;
