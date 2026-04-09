@@ -45,3 +45,7 @@ const RECONNECT_DELAY        = 1000; // ms
 // ─── String limits ──────────────────────────────────────────────────────────
 const TITLE_TRUNCATE_LENGTH      = 60;
 const TRANSCRIPT_TRUNCATE_LENGTH = 120;
+
+// ─── Clip limits ────────────────────────────────────────────────────────────
+const MIN_CLIP_DURATION_SECONDS = 1;
+const MAX_CLIP_DURATION_SECONDS = 3600;

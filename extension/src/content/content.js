@@ -747,7 +747,7 @@ function startClipDownload(startTime, endTime, filename) {
   }
 
   const duration = endTime - startTime;
-  if (duration <= 0 || duration > 3600) {
+  if (duration <= 0 || duration > MAX_CLIP_DURATION_SECONDS) {
     try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'Invalid clip duration' }); } catch {}
     return;
   }
@@ -787,13 +787,20 @@ function startClipDownload(startTime, endTime, filename) {
     return;
   }
 
-  // Choose best available MIME type
-  const mimeType = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  // Choose best available MIME type (all WebM; no MP4 fallback since captureStream yields WebM)
+  const WEBM_TYPES = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const mimeType = WEBM_TYPES.find(t => MediaRecorder.isTypeSupported(t));
+  if (!mimeType) {
+    debugLog('Clip', 'No supported WebM MIME type found for MediaRecorder');
+    if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'MediaRecorder does not support WebM in this browser' }); } catch {}
+    return;
+  }
   clipChunks = [];
   clipEndTime = endTime;
 
   try {
-    clipRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    clipRecorder = new MediaRecorder(stream, { mimeType });
   } catch (e) {
     debugLog('Clip', 'MediaRecorder init failed', { error: e.message });
     if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
@@ -821,8 +828,8 @@ function startClipDownload(startTime, endTime, filename) {
 
     const blob = new Blob(clipChunks, { type: clipRecorder.mimeType || 'video/webm' });
     const url  = URL.createObjectURL(blob);
-    const ext  = (clipRecorder.mimeType || 'video/webm').includes('webm') ? 'webm' : 'mp4';
-    const safeFilename = (filename || `clip_${Math.round(startTime)}-${Math.round(endTime)}`).replace(/[^\w\-. ]/g, '_') + `.${ext}`;
+    // Always .webm — we only ever request WebM MIME types from MediaRecorder
+    const safeFilename = (filename || `clip_${Math.round(startTime)}-${Math.round(endTime)}_${Date.now()}`).replace(/[^\w\-. ]/g, '_') + '.webm';
 
     const a  = document.createElement('a');
     a.href   = url;

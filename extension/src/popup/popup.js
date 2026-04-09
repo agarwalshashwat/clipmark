@@ -656,7 +656,8 @@ async function getClips(videoId) {
 async function saveClip(videoId, startTime, endTime, label) {
   if (endTime <= startTime) { showError('End time must be after start time'); return null; }
   const duration = endTime - startTime;
-  if (duration < 1) { showError('Clip must be at least 1 second long'); return null; }
+  if (duration < MIN_CLIP_DURATION_SECONDS) { showError(`Clip must be at least ${MIN_CLIP_DURATION_SECONDS} second long`); return null; }
+  if (duration > MAX_CLIP_DURATION_SECONDS) { showError(`Clip cannot exceed ${MAX_CLIP_DURATION_SECONDS / 60} minutes`); return null; }
   const clips = await getClips(videoId);
   const clip  = {
     id:        Date.now(),
@@ -704,8 +705,13 @@ async function triggerClipDownload(videoId, clip) {
 
   const videoTitles = await getVideoTitles();
   const title       = videoTitles[videoId] || videoId;
-  const safeTitle   = title.replace(/[^\w\s\-]/g, '').trim().slice(0, 40);
-  const filename    = `${safeTitle}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`.replace(/:/g, '-');
+  // Comprehensive filesystem-safe sanitization: strip all chars except word chars, spaces, hyphens, dots
+  const safeTitle   = title.replace(/[^\w\s\-.]/g, '').replace(/\s+/g, '_').trim().slice(0, 40);
+  const filename    = `${safeTitle || videoId}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`
+    .replace(/:/g, '-')
+    .replace(/[/\\<>"|?*\x00-\x1f]/g, '_')
+    .replace(/__+/g, '_')
+    .slice(0, 100);
 
   const statusEl = document.getElementById('clip-record-status');
   const dlBtn    = document.getElementById('clip-download-btn');
