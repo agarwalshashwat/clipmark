@@ -645,6 +645,216 @@ async function shareBookmarks() {
   }
 }
 
+// ─── Clips ────────────────────────────────────────────────────────────────────
+function clipKey(videoId) { return `cl_${videoId}`; }
+
+async function getClips(videoId) {
+  const r = await syncGet({ [clipKey(videoId)]: [] });
+  return r[clipKey(videoId)];
+}
+
+async function saveClip(videoId, startTime, endTime, label) {
+  if (endTime <= startTime) { showError('End time must be after start time'); return null; }
+  const duration = endTime - startTime;
+  if (duration < 1) { showError('Clip must be at least 1 second long'); return null; }
+  const clips = await getClips(videoId);
+  const clip  = {
+    id:        Date.now(),
+    videoId,
+    startTime,
+    endTime,
+    label:     label || `Clip ${formatTimestamp(startTime)} – ${formatTimestamp(endTime)}`,
+    createdAt: new Date().toISOString(),
+  };
+  clips.push(clip);
+  await syncSet({ [clipKey(videoId)]: clips });
+  debugLog('Clip', 'Saved clip', clip);
+  return clip;
+}
+
+async function deleteClip(videoId, clipId) {
+  const clips   = await getClips(videoId);
+  const updated = clips.filter(c => c.id !== parseInt(clipId, 10));
+  await syncSet({ [clipKey(videoId)]: updated });
+}
+
+// ─── Clip panel state ─────────────────────────────────────────────────────────
+let clipStartTime = null;
+let clipEndTime   = null;
+
+function updateClipDuration() {
+  const durEl = document.getElementById('clip-duration-display');
+  if (!durEl) return;
+  if (clipStartTime == null || clipEndTime == null || clipEndTime <= clipStartTime) {
+    durEl.textContent = '–';
+    return;
+  }
+  const secs = Math.round(clipEndTime - clipStartTime);
+  const m    = Math.floor(secs / 60);
+  const s    = secs % 60;
+  durEl.textContent = m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+async function triggerClipDownload(videoId, clip) {
+  const tab = await getCurrentTab();
+  if (!tab.url.includes('youtube.com/watch')) {
+    showError('Please open the YouTube video to download clips');
+    return;
+  }
+
+  const videoTitles = await getVideoTitles();
+  const title       = videoTitles[videoId] || videoId;
+  const safeTitle   = title.replace(/[^\w\s\-]/g, '').trim().slice(0, 40);
+  const filename    = `${safeTitle}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`.replace(/:/g, '-');
+
+  const statusEl = document.getElementById('clip-record-status');
+  const dlBtn    = document.getElementById('clip-download-btn');
+
+  try {
+    await waitForContentScript(tab.id);
+  } catch {
+    showError('Please refresh the YouTube page and try again');
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.innerHTML = `<div class="clip-record-status-dot"></div> Recording clip… watch the video player`;
+    statusEl.style.display = 'flex';
+  }
+  if (dlBtn) { dlBtn.disabled = true; dlBtn.textContent = 'Recording…'; }
+
+  try {
+    await sendMessageToTab(tab.id, {
+      action:    'startClipDownload',
+      startTime: clip.startTime,
+      endTime:   clip.endTime,
+      filename,
+    });
+  } catch (err) {
+    if (statusEl) statusEl.style.display = 'none';
+    if (dlBtn) { dlBtn.disabled = false; dlBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">download</span> Download'; }
+    showError('Could not start recording: ' + err.message);
+  }
+}
+
+// Listen for updates from the content script about clip recording
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action !== 'clipRecordingUpdate') return;
+  const statusEl = document.getElementById('clip-record-status');
+  const dlBtn    = document.getElementById('clip-download-btn');
+
+  if (msg.status === 'recording') {
+    if (statusEl) {
+      statusEl.innerHTML = `<div class="clip-record-status-dot"></div> Recording — keep this tab open`;
+      statusEl.style.display = 'flex';
+    }
+  } else if (msg.status === 'done') {
+    if (statusEl) statusEl.style.display = 'none';
+    if (dlBtn) { dlBtn.disabled = false; dlBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">download</span> Download'; }
+    showStatus('Clip downloaded ✓');
+  } else if (msg.status === 'cancelled' || msg.status === 'error') {
+    if (statusEl) statusEl.style.display = 'none';
+    if (dlBtn) { dlBtn.disabled = false; dlBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">download</span> Download'; }
+    if (msg.status === 'error' && msg.message) showError('Download failed: ' + msg.message);
+  }
+});
+
+async function loadClipList(videoId) {
+  const listEl = document.getElementById('clip-list');
+  if (!listEl) return;
+
+  const clips = await getClips(videoId);
+
+  if (clips.length === 0) {
+    listEl.innerHTML = '<div class="clip-empty">No saved clips yet. Set start and end times above.</div>';
+    return;
+  }
+
+  listEl.innerHTML = `<div class="clip-list-header">Saved clips (${clips.length})</div>`;
+
+  clips.sort((a, b) => a.startTime - b.startTime).forEach(clip => {
+    const dur  = Math.round(clip.endTime - clip.startTime);
+    const durStr = dur >= 60 ? `${Math.floor(dur/60)}m ${dur%60}s` : `${dur}s`;
+    const item = document.createElement('div');
+    item.className = 'clip-item';
+    item.dataset.id = clip.id;
+    item.innerHTML = `
+      <div class="clip-item-info">
+        <div class="clip-item-label">${clip.label.replace(/</g, '&lt;')}</div>
+        <div class="clip-item-times">${formatTimestamp(clip.startTime)} → ${formatTimestamp(clip.endTime)}</div>
+      </div>
+      <span class="clip-item-duration">${durStr}</span>
+      <button class="clip-item-dl-btn" title="Download this clip">
+        <span class="material-symbols-outlined" style="font-size:12px">download</span>
+      </button>
+      <button class="clip-item-del-btn" title="Delete clip">&times;</button>
+    `;
+
+    item.querySelector('.clip-item-dl-btn').addEventListener('click', async e => {
+      e.stopPropagation();
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      await triggerClipDownload(videoId, clip);
+      btn.disabled = false;
+    });
+
+    item.querySelector('.clip-item-del-btn').addEventListener('click', async e => {
+      e.stopPropagation();
+      await deleteClip(videoId, clip.id);
+      // Clear clip markers if they're from this clip
+      const tab = await getCurrentTab().catch(() => null);
+      if (tab) sendMessageToTab(tab.id, { action: 'clearClipMarkers' }).catch(() => {});
+      await loadClipList(videoId);
+    });
+
+    // Click on the row seeks to start
+    item.querySelector('.clip-item-info').addEventListener('click', async () => {
+      const tab = await getCurrentTab().catch(() => null);
+      if (!tab) return;
+      try {
+        await sendMessageToTab(tab.id, { action: 'setTimestamp', timestamp: clip.startTime });
+        sendMessageToTab(tab.id, { action: 'updateClipMarkers', startTime: clip.startTime, endTime: clip.endTime }).catch(() => {});
+      } catch {}
+    });
+
+    listEl.appendChild(item);
+  });
+}
+
+async function openClipPanel() {
+  const tab = await getCurrentTab().catch(() => null);
+  if (!tab || !tab.url.includes('youtube.com/watch')) {
+    showError('Please navigate to a YouTube video first');
+    return;
+  }
+
+  const panel = document.getElementById('clip-panel');
+  if (!panel) return;
+
+  // Close other panels
+  document.getElementById('summary-panel').style.display = 'none';
+  document.getElementById('social-panel').style.display  = 'none';
+
+  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+
+  // Pre-fill start from current time
+  try {
+    await waitForContentScript(tab.id);
+    const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+    if (res?.timestamp != null) {
+      clipStartTime = res.timestamp;
+      const startEl = document.getElementById('clip-start-display');
+      if (startEl) startEl.textContent = formatTimestamp(clipStartTime);
+      updateClipDuration();
+    }
+  } catch {}
+
+  const videoId = extractVideoId(tab.url);
+  await loadClipList(videoId);
+
+  panel.style.display = 'block';
+}
+
 // ─── Spaced Revisit (legacy bookmark-level, backward compat) ──────────────────
 function isDueForReview(bookmark) {
   if (!bookmark.reviewSchedule?.length || !bookmark.createdAt) return false;
@@ -1114,6 +1324,88 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('summarize-btn').addEventListener('click', summarizeBookmarks);
   document.getElementById('summary-close').addEventListener('click', () => {
     document.getElementById('summary-panel').style.display = 'none';
+  });
+
+  // ── Clip panel ──────────────────────────────────────────────────────────────
+  document.getElementById('clip-btn').addEventListener('click', openClipPanel);
+
+  document.getElementById('clip-close').addEventListener('click', async () => {
+    document.getElementById('clip-panel').style.display = 'none';
+    // Clear progress bar markers when closing
+    const tab = await getCurrentTab().catch(() => null);
+    if (tab) sendMessageToTab(tab.id, { action: 'clearClipMarkers' }).catch(() => {});
+    clipStartTime = null;
+    clipEndTime   = null;
+  });
+
+  document.getElementById('clip-set-start').addEventListener('click', async () => {
+    const tab = await getCurrentTab().catch(() => null);
+    if (!tab) return;
+    try {
+      await waitForContentScript(tab.id);
+      const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+      if (res?.timestamp != null) {
+        clipStartTime = res.timestamp;
+        document.getElementById('clip-start-display').textContent = formatTimestamp(clipStartTime);
+        updateClipDuration();
+        // Update progress bar markers
+        if (clipEndTime != null && clipEndTime > clipStartTime) {
+          sendMessageToTab(tab.id, { action: 'updateClipMarkers', startTime: clipStartTime, endTime: clipEndTime }).catch(() => {});
+        }
+      }
+    } catch (e) { showError('Could not get timestamp: ' + e.message); }
+  });
+
+  document.getElementById('clip-set-end').addEventListener('click', async () => {
+    const tab = await getCurrentTab().catch(() => null);
+    if (!tab) return;
+    try {
+      await waitForContentScript(tab.id);
+      const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+      if (res?.timestamp != null) {
+        clipEndTime = res.timestamp;
+        document.getElementById('clip-end-display').textContent = formatTimestamp(clipEndTime);
+        updateClipDuration();
+        // Update progress bar markers
+        if (clipStartTime != null && clipEndTime > clipStartTime) {
+          sendMessageToTab(tab.id, { action: 'updateClipMarkers', startTime: clipStartTime, endTime: clipEndTime }).catch(() => {});
+        }
+      }
+    } catch (e) { showError('Could not get timestamp: ' + e.message); }
+  });
+
+  document.getElementById('clip-save-btn').addEventListener('click', async () => {
+    if (clipStartTime == null || clipEndTime == null) {
+      showError('Set both start and end times first'); return;
+    }
+    const tab = await getCurrentTab().catch(() => null);
+    if (!tab || !tab.url.includes('youtube.com/watch')) {
+      showError('Please open a YouTube video first'); return;
+    }
+    const videoId = extractVideoId(tab.url);
+    const label   = document.getElementById('clip-label-input').value.trim();
+    const clip    = await saveClip(videoId, clipStartTime, clipEndTime, label);
+    if (clip) {
+      document.getElementById('clip-label-input').value = '';
+      showStatus('Clip saved ✓');
+      await loadClipList(videoId);
+    }
+  });
+
+  document.getElementById('clip-download-btn').addEventListener('click', async () => {
+    if (clipStartTime == null || clipEndTime == null) {
+      showError('Set both start and end times first'); return;
+    }
+    if (clipEndTime <= clipStartTime) {
+      showError('End time must be after start time'); return;
+    }
+    const tab = await getCurrentTab().catch(() => null);
+    if (!tab || !tab.url.includes('youtube.com/watch')) {
+      showError('Please open a YouTube video first'); return;
+    }
+    const videoId = extractVideoId(tab.url);
+    const label   = document.getElementById('clip-label-input').value.trim();
+    await triggerClipDownload(videoId, { startTime: clipStartTime, endTime: clipEndTime, label });
   });
 
   // Social post panel

@@ -129,6 +129,10 @@
         <span class="material-symbols-outlined">ios_share</span>
         <span class="quick-link-label">Share</span>
       </button>
+      <button class="quick-link-card" id="clip-btn">
+        <span class="material-symbols-outlined">content_cut</span>
+        <span class="quick-link-label">Clip</span>
+      </button>
       <button class="ai-summary-card" id="summarize-btn">
         <div class="ai-summary-card-left">
           <div class="ai-summary-icon">
@@ -201,6 +205,46 @@
         <button id="social-copy-btn" class="social-copy-btn">Copy</button>
         <a id="social-open-link" class="social-open-link" target="_blank" rel="noopener">Open ↗</a>
       </div>
+    </div>
+  </div>
+
+  <!-- Clip Panel Overlay -->
+  <div id="clip-panel" class="clip-panel" style="display:none;">
+    <div class="clip-panel-header">
+      <span class="clip-panel-title">✂ Clip &amp; Download</span>
+      <button id="clip-close" class="summary-close" title="Close">&times;</button>
+    </div>
+    <div class="clip-panel-body">
+      <!-- Define clip start / end -->
+      <div class="clip-time-row">
+        <div class="clip-time-item">
+          <span class="clip-time-label">Start</span>
+          <span class="clip-time-display" id="clip-start-display">--:--</span>
+          <button class="clip-time-set-btn" id="clip-set-start" title="Set start to current time">Set</button>
+        </div>
+        <span class="clip-duration-display" id="clip-duration-display">–</span>
+        <div class="clip-time-item clip-time-item--end">
+          <span class="clip-time-label">End</span>
+          <span class="clip-time-display" id="clip-end-display">--:--</span>
+          <button class="clip-time-set-btn" id="clip-set-end" title="Set end to current time">Set</button>
+        </div>
+      </div>
+      <div class="clip-label-row">
+        <input type="text" id="clip-label-input" class="clip-label-input" placeholder="Clip label (optional)">
+      </div>
+      <div class="clip-actions-row">
+        <button id="clip-save-btn" class="clip-action-btn clip-save-btn" title="Save clip without downloading">
+          <span class="material-symbols-outlined" style="font-size:14px">bookmark_add</span>
+          Save
+        </button>
+        <button id="clip-download-btn" class="clip-action-btn clip-download-btn--primary" title="Record and download this clip">
+          <span class="material-symbols-outlined" style="font-size:14px">download</span>
+          Download
+        </button>
+      </div>
+      <div id="clip-record-status" class="clip-record-status" style="display:none;"></div>
+      <!-- Saved clips list -->
+      <div id="clip-list" class="clip-list"></div>
     </div>
   </div>
 
