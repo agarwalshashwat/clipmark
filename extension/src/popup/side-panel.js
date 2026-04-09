@@ -28,16 +28,33 @@ async function getValidToken() {
   }
 }
 
-// TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
+// ─── Tag colours ────────────────────────────────────────────────────────────
+const TAG_COLORS = {
+  important: '#ff6b6b',
+  review:    '#ffa94d',
+  note:      '#74c0fc',
+  question:  '#a9e34b',
+  todo:      '#da77f2',
+  key:       '#f783ac',
+};
 
-// ─── Utilities ───────────────────────────────────────────────────────────────
-function extractVideoId(url) {
-  return new URLSearchParams(new URL(url).search).get('v');
+function parseTags(description) {
+  if (!description) return [];
+  const matches = description.match(/#(\w+)/g);
+  return matches ? matches.map(t => t.slice(1).toLowerCase()) : [];
 }
 
-async function getCurrentTab() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  return tab;
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return `hsl(${Math.abs(hash) % 360}, 60%, 60%)`;
+}
+
+function getTagColor(tags) {
+  if (!tags || tags.length === 0) return '#4da1ee';
+  return TAG_COLORS[tags[0]] || stringToColor(tags[0]);
 }
 
 function formatTimestamp(seconds) {
@@ -47,37 +64,10 @@ function formatTimestamp(seconds) {
 }
 
 function debugLog(category, message, data = null) {
-  console.log(`[Popup][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
+  console.log(`[SidePanel][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
 }
 
-// ─── Messaging ───────────────────────────────────────────────────────────────
-function sendMessageToTab(tabId, message) {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.sendMessage(tabId, message, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message || 'Failed to communicate with the page'));
-      } else if (response && response.error) {
-        reject(new Error(response.error));
-      } else {
-        resolve(response);
-      }
-    });
-  });
-}
-
-async function waitForContentScript(tabId, maxRetries = MAX_RECONNECT_ATTEMPTS, delay = RECONNECT_DELAY) {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const r = await sendMessageToTab(tabId, { action: 'ping' });
-      if (r && r.status === 'ready') return true;
-    } catch {
-      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, delay));
-    }
-  }
-  throw new Error('Content script not available. Please refresh the YouTube page.');
-}
-
-// ─── Storage (per-video sync keys) ───────────────────────────────────────────
+// ─── Storage helpers ────────────────────────────────────────────────────────
 function bmKey(videoId) { return `bm_${videoId}`; }
 
 function syncGet(defaults) {
@@ -98,6 +88,138 @@ function syncSet(data) {
   });
 }
 
+async function getCurrentTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
+}
+
+function extractVideoId(url) {
+  try {
+    return new URLSearchParams(new URL(url).search).get('v');
+  } catch {
+    return null;
+  }
+}
+
+// ─── Clips Logic ────────────────────────────────────────────────────────────
+function clipKey(videoId) { return `cl_${videoId}`; }
+
+async function getClips(videoId) {
+  const r = await syncGet({ [clipKey(videoId)]: [] });
+  return r[clipKey(videoId)];
+}
+
+async function saveClip(videoId, startTime, endTime, label) {
+  if (endTime <= startTime) { showError('End time must be after start time'); return null; }
+  const clips = await getClips(videoId);
+  const clip = {
+    id: Date.now(),
+    videoId,
+    startTime,
+    endTime,
+    label: label || `Clip ${formatTimestamp(startTime)} – ${formatTimestamp(endTime)}`,
+    createdAt: new Date().toISOString(),
+  };
+  clips.push(clip);
+  await syncSet({ [clipKey(videoId)]: clips });
+  return clip;
+}
+
+async function deleteClip(videoId, clipId) {
+  const clips = await getClips(videoId);
+  const updated = clips.filter(c => c.id !== parseInt(clipId, 10));
+  await syncSet({ [clipKey(videoId)]: updated });
+}
+
+let clipStartTime = null;
+let clipEndTime = null;
+
+function updateClipDuration() {
+  const durEl = document.getElementById('clip-duration-display');
+  if (!durEl) return;
+  if (clipStartTime == null || clipEndTime == null || clipEndTime <= clipStartTime) {
+    durEl.textContent = 'Duration: --';
+    return;
+  }
+  const secs = Math.round(clipEndTime - clipStartTime);
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  durEl.textContent = `Duration: ${m > 0 ? `${m}m ${s}s` : `${s}s`}`;
+}
+
+async function triggerClipDownload(videoId, clip) {
+  const tab = await getCurrentTab();
+  if (!tab || !tab.url.includes('youtube.com/watch')) return;
+
+  const videoTitles = await getVideoTitles();
+  const title = videoTitles[videoId] || videoId;
+  const safeTitle = title.replace(/[^\w\s\-.]/g, '').replace(/\s+/g, '_').trim().slice(0, 40);
+  const filename = `${safeTitle}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`;
+
+  const statusEl = document.getElementById('clip-record-status');
+  const dlBtn = document.getElementById('clip-download-btn');
+
+  if (statusEl) statusEl.style.display = 'flex';
+  if (dlBtn) { dlBtn.disabled = true; dlBtn.textContent = 'Recording...'; }
+
+  try {
+    await sendMessageToTab(tab.id, {
+      action: 'startClipDownload',
+      startTime: clip.startTime,
+      endTime: clip.endTime,
+      filename,
+    });
+  } catch (err) {
+    if (statusEl) statusEl.style.display = 'none';
+    if (dlBtn) { dlBtn.disabled = false; dlBtn.textContent = 'Download Clip'; }
+    showError('Recording failed: ' + err.message);
+  }
+}
+
+async function loadClipList(videoId) {
+  const listEl = document.getElementById('clip-list');
+  if (!listEl) return;
+
+  const clips = await getClips(videoId);
+  if (clips.length === 0) {
+    listEl.innerHTML = '<div style="font-size:10px; color:var(--text-muted); text-align:center;">No clips saved.</div>';
+    return;
+  }
+
+  listEl.innerHTML = clips.sort((a,b) => b.id - a.id).map(c => `
+    <div class="clip-item" style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--bg-sub);">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:11px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.label}</div>
+        <div style="font-size:9px; color:var(--accent); font-family:var(--font-mono);">${formatTimestamp(c.startTime)} → ${formatTimestamp(c.endTime)}</div>
+      </div>
+      <button class="clip-dl-btn" data-id="${c.id}" style="background:var(--accent-light); color:var(--accent); border:none; padding:4px; border-radius:4px; cursor:pointer;">
+        <span class="material-symbols-outlined" style="font-size:14px;">download</span>
+      </button>
+      <button class="clip-del-btn" data-id="${c.id}" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">&times;</button>
+    </div>
+  `).join('');
+
+  listEl.querySelectorAll('.clip-dl-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const clip = clips.find(c => c.id == btn.dataset.id);
+      if (clip) triggerClipDownload(videoId, clip);
+    });
+  });
+
+  listEl.querySelectorAll('.clip-del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteClip(videoId, btn.dataset.id);
+      loadClipList(videoId);
+    });
+  });
+}
+
+function openClipPanel(videoId) {
+  const panel = document.getElementById('clip-panel');
+  panel.style.display = 'flex';
+  loadClipList(videoId);
+}
+
 async function getVideoBookmarksLocal(videoId) {
   const r = await syncGet({ [bmKey(videoId)]: [] });
   return r[bmKey(videoId)];
@@ -110,29 +232,26 @@ async function getVideoBookmarks(videoId) {
 
 async function saveVideoBookmarks(videoId, bookmarks) {
   await syncSet({ [bmKey(videoId)]: bookmarks });
-  // Cloud sync: push to Supabase if signed in
-  syncToCloud(videoId, bookmarks);
-}
-
-async function syncToCloud(videoId, bookmarks) {
+  // Cloud sync: push to backend if signed in
   try {
     const token = await getValidToken();
-    if (!token) return;
-    const res = await fetch(`${API_BASE}/api/bookmarks`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ videoId, bookmarks }),
-    });
-    if (res.status === 403) {
-      // Server says not Pro — sync local flag so UI reflects reality
-      const { bmUser } = await syncGet({ bmUser: null });
-      if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
+    if (token) {
+      const res = await fetch(`${API_BASE}/api/bookmarks`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ videoId, bookmarks }),
+      });
+      if (res.status === 403) {
+        // Server says not Pro — sync local flag so UI reflects reality
+        const { bmUser } = await syncGet({ bmUser: null });
+        if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
+      }
     }
   } catch {
-    // Cloud sync is best-effort — don't block the user
+    // Best-effort cloud sync
   }
 }
 
@@ -168,46 +287,62 @@ async function getVideoTitles() {
   return r.videoTitles;
 }
 
-// ─── One-time migration from chrome.storage.local → sync ─────────────────────
-async function migrateToSync(tabId) {
-  const check = await syncGet({ syncMigrated: false });
-  if (check.syncMigrated) return;
-
-  const local = await new Promise(resolve =>
-    chrome.storage.local.get({ bookmarks: [], videoTitles: {} }, resolve)
-  );
-
-  const syncData = { syncMigrated: true };
-
-  if (local.bookmarks.length > 0) {
-    const byVideo = {};
-    local.bookmarks.forEach(b => {
-      if (!byVideo[b.videoId]) byVideo[b.videoId] = [];
-      const tags = b.tags || parseTags(b.description);
-      byVideo[b.videoId].push({ ...b, tags, color: b.color || getTagColor(tags) });
+// ─── Messaging ───────────────────────────────────────────────────────────────
+function sendMessageToTab(tabId, message) {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.sendMessage(tabId, message, response => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message || 'Failed to communicate'));
+      } else if (response && response.error) {
+        reject(new Error(response.error));
+      } else {
+        resolve(response);
+      }
     });
-    for (const [vId, bms] of Object.entries(byVideo)) {
-      syncData[bmKey(vId)] = bms;
-    }
-  }
-
-  if (Object.keys(local.videoTitles).length > 0) {
-    syncData.videoTitles = local.videoTitles;
-  }
-
-  await syncSet(syncData);
-  debugLog('Migration', 'Migrated bookmarks from local to sync');
-
-  // Refresh markers after migration
-  if (tabId) {
-    try { await sendMessageToTab(tabId, { action: 'bookmarkUpdated' }); } catch {}
-  }
+  });
 }
 
-// ─── Bookmark CRUD ────────────────────────────────────────────────────────────
+async function waitForContentScript(tabId, maxRetries = 3, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const r = await sendMessageToTab(tabId, { action: 'ping' });
+      if (r && r.status === 'ready') return true;
+    } catch {
+      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error('Content script not available. Please refresh the YouTube page.');
+}
+
+// ─── UI Helpers ────────────────────────────────────────────────────────────
+function showError(message, duration = 3000) {
+  const el = document.getElementById('error-message');
+  el.textContent = message;
+  el.style.display = 'block';
+  el.classList.add('show');
+  el.classList.remove('hide');
+  setTimeout(() => {
+    el.classList.add('hide');
+    el.classList.remove('show');
+    setTimeout(() => { el.style.display = 'none'; }, 300);
+  }, duration);
+}
+
+function showStatus(message, duration = 1500) {
+  const el = document.getElementById('status-message');
+  el.textContent = message;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ─── Bookmark Operations ──────────────────────────────────────────────────────
 async function saveBookmark(bookmark) {
   try {
     const tab = await getCurrentTab();
+    if (!tab.url.includes('youtube.com/watch')) {
+      throw new Error('Please navigate to a YouTube video first!');
+    }
+
     await waitForContentScript(tab.id);
 
     // Parallel reads — dupe check list + video titles in one round-trip
@@ -240,7 +375,7 @@ async function saveBookmark(bookmark) {
       if (!description) description = `Bookmark at ${formatTimestamp(bookmark.timestamp)}`;
     }
 
-    const tags  = parseTags(description);
+    const tags = parseTags(description);
     const color = getTagColor(tags);
 
     bookmarks.push({
@@ -248,11 +383,11 @@ async function saveBookmark(bookmark) {
       description,
       tags,
       color,
-      id:             Date.now(),
-      createdAt:      new Date().toISOString(),
-      videoTitle:     videoTitles[bookmark.videoId] || null,
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      videoTitle: videoTitles[bookmark.videoId] || null,
       reviewSchedule: [1, 3, 7],
-      lastReviewed:   null,
+      lastReviewed: null,
     });
 
     await saveVideoBookmarks(bookmark.videoId, bookmarks);
@@ -286,7 +421,7 @@ async function deleteBookmark(videoId, bookmarkId) {
     await saveVideoBookmarks(videoId, bookmarks.filter(b => b.id !== parseInt(bookmarkId)));
 
     await loadBookmarks();
-    await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' });
+    try { await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }); } catch {}
   } catch (error) {
     showError('Failed to delete bookmark: ' + error.message);
   }
@@ -294,101 +429,98 @@ async function deleteBookmark(videoId, bookmarkId) {
 
 async function updateBookmarkDescription(videoId, bookmarkId, newDescription) {
   try {
-    const tab = await getCurrentTab();
     const bookmarks = await getVideoBookmarks(videoId);
     const updated = bookmarks.map(b => {
       if (b.id !== parseInt(bookmarkId)) return b;
-      const tags  = parseTags(newDescription);
+      const tags = parseTags(newDescription);
       const color = getTagColor(tags);
       return { ...b, description: newDescription, tags, color };
     });
     await saveVideoBookmarks(videoId, updated);
     await loadBookmarks();
-    try { await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }); } catch {}
+    try {
+      const tab = await getCurrentTab();
+      await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' });
+    } catch {}
   } catch (error) {
     showError('Failed to update bookmark: ' + error.message);
   }
 }
 
-// ─── Pro / Paywall helpers ────────────────────────────────────────────────────
-async function checkPro() {
-  const { bmUser } = await syncGet({ bmUser: null });
-  return bmUser?.isPro === true;
-}
-
-function showUpgradePrompt(feature) {
-  showError(`✦ ${feature} is a Pro feature. Upgrade to Clipmark Pro to unlock AI-powered tools.`, 4000);
-}
-
-// ─── Smart Tag Suggestions ────────────────────────────────────────────────────
-async function suggestTags(description, transcript) {
-  const suggestionsEl = document.getElementById('tag-suggestions');
-  if (!description.trim()) {
-    suggestionsEl.style.display = 'none';
-    return;
-  }
-
-  let tags = null;
-  const availability = await localAiAvailability();
-
-  if (availability === 'available') {
-    try { tags = await localSuggestTags(description, transcript); } catch { /* fall through */ }
-  }
-
-  if (!tags) {
-    if (availability === 'downloading') return; // silently wait for model
-    const isPro = await checkPro();
-    if (!isPro) return; // free user + no local AI = silent skip
-    try {
-      const response = await fetch(`${API_BASE}/api/suggest-tags`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description, transcript }),
-      });
-      if (!response.ok) return;
-      tags = (await response.json()).tags;
-    } catch { return; }
-  }
-
+// ─── Share Bookmarks ──────────────────────────────────────────────────────────
+async function shareBookmarks() {
+  const btn = document.getElementById('share-btn');
   try {
-    if (!tags?.length) return;
+    const tab = await getCurrentTab();
+    if (!tab.url.includes('youtube.com/watch')) {
+      throw new Error('Please navigate to a YouTube video first!');
+    }
 
-    const input = document.getElementById('description');
-    const existingTags = parseTags(input.value);
-    const newTags = tags.filter(t => !existingTags.includes(t));
-    if (!newTags.length) return;
+    const videoId = extractVideoId(tab.url);
+    if (!videoId) throw new Error('Could not find video ID');
 
-    suggestionsEl.innerHTML =
-      '<span class="tag-suggest-label">Suggested:</span>' +
-      newTags.map(t =>
-        `<button class="tag-suggest-chip" data-tag="${t}" style="background:${getTagColor([t])}">#${t}</button>`
-      ).join('');
+    const bookmarks = await getVideoBookmarks(videoId);
+    if (bookmarks.length === 0) {
+      throw new Error('Add some bookmarks before sharing');
+    }
 
-    suggestionsEl.querySelectorAll('.tag-suggest-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const tag = chip.dataset.tag;
-        const val = input.value.trim();
-        input.value = val ? `${val} #${tag}` : `#${tag}`;
-        chip.remove();
-        if (!suggestionsEl.querySelectorAll('.tag-suggest-chip').length) {
-          suggestionsEl.style.display = 'none';
-        }
-      });
+    const videoTitles = await getVideoTitles();
+
+    btn.textContent = 'Sharing…';
+    btn.disabled = true;
+
+    const { bmUser } = await syncGet({ bmUser: null });
+    const response = await fetch(`${API_BASE}/api/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        videoId,
+        videoTitle: videoTitles[videoId] || '',
+        bookmarks,
+        userId: bmUser?.userId || null,
+      }),
     });
 
-    suggestionsEl.style.display = 'flex';
-  } catch {
-    // Silently ignore — tag suggestions are non-critical
+    if (response.status === 403) {
+      const err = await response.json().catch(() => ({}));
+      if (err.error === 'free_limit_reached') {
+        showError(`You've used all ${err.limit} free shares. ✦ Upgrade to Pro for unlimited sharing.`, 5000);
+        chrome.tabs.create({ url: `${API_BASE}/upgrade` });
+        btn.textContent = '↗ Share';
+        btn.disabled = false;
+        return null;
+      }
+    }
+
+    if (!response.ok) throw new Error('Server error');
+
+    const { shareId } = await response.json();
+    const shareUrl = `${API_BASE}/v/${shareId}`;
+
+    await navigator.clipboard.writeText(shareUrl);
+
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.textContent = '↗ Share';
+      btn.disabled = false;
+    }, 2500);
+
+    return shareUrl;
+  } catch (error) {
+    debugLog('Error', 'Share failed', { error: error.message });
+    showError(error.message);
+    btn.textContent = '↗ Share';
+    btn.disabled = false;
+    return null;
   }
 }
 
-// ─── AI Summary ───────────────────────────────────────────────────────────────
+// ─── Summarize Bookmarks ──────────────────────────────────────────────────────
 async function summarizeBookmarks() {
   const btn = document.getElementById('summarize-btn');
   const panel = document.getElementById('summary-panel');
   const content = document.getElementById('summary-content');
 
-  // Toggle off if already open
   if (panel.style.display !== 'none') {
     panel.style.display = 'none';
     return;
@@ -412,7 +544,8 @@ async function summarizeBookmarks() {
     const videoTitle = videoTitles[videoId] || '';
 
     const availability = await localAiAvailability();
-    const isPro = await checkPro();
+    const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
+    const isPro = bmUser?.isPro === true;
     let result = null;
 
     if (availability === 'available') {
@@ -501,11 +634,11 @@ async function summarizeBookmarks() {
   }
 }
 
-// ─── Social Post Generation ────────────────────────────────────────────────────
-async function generateSocialPost(platform, shareUrl) {
-  const outputEl     = document.getElementById('social-output');
-  const textareaEl   = document.getElementById('social-post-text');
-  const openLink     = document.getElementById('social-open-link');
+// ─── Social Post Generation ───────────────────────────────────────────────────
+async function generateSocialPost(platform, shareUrl, autoOpen = false) {
+  const outputEl = document.getElementById('social-output');
+  const textareaEl = document.getElementById('social-post-text');
+  const openLink = document.getElementById('social-open-link');
   const platformBtns = document.querySelectorAll('.social-platform-btn');
 
   platformBtns.forEach(b => {
@@ -519,8 +652,8 @@ async function generateSocialPost(platform, shareUrl) {
     const tab = await getCurrentTab();
     if (!tab.url.includes('youtube.com/watch')) throw new Error('Open a YouTube video first');
 
-    const videoId    = extractVideoId(tab.url);
-    const bookmarks  = await getVideoBookmarks(videoId);
+    const videoId = extractVideoId(tab.url);
+    const bookmarks = await getVideoBookmarks(videoId);
     if (bookmarks.length === 0) throw new Error('No bookmarks to share');
 
     const videoTitles = await getVideoTitles();
@@ -531,7 +664,7 @@ async function generateSocialPost(platform, shareUrl) {
       body: JSON.stringify({
         bookmarks,
         videoTitle: videoTitles[videoId] || '',
-        shareUrl:   shareUrl || '',
+        shareUrl: shareUrl || '',
         platform,
       }),
     });
@@ -544,17 +677,17 @@ async function generateSocialPost(platform, shareUrl) {
     const { post } = await response.json();
     textareaEl.value = post;
 
-    // Deep-link to platform compose
     const encoded = encodeURIComponent(post);
     const composeUrls = {
       twitter:  `https://twitter.com/intent/tweet?text=${encoded}`,
       linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`,
       threads:  `https://www.threads.net/intent/post?text=${encoded}`,
     };
-    openLink.href        = composeUrls[platform] || '#';
+    openLink.href = composeUrls[platform] || '#';
     openLink.textContent = `Open ${platform.charAt(0).toUpperCase() + platform.slice(1)} ↗`;
 
     outputEl.style.display = 'block';
+    if (autoOpen && composeUrls[platform]) chrome.tabs.create({ url: composeUrls[platform] });
   } catch (error) {
     showError(error.message);
   } finally {
@@ -562,499 +695,118 @@ async function generateSocialPost(platform, shareUrl) {
   }
 }
 
-// ─── Share ────────────────────────────────────────────────────────────────────
-async function shareBookmarks() {
-  const btn = document.getElementById('share-btn');
-  try {
-    const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
-      throw new Error('Please navigate to a YouTube video first!');
-    }
+// ─── Resume Playback ──────────────────────────────────────────────────────────
+async function loadResumePosition(videoId, tabId) {
+  const pill = document.getElementById('resume-pill');
+  if (!pill) return;
 
-    const videoId = extractVideoId(tab.url);
-    if (!videoId) throw new Error('Could not find video ID');
+  const key = `resume_${videoId}`;
+  const data = await new Promise(resolve => chrome.storage.local.get({ [key]: null }, resolve));
+  const entry = data[key];
 
-    const bookmarks = await getVideoBookmarks(videoId);
-    if (bookmarks.length === 0) {
-      throw new Error('Add some bookmarks before sharing');
-    }
+  if (!entry || entry.time < 30) { pill.style.display = 'none'; return; }
 
-    const videoTitles = await getVideoTitles();
-
-    btn.textContent = 'Sharing…';
-    btn.disabled = true;
-
-    const { bmUser } = await syncGet({ bmUser: null });
-    const response = await fetch(`${API_BASE}/api/share`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        videoId,
-        videoTitle: videoTitles[videoId] || '',
-        bookmarks,
-        userId: bmUser?.userId || null,
-      }),
-    });
-
-    if (response.status === 403) {
-      const err = await response.json().catch(() => ({}));
-      if (err.error === 'free_limit_reached') {
-        showError(`You've used all ${err.limit} free shares. ✦ Upgrade to Pro for unlimited sharing.`, 5000);
-        chrome.tabs.create({ url: `${API_BASE}/upgrade` });
-        btn.textContent = '↗ Share';
-        btn.disabled = false;
-        return null;
-      }
-    }
-
-    if (!response.ok) throw new Error('Server error — is the webapp running?');
-
-    const { shareId, collectionsUsed, freeLimit } = await response.json();
-    const shareUrl = `${API_BASE}/v/${shareId}`;
-
-    await navigator.clipboard.writeText(shareUrl);
-
-    btn.textContent = '✓ Copied!';
-    btn.classList.add('share-btn--copied');
-    setTimeout(() => {
-      btn.textContent = '↗ Share';
-      btn.classList.remove('share-btn--copied');
-      btn.disabled = false;
-    }, 2500);
-
-    // Show usage nudge when approaching free tier limit
-    if (collectionsUsed != null && freeLimit != null) {
-      const isPro = await checkPro();
-      if (!isPro && collectionsUsed >= freeLimit - 1) {
-        const remaining = freeLimit - collectionsUsed;
-        if (remaining <= 0) {
-          showError(`You've used all ${freeLimit} free shares. ✦ Upgrade to Pro for unlimited.`, 4000);
-        } else {
-          showStatus(`${collectionsUsed} of ${freeLimit} free shares used · ${remaining} left`, 4000);
-        }
-      }
-    }
-
-    return shareUrl;
-  } catch (error) {
-    debugLog('Error', 'Share failed', { error: error.message });
-    showError(error.message);
-    btn.textContent = '↗ Share';
-    btn.disabled = false;
-    return null;
-  }
-}
-
-// ─── Clips ────────────────────────────────────────────────────────────────────
-function clipKey(videoId) { return `cl_${videoId}`; }
-
-async function getClips(videoId) {
-  const r = await syncGet({ [clipKey(videoId)]: [] });
-  return r[clipKey(videoId)];
-}
-
-async function saveClip(videoId, startTime, endTime, label) {
-  if (endTime <= startTime) { showError('End time must be after start time'); return null; }
-  const duration = endTime - startTime;
-  if (duration < MIN_CLIP_DURATION_SECONDS) { showError(`Clip must be at least ${MIN_CLIP_DURATION_SECONDS} second long`); return null; }
-  if (duration > MAX_CLIP_DURATION_SECONDS) { showError(`Clip cannot exceed ${MAX_CLIP_DURATION_SECONDS / 60} minutes`); return null; }
-  const clips = await getClips(videoId);
-  const clip  = {
-    id:        Date.now(),
-    videoId,
-    startTime,
-    endTime,
-    label:     label || `Clip ${formatTimestamp(startTime)} – ${formatTimestamp(endTime)}`,
-    createdAt: new Date().toISOString(),
-  };
-  clips.push(clip);
-  await syncSet({ [clipKey(videoId)]: clips });
-  debugLog('Clip', 'Saved clip', clip);
-  return clip;
-}
-
-async function deleteClip(videoId, clipId) {
-  const clips   = await getClips(videoId);
-  const updated = clips.filter(c => c.id !== parseInt(clipId, 10));
-  await syncSet({ [clipKey(videoId)]: updated });
-}
-
-// ─── Clip panel state ─────────────────────────────────────────────────────────
-let clipStartTime = null;
-let clipEndTime   = null;
-
-function updateClipDuration() {
-  const durEl = document.getElementById('clip-duration-display');
-  if (!durEl) return;
-  if (clipStartTime == null || clipEndTime == null || clipEndTime <= clipStartTime) {
-    durEl.textContent = '–';
-    return;
-  }
-  const secs = Math.round(clipEndTime - clipStartTime);
-  const m    = Math.floor(secs / 60);
-  const s    = secs % 60;
-  durEl.textContent = m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
-
-async function triggerClipDownload(videoId, clip) {
-  const tab = await getCurrentTab();
-  if (!tab.url.includes('youtube.com/watch')) {
-    showError('Please open the YouTube video to download clips');
-    return;
-  }
-
-  const videoTitles = await getVideoTitles();
-  const title       = videoTitles[videoId] || videoId;
-  // Strip non-word/space/hyphen/dot chars, collapse spaces → underscores
-  const safeTitle   = title.replace(/[^\w\s\-.]/g, '').replace(/\s+/g, '_').trim().slice(0, 40);
-  const rawFilename = `${safeTitle || videoId}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`;
-  const filename    = sanitizeClipFilename(rawFilename);
-
-  const statusEl = document.getElementById('clip-record-status');
-  const dlBtn    = document.getElementById('clip-download-btn');
-
-  try {
-    await waitForContentScript(tab.id);
-  } catch {
-    showError('Please refresh the YouTube page and try again');
-    return;
-  }
-
-  if (statusEl) {
-    statusEl.innerHTML = `<div class="clip-record-status-dot"></div> Recording clip… watch the video player`;
-    statusEl.style.display = 'flex';
-  }
-  if (dlBtn) { dlBtn.disabled = true; dlBtn.textContent = 'Recording…'; }
-
-  try {
-    await sendMessageToTab(tab.id, {
-      action:    'startClipDownload',
-      startTime: clip.startTime,
-      endTime:   clip.endTime,
-      filename,
-    });
-  } catch (err) {
-    if (statusEl) statusEl.style.display = 'none';
-    if (dlBtn) { dlBtn.disabled = false; dlBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">download</span> Download'; }
-    showError('Could not start recording: ' + err.message);
-  }
-}
-
-// Listen for updates from the content script about clip recording
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.action !== 'clipRecordingUpdate') return;
-  const statusEl = document.getElementById('clip-record-status');
-  const dlBtn    = document.getElementById('clip-download-btn');
-
-  if (msg.status === 'recording') {
-    if (statusEl) {
-      statusEl.innerHTML = `<div class="clip-record-status-dot"></div> Recording — keep this tab open`;
-      statusEl.style.display = 'flex';
-    }
-  } else if (msg.status === 'done') {
-    if (statusEl) statusEl.style.display = 'none';
-    if (dlBtn) { dlBtn.disabled = false; dlBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">download</span> Download'; }
-    showStatus('Clip downloaded ✓');
-  } else if (msg.status === 'cancelled' || msg.status === 'error') {
-    if (statusEl) statusEl.style.display = 'none';
-    if (dlBtn) { dlBtn.disabled = false; dlBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">download</span> Download'; }
-    if (msg.status === 'error' && msg.message) showError('Download failed: ' + msg.message);
-  }
-});
-
-async function loadClipList(videoId) {
-  const listEl = document.getElementById('clip-list');
-  if (!listEl) return;
-
-  const clips = await getClips(videoId);
-
-  if (clips.length === 0) {
-    listEl.innerHTML = '<div class="clip-empty">No saved clips yet. Set start and end times above.</div>';
-    return;
-  }
-
-  listEl.innerHTML = `<div class="clip-list-header">Saved clips (${clips.length})</div>`;
-
-  clips.sort((a, b) => a.startTime - b.startTime).forEach(clip => {
-    const dur  = Math.round(clip.endTime - clip.startTime);
-    const durStr = dur >= 60 ? `${Math.floor(dur/60)}m ${dur%60}s` : `${dur}s`;
-    // Escape all HTML special chars to prevent XSS from crafted clip labels
-    const safeLabel = clip.label
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-    const item = document.createElement('div');
-    item.className = 'clip-item';
-    item.dataset.id = clip.id;
-    item.innerHTML = `
-      <div class="clip-item-info">
-        <div class="clip-item-label">${safeLabel}</div>
-        <div class="clip-item-times">${formatTimestamp(clip.startTime)} → ${formatTimestamp(clip.endTime)}</div>
-      </div>
-      <span class="clip-item-duration">${durStr}</span>
-      <button class="clip-item-dl-btn" title="Download this clip">
-        <span class="material-symbols-outlined" style="font-size:12px">download</span>
-      </button>
-      <button class="clip-item-del-btn" title="Delete clip">&times;</button>
-    `;
-
-    item.querySelector('.clip-item-dl-btn').addEventListener('click', async e => {
-      e.stopPropagation();
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      await triggerClipDownload(videoId, clip);
-      btn.disabled = false;
-    });
-
-    item.querySelector('.clip-item-del-btn').addEventListener('click', async e => {
-      e.stopPropagation();
-      await deleteClip(videoId, clip.id);
-      // Clear clip markers if they're from this clip
-      const tab = await getCurrentTab().catch(() => null);
-      if (tab) sendMessageToTab(tab.id, { action: 'clearClipMarkers' }).catch(() => {});
-      await loadClipList(videoId);
-    });
-
-    // Click on the row seeks to start
-    item.querySelector('.clip-item-info').addEventListener('click', async () => {
-      const tab = await getCurrentTab().catch(() => null);
-      if (!tab) return;
-      try {
-        await sendMessageToTab(tab.id, { action: 'setTimestamp', timestamp: clip.startTime });
-        sendMessageToTab(tab.id, { action: 'updateClipMarkers', startTime: clip.startTime, endTime: clip.endTime }).catch(() => {});
-      } catch {}
-    });
-
-    listEl.appendChild(item);
-  });
-}
-
-async function openClipPanel() {
-  const tab = await getCurrentTab().catch(() => null);
-  if (!tab || !tab.url.includes('youtube.com/watch')) {
-    showError('Please navigate to a YouTube video first');
-    return;
-  }
-
-  const panel = document.getElementById('clip-panel');
-  if (!panel) return;
-
-  // Close other panels
-  document.getElementById('summary-panel').style.display = 'none';
-  document.getElementById('social-panel').style.display  = 'none';
-
-  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
-
-  // Pre-fill start from current time
-  try {
-    await waitForContentScript(tab.id);
-    const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
-    if (res?.timestamp != null) {
-      clipStartTime = res.timestamp;
-      const startEl = document.getElementById('clip-start-display');
-      if (startEl) startEl.textContent = formatTimestamp(clipStartTime);
-      updateClipDuration();
-    }
-  } catch {}
-
-  const videoId = extractVideoId(tab.url);
-  await loadClipList(videoId);
-
-  panel.style.display = 'block';
-}
-
-// ─── Spaced Revisit (legacy bookmark-level, backward compat) ──────────────────
-function isDueForReview(bookmark) {
-  if (!bookmark.reviewSchedule?.length || !bookmark.createdAt) return false;
-  const created      = new Date(bookmark.createdAt).getTime();
-  const now          = Date.now();
-  const lastReviewed = bookmark.lastReviewed ? new Date(bookmark.lastReviewed).getTime() : 0;
-  return bookmark.reviewSchedule.some(days => {
-    const dueAt = created + days * 86400000;
-    return now >= dueAt && lastReviewed < dueAt;
-  });
-}
-
-async function markReviewed(videoId, bookmarkId) {
-  const bookmarks = await getVideoBookmarks(videoId);
-  const updated   = bookmarks.map(b =>
-    b.id === bookmarkId ? { ...b, lastReviewed: new Date().toISOString() } : b
-  );
-  await saveVideoBookmarks(videoId, updated);
-}
-
-// ─── Video-level Revisit Reminders ────────────────────────────────────────────
-function remKey(videoId) { return `rem_${videoId}`; }
-
-async function getRevisitReminder(videoId) {
-  const data = await new Promise(resolve => chrome.storage.sync.get(remKey(videoId), resolve));
-  return data[remKey(videoId)] || null;
-}
-
-async function setRevisitReminder(videoId, videoTitle, intervalDays) {
-  const nextRevisitDate = new Date(Date.now() + intervalDays * 86400000).toISOString();
-  await new Promise(resolve =>
-    chrome.storage.sync.set({ [remKey(videoId)]: { videoId, videoTitle, intervalDays, nextRevisitDate, createdAt: new Date().toISOString() } }, resolve)
-  );
-}
-
-async function clearRevisitReminder(videoId) {
-  await new Promise(resolve => chrome.storage.sync.remove(remKey(videoId), resolve));
-}
-
-async function advanceRevisitReminder(videoId) {
-  const rem = await getRevisitReminder(videoId);
-  if (!rem) return;
-  const nextRevisitDate = new Date(Date.now() + rem.intervalDays * 86400000).toISOString();
-  await new Promise(resolve =>
-    chrome.storage.sync.set({ [remKey(videoId)]: { ...rem, nextRevisitDate } }, resolve)
-  );
-}
-
-async function loadRevisitReminderPanel(videoId, videoTitle) {
-  const panel = document.getElementById('revisit-reminder-panel');
-  if (!panel) return;
-
-  const rem = await getRevisitReminder(videoId);
-  if (rem) {
-    const due  = new Date(rem.nextRevisitDate);
-    const diff = Math.ceil((due - Date.now()) / 86400000);
-    const label = diff <= 0 ? 'Due now' : diff === 1 ? 'Tomorrow' : `In ${diff} days`;
-    panel.innerHTML = `
-      <div class="rr-active">
-        <span class="rr-icon">🔔</span>
-        <span class="rr-label">Every <strong>${rem.intervalDays}d</strong> · ${label}</span>
-        <button class="rr-change" id="rr-change-btn">Change</button>
-        <button class="rr-clear" id="rr-clear-btn">✕</button>
-      </div>`;
-    panel.querySelector('#rr-clear-btn').addEventListener('click', async () => {
-      await clearRevisitReminder(videoId);
-      loadRevisitReminderPanel(videoId, videoTitle);
-    });
-    panel.querySelector('#rr-change-btn').addEventListener('click', () => showReminderInput(panel, videoId, videoTitle, rem.intervalDays));
-  } else {
-    showReminderInput(panel, videoId, videoTitle, null);
-  }
-}
-
-function showReminderInput(panel, videoId, videoTitle, currentDays) {
-  panel.innerHTML = `
-    <div class="rr-set">
-      <span class="rr-icon">🔔</span>
-      <span class="rr-set-label">Remind every</span>
-      <input id="rr-days-input" class="rr-days-input" type="number" min="1" max="365" value="${currentDays || 7}" placeholder="days">
-      <span class="rr-set-label">days</span>
-      <button class="rr-set-btn" id="rr-set-btn">Set</button>
-      ${currentDays ? '<button class="rr-clear" id="rr-cancel-btn">Cancel</button>' : ''}
-    </div>`;
-  panel.querySelector('#rr-set-btn').addEventListener('click', async () => {
-    const days = parseInt(panel.querySelector('#rr-days-input').value);
-    if (!days || days < 1) return;
-    await setRevisitReminder(videoId, videoTitle, days);
-    loadRevisitReminderPanel(videoId, videoTitle);
-  });
-  panel.querySelector('#rr-cancel-btn')?.addEventListener('click', () => loadRevisitReminderPanel(videoId, videoTitle));
-}
-
-async function loadSpacedRevision() {
-  const section = document.getElementById('revision-today');
-  if (!section) return;
-
-  const allData = await new Promise(resolve => chrome.storage.sync.get(null, resolve));
-
-  // Video-level reminders
-  const dueReminders = [];
-  for (const [key, val] of Object.entries(allData)) {
-    if (key.startsWith('rem_') && val?.nextRevisitDate) {
-      if (new Date(val.nextRevisitDate) <= new Date()) dueReminders.push(val);
-    }
-  }
-
-  // Legacy bookmark-level spaced revisit (backward compat)
-  const dueBookmarks = [];
-  for (const [key, val] of Object.entries(allData)) {
-    if (key.startsWith('bm_') && Array.isArray(val)) {
-      val.forEach(b => { if (isDueForReview(b)) dueBookmarks.push(b); });
-    }
-  }
-
-  const total = dueReminders.length + dueBookmarks.length;
-  if (total === 0) { section.style.display = 'none'; return; }
-
-  section.style.display = 'block';
-  section.innerHTML = `
-    <div class="revision-today-header">
-      <span class="revision-today-title">📚 Revisit Today</span>
-      <span class="revision-today-count">${total}</span>
-    </div>
-    <div class="revision-today-list">
-      ${dueReminders.map(r => `
-        <div class="revision-item rr-due-item" data-video-id="${r.videoId}">
-          <span class="revision-ts">🎬</span>
-          <span class="revision-desc">${r.videoTitle || r.videoId}</span>
-        </div>`).join('')}
-      ${dueBookmarks.slice(0, 5 - dueReminders.length).map(b => `
-        <div class="revision-item" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" data-id="${b.id}">
-          <span class="revision-ts">${formatTimestamp(b.timestamp)}</span>
-          <span class="revision-desc">${b.description || 'No note'}</span>
-        </div>`).join('')}
-      ${total > 5 ? `<div class="revision-more">+${total - 5} more in dashboard</div>` : ''}
-    </div>
+  pill.style.display = 'flex';
+  pill.innerHTML = `
+    <span class="resume-pill-icon material-symbols-outlined">play_circle</span>
+    <span class="resume-pill-text">Resume from ${formatTimestamp(entry.time)}</span>
+    <button class="resume-pill-dismiss" title="Dismiss" aria-label="Dismiss">✕</button>
   `;
 
-  section.querySelectorAll('.rr-due-item').forEach(el => {
-    el.addEventListener('click', async () => {
-      const isPro = await checkPro();
-      if (!isPro) {
-        showError('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro.', 4000);
-        chrome.tabs.create({ url: `${API_BASE}/upgrade` });
-        return;
-      }
-      const { videoId } = el.dataset;
-      await advanceRevisitReminder(videoId);
-      chrome.tabs.create({ url: ytWatchUrl(videoId) });
-      loadSpacedRevision();
-    });
+  pill.querySelector('.resume-pill-text').addEventListener('click', async () => {
+    try {
+      await sendMessageToTab(tabId, { action: 'seekTo', time: entry.time });
+      pill.style.display = 'none';
+    } catch { /* tab may have been navigated */ }
   });
 
-  section.querySelectorAll('.revision-item:not(.rr-due-item)').forEach(el => {
-    el.addEventListener('click', async () => {
-      const { videoId, timestamp, id } = el.dataset;
-      await markReviewed(videoId, parseInt(id));
-      const tab = await getCurrentTab();
-      if (tab?.url?.includes(`youtube.com/watch?v=${videoId}`)) {
-        await handleBookmarkClick(tab, timestamp);
-      } else {
-        chrome.tabs.create({ url: ytWatchUrl(videoId, parseFloat(timestamp)) });
-      }
-    });
+  pill.querySelector('.resume-pill-icon').addEventListener('click', async () => {
+    try {
+      await sendMessageToTab(tabId, { action: 'seekTo', time: entry.time });
+      pill.style.display = 'none';
+    } catch { /* tab may have been navigated */ }
+  });
+
+  pill.querySelector('.resume-pill-dismiss').addEventListener('click', () => {
+    pill.style.display = 'none';
   });
 }
 
-// ─── UI helpers ───────────────────────────────────────────────────────────────
-function showError(message, duration = 3000) {
-  const el = document.getElementById('error-message');
-  el.textContent = message;
-  el.style.display = 'block';
-  el.classList.add('show');
-  el.classList.remove('hide');
-  setTimeout(() => {
-    el.classList.add('hide');
-    el.classList.remove('show');
-    setTimeout(() => { el.style.display = 'none'; }, 300);
-  }, duration);
+async function pruneOldResumeEntries() {
+  const all = await new Promise(resolve => chrome.storage.local.get(null, resolve));
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days ago
+  const toRemove = Object.keys(all).filter(k => {
+    if (!k.startsWith('resume_')) return false;
+    const entry = all[k];
+    return !entry?.lastWatched || new Date(entry.lastWatched).getTime() < cutoff;
+  });
+  if (toRemove.length) chrome.storage.local.remove(toRemove);
 }
 
-function showStatus(message, duration = 1500) {
-  const el = document.getElementById('status-message');
-  el.textContent = message;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), duration);
+// ─── Comments View ────────────────────────────────────────────────────────────
+async function loadComments(videoId) {
+  const list = document.getElementById('comment-list');
+  if (!list) return;
+
+  list.innerHTML = '<div class="comment-skeleton"></div><div class="comment-skeleton"></div><div class="comment-skeleton"></div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/comments?videoId=${encodeURIComponent(videoId)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to load comments');
+    }
+
+    const { comments } = await res.json();
+
+    if (!comments || comments.length === 0) {
+      list.innerHTML = '<div class="no-bookmarks">No comments found.</div>';
+      return;
+    }
+
+    list.innerHTML = comments.map(c => {
+      const initials = (c.author || '?').charAt(0).toUpperCase();
+      const likesText = c.likeCount > 0
+        ? `<span class="comment-likes">♥ ${c.likeCount.toLocaleString()}</span>`
+        : '';
+      return `
+        <div class="comment-card">
+          <div class="comment-header">
+            <div class="comment-avatar">${initials}</div>
+            <span class="comment-author">${escapeHtml(c.author)}</span>
+            ${likesText}
+          </div>
+          <p class="comment-text">${sanitizeCommentHtml(c.text)}</p>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    list.innerHTML = `<div class="no-bookmarks">${error.message}</div>`;
+  }
 }
 
-// ─── Render bookmarks in popup ────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// YouTube API returns HTML in textDisplay (e.g. <br>, &#39;, <a href>).
+// Strip everything except <br> and <a> (with href sanitized), then decode entities.
+function sanitizeCommentHtml(html) {
+  return String(html)
+    // Keep <br> as-is
+    // Strip all tags except <br> and <a href="...">
+    .replace(/<(?!br\s*\/?>|a\s[^>]*href=["']https?:\/\/[^"']*["'][^>]*>|\/a>)[^>]+>/gi, '')
+    // Force all <a> links to open safely
+    .replace(/<a\s[^>]*href=["'](https?:\/\/[^"']*?)["'][^>]*>/gi,
+      (_, url) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`)
+    .trim();
+}
+
+// ─── Load Bookmarks ───────────────────────────────────────────────────────────
 async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
@@ -1062,6 +814,10 @@ async function loadBookmarks() {
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
+
+    // Resume playback pill + entry cleanup
+    loadResumePosition(videoId, tab.id);
+    pruneOldResumeEntries();
 
     // Update video title context
     const videoTitles = await getVideoTitles();
@@ -1071,10 +827,7 @@ async function loadBookmarks() {
       titleEl.textContent = videoTitles[videoId];
     }
 
-    // Load revisit reminder panel for this video
-    loadRevisitReminderPanel(videoId, videoTitles[videoId] || '');
-
-    // Update timestamp preview
+    // Update timestamp
     try {
       const response = await sendMessageToTab(tab.id, { action: 'getCurrentTime' });
       if (response && response.currentTime !== undefined) {
@@ -1093,12 +846,12 @@ async function loadBookmarks() {
       .sort((a, b) => a.timestamp - b.timestamp);
 
     const list = document.getElementById('bookmark-list');
-    
+
     if (bookmarks.length === 0) {
       list.innerHTML = `
         <div class="no-bookmarks">
           No bookmarks yet.<br>
-          <span class="no-bookmarks-hint">Save important moments from YouTube videos<br>so you can revisit them later.</span>
+          <span style="font-size:11px;color:var(--text-secondary);margin-top:8px;display:block;">Save important moments to see them here.</span>
         </div>
       `;
       return;
@@ -1111,24 +864,24 @@ async function loadBookmarks() {
           <span class="bookmark-desc">${b.description || 'No description'}</span>
           ${b.tags && b.tags.length
             ? `<div class="bookmark-tags">${b.tags.map(t =>
-                `<span class="tag-badge" style="background:${getTagColor([t])}">${t}</span>`
+                `<span class="tag-badge" style="background:${getTagColor([t])};opacity:0.8;color:white">${t}</span>`
               ).join('')}</div>`
             : ''}
         </div>
-        <button class="copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" aria-label="Copy link" title="Copy timestamped link">⎘</button>
-        <button class="delete-bookmark" aria-label="Delete bookmark">&times;</button>
+        <button class="copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" aria-label="Copy link" title="Copy link">⎘</button>
+        <button class="delete-bookmark" aria-label="Delete bookmark" title="Delete">&times;</button>
       </div>
     `).join('');
 
     list.querySelectorAll('.bookmark').forEach(el => {
-      const id        = el.dataset.id;
-      const vId       = el.dataset.videoId;
+      const id = el.dataset.id;
+      const vId = el.dataset.videoId;
       const timestamp = el.dataset.timestamp;
 
       // Copy link
       el.querySelector('.copy-link').addEventListener('click', async e => {
         e.stopPropagation();
-        const url = ytWatchUrl(vId, parseFloat(timestamp));
+        const url = `https://www.youtube.com/watch?v=${vId}&t=${Math.floor(parseFloat(timestamp))}`;
         await navigator.clipboard.writeText(url);
         showStatus('Link copied!');
       });
@@ -1139,24 +892,27 @@ async function loadBookmarks() {
         await deleteBookmark(vId, id);
       });
 
-      // Navigate on row click (not on desc or delete)
+      // Seek to bookmark
       el.addEventListener('click', async e => {
-        if (e.target.classList.contains('delete-bookmark') ||
-            e.target.classList.contains('bookmark-desc')) return;
-        const currentTab = await getCurrentTab();
-        await handleBookmarkClick(currentTab, timestamp);
+        if (e.target.classList.contains('delete-bookmark')) return;
+        try {
+          await waitForContentScript(tab.id);
+          await sendMessageToTab(tab.id, { action: 'setTimestamp', timestamp: parseFloat(timestamp) });
+        } catch (error) {
+          showError('Failed to seek: ' + error.message);
+        }
       });
 
-      // Inline edit on description click
+      // Inline edit
       el.querySelector('.bookmark-desc').addEventListener('click', e => {
         e.stopPropagation();
-        const descEl  = e.currentTarget;
+        const descEl = e.currentTarget;
         const current = descEl.textContent;
 
         const input = document.createElement('input');
-        input.type      = 'text';
-        input.className = 'bookmark-edit-input';
-        input.value     = (current === 'No description' || current.startsWith('Bookmark at')) ? '' : current;
+        input.type = 'text';
+        input.className = 'sp-input';
+        input.value = (current === 'No description' || current.startsWith('Bookmark at')) ? '' : current;
         descEl.replaceWith(input);
         input.focus();
         input.select();
@@ -1173,7 +929,7 @@ async function loadBookmarks() {
 
         input.addEventListener('blur', blurHandler);
         input.addEventListener('keydown', e => {
-          if (e.key === 'Enter')  { e.preventDefault(); input.removeEventListener('blur', blurHandler); save(); }
+          if (e.key === 'Enter') { e.preventDefault(); input.removeEventListener('blur', blurHandler); save(); }
           if (e.key === 'Escape') { input.removeEventListener('blur', blurHandler); loadBookmarks(); }
         });
       });
@@ -1184,24 +940,13 @@ async function loadBookmarks() {
   }
 }
 
-async function handleBookmarkClick(tab, timestamp) {
-  try {
-    await waitForContentScript(tab.id);
-    await sendMessageToTab(tab.id, { action: 'setTimestamp', timestamp: parseFloat(timestamp) });
-  } catch (error) {
-    showError('Failed to navigate to timestamp: ' + error.message);
-  }
-}
-
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 async function loadAuthState() {
-  const { bmUser } = await syncGet({ bmUser: null });
+  const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
   const signinBtn  = document.getElementById('signin-btn');
   const userChip   = document.getElementById('user-chip');
+  const signoutBtn = document.getElementById('signout-btn');
   if (!signinBtn || !userChip) return;
-
-  const upgradeBtn  = document.getElementById('upgrade-btn');
-  const signoutBtn  = document.getElementById('signout-btn');
 
   if (bmUser) {
     signinBtn.style.display  = 'none';
@@ -1209,88 +954,28 @@ async function loadAuthState() {
     userChip.textContent     = bmUser.userEmail?.split('@')[0] || 'Signed in';
     userChip.title           = bmUser.userEmail || '';
     if (signoutBtn) signoutBtn.style.display = '';
-    if (upgradeBtn) upgradeBtn.style.display = bmUser.isPro ? 'none' : '';
 
     // Silently validate/refresh token — sign out if session is fully expired
     const token = await getValidToken();
     if (!token) {
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
-    } else {
-      // Sync Pro status from server (handles upgrades after login)
-      try {
-        const res = await fetch(`${API_BASE}/api/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const { isPro } = await res.json();
-          if (isPro !== bmUser.isPro) {
-            const updated = { ...bmUser, isPro };
-            await new Promise(resolve => chrome.storage.sync.set({ bmUser: updated }, resolve));
-            if (upgradeBtn) upgradeBtn.style.display = isPro ? 'none' : '';
-          }
-        }
-      } catch { /* non-critical, ignore */ }
     }
   } else {
     signinBtn.style.display  = '';
     userChip.style.display   = 'none';
     if (signoutBtn) signoutBtn.style.display = 'none';
-    if (upgradeBtn) upgradeBtn.style.display = '';  // always show for signed-out users
   }
 }
 
-// ─── Onboarding Tour ──────────────────────────────────────────────────────────
-async function initOnboardingTour() {
-  const { onboardingDone } = await new Promise(resolve =>
-    chrome.storage.local.get({ onboardingDone: false }, resolve)
-  );
-  if (onboardingDone) return;
-
-  const overlay = document.getElementById('onboarding-overlay');
-  if (!overlay) return;
-  overlay.style.display = 'flex';
-
-  const showStep = (n) => {
-    [1, 2, 3].forEach(i => {
-      const el = document.getElementById(`onb-step-${i}`);
-      if (el) el.style.display = i === n ? 'flex' : 'none';
-    });
-  };
-
-  const dismiss = async () => {
-    overlay.style.display = 'none';
-    await chrome.storage.local.set({ onboardingDone: true });
-  };
-
-  showStep(1);
-  document.getElementById('onb-next-1').addEventListener('click', () => showStep(2));
-  document.getElementById('onb-next-2').addEventListener('click', () => showStep(3));
-  document.getElementById('onb-done').addEventListener('click', dismiss);
-  document.getElementById('onb-skip').addEventListener('click', dismiss);
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Initialize ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  debugLog('Init', 'Popup opened');
+  debugLog('Init', 'Side panel opened');
 
-  const tab = await getCurrentTab().catch(() => null);
-  if (tab) await migrateToSync(tab.id).catch(() => {});
-
-  initOnboardingTour();
   loadBookmarks();
-  loadSpacedRevision();
-
-  // Pre-warm transcript cache while the popup is loading
-  getCurrentTab().then(t => {
-    if (t?.url?.includes('youtube.com/watch')) {
-      sendMessageToTab(t.id, { action: 'prefetchTranscript' }).catch(() => {});
-    }
-  }).catch(() => {});
-
   loadAuthState();
 
-  // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
+  // Theme toggle (hidden)
   // function initTheme() {
   //   chrome.storage.local.get(['theme'], (result) => {
   //     const theme = result.theme || 'light';
@@ -1312,12 +997,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   // initTheme();
   // document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
-  // Refresh auth state live when sign-in completes in another tab
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'sync' && changes.bmUser) loadAuthState();
+  // Tab switching: Bookmarks / Comments
+  let lastCommentVideoId = null;
+  document.getElementById('tab-bookmarks').addEventListener('click', () => {
+    document.getElementById('tab-bookmarks').classList.add('sp-tab--active');
+    document.getElementById('tab-comments').classList.remove('sp-tab--active');
+    document.getElementById('bookmarks-panel').style.display = '';
+    document.getElementById('comments-panel').style.display = 'none';
+  });
+  document.getElementById('tab-comments').addEventListener('click', async () => {
+    document.getElementById('tab-comments').classList.add('sp-tab--active');
+    document.getElementById('tab-bookmarks').classList.remove('sp-tab--active');
+    document.getElementById('bookmarks-panel').style.display = 'none';
+    document.getElementById('comments-panel').style.display = '';
+    const tab = await getCurrentTab();
+    const videoId = tab?.url ? extractVideoId(tab.url) : null;
+    if (videoId !== lastCommentVideoId) {
+      lastCommentVideoId = videoId;
+      if (videoId) loadComments(videoId);
+      else document.getElementById('comment-list').innerHTML = '<div class="no-bookmarks">Open a YouTube video first.</div>';
+    }
   });
 
-  // Quick tag chips
+  // Quick tags
   const descInput = document.getElementById('description');
   document.querySelectorAll('.quick-tag-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1331,252 +1033,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  document.getElementById('summarize-btn').addEventListener('click', summarizeBookmarks);
-  document.getElementById('summary-close').addEventListener('click', () => {
-    document.getElementById('summary-panel').style.display = 'none';
-  });
-
-  // ── SidePanel Grid Links ────────────────────────────────────────────────────
-  const shareBtn = document.getElementById('share-btn-sp');
-  if (shareBtn) shareBtn.addEventListener('click', shareBookmarks);
-  
-  const clipBtn = document.getElementById('clip-btn-sp');
-  if (clipBtn) clipBtn.addEventListener('click', openClipPanel);
-
-  const socialBtn = document.getElementById('social-btn-sp');
-  if (socialBtn) socialBtn.addEventListener('click', () => {
-    const panel = document.getElementById('social-panel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    if (panel.style.display === 'block') {
-      document.getElementById('summary-panel').style.display = 'none';
-      document.getElementById('clip-panel').style.display = 'none';
-    }
-  });
-
-  // ── Clip panel ──────────────────────────────────────────────────────────────
-  const clipBtnMain = document.getElementById('clip-btn'); // Compatibility with popup.js logic
-  if (clipBtnMain) clipBtnMain.addEventListener('click', openClipPanel);
-
-  document.getElementById('clip-close').addEventListener('click', async () => {
-    document.getElementById('clip-panel').style.display = 'none';
-    // Clear progress bar markers when closing
-    const tab = await getCurrentTab().catch(() => null);
-    if (tab) sendMessageToTab(tab.id, { action: 'clearClipMarkers' }).catch(() => {});
-    clipStartTime = null;
-    clipEndTime   = null;
-  });
-
-  // ── Grid Button Listeners ──────────────────────────────────────────────────
-  const shareBtnSp = document.getElementById('share-btn-sp');
-  if (shareBtnSp) shareBtnSp.addEventListener('click', shareBookmarks);
-
-  const clipBtnSp = document.getElementById('clip-btn-sp');
-  if (clipBtnSp) clipBtnSp.addEventListener('click', openClipPanel);
-
-  const socialBtnSp = document.getElementById('social-btn-sp');
-  if (socialBtnSp) socialBtnSp.addEventListener('click', async () => {
-    const isPro = await checkPro();
-    if (!isPro) { showUpgradePrompt('Post Insights'); return; }
-    
-    const panel = document.getElementById('social-panel');
-    if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
-    
-    // Close others
-    document.getElementById('summary-panel').style.display = 'none';
-    document.getElementById('clip-panel').style.display = 'none';
-    
-    document.getElementById('social-output').style.display = 'none';
-    document.querySelectorAll('.social-platform-btn').forEach(b => b.classList.remove('active'));
-    panel.style.display = 'block';
-  });
-
-  document.getElementById('clip-set-start').addEventListener('click', async () => {
-    const tab = await getCurrentTab().catch(() => null);
-    if (!tab) return;
-    try {
-      await waitForContentScript(tab.id);
-      const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
-      if (res?.timestamp != null) {
-        clipStartTime = res.timestamp;
-        const startEl = document.getElementById('clip-start-display');
-        if (startEl) startEl.textContent = formatTimestamp(clipStartTime);
-        updateClipDuration();
-        // Update progress bar markers
-        if (clipEndTime != null && clipEndTime > clipStartTime) {
-          sendMessageToTab(tab.id, { action: 'updateClipMarkers', startTime: clipStartTime, endTime: clipEndTime }).catch(() => {});
-        }
-      }
-    } catch (e) { showError('Could not get timestamp: ' + e.message); }
-  });
-
-  document.getElementById('clip-set-end').addEventListener('click', async () => {
-    const tab = await getCurrentTab().catch(() => null);
-    if (!tab) return;
-    try {
-      await waitForContentScript(tab.id);
-      const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
-      if (res?.timestamp != null) {
-        clipEndTime = res.timestamp;
-        const endEl = document.getElementById('clip-end-display');
-        if (endEl) endEl.textContent = formatTimestamp(clipEndTime);
-        updateClipDuration();
-        // Update progress bar markers
-        if (clipStartTime != null && clipEndTime > clipStartTime) {
-          sendMessageToTab(tab.id, { action: 'updateClipMarkers', startTime: clipStartTime, endTime: clipEndTime }).catch(() => {});
-        }
-      }
-    } catch (e) { showError('Could not get timestamp: ' + e.message); }
-  });
-
-  document.getElementById('clip-save-btn').addEventListener('click', async () => {
-    if (clipStartTime == null || clipEndTime == null) {
-      showError('Set both start and end times first'); return;
-    }
-    const tab = await getCurrentTab().catch(() => null);
-    if (!tab || !tab.url.includes('youtube.com/watch')) {
-      showError('Please open a YouTube video first'); return;
-    }
-    const videoId = extractVideoId(tab.url);
-    const labelInput = document.getElementById('clip-label-input');
-    const label = labelInput ? labelInput.value.trim() : '';
-    const clip    = await saveClip(videoId, clipStartTime, clipEndTime, label);
-    if (clip) {
-      if (labelInput) labelInput.value = '';
-      showStatus('Clip saved ✓');
-      await loadClipList(videoId);
-    }
-  });
-
-  document.getElementById('clip-download-btn').addEventListener('click', async () => {
-    if (clipStartTime == null || clipEndTime == null) {
-      showError('Set both start and end times first'); return;
-    }
-    if (clipEndTime <= clipStartTime) {
-      showError('End time must be after start time'); return;
-    }
-    const tab = await getCurrentTab().catch(() => null);
-    if (!tab || !tab.url.includes('youtube.com/watch')) {
-      showError('Please open a YouTube video first'); return;
-    }
-    const videoId = extractVideoId(tab.url);
-    const label   = document.getElementById('clip-label-input').value.trim();
-    await triggerClipDownload(videoId, { startTime: clipStartTime, endTime: clipEndTime, label });
-  });
-
-  // Social post panel
-  let lastShareUrl = null;
-
-  document.getElementById('post-btn').addEventListener('click', async () => {
-    const panel = document.getElementById('social-panel');
-    if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
-
-    // Pro gate
-    const isPro = await checkPro();
-    if (!isPro) { showUpgradePrompt('Post Insights'); return; }
-
-    // Reset output pane
-    document.getElementById('social-output').style.display = 'none';
-    document.querySelectorAll('.social-platform-btn').forEach(b => b.classList.remove('active'));
-    panel.style.display = 'block';
-  });
-
-  document.getElementById('social-close').addEventListener('click', () => {
-    document.getElementById('social-panel').style.display = 'none';
-  });
-
-  document.querySelectorAll('.social-platform-btn').forEach(btn => {
-    btn.addEventListener('click', () => generateSocialPost(btn.dataset.platform, lastShareUrl));
-  });
-
-  document.getElementById('social-copy-btn').addEventListener('click', async () => {
-    const text = document.getElementById('social-post-text').value;
-    await navigator.clipboard.writeText(text);
-    const btn = document.getElementById('social-copy-btn');
-    btn.textContent = 'Copied ✓';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
-  });
-
-  document.getElementById('share-btn').addEventListener('click', async () => {
-    const url = await shareBookmarks();
-    if (url) lastShareUrl = url;
-  });
-
-  document.getElementById('signin-btn').addEventListener('click', async () => {
-    const tab = await getCurrentTab().catch(() => null);
-    if (!tab) return;
-    const url = `${API_BASE}/signin?extensionId=${chrome.runtime.id}`;
-    chrome.tabs.create({ url });
-  });
-
-  document.getElementById('upgrade-btn').addEventListener('click', () => {
-    chrome.tabs.create({ url: `${API_BASE}/upgrade` });
-  });
-
-  document.getElementById('signout-btn').addEventListener('click', async () => {
-    await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
-    loadAuthState();
-  });
-
-  // ── Auto-fill from transcript ──────────────────────────────────────────────
-  document.getElementById('auto-fill-btn').addEventListener('click', async () => {
-    const btn   = document.getElementById('auto-fill-btn');
-    const input = document.getElementById('description');
-    try {
-      const tab = await getCurrentTab();
-      debugLog('AutoFill', 'Tab URL', tab.url);
-      if (!tab.url.includes('youtube.com/watch')) {
-        debugLog('AutoFill', 'Not a YouTube watch page, aborting');
-        return;
-      }
-
-      btn.textContent = '…';
-      btn.disabled    = true;
-
-      await waitForContentScript(tab.id);
-      const tsRes = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
-      debugLog('AutoFill', 'Timestamp response', tsRes);
-      if (!tsRes?.timestamp) throw new Error('no timestamp');
-
-      debugLog('AutoFill', 'Fetching transcript and chapter in parallel', tsRes.timestamp);
-      const [txResult, chResult] = await Promise.allSettled([
-        sendMessageToTab(tab.id, { action: 'getTranscriptAtTimestamp', timestamp: tsRes.timestamp }),
-        sendMessageToTab(tab.id, { action: 'getCurrentChapter' }),
-      ]);
-
-      const transcript = txResult.status === 'fulfilled' ? txResult.value?.text    : null;
-      const chapter    = chResult.status  === 'fulfilled' ? chResult.value?.chapter : null;
-      debugLog('AutoFill', 'Transcript text', transcript);
-      debugLog('AutoFill', 'Chapter', chapter);
-
-      let text = null;
-      if (chapter && transcript) text = `${chapter} - ${transcript}`;
-      else if (transcript)        text = transcript;
-      else if (chapter)           text = chapter;
-
-      if (text) {
-        debugLog('AutoFill', 'Filled with', text);
-        input.value = text;
-        input.focus();
-        input.select();
-        btn.textContent = '✓';
-        btn.classList.add('auto-fill-btn--done');
-        suggestTags(text, text);
-      } else {
-        debugLog('AutoFill', 'No transcript or chapter available');
-        btn.textContent = 'No transcript';
-      }
-    } catch (e) {
-      debugLog('AutoFill', 'Error', e?.message);
-      btn.textContent = '✦ Auto';
-    } finally {
-      setTimeout(() => {
-        btn.textContent = '✦ Auto';
-        btn.classList.remove('auto-fill-btn--done');
-        btn.disabled = false;
-      }, 1800);
-    }
-  });
-
+  // Buttons
   document.getElementById('add-bookmark').addEventListener('click', async () => {
     try {
       const tab = await getCurrentTab();
@@ -1603,8 +1060,211 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  document.getElementById('view-all-bookmarks').addEventListener('click', e => {
-    e.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
+  // ── Auto-fill from transcript ──────────────────────────────────────────────
+  document.getElementById('auto-fill-btn').addEventListener('click', async () => {
+    const btn   = document.getElementById('auto-fill-btn');
+    const input = document.getElementById('description');
+    const origHTML = btn.innerHTML;
+    try {
+      const tab = await getCurrentTab();
+      debugLog('AutoFill', 'Tab URL', tab.url);
+      if (!tab.url.includes('youtube.com/watch')) {
+        debugLog('AutoFill', 'Not a YouTube watch page, aborting');
+        return;
+      }
+
+      btn.disabled = true;
+
+      await waitForContentScript(tab.id);
+      const tsRes = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+      debugLog('AutoFill', 'Timestamp response', tsRes);
+      if (!tsRes?.timestamp) throw new Error('no timestamp');
+
+      debugLog('AutoFill', 'Fetching transcript and chapter in parallel', tsRes.timestamp);
+      const [txResult, chResult] = await Promise.allSettled([
+        sendMessageToTab(tab.id, { action: 'getTranscriptAtTimestamp', timestamp: tsRes.timestamp }),
+        sendMessageToTab(tab.id, { action: 'getCurrentChapter' }),
+      ]);
+
+      const transcript = txResult.status === 'fulfilled' ? txResult.value?.text  : null;
+      const chapter    = chResult.status  === 'fulfilled' ? chResult.value?.chapter : null;
+      const txRaw = txResult.status === 'fulfilled' ? txResult.value : null;
+      debugLog('AutoFill', 'Transcript raw response', {
+        status: txResult.status,
+        text: txRaw?.text,
+        segmentCount: txRaw?._debug?.segmentCount,
+        hasCaptions: txRaw?._debug?.hasCaptions,
+        error: txResult.reason?.message,
+      });
+      debugLog('AutoFill', 'Transcript text', transcript);
+      debugLog('AutoFill', 'Chapter', chapter);
+
+      let text = null;
+      if (chapter && transcript) text = `${chapter} - ${transcript}`;
+      else if (transcript)        text = transcript;
+      else if (chapter)           text = chapter;
+
+      if (text) {
+        debugLog('AutoFill', 'Filled with', text);
+        input.value = text;
+        input.focus();
+        input.select();
+      } else {
+        debugLog('AutoFill', 'No transcript or chapter available');
+        showStatus('No transcript available');
+      }
+    } catch (e) {
+      debugLog('AutoFill', 'Error', e?.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origHTML;
+    }
   });
+
+  document.getElementById('signin-btn').addEventListener('click', () => {
+    chrome.tabs.create({ url: `${API_BASE}/signin?extensionId=${chrome.runtime.id}` });
+  });
+
+  document.getElementById('signout-btn').addEventListener('click', async () => {
+    await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
+    loadAuthState();
+  });
+
+  document.getElementById('dashboard-link').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') });
+  });
+
+  document.getElementById('revisit-mode-btn').addEventListener('click', async () => {
+    try {
+      const isPro = await checkPro();
+      if (!isPro) {
+        showError('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro.', 4000);
+        return;
+      }
+      const tab = await getCurrentTab();
+      if (!tab.url.includes('youtube.com/watch')) {
+        showError('Please navigate to a YouTube video first.');
+        return;
+      }
+      const videoId = extractVideoId(tab.url);
+      if (!videoId) return;
+      const bookmarks = (await getVideoBookmarks(videoId)).sort((a, b) => a.timestamp - b.timestamp);
+      if (!bookmarks.length) {
+        showError('No bookmarks for this video yet.');
+        return;
+      }
+      await waitForContentScript(tab.id);
+      await sendMessageToTab(tab.id, { action: 'startRevision', bookmarks });
+    } catch (error) {
+      showError('Could not start Revisit Mode: ' + error.message);
+    }
+  });
+
+  document.getElementById('summarize-btn').addEventListener('click', summarizeBookmarks);
+
+  document.getElementById('summary-close').addEventListener('click', () => {
+    document.getElementById('summary-panel').style.display = 'none';
+  });
+
+  // Clip Button and UI Listeners
+  document.getElementById('clip-btn')?.addEventListener('click', async () => {
+    const tab = await getCurrentTab();
+    const vId = extractVideoId(tab.url);
+    if (vId) openClipPanel(vId);
+  });
+
+  document.getElementById('clip-close')?.addEventListener('click', () => {
+    document.getElementById('clip-panel').style.display = 'none';
+    clipStartTime = null; clipEndTime = null;
+  });
+
+  document.getElementById('clip-set-start')?.addEventListener('click', async () => {
+    const tab = await getCurrentTab();
+    const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+    if (res?.timestamp != null) {
+      clipStartTime = res.timestamp;
+      document.getElementById('clip-start-display').textContent = formatTimestamp(clipStartTime);
+      updateClipDuration();
+    }
+  });
+
+  document.getElementById('clip-set-end')?.addEventListener('click', async () => {
+    const tab = await getCurrentTab();
+    const res = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
+    if (res?.timestamp != null) {
+      clipEndTime = res.timestamp;
+      document.getElementById('clip-end-display').textContent = formatTimestamp(clipEndTime);
+      updateClipDuration();
+    }
+  });
+
+  document.getElementById('clip-save-btn')?.addEventListener('click', async () => {
+    if (clipStartTime == null || clipEndTime == null) { showError('Set both start and end times'); return; }
+    const tab = await getCurrentTab();
+    const vId = extractVideoId(tab.url);
+    if (vId) {
+      await saveClip(vId, clipStartTime, clipEndTime);
+      showStatus('Clip descriptor saved');
+      loadClipList(vId);
+    }
+  });
+
+  document.getElementById('clip-download-btn')?.addEventListener('click', async () => {
+    if (clipStartTime == null || clipEndTime == null) { showError('Set times first'); return; }
+    const tab = await getCurrentTab();
+    const vId = extractVideoId(tab.url);
+    if (vId) triggerClipDownload(vId, { startTime: clipStartTime, endTime: clipEndTime });
+  });
+
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === 'clipRecordingUpdate') {
+      const dlBtn = document.getElementById('clip-download-btn');
+      const statusEl = document.getElementById('clip-record-status');
+      if (msg.status === 'done' || msg.status === 'error' || msg.status === 'cancelled') {
+        if (dlBtn) { dlBtn.disabled = false; dlBtn.textContent = 'Download Clip'; }
+        if (statusEl) statusEl.style.display = 'none';
+        if (msg.status === 'done') showStatus('Clip ready!');
+      }
+    }
+  });
+
+  document.getElementById('social-close').addEventListener('click', () => {
+    document.getElementById('social-panel').style.display = 'none';
+  });
+
+  // Overlay platform buttons (copy flow)
+  document.querySelectorAll('.social-platform-btn').forEach(btn => {
+    btn.addEventListener('click', () => generateSocialPost(btn.dataset.platform, null));
+  });
+
+  // Footer platform buttons — generate post and open platform directly
+  document.querySelectorAll('.sp-platform-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('social-panel').style.display = 'flex';
+      generateSocialPost(btn.dataset.platform, null, true);
+    });
+  });
+
+  // Watch for storage changes (real-time sync from dashboard)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync') {
+      debugLog('Storage', 'Change detected, reloading bookmarks');
+      loadBookmarks();
+      if (changes.bmUser) loadAuthState();
+    }
+  });
+
+  // Reload bookmarks when tab changes
+  chrome.tabs.onActivated.addListener(() => {
+    debugLog('Tabs', 'Tab activated, reloading bookmarks');
+    loadBookmarks();
+  });
+});
+
+// Auto-refresh when YouTube SPA navigates to a new video
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === 'ytVideoChanged') {
+    debugLog('Nav', 'YouTube video changed, reloading', { videoId: msg.videoId });
+    loadBookmarks();
+  }
 });
