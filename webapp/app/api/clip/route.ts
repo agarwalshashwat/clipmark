@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const url  = `https://www.youtube.com/watch?v=${videoId}`;
+    const url  = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
     const info = await ytdl.getInfo(url);
 
     const title = info.videoDetails.title;
@@ -71,9 +71,14 @@ export async function POST(req: NextRequest) {
       formats: formats.slice(0, 5), // return top 5 formats
     });
   } catch (err: unknown) {
-    // Do not expose internal error details (stack traces, paths) to callers
-    const isYtError = err instanceof Error && (err.message.includes('Status code') || err.message.includes('No such format'));
-    const clientMessage = isYtError ? 'Could not retrieve video information' : 'Failed to process request';
+    // Classify the error without exposing internal details (stack traces, paths)
+    const message = err instanceof Error ? err.message : '';
+    let clientMessage = 'Failed to process request';
+    if (message.includes('Status code: 4') || message.includes('No such format') || message.includes('unavailable')) {
+      clientMessage = 'Could not retrieve video information';
+    } else if (message.includes('Status code: 5')) {
+      clientMessage = 'YouTube service unavailable, please try again';
+    }
     return NextResponse.json({ error: clientMessage }, { status: 500 });
   }
 }

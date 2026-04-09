@@ -705,13 +705,10 @@ async function triggerClipDownload(videoId, clip) {
 
   const videoTitles = await getVideoTitles();
   const title       = videoTitles[videoId] || videoId;
-  // Comprehensive filesystem-safe sanitization: strip all chars except word chars, spaces, hyphens, dots
+  // Strip non-word/space/hyphen/dot chars, collapse spaces → underscores
   const safeTitle   = title.replace(/[^\w\s\-.]/g, '').replace(/\s+/g, '_').trim().slice(0, 40);
-  const filename    = `${safeTitle || videoId}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`
-    .replace(/:/g, '-')
-    .replace(/[/\\<>"|?*\x00-\x1f]/g, '_')
-    .replace(/__+/g, '_')
-    .slice(0, 100);
+  const rawFilename = `${safeTitle || videoId}_${formatTimestamp(clip.startTime)}-${formatTimestamp(clip.endTime)}`;
+  const filename    = sanitizeClipFilename(rawFilename);
 
   const statusEl = document.getElementById('clip-record-status');
   const dlBtn    = document.getElementById('clip-download-btn');
@@ -781,12 +778,19 @@ async function loadClipList(videoId) {
   clips.sort((a, b) => a.startTime - b.startTime).forEach(clip => {
     const dur  = Math.round(clip.endTime - clip.startTime);
     const durStr = dur >= 60 ? `${Math.floor(dur/60)}m ${dur%60}s` : `${dur}s`;
+    // Escape all HTML special chars to prevent XSS from crafted clip labels
+    const safeLabel = clip.label
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
     const item = document.createElement('div');
     item.className = 'clip-item';
     item.dataset.id = clip.id;
     item.innerHTML = `
       <div class="clip-item-info">
-        <div class="clip-item-label">${clip.label.replace(/</g, '&lt;')}</div>
+        <div class="clip-item-label">${safeLabel}</div>
         <div class="clip-item-times">${formatTimestamp(clip.startTime)} → ${formatTimestamp(clip.endTime)}</div>
       </div>
       <span class="clip-item-duration">${durStr}</span>

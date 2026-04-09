@@ -49,3 +49,14 @@ const TRANSCRIPT_TRUNCATE_LENGTH = 120;
 // ─── Clip limits ────────────────────────────────────────────────────────────
 const MIN_CLIP_DURATION_SECONDS = 1;
 const MAX_CLIP_DURATION_SECONDS = 3600;
+
+// ─── Clip filename sanitization ─────────────────────────────────────────────
+// Shared by popup.js and content.js (both load constants.js before their own file)
+function sanitizeClipFilename(name) {
+  return name
+    .replace(/[/\\<>"|?*\x00-\x1f]/g, '_')  // filesystem-unsafe chars and control chars
+    .replace(/:/g, '-')                        // colons (common in timestamps)
+    .replace(/__+/g, '_')                      // collapse repeated underscores
+    .trim()
+    .slice(0, 100);
+}

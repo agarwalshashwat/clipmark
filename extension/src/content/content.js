@@ -787,7 +787,9 @@ function startClipDownload(startTime, endTime, filename) {
     return;
   }
 
-  // Choose best available MIME type (all WebM; no MP4 fallback since captureStream yields WebM)
+  // Choose best available MIME type (all WebM; no MP4 fallback since captureStream yields WebM).
+  // VP9+Opus is tried first for better compression; VP8+Opus is a wider-compatibility fallback;
+  // plain video/webm lets the browser choose its default codec as a last resort.
   const WEBM_TYPES = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
   const mimeType = WEBM_TYPES.find(t => MediaRecorder.isTypeSupported(t));
   if (!mimeType) {
@@ -829,7 +831,8 @@ function startClipDownload(startTime, endTime, filename) {
     const blob = new Blob(clipChunks, { type: clipRecorder.mimeType || 'video/webm' });
     const url  = URL.createObjectURL(blob);
     // Always .webm — we only ever request WebM MIME types from MediaRecorder
-    const safeFilename = (filename || `clip_${Math.round(startTime)}-${Math.round(endTime)}_${Date.now()}`).replace(/[^\w\-. ]/g, '_') + '.webm';
+    const rawFilename = filename || `clip_${Math.round(startTime)}-${Math.round(endTime)}_${Date.now()}`;
+    const safeFilename = sanitizeClipFilename(rawFilename.replace(/[^\w\s\-.]/g, '_')) + '.webm';
 
     const a  = document.createElement('a');
     a.href   = url;
@@ -854,19 +857,24 @@ function startClipDownload(startTime, endTime, filename) {
 
   clipRecorder.start(1000); // collect data every second
 
-  // Monitor end time
-  clipTimeListener = () => {
-    const v = document.querySelector('video') || video;
-    if (!v) return;
-    const elapsed = v.currentTime - startTime;
-    const recTimeEl = document.getElementById('yt-clip-rec-time');
-    if (recTimeEl) recTimeEl.textContent = `${Math.max(0, Math.round(elapsed))}s / ${Math.round(duration)}s`;
+  // Cache element references to avoid repeated DOM traversals on every timeupdate tick
+  const cachedVideo   = activeVideo;
+  const cachedRecTime = clipProgressEl ? clipProgressEl.querySelector('#yt-clip-rec-time') : null;
 
-    if (v.currentTime >= clipEndTime) {
+  // Monitor end time via timeupdate.
+  // Note: if the user seeks past clipEndTime the recorder stops correctly. If the user seeks
+  // backward before startTime, the recording will contain the repeated content — this is
+  // intentional: the MediaRecorder captures whatever is playing, maintaining stream continuity.
+  clipTimeListener = () => {
+    if (!cachedVideo) return;
+    const elapsed = cachedVideo.currentTime - startTime;
+    if (cachedRecTime) cachedRecTime.textContent = `${Math.max(0, Math.round(elapsed))}s / ${Math.round(duration)}s`;
+
+    if (cachedVideo.currentTime >= clipEndTime) {
       if (clipRecorder && clipRecorder.state === 'recording') {
         clipRecorder.stop();
       }
-      v.removeEventListener('timeupdate', clipTimeListener);
+      cachedVideo.removeEventListener('timeupdate', clipTimeListener);
       clipTimeListener = null;
     }
   };
