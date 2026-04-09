@@ -828,7 +828,8 @@ function startClipDownload(startTime, endTime, filename) {
       return;
     }
 
-    const blob = new Blob(clipChunks, { type: clipRecorder.mimeType || 'video/webm' });
+    const mimeType = clipRecorder ? clipRecorder.mimeType : 'video/webm';
+    const blob = new Blob(clipChunks, { type: mimeType });
     const url  = URL.createObjectURL(blob);
     // Always .webm — we only ever request WebM MIME types from MediaRecorder
     const rawFilename = filename || `clip_${Math.round(startTime)}-${Math.round(endTime)}_${Date.now()}`;

@@ -28,6 +28,11 @@ async function getValidToken() {
   }
 }
 
+async function checkPro() {
+  const { bmUser } = await syncGet({ bmUser: null });
+  return bmUser?.isPro === true;
+}
+
 // ─── Tag colours ────────────────────────────────────────────────────────────
 const TAG_COLORS = {
   important: '#ff6b6b',
@@ -822,9 +827,25 @@ async function loadBookmarks() {
     // Update video title context
     const videoTitles = await getVideoTitles();
     const titleEl = document.querySelector('#video-title span');
-    if (titleEl && videoTitles[videoId]) {
-      titleEl.className = '';
-      titleEl.textContent = videoTitles[videoId];
+    if (titleEl) {
+      if (videoTitles[videoId]) {
+        titleEl.className = '';
+        titleEl.textContent = videoTitles[videoId];
+      } else {
+        // Not in storage? Fetch it directly from the tab
+        try {
+          const response = await sendMessageToTab(tab.id, { action: 'getVideoTitle' });
+          if (response?.title) {
+            titleEl.className = '';
+            titleEl.textContent = response.title;
+            // Persist it for next time
+            videoTitles[videoId] = response.title;
+            await syncSet({ videoTitles });
+          }
+        } catch (e) {
+          debugLog('Error', 'Could not fetch video title from tab', e.message);
+        }
+      }
     }
 
     // Update timestamp
@@ -1131,7 +1152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('dashboard-link').addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/bookmarks.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
   });
 
   document.getElementById('revisit-mode-btn').addEventListener('click', async () => {
