@@ -13,8 +13,10 @@ export async function createGroup(formData: FormData) {
   const tagName = ((formData.get('tag_name') as string) ?? '').trim().replace(/^#/, '') || null;
 
   if (!name) throw new Error('Group name is required');
+  if (name.length > 255) throw new Error('Group name must be 255 characters or fewer');
   if (!['custom', 'tag'].includes(type)) throw new Error('Invalid group type');
   if (type === 'tag' && !tagName) throw new Error('Tag name is required for tag groups');
+  if (tagName && tagName.length > 50) throw new Error('Tag name must be 50 characters or fewer');
 
   await supabase.from('groups').insert({ user_id: user.id, name, type, tag_name: tagName });
   revalidatePath('/dashboard/groups');

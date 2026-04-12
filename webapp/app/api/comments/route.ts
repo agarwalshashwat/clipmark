@@ -14,6 +14,9 @@ export async function GET(request: NextRequest) {
   if (!videoId) {
     return NextResponse.json({ error: 'videoId is required' }, { status: 400 });
   }
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+    return NextResponse.json({ error: 'Invalid videoId' }, { status: 400 });
+  }
 
   try {
     const url = new URL('https://www.googleapis.com/youtube/v3/commentThreads');
