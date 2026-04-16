@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     payingUserId: string,
     affiliateCode: string | undefined,
     plan: 'monthly' | 'annual' | 'lifetime',
+    paymentId?: string,
   ) {
     if (!affiliateCode) return;
 
@@ -71,6 +72,8 @@ export async function POST(request: NextRequest) {
       commission_usd:   commissionUsd,
       commission_rate:  commissionRate,
       status:           'pending',
+      // Stored so a payment.refunded webhook can cancel this row within the 30-day window
+      dodo_payment_id:  paymentId ?? null,
     });
   }
 
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
     const userId = payment.metadata?.user_id;
     if (userId) {
       await supabaseAdmin.from('profiles').update({ is_pro: true }).eq('id', userId);
-      await recordAffiliateConversion(userId, payment.metadata?.affiliate_code, 'lifetime');
+      await recordAffiliateConversion(userId, payment.metadata?.affiliate_code, 'lifetime', payment.payment_id);
     }
   }
 
@@ -101,7 +104,8 @@ export async function POST(request: NextRequest) {
         cancel_at_period_end: false,
       }).eq('id', userId);
 
-      await recordAffiliateConversion(userId, sub.metadata?.affiliate_code, plan);
+      // Use subscription_id as the payment reference for subscription plans
+      await recordAffiliateConversion(userId, sub.metadata?.affiliate_code, plan, sub.subscription_id);
     }
   }
 
@@ -129,6 +133,19 @@ export async function POST(request: NextRequest) {
         subscription_period_end: null,
         cancel_at_period_end: false,
       }).eq('id', userId);
+    }
+  }
+
+  // refund.succeeded — cancel any pending affiliate commission tied to this payment.
+  // This ensures affiliates are never paid for sales refunded within the 30-day window.
+  else if (type === 'refund.succeeded') {
+    const refund = data as { payment_id?: string };
+    if (refund.payment_id) {
+      await supabaseAdmin
+        .from('affiliate_conversions')
+        .update({ status: 'cancelled' })
+        .eq('dodo_payment_id', refund.payment_id)
+        .eq('status', 'pending');
     }
   }
 

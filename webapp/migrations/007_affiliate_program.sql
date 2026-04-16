@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public.affiliate_conversions (
   commission_usd    DECIMAL(10,2) NOT NULL,
   commission_rate   DECIMAL(4,2)  NOT NULL,
   status            TEXT          NOT NULL DEFAULT 'pending'
-                                  CHECK (status IN ('pending', 'approved', 'paid')),
+                                  CHECK (status IN ('pending', 'approved', 'paid', 'cancelled')),
   dodo_payment_id   TEXT,
   created_at        TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );

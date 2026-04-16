@@ -11,9 +11,10 @@ const supabaseAdmin = createClient(
 
 function StatusPill({ status }: { status: string }) {
   const colorMap: Record<string, { bg: string; color: string }> = {
-    pending:  { bg: 'rgba(251,191,36,0.15)',  color: '#b45309' },
-    approved: { bg: 'rgba(20,184,166,0.15)',  color: '#006b5f' },
-    paid:     { bg: 'rgba(139,92,246,0.15)',  color: '#6d28d9' },
+    pending:   { bg: 'rgba(251,191,36,0.15)',  color: '#b45309' },
+    approved:  { bg: 'rgba(20,184,166,0.15)',  color: '#006b5f' },
+    paid:      { bg: 'rgba(139,92,246,0.15)',  color: '#6d28d9' },
+    cancelled: { bg: 'rgba(239,68,68,0.12)',   color: '#b91c1c' },
   };
   const c = colorMap[status] ?? colorMap.pending;
   return (
@@ -91,10 +92,12 @@ export default async function AffiliatePage() {
   ]);
 
   const conversionList = conversions ?? [];
-  const totalEarned  = conversionList.reduce((s: number, c: { commission_usd: number }) => s + Number(c.commission_usd), 0);
-  const totalPaid    = conversionList.filter((c: { status: string }) => c.status === 'paid')
+  // Exclude cancelled (refunded) conversions from all earnings totals
+  const earnableConversions = conversionList.filter((c: { status: string }) => c.status !== 'cancelled');
+  const totalEarned  = earnableConversions.reduce((s: number, c: { commission_usd: number }) => s + Number(c.commission_usd), 0);
+  const totalPaid    = earnableConversions.filter((c: { status: string }) => c.status === 'paid')
     .reduce((s: number, c: { commission_usd: number }) => s + Number(c.commission_usd), 0);
-  const totalPending = conversionList.filter((c: { status: string }) => c.status === 'pending')
+  const totalPending = earnableConversions.filter((c: { status: string }) => c.status === 'pending')
     .reduce((s: number, c: { commission_usd: number }) => s + Number(c.commission_usd), 0);
 
   const statCards = [
