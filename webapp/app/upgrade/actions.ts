@@ -100,9 +100,6 @@ export async function createCheckoutSession(formData: FormData) {
   const productId = PRODUCT_IDS[plan];
   if (!productId) throw new Error(`Unknown plan: ${plan}`);
 
-  // Read affiliate attribution cookie set by /r/[code] then immediately consume it.
-  // Deleting it here ensures a single re-subscribe or refund+re-buy cannot generate
-  // a second commission row for the same affiliate.
   const cookieStore = await cookies();
   const affiliateCode = cookieStore.get('clipmark_ref')?.value ?? null;
   if (affiliateCode) cookieStore.delete('clipmark_ref');
@@ -113,8 +110,6 @@ export async function createCheckoutSession(formData: FormData) {
       email: user.email!,
       name:  user.user_metadata?.full_name ?? undefined,
     },
-    // Passed through to webhook payload so we can identify the Supabase user
-    // and attribute the conversion to an affiliate if one referred this user.
     metadata: {
       user_id: user.id,
       ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),

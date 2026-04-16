@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
 
   const { type, data } = event;
 
-  // ── Helper: record affiliate commission if affiliate_code is in metadata ──
   async function recordAffiliateConversion(
     payingUserId: string,
     affiliateCode: string | undefined,
@@ -58,10 +57,8 @@ export async function POST(request: NextRequest) {
 
     if (!affiliate) return;
 
-    // Guard: do not reward self-referrals
     if (affiliate.id === payingUserId) return;
 
-    // Guard: one commission per referred user — prevents double-dipping on cancel+re-subscribe
     const { count: existingCount } = await supabaseAdmin
       .from('affiliate_conversions')
       .select('*', { count: 'exact', head: true })
@@ -80,12 +77,10 @@ export async function POST(request: NextRequest) {
       commission_usd:   commissionUsd,
       commission_rate:  commissionRate,
       status:           'pending',
-      // Stored so a payment.refunded webhook can cancel this row within the 30-day window
       dodo_payment_id:  paymentId ?? null,
     });
   }
 
-  // payment.succeeded fires for one-time purchases (Lifetime plan)
   if (type === 'payment.succeeded') {
     const payment = data as DodoPayments.WebhookPayload.Payment;
     const userId = payment.metadata?.user_id;
@@ -95,12 +90,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // subscription.active fires when a new subscription starts
   else if (type === 'subscription.active') {
     const sub = data as DodoPayments.WebhookPayload.Subscription;
     const userId = sub.metadata?.user_id;
     if (userId) {
-      // Determine plan from product ID
       const productId = (sub as unknown as { product_id?: string }).product_id ?? '';
       const plan = productId === process.env.DODO_ANNUAL_PRODUCT_ID ? 'annual' : 'monthly';
 
@@ -112,12 +105,10 @@ export async function POST(request: NextRequest) {
         cancel_at_period_end: false,
       }).eq('id', userId);
 
-      // Use subscription_id as the payment reference for subscription plans
       await recordAffiliateConversion(userId, sub.metadata?.affiliate_code, plan, sub.subscription_id);
     }
   }
 
-  // subscription.renewed fires on each successful billing cycle
   else if (type === 'subscription.renewed') {
     const sub = data as DodoPayments.WebhookPayload.Subscription;
     const userId = sub.metadata?.user_id;
@@ -130,7 +121,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // subscription.cancelled / expired — revoke Pro access
   else if (type === 'subscription.cancelled' || type === 'subscription.expired') {
     const sub = data as DodoPayments.WebhookPayload.Subscription;
     const userId = sub.metadata?.user_id;
@@ -144,8 +134,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // refund.succeeded — cancel any pending affiliate commission tied to this payment.
-  // This ensures affiliates are never paid for sales refunded within the 30-day window.
   else if (type === 'refund.succeeded') {
     const refund = data as { payment_id?: string };
     if (refund.payment_id) {

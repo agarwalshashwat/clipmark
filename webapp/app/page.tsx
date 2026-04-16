@@ -54,9 +54,6 @@ export default async function Home({
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect('/dashboard');
 
-  // Resolve affiliate referral code — only show banner when the user actually
-  // arrived via /r/[code] (cookie is present and matches the ?ref= param).
-  // This prevents the banner from being triggered by crafting a direct URL.
   const cookieStore = await cookies();
   const refCookie = cookieStore.get('clipmark_ref')?.value;
   let referrerUsername: string | null = null;
