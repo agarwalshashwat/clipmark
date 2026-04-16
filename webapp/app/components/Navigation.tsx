@@ -32,7 +32,7 @@ export function Navigation() {
             background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
             color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
           }}>
-            Add to Chrome — Free
+            Build Your Second Brain — Free
           </a>
         </div>
       </div>

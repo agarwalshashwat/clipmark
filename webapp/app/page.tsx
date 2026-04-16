@@ -5,9 +5,9 @@ import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Clipmark — The Digital Curator for YouTube Professionals',
-  description: 'Turn long YouTube videos into searchable, revisable knowledge. Bookmark moments, get AI summaries, and revisit key insights instantly.',
-  keywords: ['youtube bookmarks', 'video notes', 'study tool', 'chrome extension', 'ai summaries', 'timestamp bookmarks'],
+  title: 'Clipmark — Your YouTube Second Brain',
+  description: 'Stop forgetting what you watch. Bookmark moments, get AI summaries, and build a searchable repository of video knowledge.',
+  keywords: ['youtube bookmarks', 'video notes', 'study tool', 'chrome extension', 'ai summaries', 'timestamp bookmarks', 'second brain'],
 };
 
 const FAQ_DATA = [
@@ -129,13 +129,13 @@ export default async function Home({
             lineHeight: 1.1, letterSpacing: '-2px', maxWidth: 900, margin: '0 auto 32px',
             fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D',
           }}>
-            Turn Long YouTube Videos into{' '}<br />
-            <em style={{ color: '#006B5F', fontStyle: 'italic' }}>Searchable, Revisable</em> Knowledge.
+            Stop Forgetting What You Watch —<br />
+            <em style={{ color: '#006B5F', fontStyle: 'italic' }}>Your YouTube Second Brain.</em>
           </h1>
 
           {/* Subtitle */}
           <p style={{ fontSize: 20, color: '#545f6c', maxWidth: 640, margin: '0 auto 48px', lineHeight: 1.7 }}>
-            Stop scrubbing through hours of footage. Clipmark&apos;s Chrome extension and dashboard curate your learning journey instantly.
+            Quit wasting time rewatching tutorials or losing gems in your watch history. Build a personal knowledge system that remembers exactly where the value is.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 40 }}>
@@ -148,7 +148,7 @@ export default async function Home({
               color: 'white', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 16px 48px rgba(20,184,166,0.28)',
             }}>
-              Get Started for Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
+              Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
             <button 
               aria-label="Watch product demo video"
@@ -162,8 +162,44 @@ export default async function Home({
             </button>
           </div>
 
-          {/* Cinematic UI Mockup */}
+          <p style={{ marginTop: 20, fontSize: 12, color: '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>shield_with_heart</span>
+            Privacy First: AI processing (Gemini Nano) happens 100% on your device.
+          </p>
+
+          {/* Cinematic UI Mockup (Items 16, 45, 42) */}
           <div style={{ marginTop: 96, position: 'relative', maxWidth: 1000, margin: '96px auto 0' }}>
+            
+            {/* Logic-driven callouts (Item 18, 42) */}
+            <div style={{
+              position: 'absolute', top: -30, right: -40, zIndex: 10,
+              background: '#ffffff', padding: '12px 20px', borderRadius: 16,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
+              display: 'flex', alignItems: 'center', gap: 10,
+              animation: 'float 4s ease-in-out infinite'
+            }}>
+              <div style={{ width: 8, height: 8, background: '#14B8A6', borderRadius: 9999 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1C1D' }}>AI auto-magically summarizes architecture</span>
+            </div>
+
+            <div style={{
+              position: 'absolute', bottom: 100, left: -60, zIndex: 10,
+              background: '#ffffff', padding: '12px 20px', borderRadius: 16,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
+              display: 'flex', alignItems: 'center', gap: 10,
+              animation: 'float 5s ease-in-out infinite reverse'
+            }}>
+              <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 18 }}>history</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1C1D' }}>Skip the fluff, play only the gems</span>
+            </div>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+              @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+              }
+            `}} />
+
             <div style={{
               position: 'absolute', inset: -16,
               background: 'linear-gradient(to top right, rgba(20,184,166,0.20), rgba(115,46,228,0.20))',
@@ -187,19 +223,16 @@ export default async function Home({
                   borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1C1D', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Clipmark Curator</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1C1D', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Your Library</span>
                     <span className="material-symbols-outlined" style={{ color: '#9ca3af', fontSize: 16 }}>close</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ padding: 12, background: 'white', borderRadius: 8, borderLeft: '3px solid #14B8A6' }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', marginBottom: 4, fontFamily: "'JetBrains Mono', monospace" }}>04:12 — Architecture</p>
-                      <p style={{ fontSize: 10, color: '#545f6c', lineHeight: 1.5 }}>The key to scaling Next.js is effective server component hydration...</p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', marginBottom: 4, fontFamily: "'JetBrains Mono', monospace" }}>04:12 — Scalability</p>
+                      <p style={{ fontSize: 10, color: '#545f6c', lineHeight: 1.5 }}>Use server components for zero-bundle hydrations...</p>
                     </div>
                     <div style={{ padding: 12, background: 'rgba(255,255,255,0.50)', borderRadius: 8 }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', fontFamily: "'JetBrains Mono', monospace" }}>12:45 — State Management</p>
-                    </div>
-                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.50)', borderRadius: 8 }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', fontFamily: "'JetBrains Mono', monospace" }}>28:10 — Deployment</p>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', fontFamily: "'JetBrains Mono', monospace" }}>12:45 — Microservices</p>
                     </div>
                   </div>
                   <button style={{
@@ -222,10 +255,10 @@ export default async function Home({
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 80, alignItems: 'center' }}>
           <div>
             <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 800, marginBottom: 32, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D', letterSpacing: '-0.5px' }}>
-              2 Hours → 6 Minutes
+              Stop Scrubbing, <br /><span style={{ color: '#006B5F' }}>Start Remembering.</span>
             </h2>
             <p style={{ fontSize: 18, color: '#545f6c', marginBottom: 40, lineHeight: 1.75 }}>
-              Stop wasting time re-watching entire lectures just to find that one 30-second explanation. Clipmark&apos;s <strong>Revisit Mode</strong> automatically skips the fluff and only plays your saved clips.
+              The average learner forgets 70% of what they watch within 24 hours. Clipmark&apos;s <strong>Revisit Mode</strong> forces you to focus only on the breakthroughs you saved, turning hours of idle watching into minutes of active mastery.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -233,8 +266,8 @@ export default async function Home({
                   <span className="material-symbols-outlined">timer_off</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Standard Watching</h4>
-                  <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Where was that part about database indexing again?&rdquo;</p>
+                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Passive Consumption (Bad)</h4>
+                  <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Where was that part? *scrubs timeline for 15 minutes*&rdquo;</p>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -242,26 +275,59 @@ export default async function Home({
                   <span className="material-symbols-outlined">bolt</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Curated Revisit</h4>
-                  <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Replaying 4 specific bookmarks in 6 minutes. Knowledge locked in.&rdquo;</p>
+                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>The Clipmark System (Pro)</h4>
+                  <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Playing 4 peak moments in 6 minutes. System locked in.&rdquo;</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bar chart */}
-          <div style={{ background: '#f9f9fa', padding: 40, borderRadius: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: 200, marginBottom: 24 }}>
-              <div style={{ flex: 1, background: '#e8e8e9', height: '100%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
-                <span style={{ position: 'absolute', top: -28, left: '50%', transform: 'translateX(-50%)', fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#9ca3af', whiteSpace: 'nowrap' }}>120m</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {/* Before / After Transformation Visual */}
+            <div style={{ 
+              background: '#f9f9fa', 
+              padding: 40, 
+              borderRadius: 32, 
+              border: '1px solid #e8e8e9',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ color: '#ba1a1a', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The Old Way</div>
+                  <div style={{ height: 120, background: '#fee2e2', borderRadius: 16, border: '2px dashed #fecaca', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 12 }}>
+                    <div style={{ width: '80%', height: 8, background: '#fecaca', borderRadius: 4 }} />
+                    <div style={{ width: '60%', height: 8, background: '#fecaca', borderRadius: 4 }} />
+                    <div style={{ width: '70%', height: 8, background: '#fecaca', borderRadius: 4 }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', color: '#006B5F' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 32 }}>arrow_forward</span>
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ color: '#006B5F', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The Clipmark Way</div>
+                  <div style={{ height: 120, background: '#ccfbf1', borderRadius: 16, border: '2px solid #99f6e4', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 12 }}>
+                    <div style={{ width: '90%', height: 12, background: '#14B8A6', borderRadius: 6 }} />
+                    <div style={{ width: '90%', height: 12, background: '#14B8A6', borderRadius: 6 }} />
+                  </div>
+                </div>
               </div>
-              <div style={{ flex: 1, background: '#14B8A6', height: '5%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
-                <span style={{ position: 'absolute', top: -28, left: '50%', transform: 'translateX(-50%)', fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#006B5F', whiteSpace: 'nowrap' }}>6m</span>
+
+              {/* Bar chart */}
+              <div style={{ borderTop: '1px solid #e8e8e9', paddingTop: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: 120, marginBottom: 16 }}>
+                  <div style={{ flex: 1, background: '#e8e8e9', height: '100%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
+                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#9ca3af', whiteSpace: 'nowrap' }}>120m</span>
+                  </div>
+                  <div style={{ flex: 1, background: '#14B8A6', height: '5%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
+                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#006B5F', whiteSpace: 'nowrap' }}>6m</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 11, letterSpacing: '0.08em', color: '#545f6c', textTransform: 'uppercase' }}>
+                  <span>Mental Fatigue</span>
+                  <span style={{ color: '#006B5F' }}>Knowledge Retained</span>
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 13, letterSpacing: '0.08em', color: '#545f6c', textTransform: 'uppercase' }}>
-              <span>Traditional</span>
-              <span style={{ color: '#006B5F' }}>With Clipmark</span>
             </div>
           </div>
         </div>
@@ -285,43 +351,43 @@ export default async function Home({
               <div style={{ width: 48, height: 48, borderRadius: 12, background: '#1A1C1D', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined">code</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For Developers</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For the Builder</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Instantly capture code snippets from tutorial videos. Search by keyword across 100+ saved tutorials in your library.
+                Stop "tutorial hell." Instantly capture code snippets and architecture shifts from technical deep dives. Build a searchable library of 100+ tutorials you actually understand.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dbeafe', color: '#1d4ed8', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#react</span>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#f1f5f9', color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#tutorial</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#f1f5f9', color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#architecture</span>
               </div>
             </div>
 
-            {/* Students */}
+            {/* Founders */}
             <div style={{ padding: 32, borderRadius: 32, background: '#f3f3f4' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(20,184,166,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined">school</span>
+                <span className="material-symbols-outlined">rocket_launch</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For Students</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For the Founder</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Spaced Revisit automatically notifies you to review bookmarks after 1, 3, and 7 days — locking in the physics lecture before exam day.
+                Extract insights from 3-hour podcasts with industry leaders in seconds. Use AI to summarize key takeaways and turn them into actionable tasks for your team.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#ffedd5', color: '#c2410c', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#quantum</span>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dcfce7', color: '#15803d', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#review_active</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#ffedd5', color: '#c2410c', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#strategy</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dcfce7', color: '#15803d', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#execution</span>
               </div>
             </div>
 
-            {/* Creators */}
+            {/* Serious Learners */}
             <div style={{ padding: 32, borderRadius: 32, background: '#f3f3f4' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(115,46,228,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined">edit_square</span>
+                <span className="material-symbols-outlined">psychology</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For Creators</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For the Serious Learner</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                AI-powered social post generation. Turn your favorite video segments into viral X/Twitter and LinkedIn threads instantly.
+                Treat YouTube like a structured course. Spaced Revisit reminds you to review key bookmarks at the optimal time, ensuring 100% retention for exam day.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#f3e8ff', color: '#7c3aed', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>✍️ Post_Ready</span>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#fce7f3', color: '#be185d', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#inspo</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#f3e8ff', color: '#7c3aed', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#retention</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#fce7f3', color: '#be185d', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#second_brain</span>
               </div>
             </div>
           </div>
@@ -476,13 +542,27 @@ export default async function Home({
 
       {/* ── Final CTA ───────────────────────────────────────────────────── */}
       <section style={{ padding: '128px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        
+        {/* Founder Quote (Item 33) */}
+        <div style={{ maxWidth: 640, margin: '0 auto 80px', padding: 48, background: 'white', borderRadius: 32, border: '1px solid #e8e8e9', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', width: 64, height: 64, background: '#14B8A6', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 24px rgba(20,184,166,0.2)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 32 }}>person</span>
+          </div>
+          <p style={{ fontSize: 18, fontStyle: 'italic', color: '#1A1C1D', lineHeight: 1.6, marginBottom: 24, fontWeight: 500 }}>
+            &ldquo;I built Clipmark because I was tired of re-watching the same 3-hour podcasts just to find that one 30-second gem I forgot to write down. YouTube is a goldmine, but only if you have a way to mine it.&rdquo;
+          </p>
+          <p style={{ fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#545f6c' }}>
+            — Mith, Creator of Clipmark
+          </p>
+        </div>
+
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, background: 'rgba(20,184,166,0.05)', borderRadius: 9999, filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }} />
         <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <h2 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, marginBottom: 24, letterSpacing: '-1px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>
-            Ready to curate your knowledge?
+            Ready to Build Your Second Brain?
           </h2>
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
-            Join 15,000+ power learners turning YouTube into their second brain.
+            Join 15,000+ power learners who use Clipmark to turn casual watching into lifelong knowledge.
           </p>
           <a href="https://chrome.google.com/webstore" 
              aria-label="Install Clipmark Chrome Extension"
