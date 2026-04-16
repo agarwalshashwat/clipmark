@@ -28,8 +28,12 @@ export async function GET(
     return NextResponse.redirect(new URL('/', appUrl));
   }
 
-  // Record the click (no PII — just the code and timestamp)
-  await supabaseAdmin.from('affiliate_clicks').insert({ affiliate_code: code });
+  // Record the click only if the visitor doesn't already have this code as their cookie.
+  // This prevents re-loading the link from inflating click counts for returning visitors.
+  const existingRef = _request.cookies.get('clipmark_ref')?.value;
+  if (existingRef !== code) {
+    await supabaseAdmin.from('affiliate_clicks').insert({ affiliate_code: code });
+  }
 
   // Set a 30-day HttpOnly cookie so checkout can attribute the conversion
   const response = NextResponse.redirect(new URL(`/?ref=${encodeURIComponent(code)}`, appUrl));

@@ -61,6 +61,14 @@ export async function POST(request: NextRequest) {
     // Guard: do not reward self-referrals
     if (affiliate.id === payingUserId) return;
 
+    // Guard: one commission per referred user — prevents double-dipping on cancel+re-subscribe
+    const { count: existingCount } = await supabaseAdmin
+      .from('affiliate_conversions')
+      .select('*', { count: 'exact', head: true })
+      .eq('referred_user_id', payingUserId)
+      .neq('status', 'cancelled');
+    if ((existingCount ?? 0) > 0) return;
+
     const commissionRate = Number(affiliate.commission_rate) || 0.30;
     const commissionUsd  = parseFloat((amount * commissionRate).toFixed(2));
 
