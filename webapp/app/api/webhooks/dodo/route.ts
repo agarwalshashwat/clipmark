@@ -32,12 +32,55 @@ export async function POST(request: NextRequest) {
 
   const { type, data } = event;
 
+  // ── Helper: record affiliate commission if affiliate_code is in metadata ──
+  async function recordAffiliateConversion(
+    payingUserId: string,
+    affiliateCode: string | undefined,
+    plan: 'monthly' | 'annual' | 'lifetime',
+  ) {
+    if (!affiliateCode) return;
+
+    const PLAN_AMOUNTS: Record<string, number> = {
+      monthly:  5.00,
+      annual:   40.00,
+      lifetime: 39.99,
+    };
+    const amount = PLAN_AMOUNTS[plan];
+    if (!amount) return;
+
+    const { data: affiliate } = await supabaseAdmin
+      .from('profiles')
+      .select('id, commission_rate')
+      .eq('affiliate_code', affiliateCode)
+      .eq('is_affiliate', true)
+      .single();
+
+    if (!affiliate) return;
+
+    // Guard: do not reward self-referrals
+    if (affiliate.id === payingUserId) return;
+
+    const commissionRate = Number(affiliate.commission_rate) || 0.30;
+    const commissionUsd  = parseFloat((amount * commissionRate).toFixed(2));
+
+    await supabaseAdmin.from('affiliate_conversions').insert({
+      affiliate_id:     affiliate.id,
+      referred_user_id: payingUserId,
+      plan,
+      amount_usd:       amount,
+      commission_usd:   commissionUsd,
+      commission_rate:  commissionRate,
+      status:           'pending',
+    });
+  }
+
   // payment.succeeded fires for one-time purchases (Lifetime plan)
   if (type === 'payment.succeeded') {
     const payment = data as DodoPayments.WebhookPayload.Payment;
     const userId = payment.metadata?.user_id;
     if (userId) {
       await supabaseAdmin.from('profiles').update({ is_pro: true }).eq('id', userId);
+      await recordAffiliateConversion(userId, payment.metadata?.affiliate_code, 'lifetime');
     }
   }
 
@@ -46,6 +89,10 @@ export async function POST(request: NextRequest) {
     const sub = data as DodoPayments.WebhookPayload.Subscription;
     const userId = sub.metadata?.user_id;
     if (userId) {
+      // Determine plan from product ID
+      const productId = (sub as unknown as { product_id?: string }).product_id ?? '';
+      const plan = productId === process.env.DODO_ANNUAL_PRODUCT_ID ? 'annual' : 'monthly';
+
       await supabaseAdmin.from('profiles').update({
         is_pro: true,
         subscription_id: sub.subscription_id,
@@ -53,6 +100,8 @@ export async function POST(request: NextRequest) {
         subscription_period_end: sub.next_billing_date ?? null,
         cancel_at_period_end: false,
       }).eq('id', userId);
+
+      await recordAffiliateConversion(userId, sub.metadata?.affiliate_code, plan);
     }
   }
 

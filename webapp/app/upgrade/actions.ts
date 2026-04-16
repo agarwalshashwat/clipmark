@@ -2,6 +2,7 @@
 
 import DodoPayments from 'dodopayments';
 import { unstable_cache } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
 
@@ -99,6 +100,10 @@ export async function createCheckoutSession(formData: FormData) {
   const productId = PRODUCT_IDS[plan];
   if (!productId) throw new Error(`Unknown plan: ${plan}`);
 
+  // Read affiliate attribution cookie set by /r/[code]
+  const cookieStore = await cookies();
+  const affiliateCode = cookieStore.get('clipmark_ref')?.value ?? null;
+
   const session = await dodo.checkoutSessions.create({
     product_cart: [{ product_id: productId, quantity: 1 }],
     customer: {
@@ -106,7 +111,11 @@ export async function createCheckoutSession(formData: FormData) {
       name:  user.user_metadata?.full_name ?? undefined,
     },
     // Passed through to webhook payload so we can identify the Supabase user
-    metadata: { user_id: user.id },
+    // and attribute the conversion to an affiliate if one referred this user.
+    metadata: {
+      user_id: user.id,
+      ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
+    },
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
   });
 
