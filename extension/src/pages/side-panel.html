@@ -95,6 +95,9 @@
             <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;font-size:18px;vertical-align:middle;">add_circle</span>
             Save Moment
           </button>
+          <button id="clip-btn" class="sp-btn-revisit" title="Clip segment" style="background: var(--bg-sub); color: var(--text-sub); border: 1px solid var(--border);">
+            <span class="material-symbols-outlined" style="font-size:20px;">content_cut</span>
+          </button>
           <button id="revisit-mode-btn" class="sp-btn-revisit" title="Start Revisit Mode for this video">
             <span class="material-symbols-outlined" style="font-size:20px;">history</span>
           </button>
@@ -158,31 +161,44 @@
 
   <div id="error-message" class="error-message"></div>
 
-  <!-- Unsupported Website Screen -->
-  <div id="sp-unsupported-screen" style="display:none;">
-    <div class="sp-unsupported-hero">
-      <span class="sp-unsupported-badge">OFFLINE MODE</span>
-    </div>
-    <div class="sp-unsupported-body">
-      <p class="sp-unsupported-eyebrow">THE DIGITAL CURATOR</p>
-      <h1 class="sp-unsupported-heading">Unsupported Website</h1>
-      <p class="sp-unsupported-copy">
-        <em>Clipmark currently works best on <strong class="sp-unsupported-yt">YouTube.</strong><br>
-        We're working on expanding to more knowledge-rich sites soon.</em>
-      </p>
-      <div class="sp-unsupported-actions">
-        <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
-          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
-          Go to YouTube
-        </button>
-        <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
+  <!-- Clip Panel Overlay -->
+  <div id="clip-panel" class="summary-panel-overlay" style="display:none;">
+    <div class="summary-panel-content" style="max-height: fit-content;">
+      <div class="summary-header">
+        <span class="summary-title" style="color:var(--accent);">✂ Clip Moment</span>
+        <button id="clip-close" class="overlay-close" title="Close">&times;</button>
       </div>
-      <div class="sp-unsupported-info">
-        <p class="sp-unsupported-info-title">
-          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">auto_awesome</span>
-          WHY YOUTUBE?
-        </p>
-        <p class="sp-unsupported-info-text">Our proprietary algorithm focuses on temporal knowledge extraction. We are perfecting the transcription engine before we tackle the sprawling architecture of the modern web.</p>
+      <div class="summary-body">
+        <div style="background:var(--bg-sub); padding:12px; border-radius:var(--radius-sm); margin-bottom:12px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; text-align:center;">
+            <div>
+              <div style="font-size:10px; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Start</div>
+              <div id="clip-start-display" style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--accent); margin-bottom:6px;">--:--</div>
+              <button id="clip-set-start" class="sp-btn-mini" style="width:100%; height:28px;">Set</button>
+            </div>
+            <div>
+              <div style="font-size:10px; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:4px;">End</div>
+              <div id="clip-end-display" style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--accent); margin-bottom:6px;">--:--</div>
+              <button id="clip-set-end" class="sp-btn-mini" style="width:100%; height:28px;">Set</button>
+            </div>
+          </div>
+          <div id="clip-duration-display" style="font-size:10px; color:var(--text-muted); text-align:center; margin-top:10px; font-family:var(--font-mono);">Duration: --</div>
+        </div>
+        
+        <div style="display:flex; gap:8px;">
+          <button id="clip-save-btn" class="sp-btn-mini" style="flex:1; height:36px; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">bookmark_add</span> Save
+          </button>
+          <button id="clip-download-btn" class="sp-btn-mini" style="flex:2; height:36px; background:var(--accent); color:white; border:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">download</span> Download Clip
+          </button>
+        </div>
+
+        <div id="clip-record-status" style="display:none; align-items:center; gap:6px; margin-top:12px; padding:8px; background:rgba(20, 184, 166, 0.1); border-radius:4px; font-size:11px; color:var(--accent);">
+          <div style="width:8px; height:8px; border-radius:50%; background:#ef4444; animation:blink 1s infinite;"></div> Recording...
+        </div>
+
+        <div id="clip-list" style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;"></div>
       </div>
     </div>
   </div>
@@ -223,7 +239,6 @@
 
 </div><!-- /.side-panel-container -->
 
-<script src="../constants.js"></script>
 <script src="../config.js"></script>
 <script src="../ai/local-ai.js"></script>
 <script src="../popup/side-panel.js"></script>

@@ -585,6 +585,14 @@ function initializeMessageListener() {
         });
         return;
       }
+      if (request.action === 'getVideoTitle') {
+        const titleEl = document.querySelector('h1.ytd-video-primary-info-renderer') ||
+                        document.querySelector('yt-formatted-string.ytd-watch-metadata') ||
+                        document.title;
+        const title = (typeof titleEl === 'string') ? titleEl : (titleEl ? titleEl.textContent.trim() : null);
+        sendResponse({ title });
+        return;
+      }
       if (request.action === 'getCurrentChapter') {
         sendResponse({ chapter: getCurrentChapter() });
         return;
@@ -672,6 +680,26 @@ function initializeMessageListener() {
         sendResponse({});
         return;
       }
+      if (request.action === 'startClipDownload') {
+        startClipDownload(request.startTime, request.endTime, request.filename);
+        sendResponse({ started: true });
+        return;
+      }
+      if (request.action === 'cancelClipDownload') {
+        cancelClipDownload();
+        sendResponse({});
+        return;
+      }
+      if (request.action === 'updateClipMarkers') {
+        updateClipRangeMarker(request.startTime, request.endTime);
+        sendResponse({});
+        return;
+      }
+      if (request.action === 'clearClipMarkers') {
+        clearClipRangeMarker();
+        sendResponse({});
+        return;
+      }
     };
 
     handle().catch(error => {
@@ -687,6 +715,208 @@ function initializeMessageListener() {
 async function getVideoTitle() {
   const el = document.querySelector('h1.ytd-video-primary-info-renderer');
   return el ? el.textContent.trim() : null;
+}
+
+// ─── Clip recording ───────────────────────────────────────────────────────────
+let clipRecorder     = null;
+let clipChunks       = [];
+let clipEndTime      = null;
+let clipTimeListener = null;
+let clipProgressEl   = null;
+
+function cancelClipDownload() {
+  if (clipRecorder && clipRecorder.state !== 'inactive') {
+    clipRecorder.stop();
+  }
+  clipRecorder     = null;
+  clipChunks       = [];
+  clipEndTime      = null;
+  if (clipTimeListener) {
+    const v = document.querySelector('video') || video;
+    if (v) v.removeEventListener('timeupdate', clipTimeListener);
+    clipTimeListener = null;
+  }
+  if (clipProgressEl) {
+    clipProgressEl.remove();
+    clipProgressEl = null;
+  }
+  try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'cancelled' }); } catch {}
+}
+
+function startClipDownload(startTime, endTime, filename) {
+  const activeVideo = document.querySelector('video') || video;
+  if (!activeVideo) {
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'No video found' }); } catch {}
+    return;
+  }
+  if (clipRecorder && clipRecorder.state !== 'inactive') {
+    debugLog('Clip', 'Already recording, cancelling previous');
+    cancelClipDownload();
+  }
+
+  const duration = endTime - startTime;
+  if (duration <= 0 || duration > MAX_CLIP_DURATION_SECONDS) {
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'Invalid clip duration' }); } catch {}
+    return;
+  }
+
+  debugLog('Clip', 'Starting clip download', { startTime, endTime, filename });
+
+  // Show recording overlay on the YouTube player
+  const player = document.querySelector('.html5-video-player') || document.querySelector('#movie_player');
+  if (player) {
+    clipProgressEl = document.createElement('div');
+    clipProgressEl.className = 'yt-clip-recording-overlay';
+    clipProgressEl.innerHTML = `
+      <div class="yt-clip-rec-inner">
+        <div class="yt-clip-rec-dot"></div>
+        <span class="yt-clip-rec-label">Recording clip…</span>
+        <span class="yt-clip-rec-time" id="yt-clip-rec-time">0s / ${Math.round(duration)}s</span>
+        <button class="yt-clip-rec-cancel" id="yt-clip-rec-cancel">✕ Cancel</button>
+      </div>`;
+    if (getComputedStyle(player).position === 'static') player.style.position = 'relative';
+    player.appendChild(clipProgressEl);
+    clipProgressEl.querySelector('#yt-clip-rec-cancel').addEventListener('click', () => {
+      cancelClipDownload();
+    });
+  }
+
+  // Seek to start and play
+  activeVideo.currentTime = startTime;
+  activeVideo.play().catch(() => {});
+
+  let stream;
+  try {
+    stream = activeVideo.captureStream();
+  } catch (e) {
+    debugLog('Clip', 'captureStream failed', { error: e.message });
+    if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'captureStream not supported' }); } catch {}
+    return;
+  }
+
+  // Choose best available MIME type (all WebM; no MP4 fallback since captureStream yields WebM).
+  // VP9+Opus is tried first for better compression; VP8+Opus is a wider-compatibility fallback;
+  // plain video/webm lets the browser choose its default codec as a last resort.
+  const WEBM_TYPES = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const mimeType = WEBM_TYPES.find(t => MediaRecorder.isTypeSupported(t));
+  if (!mimeType) {
+    debugLog('Clip', 'No supported WebM MIME type found for MediaRecorder');
+    if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'MediaRecorder does not support WebM in this browser' }); } catch {}
+    return;
+  }
+  clipChunks = [];
+  clipEndTime = endTime;
+
+  try {
+    clipRecorder = new MediaRecorder(stream, { mimeType });
+  } catch (e) {
+    debugLog('Clip', 'MediaRecorder init failed', { error: e.message });
+    if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'MediaRecorder not available' }); } catch {}
+    return;
+  }
+
+  clipRecorder.ondataavailable = e => {
+    if (e.data && e.data.size > 0) clipChunks.push(e.data);
+  };
+
+  clipRecorder.onstop = () => {
+    debugLog('Clip', 'Recording stopped, creating download');
+    if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
+    if (clipTimeListener) {
+      const v = document.querySelector('video') || video;
+      if (v) v.removeEventListener('timeupdate', clipTimeListener);
+      clipTimeListener = null;
+    }
+    if (clipChunks.length === 0) {
+      try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: 'No data recorded' }); } catch {}
+      clipRecorder = null;
+      return;
+    }
+
+    const mimeType = clipRecorder ? clipRecorder.mimeType : 'video/webm';
+    const blob = new Blob(clipChunks, { type: mimeType });
+    const url  = URL.createObjectURL(blob);
+    // Always .webm — we only ever request WebM MIME types from MediaRecorder
+    const rawFilename = filename || `clip_${Math.round(startTime)}-${Math.round(endTime)}_${Date.now()}`;
+    const safeFilename = sanitizeClipFilename(rawFilename.replace(/[^\w\s\-.]/g, '_')) + '.webm';
+
+    const a  = document.createElement('a');
+    a.href   = url;
+    a.download = safeFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    clipRecorder = null;
+    clipChunks   = [];
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'done' }); } catch {}
+    showSilentSaveIndicator('Clip downloaded ✓');
+  };
+
+  clipRecorder.onerror = e => {
+    debugLog('Clip', 'Recorder error', { error: e.error?.message });
+    if (clipProgressEl) { clipProgressEl.remove(); clipProgressEl = null; }
+    clipRecorder = null;
+    try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'error', message: e.error?.message || 'Recorder error' }); } catch {}
+  };
+
+  clipRecorder.start(1000); // collect data every second
+
+  // Cache element references to avoid repeated DOM traversals on every timeupdate tick
+  const cachedVideo   = activeVideo;
+  const cachedRecTime = clipProgressEl ? clipProgressEl.querySelector('#yt-clip-rec-time') : null;
+
+  // Monitor end time via timeupdate.
+  // Note: if the user seeks past clipEndTime the recorder stops correctly. If the user seeks
+  // backward before startTime, the recording will contain the repeated content — this is
+  // intentional: the MediaRecorder captures whatever is playing, maintaining stream continuity.
+  clipTimeListener = () => {
+    if (!cachedVideo) return;
+    const elapsed = cachedVideo.currentTime - startTime;
+    if (cachedRecTime) cachedRecTime.textContent = `${Math.max(0, Math.round(elapsed))}s / ${Math.round(duration)}s`;
+
+    if (cachedVideo.currentTime >= clipEndTime) {
+      if (clipRecorder && clipRecorder.state === 'recording') {
+        clipRecorder.stop();
+      }
+      cachedVideo.removeEventListener('timeupdate', clipTimeListener);
+      clipTimeListener = null;
+    }
+  };
+  activeVideo.addEventListener('timeupdate', clipTimeListener);
+  try { chrome.runtime.sendMessage({ action: 'clipRecordingUpdate', status: 'recording', duration }); } catch {}
+}
+
+// ─── Clip range markers on the progress bar ───────────────────────────────────
+function updateClipRangeMarker(startTime, endTime) {
+  video = document.querySelector('video') || video;
+  if (!video || !progressBar) return;
+
+  clearClipRangeMarker();
+
+  const duration = video.duration;
+  if (!duration || isNaN(duration)) return;
+
+  const container = document.querySelector('.yt-bookmark-markers');
+  if (!container) return;
+
+  const startPct = (startTime / duration) * 100;
+  const endPct   = (endTime / duration) * 100;
+  const widthPct = endPct - startPct;
+  if (widthPct <= 0) return;
+
+  const range = document.createElement('div');
+  range.className = 'yt-clip-range-marker';
+  range.style.cssText = `left:${startPct}%;width:${widthPct}%;`;
+  container.appendChild(range);
+}
+
+function clearClipRangeMarker() {
+  document.querySelectorAll('.yt-clip-range-marker').forEach(el => el.remove());
 }
 
 async function saveVideoTitle() {
@@ -1079,6 +1309,81 @@ function injectStyles() {
       0%   { transform: scale(1); }
       50%  { transform: scale(1.3); color: #14B8A6; }
       100% { transform: scale(1); }
+    }
+
+    /* Clip range marker on progress bar */
+    .yt-clip-range-marker {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: rgba(20, 184, 166, 0.30);
+      border-left: 2px solid #14B8A6;
+      border-right: 2px solid #14B8A6;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Clip recording overlay on the video player */
+    .yt-clip-recording-overlay {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999999;
+      pointer-events: auto;
+    }
+    .yt-clip-rec-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 15, 15, 0.88);
+      border: 1px solid rgba(20, 184, 166, 0.5);
+      border-radius: 20px;
+      padding: 6px 14px 6px 10px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      font-size: 13px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+    .yt-clip-rec-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      flex-shrink: 0;
+      animation: clip-rec-blink 1s ease infinite;
+    }
+    @keyframes clip-rec-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+    .yt-clip-rec-label {
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+    }
+    .yt-clip-rec-time {
+      font-size: 11px;
+      color: #14B8A6;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+    .yt-clip-rec-cancel {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      color: rgba(255,255,255,0.75);
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 2px 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .yt-clip-rec-cancel:hover {
+      background: rgba(239,68,68,0.25);
+      color: white;
+      border-color: rgba(239,68,68,0.5);
     }
   `;
   document.head.appendChild(style);
