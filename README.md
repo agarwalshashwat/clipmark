@@ -114,6 +114,22 @@ webapp/             Next.js 14 webapp
 
 ---
 
+## Documentation
+
+Non-code documentation and planning is organized in the following directories:
+
+| Directory | Purpose |
+|---|---|
+| [`/architecture`](./architecture/) | System design documents, diagrams, and architectural overviews |
+| [`/ideas`](./ideas/) | Feature proposals, brainstorms, and early-stage exploration |
+| [`/decisions`](./decisions/) | Architecture Decision Records (ADRs) — key decisions and their rationale |
+| [`/specifications`](./specifications/) | Detailed technical specifications for features and integrations |
+| [`/api`](./api/) | HTTP API endpoint documentation |
+
+Each directory contains a `README.md` with contribution guidelines and a `template.md` to help you get started quickly.
+
+---
+
 ## Testing
 
 ```bash
