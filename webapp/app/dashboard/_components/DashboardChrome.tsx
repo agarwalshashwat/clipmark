@@ -136,6 +136,10 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
               <span className={styles.sideNavItemLabel}>Affiliate</span>
             </a>
           )}
+          <a href="/dashboard/referral" className={`${styles.sideNavItem} ${isActive('/dashboard/referral') ? styles.sideNavItemActive : ''}`}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>redeem</span>
+            <span className={styles.sideNavItemLabel}>Refer &amp; Earn</span>
+          </a>
           {!isPro ? (
             <a href="/upgrade" className={`${styles.sideNavItem} ${styles.sideNavUpgrade}`}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>auto_awesome</span>

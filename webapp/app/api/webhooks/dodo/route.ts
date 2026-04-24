@@ -36,16 +36,13 @@ export async function POST(request: NextRequest) {
     payingUserId: string,
     affiliateCode: string | undefined,
     plan: 'monthly' | 'annual' | 'lifetime',
+    amountCents: number,          // actual amount paid in cents (from Dodo payload)
     paymentId?: string,
   ) {
     if (!affiliateCode) return;
 
-    const PLAN_AMOUNTS: Record<string, number> = {
-      monthly:  5.00,
-      annual:   40.00,
-      lifetime: 39.99,
-    };
-    const amount = PLAN_AMOUNTS[plan];
+    // Convert cents to USD dollars
+    const amount = parseFloat((amountCents / 100).toFixed(2));
     if (!amount) return;
 
     const { data: affiliate } = await supabaseAdmin
@@ -57,8 +54,10 @@ export async function POST(request: NextRequest) {
 
     if (!affiliate) return;
 
+    // Self-referral guard: affiliate cannot earn commission on their own purchase
     if (affiliate.id === payingUserId) return;
 
+    // Duplicate conversion guard: one commission per referred user lifetime
     const { count: existingCount } = await supabaseAdmin
       .from('affiliate_conversions')
       .select('*', { count: 'exact', head: true })
@@ -81,12 +80,75 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  /**
+   * recordReferralCredit — awards free months to the referrer when a referred
+   * user makes their first Pro purchase via a /ref/[code] link.
+   *
+   * Guards:
+   *  - Code must map to a real profile
+   *  - Self-referral blocked (referrer_id === payingUserId)
+   *  - One reward per referred user lifetime (duplicate guard)
+   */
+  async function recordReferralCredit(
+    payingUserId: string,
+    userReferralCode: string | undefined,
+    rewardMonths = 3,
+  ) {
+    if (!userReferralCode) return;
+
+    const { data: referrer } = await supabaseAdmin
+      .from('profiles')
+      .select('id, referral_months_credit')
+      .eq('referral_code', userReferralCode)
+      .single();
+
+    if (!referrer) return;
+
+    // Self-referral guard
+    if (referrer.id === payingUserId) return;
+
+    // Duplicate reward guard: one reward per referred user
+    const { count: existingCount } = await supabaseAdmin
+      .from('referrals')
+      .select('*', { count: 'exact', head: true })
+      .eq('referred_user_id', payingUserId)
+      .neq('status', 'cancelled');
+    if ((existingCount ?? 0) > 0) return;
+
+    // Award the months and record the referral
+    await Promise.all([
+      supabaseAdmin.from('profiles')
+        .update({ referral_months_credit: (Number(referrer.referral_months_credit) || 0) + rewardMonths })
+        .eq('id', referrer.id),
+      supabaseAdmin.from('referrals').insert({
+        referrer_id:      referrer.id,
+        referred_user_id: payingUserId,
+        status:           'rewarded',
+        reward_months:    rewardMonths,
+        reward_applied_at: new Date().toISOString(),
+      }),
+    ]);
+  }
+
   if (type === 'payment.succeeded') {
     const payment = data as DodoPayments.WebhookPayload.Payment;
     const userId = payment.metadata?.user_id;
     if (userId) {
+      // Capture is_pro state BEFORE updating so we can detect already-Pro users
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', userId)
+        .single();
+
       await supabaseAdmin.from('profiles').update({ is_pro: true }).eq('id', userId);
-      await recordAffiliateConversion(userId, payment.metadata?.affiliate_code, 'lifetime', payment.payment_id);
+
+      // Only record conversion if the user was not already a Pro subscriber
+      if (!existingProfile?.is_pro) {
+        const amountCents = (payment as unknown as { total_amount?: number }).total_amount ?? 0;
+        await recordAffiliateConversion(userId, payment.metadata?.affiliate_code, 'lifetime', amountCents, payment.payment_id);
+        await recordReferralCredit(userId, payment.metadata?.user_referral_code);
+      }
     }
   }
 
@@ -97,6 +159,13 @@ export async function POST(request: NextRequest) {
       const productId = (sub as unknown as { product_id?: string }).product_id ?? '';
       const plan = productId === process.env.DODO_ANNUAL_PRODUCT_ID ? 'annual' : 'monthly';
 
+      // Capture is_pro + subscription_id state BEFORE updating
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('is_pro, subscription_id')
+        .eq('id', userId)
+        .single();
+
       await supabaseAdmin.from('profiles').update({
         is_pro: true,
         subscription_id: sub.subscription_id,
@@ -105,7 +174,13 @@ export async function POST(request: NextRequest) {
         cancel_at_period_end: false,
       }).eq('id', userId);
 
-      await recordAffiliateConversion(userId, sub.metadata?.affiliate_code, plan, sub.subscription_id);
+      // Only record conversion if user was not already an active subscriber
+      const wasAlreadyActiveSubscriber = existingProfile?.is_pro === true && !!existingProfile?.subscription_id;
+      if (!wasAlreadyActiveSubscriber) {
+        const amountCents = (sub as unknown as { recurring_pre_tax_amount?: number }).recurring_pre_tax_amount ?? 0;
+        await recordAffiliateConversion(userId, sub.metadata?.affiliate_code, plan, amountCents, sub.subscription_id);
+        await recordReferralCredit(userId, sub.metadata?.user_referral_code);
+      }
     }
   }
 

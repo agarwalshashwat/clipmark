@@ -1,3 +1,4 @@
+import DodoPayments from 'dodopayments';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase';
@@ -6,6 +7,11 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
+
+const dodo = new DodoPayments({
+  bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
+  environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode',
+});
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase();
@@ -85,10 +91,29 @@ export async function POST(request: NextRequest) {
     reviewed_at: new Date().toISOString(),
   });
 
+  // Create a Dodo discount code for this affiliate (10% = 1000 basis points).
+  // The code is stored so it can be applied automatically at checkout for referred users.
+  let dodoDiscountCode: string | null = null;
+  try {
+    const discount = await dodo.discounts.create({
+      type: 'percentage',
+      amount: 1000, // 1000 basis points = 10%
+      name: `Clipmark Affiliate — ${profile.username}`,
+      usage_limit: null,  // unlimited
+      expires_at:  null,  // never expires
+    });
+    dodoDiscountCode = discount.code;
+  } catch (err) {
+    // Non-fatal: affiliate is still approved even if discount creation fails.
+    console.error('[affiliate/apply] Failed to create Dodo discount code:', err);
+  }
+
   await supabaseAdmin.from('profiles').update({
-    is_affiliate:    true,
-    affiliate_code:  affiliateCode,
-    commission_rate: 0.30,
+    is_affiliate:          true,
+    affiliate_code:        affiliateCode,
+    commission_rate:       0.30,
+    affiliate_discount_pct: 10,
+    dodo_discount_code:    dodoDiscountCode,
   }).eq('id', user.id);
 
   return NextResponse.json({ success: true, affiliate_code: affiliateCode });

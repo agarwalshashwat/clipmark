@@ -11,19 +11,19 @@ const supabaseAdmin = createClient(
 );
 
 function StatusPill({ status }: { status: string }) {
-  const colorMap: Record<string, { bg: string; color: string }> = {
-    pending:   { bg: 'rgba(251,191,36,0.15)',  color: '#b45309' },
-    approved:  { bg: 'rgba(20,184,166,0.15)',  color: '#006b5f' },
-    paid:      { bg: 'rgba(139,92,246,0.15)',  color: '#6d28d9' },
-    cancelled: { bg: 'rgba(239,68,68,0.12)',   color: '#b91c1c' },
+  const colorMap: Record<string, { bg: string; color: string; label: string }> = {
+    pending:   { bg: 'rgba(251,191,36,0.15)',  color: '#b45309', label: 'Pending'  },
+    approved:  { bg: 'rgba(20,184,166,0.15)',  color: '#006b5f', label: 'Approved' },
+    paid:      { bg: 'rgba(139,92,246,0.15)',  color: '#6d28d9', label: 'Paid'     },
+    cancelled: { bg: 'rgba(239,68,68,0.12)',   color: '#b91c1c', label: 'Refunded' },
   };
   const c = colorMap[status] ?? colorMap.pending;
   return (
     <span style={{
       padding: '3px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 600,
-      background: c.bg, color: c.color, textTransform: 'capitalize',
+      background: c.bg, color: c.color,
     }}>
-      {status}
+      {c.label}
     </span>
   );
 }
@@ -66,6 +66,13 @@ export default async function AffiliatePage() {
               Share your unique link with your audience — YouTube, newsletters, social media, anywhere.
             </p>
           </div>
+
+          <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 20 }}>
+            By applying, you agree to the{' '}
+            <a href="/affiliate/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6', textDecoration: 'none', fontWeight: 600 }}>Affiliate Terms &amp; Conditions</a>.
+            Not sure yet?{' '}
+            <a href="/affiliate" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6', textDecoration: 'none' }}>Learn about the program →</a>
+          </p>
 
           {existingApp?.status === 'rejected' ? (
             <div style={{
@@ -214,8 +221,34 @@ export default async function AffiliatePage() {
 
       {/* Conversions table */}
       <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e8e8e9', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 24px', borderBottom: '1px solid #e8e8e9' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1A1C1D', margin: 0 }}>Conversions</h2>
+        <div style={{
+          padding: '18px 24px', borderBottom: '1px solid #e8e8e9',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        }}>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1A1C1D', margin: 0 }}>Conversions</h2>
+            <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0', lineHeight: 1.5 }}>
+              Updated in real-time from Dodo Payments. Each row has a Reference ID you can verify
+              directly with <a href="https://dodopayments.com" target="_blank" rel="noopener noreferrer"
+              style={{ color: '#14B8A6', textDecoration: 'none' }}>Dodo</a> or{' '}
+              <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none' }}>our team</a> if you have a dispute.
+            </p>
+          </div>
+          {conversionList.length > 0 && (
+            <a
+              href="/api/affiliate/export"
+              download
+              style={{
+                padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                border: '1px solid #e8e8e9', color: '#545f6c', textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                background: '#f9f9fa',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+              Export CSV
+            </a>
+          )}
         </div>
 
         {conversionList.length === 0 ? (
@@ -227,7 +260,7 @@ export default async function AffiliatePage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ background: '#f9f9fa' }}>
-                  {['Date', 'Plan', 'Sale Amount', 'Your Commission', 'Status'].map((h) => (
+                  {['Date', 'Plan', 'Sale Amount', 'Your Commission', 'Status', 'Reference ID', 'Payout Date'].map((h) => (
                     <th key={h} style={{
                       padding: '10px 20px', textAlign: 'left', fontSize: 12,
                       fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase',
@@ -246,44 +279,99 @@ export default async function AffiliatePage() {
                   amount_usd: number;
                   commission_usd: number;
                   status: string;
-                }) => (
-                  <tr key={c.id} style={{ borderTop: '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '14px 20px', color: '#545f6c', whiteSpace: 'nowrap' }}>
-                      {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: 600, color: '#1A1C1D' }}>{c.plan}</span>
-                    </td>
-                    <td style={{ padding: '14px 20px', color: '#1A1C1D' }}>
-                      ${Number(c.amount_usd).toFixed(2)}
-                    </td>
-                    <td style={{ padding: '14px 20px', fontWeight: 700, color: '#006b5f' }}>
-                      ${Number(c.commission_usd).toFixed(2)}
-                    </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <StatusPill status={c.status} />
-                    </td>
-                  </tr>
-                ))}
+                  dodo_payment_id: string | null;
+                }) => {
+                  // Affiliates earn after a 30-day refund hold
+                  const payoutEligibleAt = new Date(new Date(c.created_at).getTime() + 30 * 86400000);
+                  const payoutFormatted  = payoutEligibleAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  // Reference ID: prefer Dodo payment/subscription ID; fall back to conversion UUID
+                  const refId     = c.dodo_payment_id ?? c.id;
+                  const refShort  = refId.length > 18 ? refId.slice(0, 16) + '…' : refId;
+                  const refLabel  = c.dodo_payment_id ? '' : 'CLK-';
+                  return (
+                    <tr key={c.id} style={{ borderTop: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '14px 20px', color: '#545f6c', whiteSpace: 'nowrap' }}>
+                        {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <span style={{ textTransform: 'capitalize', fontWeight: 600, color: '#1A1C1D' }}>{c.plan}</span>
+                      </td>
+                      <td style={{ padding: '14px 20px', color: '#1A1C1D' }}>
+                        ${Number(c.amount_usd).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#006b5f' }}>
+                        ${Number(c.commission_usd).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <StatusPill status={c.status} />
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <span
+                          title={refId}
+                          data-copy-ref={refId}
+                          className="copy-ref-id"
+                          style={{
+                            fontFamily: "'JetBrains Mono', monospace",
+                            fontSize: 12, color: '#545f6c',
+                            cursor: 'pointer', borderBottom: '1px dashed #d1d5db',
+                          }}
+                        >
+                          {refLabel}{refShort}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 20px', color: '#545f6c', whiteSpace: 'nowrap', fontSize: 13 }}>
+                        {c.status === 'pending'
+                          ? payoutFormatted
+                          : c.status === 'cancelled'
+                          ? <span style={{ color: '#b91c1c', fontSize: 12 }}>Refunded — reversed</span>
+                          : '—'
+                        }
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
+      {/* T&C reference */}
+      <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 32 }}>
+        Your participation is governed by the{' '}
+        <a href="/affiliate/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6', textDecoration: 'none' }}>Affiliate Terms &amp; Conditions</a>.
+        Questions? Email{' '}
+        <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none' }}>affiliates@clipmark.app</a>.
+      </p>
+
       {/* Copy-to-clipboard client script */}
       <script dangerouslySetInnerHTML={{ __html: `
         (function() {
           var btn = document.getElementById('copy-affiliate-link');
-          if (!btn) return;
-          btn.addEventListener('click', function() {
-            var link = btn.getAttribute('data-copy');
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(link).then(function() {
-                btn.textContent = 'Copied!';
-                setTimeout(function() { btn.textContent = 'Copy Link'; }, 2000);
-              });
-            }
+          if (btn) {
+            btn.addEventListener('click', function() {
+              var link = btn.getAttribute('data-copy');
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(link).then(function() {
+                  btn.textContent = 'Copied!';
+                  setTimeout(function() { btn.textContent = 'Copy Link'; }, 2000);
+                });
+              }
+            });
+          }
+
+          // Copy reference IDs on click
+          document.querySelectorAll('.copy-ref-id').forEach(function(el) {
+            el.addEventListener('click', function() {
+              var refId = el.getAttribute('data-copy-ref');
+              if (navigator.clipboard && refId) {
+                navigator.clipboard.writeText(refId).then(function() {
+                  var orig = el.textContent;
+                  el.textContent = 'Copied!';
+                  setTimeout(function() { el.textContent = orig; }, 1500);
+                });
+              }
+            });
           });
         })();
       `}} />
