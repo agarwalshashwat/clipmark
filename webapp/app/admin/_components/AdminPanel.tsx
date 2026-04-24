@@ -110,13 +110,12 @@ export default function AdminPanel() {
   const btn = (variant: 'primary' | 'danger' | 'ghost' = 'primary'): React.CSSProperties => ({
     padding: '8px 16px',
     borderRadius: 8,
-    border: 'none',
+    border: variant === 'ghost' ? '1px solid var(--border)' : 'none',
     cursor: 'pointer',
     fontWeight: 600,
     fontSize: 14,
     background: variant === 'primary' ? 'var(--accent)' : variant === 'danger' ? '#ef4444' : 'var(--surface)',
     color: variant === 'ghost' ? 'var(--text-primary)' : '#fff',
-    border: variant === 'ghost' ? '1px solid var(--border)' : 'none',
   });
 
   return (
