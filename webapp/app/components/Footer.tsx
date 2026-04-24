@@ -11,6 +11,7 @@ export function Footer() {
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28 }}>
           <a href="/upgrade" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Pricing</a>
+          <a href="/affiliate" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Affiliate</a>
           <a href="/privacy" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Privacy</a>
           <a href="/terms" style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Terms</a>
           <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#545f6c', fontSize: 14, textDecoration: 'none' }}>Support</a>

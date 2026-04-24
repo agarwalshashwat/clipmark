@@ -2,7 +2,9 @@
 
 import DodoPayments from 'dodopayments';
 import { unstable_cache } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 
 const dodo = new DodoPayments({
@@ -35,22 +37,20 @@ function centsToDisplay(cents: number): string {
 
 export const fetchProductPrices = unstable_cache(
   async (): Promise<ProductPrices> => {
-    // Prices are in smallest currency unit (cents per Dodo API docs)
-    try {
-      const [monthly, annual, lifetime] = await Promise.all([
-        dodo.products.retrieve(PRODUCT_IDS.monthly),
-        dodo.products.retrieve(PRODUCT_IDS.annual),
-        dodo.products.retrieve(PRODUCT_IDS.lifetime),
-      ]);
-      return {
-        monthly:  centsToDisplay(extractCentPrice(monthly.price  as { type: string; price?: number; fixed_price?: number })),
-        annual:   centsToDisplay(extractCentPrice(annual.price   as { type: string; price?: number; fixed_price?: number })),
-        lifetime: centsToDisplay(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number })),
-      };
-    } catch (err) {
-      console.error('[fetchProductPrices] Dodo API error, using defaults:', err);
-      return PRICE_DEFAULTS;
-    }
+    // Prices are in smallest currency unit (cents per Dodo API docs).
+    // NOTE: No try/catch here — if the Dodo API call fails, the error propagates
+    // out of the cached function so unstable_cache does NOT store a failed result.
+    // The public getProductPrices() wrapper below catches errors without caching them.
+    const [monthly, annual, lifetime] = await Promise.all([
+      dodo.products.retrieve(PRODUCT_IDS.monthly),
+      dodo.products.retrieve(PRODUCT_IDS.annual),
+      dodo.products.retrieve(PRODUCT_IDS.lifetime),
+    ]);
+    return {
+      monthly:  centsToDisplay(extractCentPrice(monthly.price  as { type: string; price?: number; fixed_price?: number })),
+      annual:   centsToDisplay(extractCentPrice(annual.price   as { type: string; price?: number; fixed_price?: number })),
+      lifetime: centsToDisplay(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number })),
+    };
   },
   ['dodo-product-prices'],
   { revalidate: 300, tags: ['dodo-product-prices'] }
@@ -99,14 +99,40 @@ export async function createCheckoutSession(formData: FormData) {
   const productId = PRODUCT_IDS[plan];
   if (!productId) throw new Error(`Unknown plan: ${plan}`);
 
+  const cookieStore = await cookies();
+  const affiliateCode   = cookieStore.get('clipmark_ref')?.value ?? null;
+  const userReferralCode = cookieStore.get('clipmark_user_ref')?.value ?? null;
+  if (affiliateCode)    cookieStore.delete('clipmark_ref');
+  if (userReferralCode) cookieStore.delete('clipmark_user_ref');
+
+  // Look up the affiliate's Dodo discount code to apply at checkout
+  let dodoDiscountCode: string | null = null;
+  if (affiliateCode) {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data: affiliateProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('dodo_discount_code')
+      .eq('affiliate_code', affiliateCode)
+      .eq('is_affiliate', true)
+      .single();
+    dodoDiscountCode = (affiliateProfile?.dodo_discount_code as string | null) ?? null;
+  }
+
   const session = await dodo.checkoutSessions.create({
     product_cart: [{ product_id: productId, quantity: 1 }],
     customer: {
       email: user.email!,
       name:  user.user_metadata?.full_name ?? undefined,
     },
-    // Passed through to webhook payload so we can identify the Supabase user
-    metadata: { user_id: user.id },
+    ...(dodoDiscountCode ? { discount_code: dodoDiscountCode } : {}),
+    metadata: {
+      user_id: user.id,
+      ...(affiliateCode    ? { affiliate_code:    affiliateCode    } : {}),
+      ...(userReferralCode ? { user_referral_code: userReferralCode } : {}),
+    },
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
   });
 

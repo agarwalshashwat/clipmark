@@ -24,7 +24,23 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired — required for Server Components
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // ── Admin route guard ──────────────────────────────────────────────────────
+  // ADMIN_USER_IDS is a comma-separated list of Supabase user UUIDs set in .env.local
+  // e.g. ADMIN_USER_IDS=uuid1,uuid2
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/signin?redirect=/admin', request.url));
+    }
+    const adminIds = (process.env.ADMIN_USER_IDS ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+    if (!adminIds.includes(user.id)) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
 
   return supabaseResponse;
 }

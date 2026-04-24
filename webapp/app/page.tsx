@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase';
 import { Navigation } from './components/Navigation';
@@ -36,9 +37,9 @@ const FAQ_DATA = [
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; extensionId?: string }>;
+  searchParams: Promise<{ code?: string; extensionId?: string; ref?: string }>;
 }) {
-  const { code, extensionId } = await searchParams;
+  const { code, extensionId, ref } = await searchParams;
 
   // Fallback: if OAuth code lands here (misconfigured redirect URL),
   // forward it to the proper auth callback handler.
@@ -52,6 +53,19 @@ export default async function Home({
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect('/dashboard');
+
+  const cookieStore = await cookies();
+  const refCookie = cookieStore.get('clipmark_ref')?.value;
+  let referrerUsername: string | null = null;
+  if (ref && ref === refCookie) {
+    const { data: affiliateProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('affiliate_code', ref)
+      .eq('is_affiliate', true)
+      .single();
+    referrerUsername = affiliateProfile?.username ?? null;
+  }
 
   const howToLd = {
     "@context": "https://schema.org",
@@ -102,6 +116,22 @@ export default async function Home({
       />
 
       <Navigation />
+
+      {/* ── Referral Banner ────────────────────────────────────────────── */}
+      {referrerUsername && (
+        <div style={{
+          background: 'linear-gradient(90deg, rgba(20,184,166,0.10) 0%, rgba(139,92,246,0.10) 100%)',
+          borderBottom: '1px solid rgba(20,184,166,0.20)',
+          padding: '10px 24px',
+          textAlign: 'center',
+          fontSize: 14,
+          color: '#006B5F',
+          fontWeight: 500,
+        }}>
+          <span style={{ marginRight: 6 }}>👋</span>
+          You were referred by <strong>@{referrerUsername}</strong> — welcome to Clipmark!
+        </div>
+      )}
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section style={{ paddingTop: 72, position: 'relative', overflow: 'hidden' }}>
