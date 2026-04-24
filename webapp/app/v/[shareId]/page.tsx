@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
-import { SUPPORT_EMAIL } from '@/app/lib/constants';
+import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -67,7 +67,7 @@ export async function generateMetadata(
   if (!collection) return { title: 'Not found — Clipmark' };
 
   const title = collection.video_title || 'YouTube Video';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const baseUrl = APP_URL;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`;
 
   return {
@@ -100,7 +100,7 @@ export async function generateMetadata(
 
 // ─── Structured Data (JSON-LD) ────────────────────────────────────────────────
 function generateJsonLd(collection: Collection, shareId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://clipmark.mithahara.com';
+  const baseUrl = APP_URL;
   const url = `${baseUrl}/v/${shareId}`;
   
   return {
@@ -350,7 +350,7 @@ export default async function SharePage(
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Bookmarked key moments from "${title}" — check them out`)}&url=${encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/v/${video_id}`)}&via=clipmarkapp`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Bookmarked key moments from "${title}" — check them out`)}&url=${encodeURIComponent(`${APP_URL}/v/${video_id}`)}&via=clipmarkapp`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -364,7 +364,7 @@ export default async function SharePage(
                   >
                     <span style={{ fontSize: 15 }}>𝕏</span> Share on X / Twitter
                   </a>
-                  <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com'}/v/${shareId}`} />
+                  <CopyLinkButton url={`${APP_URL}/v/${shareId}`} />
                 </div>
               </div>
 

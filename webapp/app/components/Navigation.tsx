@@ -16,6 +16,7 @@ export function Navigation() {
           <a href="/#features" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Features</a>
           <a href="/#how-it-works" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>How It Works</a>
           <a href="/upgrade" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Pricing</a>
+          <a href="/affiliate" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Affiliate</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <a href="/signin" style={{
@@ -32,7 +33,7 @@ export function Navigation() {
             background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
             color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
           }}>
-            Add to Chrome — Free
+            Build Your Second Brain — Free
           </a>
         </div>
       </div>

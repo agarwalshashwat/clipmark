@@ -1,6 +1,7 @@
 import { createServerSupabase, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
 import { DashboardCopyLinkButton } from './CopyLinkButton';
+import { APP_URL } from '@/app/lib/constants';
 
 export const metadata = { title: 'Shared Collections — Clipmark' };
 
@@ -20,7 +21,7 @@ export default async function SharedPage() {
   const shared = collections.filter(c => (c.view_count ?? 0) > 0);
   const unshared = collections.filter(c => (c.view_count ?? 0) === 0);
 
-  let origin = process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com';
+  let origin = APP_URL;
   if (origin.endsWith('/')) {
     origin = origin.slice(0, -1);
   }

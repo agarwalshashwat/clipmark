@@ -2,6 +2,8 @@ import { createServerSupabase } from '@/lib/supabase';
 import { createCheckoutSession, fetchProductPrices } from './actions';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
 import LifetimeCountdown from './LifetimeCountdown';
+import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 // import { ThemeToggle } from '../components/ThemeToggle';
 
 const FEATURES = [
@@ -62,10 +64,41 @@ export default async function UpgradePage({
     cancelAtPeriodEnd = profile?.cancel_at_period_end ?? false;
   }
 
-  const prices = await fetchProductPrices();
+  let prices: import('./actions').ProductPrices;
+  try {
+    prices = await fetchProductPrices();
+  } catch (err) {
+    console.error('[UpgradePage] Could not fetch Dodo prices, using defaults:', err);
+    prices = { monthly: '5', annual: '40', lifetime: '40' };
+  }
   const savingsPct = Math.round(
     (1 - (Number(prices.annual) / 12) / Number(prices.monthly)) * 100
   );
+
+  // ── Referral discount banner ──────────────────────────────────────────────
+  // Only available to non-Pro users who arrived via an affiliate link.
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const cookieStore = await cookies();
+  const refCode = cookieStore.get('clipmark_ref')?.value;
+  let referralBanner: { username: string; discountPct: number } | null = null;
+  if (refCode && !isPro) {
+    const { data: affiliateProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('username, affiliate_discount_pct, dodo_discount_code')
+      .eq('affiliate_code', refCode)
+      .eq('is_affiliate', true)
+      .single();
+    // Only show banner if the affiliate has an active Dodo discount code (real discount)
+    if (affiliateProfile?.dodo_discount_code) {
+      referralBanner = {
+        username:    affiliateProfile.username as string,
+        discountPct: (affiliateProfile.affiliate_discount_pct as number | null) ?? 10,
+      };
+    }
+  }
 
   const daysSinceStart = subscriptionStartedAt
     ? (Date.now() - new Date(subscriptionStartedAt).getTime()) / 86400000
@@ -143,6 +176,24 @@ export default async function UpgradePage({
               fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}>
               Payment successful — welcome to Clipmark Pro! 🎉
+            </div>
+          )}
+
+          {/* ── Banner: Referral discount ── */}
+          {referralBanner && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(20,184,166,0.12) 0%, rgba(139,92,246,0.10) 100%)',
+              border: '1px solid rgba(20,184,166,0.35)',
+              borderRadius: 10, padding: '14px 24px', margin: '24px auto 0',
+              maxWidth: 640, textAlign: 'center', fontSize: 15, color: '#006b5f',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            }}>
+              <span style={{ fontSize: 18 }}>🎉</span>
+              <span>
+                <strong>{referralBanner.discountPct}% off</strong> automatically applied
+                {' '}— referred by <strong>{referralBanner.username}</strong>
+              </span>
             </div>
           )}
 
