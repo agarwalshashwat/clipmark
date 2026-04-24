@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
 
   if (approve) {
     updates.is_affiliate = true;
-    updates.affiliate_status = 'approved';
   }
 
   if (affiliateCode !== undefined) {
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (commissionRate < 0 || commissionRate > 100) {
       return NextResponse.json({ error: 'commissionRate must be 0–100' }, { status: 400 });
     }
-    updates.affiliate_commission_rate = commissionRate;
+    updates.commission_rate = commissionRate / 100; // store as decimal e.g. 0.50 for 50%
   }
 
   const effectiveDiscountPct =
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
         usage_limit: null,
         expires_at: null,
       } as Parameters<typeof dodo.discounts.create>[0]);
-      updates.dodo_discount_code = (discount as { discount_id: string }).discount_id;
+      updates.dodo_discount_code = (discount as { code: string }).code;
     } catch (err) {
       console.error('[admin/set-affiliate] Dodo discount creation failed:', err);
       // Non-fatal — proceed without discount code

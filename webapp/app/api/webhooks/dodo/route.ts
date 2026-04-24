@@ -206,17 +206,77 @@ export async function POST(request: NextRequest) {
         subscription_period_end: null,
         cancel_at_period_end: false,
       }).eq('id', userId);
+
+      // Void any pending affiliate commission for this user (sub ID used as payment ID for subs)
+      const subId = sub.subscription_id;
+      if (subId) {
+        const { data: voidedConversions } = await supabaseAdmin
+          .from('affiliate_conversions')
+          .update({ status: 'cancelled' })
+          .eq('dodo_payment_id', subId)
+          .eq('status', 'pending')
+          .select('id');
+
+        // Also reverse any referral credits for this user's conversions
+        if (voidedConversions && voidedConversions.length > 0) {
+          const { data: referral } = await supabaseAdmin
+            .from('referrals')
+            .select('referrer_id, reward_months')
+            .eq('referred_id', userId)
+            .eq('status', 'credited')
+            .maybeSingle();
+          if (referral) {
+            await Promise.all([
+              supabaseAdmin
+                .from('referrals')
+                .update({ status: 'reversed' })
+                .eq('referred_id', userId),
+              supabaseAdmin
+                .from('profiles')
+                .update({ referral_months_credit: supabaseAdmin.rpc ? undefined : undefined }) // handled via rpc below
+                .eq('id', referral.referrer_id),
+              supabaseAdmin.rpc('decrement_referral_credit', {
+                p_user_id: referral.referrer_id,
+                p_months: referral.reward_months ?? 3,
+              }),
+            ]);
+          }
+        }
+      }
     }
   }
 
   else if (type === 'refund.succeeded') {
-    const refund = data as { payment_id?: string };
+    const refund = data as { payment_id?: string; metadata?: { user_id?: string } };
     if (refund.payment_id) {
       await supabaseAdmin
         .from('affiliate_conversions')
         .update({ status: 'cancelled' })
         .eq('dodo_payment_id', refund.payment_id)
         .eq('status', 'pending');
+
+      // Reverse referral credit for the refunded user if applicable
+      const userId = refund.metadata?.user_id;
+      if (userId) {
+        const { data: referral } = await supabaseAdmin
+          .from('referrals')
+          .select('referrer_id, reward_months')
+          .eq('referred_id', userId)
+          .eq('status', 'credited')
+          .maybeSingle();
+        if (referral) {
+          await Promise.all([
+            supabaseAdmin
+              .from('referrals')
+              .update({ status: 'reversed' })
+              .eq('referred_id', userId),
+            supabaseAdmin.rpc('decrement_referral_credit', {
+              p_user_id: referral.referrer_id,
+              p_months: referral.reward_months ?? 3,
+            }),
+          ]);
+        }
+      }
     }
   }
 

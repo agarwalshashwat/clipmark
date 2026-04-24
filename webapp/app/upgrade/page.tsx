@@ -100,6 +100,19 @@ export default async function UpgradePage({
     }
   }
 
+  const userRefCode = cookieStore.get('clipmark_user_ref')?.value;
+  let userReferralBanner: { username: string } | null = null;
+  if (userRefCode && !isPro) {
+    const { data: referrerProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('username')
+      .eq('referral_code', userRefCode)
+      .single();
+    if (referrerProfile?.username) {
+      userReferralBanner = { username: referrerProfile.username as string };
+    }
+  }
+
   const daysSinceStart = subscriptionStartedAt
     ? (Date.now() - new Date(subscriptionStartedAt).getTime()) / 86400000
     : Infinity;
@@ -193,6 +206,23 @@ export default async function UpgradePage({
               <span>
                 <strong>{referralBanner.discountPct}% off</strong> automatically applied
                 {' '}— referred by <strong>{referralBanner.username}</strong>
+              </span>
+            </div>
+          )}
+
+          {/* ── Banner: User referral (Refer & Earn) ── */}
+          {!referralBanner && userReferralBanner && (
+            <div style={{
+              background: 'rgba(139,92,246,0.08)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              borderRadius: 10, padding: '14px 24px', margin: '24px auto 0',
+              maxWidth: 640, textAlign: 'center', fontSize: 15, color: '#6d28d9',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            }}>
+              <span style={{ fontSize: 18 }}>👥</span>
+              <span>
+                Referred by <strong>{userReferralBanner.username}</strong> — your upgrade will earn them 3 free months!
               </span>
             </div>
           )}
