@@ -130,10 +130,15 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             <span className={styles.sideNavItemLabel}>Shared</span>
           </a>
           <p className={styles.sideNavSection}>Account</p>
-          {isAffiliate && (
+          {isAffiliate ? (
             <a href="/dashboard/affiliate" className={`${styles.sideNavItem} ${isActive('/dashboard/affiliate') ? styles.sideNavItemActive : ''}`}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>campaign</span>
               <span className={styles.sideNavItemLabel}>Affiliate</span>
+            </a>
+          ) : (
+            <a href="/affiliate" className={styles.sideNavItem}>
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>attach_money</span>
+              <span className={styles.sideNavItemLabel}>Earn with Clipmark</span>
             </a>
           )}
           <a href="/dashboard/referral" className={`${styles.sideNavItem} ${isActive('/dashboard/referral') ? styles.sideNavItemActive : ''}`}>
