@@ -1,12 +1,40 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { supabase, createServerSupabase } from '@/lib/supabase';
 import type { Bookmark } from '@/lib/supabase';
+
+// Authenticate via Bearer token (extension) or cookie session (webapp)
+async function getAuthenticatedUser(request: NextRequest) {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    const userClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+    return { user, client: userClient };
+  }
+
+  const serverClient = await createServerSupabase();
+  const { data: { user } } = await serverClient.auth.getUser();
+  if (!user) return null;
+  return { user, client: serverClient };
+}
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 });
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await getAuthenticatedUser(request);
+  if (!authResult) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'AI features not configured' }, { status: 503 });
@@ -18,8 +46,8 @@ export async function POST(request: NextRequest) {
       videoTitle?: string;
     };
 
-    if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
-      return NextResponse.json({ error: 'bookmarks array is required' }, { status: 400 });
+    if (!Array.isArray(bookmarks) || bookmarks.length === 0 || bookmarks.length > 100) {
+      return NextResponse.json({ error: 'bookmarks must be a non-empty array of at most 100 items' }, { status: 400 });
     }
 
     const sorted = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
