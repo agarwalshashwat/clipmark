@@ -195,6 +195,51 @@ test.describe('Marker interactions', () => {
     await expect(page.locator('.yt-bookmark-marker.clicked')).not.toBeAttached({ timeout: 1_500 });
   });
 
+  // ── Marker CSS color variable reflects tag color ────────────────────────────
+  test('Marker --bm-color CSS variable matches the bookmark color', async ({ context }) => {
+    const bookmark = makeBookmark(VIDEO_ID, 40, {
+      description: 'Color check #important',
+      tags: ['important'],
+      color: '#ef4444',
+    });
+    await seedBookmarks(context, VIDEO_ID, [bookmark]);
+
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('video').hover();
+    await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
+
+    // Exactly one marker should exist (one seeded bookmark, no others)
+    const count = await page.locator('.yt-bookmark-marker').count();
+    expect(count).toBe(1);
+
+    const bmColor = await page.locator('.yt-bookmark-marker').first().evaluate(
+      el => (el as HTMLElement).style.getPropertyValue('--bm-color').trim(),
+    );
+
+    expect(bmColor).toBe('#ef4444');
+  });
+
+  // ── Active-marker highlight follows playback position ─────────────────────
+  test('Playing near a bookmark adds .yt-bookmark-marker--active to that marker', async ({ context }) => {
+    const bookmark = makeBookmark(VIDEO_ID, 5, { description: 'Active marker check' });
+    await seedBookmarks(context, VIDEO_ID, [bookmark]);
+
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('video').hover();
+    await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
+
+    // Seek the video to exactly the bookmark timestamp and fire timeupdate
+    await page.locator('video').evaluate((v: HTMLVideoElement) => {
+      v.currentTime = 5;
+      v.dispatchEvent(new Event('timeupdate'));
+    });
+    await page.waitForTimeout(600);
+
+    await expect(page.locator('.yt-bookmark-marker--active')).toBeAttached({ timeout: 3_000 });
+  });
+
   // ── Cluster tooltip ────────────────────────────────────────────────────────
   test('Hovering a cluster marker shows the cluster tooltip header', async ({ context }) => {
     // Create 10 bookmarks, 3 of which are very close together (will cluster for a long video)

@@ -564,3 +564,260 @@ describe('getTextAtTimestamp', () => {
     assert.match(result.toLowerCase(), /single segment/);
   });
 });
+
+// ─── extractVideoId ───────────────────────────────────────────────────────────
+// Inlined from extension/src/popup/popup.js
+
+function extractVideoId(url) {
+  return new URLSearchParams(new URL(url).search).get('v');
+}
+
+describe('extractVideoId', () => {
+  it('extracts videoId from a standard YouTube watch URL', () => {
+    assert.strictEqual(extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
+  });
+
+  it('extracts videoId when additional query params are present', () => {
+    assert.strictEqual(
+      extractVideoId('https://www.youtube.com/watch?v=abc123&t=30s&list=PL1'),
+      'abc123',
+    );
+  });
+
+  it('extracts videoId when v param comes after other params', () => {
+    assert.strictEqual(extractVideoId('https://www.youtube.com/watch?t=10s&v=XYZ789'), 'XYZ789');
+  });
+
+  it('returns null for a URL without a v param', () => {
+    assert.strictEqual(extractVideoId('https://www.youtube.com/'), null);
+  });
+
+  it('returns null for a youtu.be short URL (no v query param)', () => {
+    assert.strictEqual(extractVideoId('https://youtu.be/dQw4w9WgXcQ'), null);
+  });
+
+  it('handles a URL with only the v param', () => {
+    assert.strictEqual(extractVideoId('https://www.youtube.com/watch?v=onlyV'), 'onlyV');
+  });
+
+  it('throws a TypeError for a completely malformed URL string', () => {
+    // The underlying `new URL()` call throws for non-URL strings.
+    // Callers should validate the URL before invoking this function.
+    assert.throws(() => extractVideoId('not-a-url'), TypeError);
+  });
+});
+
+// ─── remKey ──────────────────────────────────────────────────────────────────
+// Inlined from extension/src/popup/popup.js
+
+function remKey(videoId) { return `rem_${videoId}`; }
+
+describe('remKey', () => {
+  it('prepends rem_ to videoId', () => {
+    assert.strictEqual(remKey('dQw4w9WgXcQ'), 'rem_dQw4w9WgXcQ');
+  });
+
+  it('works for any string videoId', () => {
+    assert.strictEqual(remKey('abc123'), 'rem_abc123');
+  });
+
+  it('produces unique keys for different video IDs', () => {
+    assert.notStrictEqual(remKey('aaa'), remKey('bbb'));
+  });
+
+  it('is distinct from the bmKey for the same video', () => {
+    assert.notStrictEqual(remKey('vid'), bmKey('vid'));
+  });
+});
+
+// ─── frequencyLabel ───────────────────────────────────────────────────────────
+// Inlined from extension/src/background/background.js
+
+function frequencyLabel(frequency) {
+  const map = { once: 'one-time', daily: 'daily', weekly: 'weekly', biweekly: 'every 2 weeks', monthly: 'monthly' };
+  return map[frequency] || frequency;
+}
+
+describe('frequencyLabel', () => {
+  it('"once" maps to "one-time"', () => {
+    assert.strictEqual(frequencyLabel('once'), 'one-time');
+  });
+
+  it('"daily" maps to "daily"', () => {
+    assert.strictEqual(frequencyLabel('daily'), 'daily');
+  });
+
+  it('"weekly" maps to "weekly"', () => {
+    assert.strictEqual(frequencyLabel('weekly'), 'weekly');
+  });
+
+  it('"biweekly" maps to "every 2 weeks"', () => {
+    assert.strictEqual(frequencyLabel('biweekly'), 'every 2 weeks');
+  });
+
+  it('"monthly" maps to "monthly"', () => {
+    assert.strictEqual(frequencyLabel('monthly'), 'monthly');
+  });
+
+  it('unknown frequency returns the input string unchanged', () => {
+    assert.strictEqual(frequencyLabel('quarterly'), 'quarterly');
+  });
+
+  it('empty string returns empty string', () => {
+    assert.strictEqual(frequencyLabel(''), '');
+  });
+});
+
+// ─── isDueForReview ───────────────────────────────────────────────────────────
+// Inlined from extension/src/popup/popup.js
+
+function isDueForReview(bookmark) {
+  if (!bookmark.reviewSchedule?.length || !bookmark.createdAt) return false;
+  const created      = new Date(bookmark.createdAt).getTime();
+  const now          = Date.now();
+  const lastReviewed = bookmark.lastReviewed ? new Date(bookmark.lastReviewed).getTime() : 0;
+  return bookmark.reviewSchedule.some(days => {
+    const dueAt = created + days * 86400000;
+    return now >= dueAt && lastReviewed < dueAt;
+  });
+}
+
+describe('isDueForReview', () => {
+  /**
+   * Builds a minimal bookmark object with createdAt set to the given number
+   * of days in the past, suitable for passing to isDueForReview.
+   *
+   * @param {number} daysAgo - Days ago createdAt was set
+   * @param {Object} [options]
+   * @param {number[]} [options.reviewSchedule=[1,3,7]]
+   * @param {string|null} [options.lastReviewed=null]
+   * @returns {{ createdAt: string, reviewSchedule: number[], lastReviewed: string|null }}
+   */
+  function makeBm(daysAgo, { reviewSchedule = [1, 3, 7], lastReviewed = null } = {}) {
+    return {
+      createdAt: new Date(Date.now() - daysAgo * 86400000).toISOString(),
+      reviewSchedule,
+      lastReviewed,
+    };
+  }
+
+  it('returns false when reviewSchedule is empty', () => {
+    assert.strictEqual(isDueForReview(makeBm(5, { reviewSchedule: [] })), false);
+  });
+
+  it('returns false when createdAt is missing', () => {
+    assert.strictEqual(
+      isDueForReview({ reviewSchedule: [1, 3, 7], lastReviewed: null }),
+      false,
+    );
+  });
+
+  it('returns false when createdAt is null', () => {
+    assert.strictEqual(
+      isDueForReview({ createdAt: null, reviewSchedule: [1, 3, 7], lastReviewed: null }),
+      false,
+    );
+  });
+
+  it('returns false when bookmark was just created (no due date reached)', () => {
+    // Created right now, 1-day schedule → first due date is 24h away
+    assert.strictEqual(isDueForReview(makeBm(0)), false);
+  });
+
+  it('returns true when a due date has passed and bookmark was never reviewed', () => {
+    // Created 2 days ago, schedule [1] → day-1 due date is in the past, never reviewed
+    assert.strictEqual(isDueForReview(makeBm(2, { reviewSchedule: [1] })), true);
+  });
+
+  it('returns false when due date passed but bookmark was reviewed after the due date', () => {
+    // Created 3 days ago, schedule [1], reviewed 2 days ago (after the 1-day due date)
+    const createdAt    = new Date(Date.now() - 3 * 86400000).toISOString();
+    const lastReviewed = new Date(Date.now() - 2 * 86400000).toISOString();
+    assert.strictEqual(isDueForReview({ createdAt, reviewSchedule: [1], lastReviewed }), false);
+  });
+
+  it('returns true when one of several scheduled days is due and has not been reviewed', () => {
+    // Created 4 days ago, schedule [3, 7]: day-3 due date is in the past → due
+    assert.strictEqual(isDueForReview(makeBm(4, { reviewSchedule: [3, 7] })), true);
+  });
+
+  it('returns false when all scheduled days are still in the future', () => {
+    // Created today, schedule [7, 14] → nothing is due yet
+    assert.strictEqual(isDueForReview(makeBm(0, { reviewSchedule: [7, 14] })), false);
+  });
+
+  it('returns false when all due dates have already been reviewed', () => {
+    // Created 10 days ago, schedule [1, 3, 7], reviewed yesterday (covers all three)
+    const createdAt    = new Date(Date.now() - 10 * 86400000).toISOString();
+    const lastReviewed = new Date(Date.now() - 1 * 86400000).toISOString();
+    assert.strictEqual(
+      isDueForReview({ createdAt, reviewSchedule: [1, 3, 7], lastReviewed }),
+      false,
+    );
+  });
+});
+
+// ─── buildRevisionSegments ────────────────────────────────────────────────────
+// Inlined from extension/src/content/content.js
+
+function buildRevisionSegments(bookmarks) {
+  const sorted = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
+  return sorted.map((b, i) => {
+    const next = sorted[i + 1];
+    const end  = next ? Math.min(next.timestamp, b.timestamp + 60) : b.timestamp + 60;
+    return { bookmark: b, start: b.timestamp, end };
+  });
+}
+
+describe('buildRevisionSegments', () => {
+  function makeRevBm(timestamp) {
+    return { id: timestamp, timestamp, description: `t=${timestamp}`, tags: [], color: '#4da1ee' };
+  }
+
+  it('returns an empty array for empty input', () => {
+    assert.deepEqual(buildRevisionSegments([]), []);
+  });
+
+  it('single bookmark: start equals timestamp, end is timestamp + 60', () => {
+    const [seg] = buildRevisionSegments([makeRevBm(30)]);
+    assert.strictEqual(seg.start, 30);
+    assert.strictEqual(seg.end, 90);
+  });
+
+  it('last segment end is always start + 60', () => {
+    const segs = buildRevisionSegments([makeRevBm(100), makeRevBm(200)]);
+    const last = segs[segs.length - 1];
+    assert.strictEqual(last.end, last.start + 60);
+  });
+
+  it('sorts bookmarks by timestamp ascending regardless of input order', () => {
+    const bms = [makeRevBm(50), makeRevBm(10), makeRevBm(30)];
+    const segs = buildRevisionSegments(bms);
+    assert.deepEqual(segs.map(s => s.start), [10, 30, 50]);
+  });
+
+  it('end is capped at next bookmark timestamp when bookmarks are close together', () => {
+    // b0 at t=10, b1 at t=20; min(20, 10+60)=20 → end for b0 should be 20
+    const segs = buildRevisionSegments([makeRevBm(10), makeRevBm(20), makeRevBm(300)]);
+    assert.strictEqual(segs[0].end, 20);
+  });
+
+  it('end is start+60 when next bookmark is farther than 60s away', () => {
+    // b0 at t=10, b1 at t=200; min(200, 10+60)=70 → end for b0 should be 70
+    const segs = buildRevisionSegments([makeRevBm(10), makeRevBm(200)]);
+    assert.strictEqual(segs[0].end, 70);
+  });
+
+  it('preserves the original bookmark reference in segment.bookmark', () => {
+    const bm = makeRevBm(15);
+    const [seg] = buildRevisionSegments([bm]);
+    assert.strictEqual(seg.bookmark, bm);
+  });
+
+  it('does not mutate the original bookmarks array', () => {
+    const original = [makeRevBm(50), makeRevBm(10)];
+    buildRevisionSegments(original);
+    assert.strictEqual(original[0].timestamp, 50);
+    assert.strictEqual(original[1].timestamp, 10);
+  });
+});

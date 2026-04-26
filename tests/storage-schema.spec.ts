@@ -58,6 +58,7 @@ test.describe('Storage schema', () => {
       'tags',
       'color',
       'createdAt',
+      'videoTitle',
       'reviewSchedule',
       'lastReviewed',
     ] as const;
@@ -123,6 +124,13 @@ test.describe('Storage schema', () => {
   test('Bookmark "lastReviewed" defaults to null', async ({ context }) => {
     const [bm] = await saveAndRead(context);
     expect(bm.lastReviewed).toBeNull();
+  });
+
+  test('Bookmark "videoTitle" is a string or null', async ({ context }) => {
+    const [bm] = await saveAndRead(context);
+    // videoTitle is populated asynchronously from the cached title map; it may be
+    // null on the first ever save but must never be an unexpected type.
+    expect(bm.videoTitle === null || typeof bm.videoTitle === 'string').toBe(true);
   });
 
   // ── No extra duplicate entries in the array ────────────────────────────────
