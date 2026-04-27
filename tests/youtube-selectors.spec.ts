@@ -28,7 +28,7 @@ test.describe('YouTube DOM selector alignment', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'domcontentloaded' });
     await page.locator('video').waitFor({ timeout: 20_000 });
     // Hover to reveal player controls
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await expect(page.locator('.ytp-progress-bar')).toBeVisible({ timeout: 20_000 });
   });
 
@@ -36,7 +36,7 @@ test.describe('YouTube DOM selector alignment', () => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'domcontentloaded' });
     await page.locator('video').waitFor({ timeout: 20_000 });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await expect(page.locator('.ytp-right-controls')).toBeAttached({ timeout: 20_000 });
   });
 
@@ -62,7 +62,7 @@ test.describe('YouTube DOM selector alignment', () => {
   test('.ytp-chapter-title-content (optional) — warns if missing, does not fail', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     const count = await page.locator('.ytp-chapter-title-content').count();
     if (count === 0) {
       console.warn(

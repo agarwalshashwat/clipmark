@@ -31,7 +31,7 @@ test.describe('Storage schema', () => {
     });
     await page.waitForTimeout(500);
 
-    await page.locator('video').click(); // ensure keyboard focus
+    await page.locator('video').click({ force: true }); // ensure keyboard focus
     await page.keyboard.press('Alt+s');
     await page.waitForTimeout(2_000); // allow storage write
 
@@ -179,7 +179,7 @@ test.describe('Storage schema', () => {
       v.pause();
     });
     await page.waitForTimeout(500);
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.keyboard.press('Alt+s');
     await page.waitForTimeout(1_500);
 
@@ -207,7 +207,7 @@ test.describe('Storage schema', () => {
         v.pause();
       }, t);
       await page.waitForTimeout(400);
-      await page.locator('video').click();
+      await page.locator('video').click({ force: true });
       await page.keyboard.press('Alt+s');
       await page.waitForTimeout(1_200);
     }
