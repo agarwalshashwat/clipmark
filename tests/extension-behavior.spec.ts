@@ -18,7 +18,8 @@ test.describe('Extension behavior', () => {
     // Wait for extension to fully initialize before sending keyboard event
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
     // Click player to give it focus — required for keyboard events to reach content script
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
     await page.keyboard.press('Alt+s');
     await expect(page.locator('.yt-bookmark-toast')).toBeAttached({ timeout: 5_000 });
   });
@@ -28,7 +29,8 @@ test.describe('Extension behavior', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
     const before = await page.locator('.yt-bookmark-marker').count();
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
     await page.keyboard.press('Alt+s');
     // Allow storage write + updateBookmarkMarkers() re-render
     await page.waitForTimeout(1_500);
@@ -54,7 +56,7 @@ test.describe('Extension behavior', () => {
 
     // Navigate to a different video — YouTube SPA, no page reload
     await page.goto(TEST_VIDEO_URL_2, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
 
     // Extension must re-inject into the new player
     await expect(page.locator('.yt-bookmark-player-btn')).toBeAttached({ timeout: 15_000 });

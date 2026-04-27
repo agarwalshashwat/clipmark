@@ -27,6 +27,7 @@ Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 - **Active marker pulse** — the marker at the current playback position briefly pulses/glows
 - **`#tag` syntax** — `#important`, `#review`, `#key`, etc. with named colors
 - **Marker clustering** — nearby markers merge into a cluster marker when a video has many bookmarks
+- **Context menu** — right-click any YouTube page to "Bookmark at current time" or "Bookmark quote" from selected text
 
 ### Revisit & Learning
 - **Revisit Mode** — plays only your bookmarked segments back to back
@@ -34,7 +35,8 @@ Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 - **Spaced Revisit** — resurfaces bookmarks on a 1/3/7-day schedule
 
 ### Dashboard & Organisation
-- **Dashboard** — card / timeline / groups view, search, sort, bulk delete
+- **Dashboard** — card / timeline / groups / videos view, search, sort, bulk delete
+- **Analytics** — 14-day activity heatmap, tag frequency chart, top videos by bookmark count
 - **Groups** — create custom groups (manual curation) or tag-based auto-groups; add/remove videos per group
 - **Timeline grouping** — multiple clips from the same video on the same day grouped into one card
 - **Side panel** — persistent access alongside any YouTube video
@@ -47,12 +49,20 @@ Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 
 ### Sharing & Sync
 - **Share** — publish any video's bookmarks to a public URL (`/v/{shareId}`)
+- **Embed widget** — embed a shared collection as an `<iframe>` on any site
 - **Cloud sync** — bookmarks pushed to Supabase when signed in
 - **Sign in with Google** — OAuth through the webapp
+- **Public profile** — every user gets a `/u/[username]` page with their public collections
+- **YouTube comments** — view top comments alongside a video's bookmarks in the dashboard
+
+### Growth & Monetisation
+- **Refer & Earn** — share your personal referral link; earn 3 free Pro months per friend who converts
+- **Affiliate program** — invite-only; track clicks and commission-based conversions with a dedicated dashboard
+- **Gifted Pro** — admin can grant Pro access to partners and creators without a payment
 
 ### Other
 - **Export / Import** — JSON, CSV, Markdown
-- **Upgrade / Pro** — Dodo Payments integration; Pro Monthly and Pro Annual plans
+- **Upgrade / Pro** — Dodo Payments integration; Pro Monthly, Pro Annual, and Lifetime plans
 
 ---
 
@@ -67,7 +77,7 @@ Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 ```bash
 cd webapp && npm install && npm run dev
 ```
-Copy `.env.local.example` to `.env.local` and fill in your Supabase, Anthropic, and Dodo Payments keys.
+Copy `.env.example` to `.env.local` and fill in your Supabase, Anthropic, and Dodo Payments keys.
 
 Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost:3000` for local dev.
 
@@ -77,8 +87,10 @@ Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost
 
 | Shortcut | Action |
 |----------|--------|
-| `Alt+B` | Silent-save bookmark at current timestamp |
+| `Alt+S` | Silent-save bookmark at current timestamp (with transcript auto-fill) |
+| `Alt+B` | Open the extension popup |
 | `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick save bookmark |
+| `[` / `]` | Skip to prev / next clip during Revisit Mode |
 
 ---
 
@@ -90,8 +102,9 @@ Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost
 | Webapp | Next.js 14, TypeScript |
 | Database | Supabase (PostgreSQL) |
 | Auth | Google OAuth via Supabase |
-| AI | Anthropic Claude Haiku |
-| Payments | Dodo Payments |
+| AI (cloud) | Anthropic Claude Haiku |
+| AI (local) | Chrome built-in `LanguageModel` (Gemini Nano) |
+| Payments | Dodo Payments (MoR, global VAT) |
 | Hosting | Vercel |
 
 ---
@@ -99,17 +112,29 @@ Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost
 ## Project Structure
 
 ```
-extension/          Chrome extension source (Manifest V3)
+extension/          Chrome extension source (Manifest V3, no build step)
   src/
+    constants.js    Shared constants, tag colors, URL helpers
     content/        Content script — injected into YouTube
-    popup/          Extension popup UI
-    background/     Service worker
+    popup/          Extension popup UI + dashboard + side panel
+    background/     Service worker (keep-alive, context menus, commands, OAuth)
+    ai/             On-device Gemini Nano helpers
+packages/
+  design-system/    Single source of truth for CSS design tokens
 webapp/             Next.js 14 webapp
   app/
-    dashboard/      Authenticated dashboard pages
-    api/            API routes (share, bookmarks, webhooks)
+    dashboard/      Authenticated dashboard (cards, timeline, groups, analytics,
+                    reminders, affiliate, referral)
+    api/            API routes (bookmarks, share, summarize, suggest-tags,
+                    generate-post, comments, referrals, affiliate, webhooks)
     v/[shareId]/    Public share pages
-  migrations/       Supabase SQL migrations
+    u/[username]/   Public user profile pages
+    embed/[shareId]/ Embeddable iframe widget
+  lib/              Supabase client helpers
+  migrations/       11 SQL migration files (idempotent, auto-run on build)
+tests/
+  unit/             Pure-logic unit tests (Node.js, no browser)
+  *.spec.ts         Playwright E2E tests (non-headless Chrome with extension)
 ```
 
 ---
@@ -117,15 +142,31 @@ webapp/             Next.js 14 webapp
 ## Testing
 
 ```bash
+# Pure logic — runs instantly, no browser needed
+npm run test:unit
+
+# E2E — opens a real Chrome window with the extension loaded
 npx playwright install chromium   # first time only
 npm run test:yt
+
+# Both suites together
+npm run test:all
 ```
+
+The E2E suite covers:
+- YouTube DOM selector alignment (progress bar, player controls, title element)
+- Extension UI injection and double-injection guards
+- Bookmark lifecycle (save → persist → reload)
+- Marker interactions (click-to-seek, hover tooltips, tag chips, duplicate rejection)
+- `chrome.storage.sync` schema validation
 
 ---
 
 ## Contributing
 
 The `main` branch is protected — all changes must come in through a pull request with at least one review. Branch off `main`, open a PR, and request a review.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
 
 ---
 
