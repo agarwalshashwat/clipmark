@@ -39,14 +39,14 @@ export function Navigation() {
           </a>
           <a href="https://chrome.google.com/webstore"
              aria-label="Add Clipmark to Chrome for free"
+             className="nav-cta-mobile"
              style={{
             display: 'none',
             padding: '9px 16px',
             background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
             color: 'white', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none',
             whiteSpace: 'nowrap',
-          }}
-          className="nav-cta-mobile">
+          }}>
             Get Free
           </a>
         </div>
