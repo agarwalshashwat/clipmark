@@ -13,7 +13,7 @@
  * Run: npm run test:yt -- --grep "storage schema"
  */
 import { test, expect, TEST_VIDEO_URL } from './fixtures';
-import { getStoredBookmarks } from './helpers';
+import { getStoredBookmarks, getServiceWorker } from './helpers';
 
 const VIDEO_ID = 'dQw4w9WgXcQ';
 
@@ -215,5 +215,37 @@ test.describe('Storage schema', () => {
     const stored = await getStoredBookmarks(context, VIDEO_ID);
     expect(stored.length).toBe(2);
     expect(stored[0].id).toBeLessThan(stored[1].id);
+  });
+
+  // ── videoTitle matches the page heading ───────────────────────────────────
+  test('videoTitle stored in bookmark matches the h1 heading on the page', async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
+
+    // Wait until the YouTube title heading is populated (not empty)
+    const titleLocator = page.locator('h1.ytd-video-primary-info-renderer').first();
+    await expect(titleLocator).not.toHaveText('', { timeout: 10_000 });
+
+    // Pause at a stable timestamp, then save via Alt+S
+    await page.locator('video').evaluate((v: HTMLVideoElement) => {
+      v.currentTime = 20;
+      v.pause();
+    });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
+    await page.keyboard.press('Alt+s');
+    await page.waitForTimeout(2_000);
+
+    const stored = await getStoredBookmarks(context, VIDEO_ID);
+    expect(stored.length).toBeGreaterThanOrEqual(1);
+
+    const storedTitle = stored[0].videoTitle as string | null;
+    const pageTitle = await titleLocator.textContent();
+
+    // videoTitle must be a non-empty string matching the page heading
+    expect(typeof storedTitle).toBe('string');
+    expect((storedTitle as string).trim().length).toBeGreaterThan(0);
+    expect((storedTitle as string).trim()).toBe((pageTitle ?? '').trim());
   });
 });

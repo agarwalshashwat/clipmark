@@ -76,4 +76,21 @@ test.describe('Extension behavior', () => {
     expect(await page.locator('.yt-bookmark-player-btn').count()).toBe(1);
     expect(await page.locator('.yt-bookmark-markers').count()).toBe(1);
   });
+
+  test('Alt+S is suppressed when a text input has focus (keyboard input guard)', async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
+
+    // Click the YouTube search input so it holds keyboard focus
+    await page.locator('input[name="search_query"]').click({ force: true });
+    await page.waitForTimeout(300);
+
+    // Press Alt+S — handleKeyboardShortcut ignores events from <input> targets
+    await page.keyboard.press('Alt+s');
+    await page.waitForTimeout(2_000);
+
+    // No toast should appear because the shortcut was suppressed
+    await expect(page.locator('.yt-bookmark-toast')).not.toBeAttached({ timeout: 500 });
+  });
 });

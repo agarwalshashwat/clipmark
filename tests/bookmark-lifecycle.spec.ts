@@ -167,4 +167,20 @@ test.describe('Bookmark lifecycle', () => {
     const dataTs = await page.locator('.yt-bookmark-marker').first().getAttribute('data-timestamp');
     expect(parseFloat(dataTs ?? 'NaN')).toBeCloseTo(42, 0);
   });
+
+  // ── Bookmark at timestamp = 0 ─────────────────────────────────────────────
+  test('Bookmark at timestamp 0 renders a marker at left: 0%', async ({ context }) => {
+    const bookmark = makeBookmark(VIDEO_ID, 0, { description: 'Very beginning of video' });
+    await seedBookmarks(context, VIDEO_ID, [bookmark]);
+
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('video').hover({ force: true });
+    await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
+
+    const leftStyle = await page.locator('.yt-bookmark-marker').first().evaluate(
+      el => (el as HTMLElement).style.left,
+    );
+    expect(leftStyle).toBe('0%');
+  });
 });

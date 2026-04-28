@@ -113,3 +113,45 @@ export async function clearAllStorage(context: BrowserContext): Promise<void> {
     () => new Promise<void>(resolve => chrome.storage.sync.clear(() => resolve())),
   );
 }
+
+/** Read a raw key from chrome.storage.sync and return the value (or the defaultValue). */
+export async function getSyncStorage<T>(
+  context: BrowserContext,
+  key: string,
+  defaultValue: T,
+): Promise<T> {
+  const sw = await getServiceWorker(context);
+  return sw.evaluate(
+    ({ k, def }: { k: string; def: T }) =>
+      new Promise<T>(resolve =>
+        chrome.storage.sync.get({ [k]: def }, r => resolve((r as Record<string, T>)[k])),
+      ),
+    { k: key, def: defaultValue },
+  );
+}
+
+/**
+ * Send a message to the content script running in the YouTube page and return
+ * the response. Uses the service worker to call chrome.tabs.sendMessage so
+ * that the call originates from a trusted extension context.
+ */
+export async function sendToContentScript(
+  context: BrowserContext,
+  tabUrl: string,
+  message: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const sw = await getServiceWorker(context);
+  return sw.evaluate(
+    ({ url, msg }: { url: string; msg: Record<string, unknown> }) =>
+      new Promise<Record<string, unknown>>((resolve, reject) => {
+        chrome.tabs.query({ url }, tabs => {
+          if (!tabs[0]?.id) { reject(new Error('No matching YouTube tab found')); return; }
+          chrome.tabs.sendMessage(tabs[0].id, msg, (resp: Record<string, unknown>) => {
+            if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+            resolve(resp ?? {});
+          });
+        });
+      }),
+    { url: tabUrl, msg: message },
+  );
+}
