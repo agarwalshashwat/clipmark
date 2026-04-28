@@ -281,26 +281,24 @@ test.describe('Marker interactions', () => {
     const markers = page.locator('.yt-bookmark-marker');
     const count = await markers.count();
 
-    // There should be fewer markers than bookmarks (some were clustered)
-    // This assertion only holds if the video is long enough for clustering to trigger.
-    // We check for the cluster header if any markers exist.
-    if (count > 0) {
-      // Hover each marker and look for a cluster header
-      for (let i = 0; i < count; i++) {
-        await page.evaluate((idx) => {
-          const ms = document.querySelectorAll('.yt-bookmark-marker');
-          const m = ms[idx] as HTMLElement | undefined;
-          if (m) m.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }));
-        }, i);
-        await page.waitForTimeout(200);
-        const headerVisible = await page.locator('#yt-bm-tooltip.visible .yt-bm-tt-cluster-header').count();
-        if (headerVisible > 0) {
-          // Found a cluster tooltip — test passes
-          return;
-        }
+    // Fail explicitly when markers were not rendered (seeding/rendering regression)
+    expect(count).toBeGreaterThan(0);
+
+    // Hover each marker and look for a cluster header
+    for (let i = 0; i < count; i++) {
+      await page.evaluate((idx) => {
+        const ms = document.querySelectorAll('.yt-bookmark-marker');
+        const m = ms[idx] as HTMLElement | undefined;
+        if (m) m.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }));
+      }, i);
+      await page.waitForTimeout(200);
+      const headerVisible = await page.locator('#yt-bm-tooltip.visible .yt-bm-tt-cluster-header').count();
+      if (headerVisible > 0) {
+        // Found a cluster tooltip — test passes
+        return;
       }
-      // If the video is short enough that no clustering occurred, just check tooltip appears
-      await expect(page.locator('#yt-bm-tooltip.visible')).toBeAttached({ timeout: 2_000 });
     }
+    // If the video is short enough that no clustering occurred, just check tooltip appears
+    await expect(page.locator('#yt-bm-tooltip.visible')).toBeAttached({ timeout: 2_000 });
   });
 });

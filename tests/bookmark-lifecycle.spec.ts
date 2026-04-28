@@ -133,9 +133,7 @@ test.describe('Bookmark lifecycle', () => {
 
   // ── Marker left-position reflects timestamp ───────────────────────────────
   test('Marker left% is proportional to its timestamp', async ({ context }) => {
-    // Seed a bookmark at exactly 25% of a 100s video
     const bookmark = makeBookmark(VIDEO_ID, 25);
-
     await seedBookmarks(context, VIDEO_ID, [bookmark]);
 
     const page = await context.newPage();
@@ -143,15 +141,26 @@ test.describe('Bookmark lifecycle', () => {
     await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
-    const leftStyle = await page.locator('.yt-bookmark-marker').first().evaluate(
-      el => (el as HTMLElement).style.left,
-    );
+    // Read both the rendered left% and the video duration in one evaluate call
+    const { leftPct, expectedPct } = await page.evaluate(() => {
+      const marker   = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      const video    = document.querySelector('video') as HTMLVideoElement | null;
+      const left     = marker ? parseFloat(marker.style.left) : NaN;
+      const duration = video?.duration ?? 0;
+      const ts       = marker ? parseFloat(marker.getAttribute('data-timestamp') ?? 'NaN') : NaN;
+      return {
+        leftPct:     left,
+        expectedPct: duration > 0 ? (ts / duration) * 100 : NaN,
+      };
+    });
 
-    // The left% should be non-zero (bookmark is not at t=0)
-    expect(leftStyle).toBeTruthy();
-    const pct = parseFloat(leftStyle);
-    expect(pct).toBeGreaterThan(0);
-    expect(pct).toBeLessThan(100);
+    // Sanity-check the video has loaded with a real duration
+    expect(expectedPct).not.toBeNaN();
+    expect(expectedPct).toBeGreaterThan(0);
+    expect(expectedPct).toBeLessThan(100);
+
+    // Rendered left% must be within 0.5% of the computed expected position
+    expect(leftPct).toBeCloseTo(expectedPct, 0);
   });
 
   // ── Marker has correct data-timestamp attribute ───────────────────────────

@@ -53,14 +53,26 @@ export function makeBookmark(
 
 // ─── Service-worker helper ─────────────────────────────────────────────────
 
+function isExtensionServiceWorker(worker: Worker): boolean {
+  return worker.url().startsWith('chrome-extension://');
+}
+
 /**
  * Returns the extension background service worker, waiting for it if it has
  * not yet registered (MV3 service workers start lazily).
+ *
+ * Filters by URL prefix so that YouTube's own service worker is never returned
+ * instead of the extension worker.
  */
 async function getServiceWorker(context: BrowserContext): Promise<Worker> {
-  const existing = context.serviceWorkers();
-  if (existing.length > 0) return existing[0];
-  return context.waitForEvent('serviceworker', { timeout: 20_000 });
+  const existing = context.serviceWorkers().find(isExtensionServiceWorker);
+  if (existing) return existing;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const worker = await context.waitForEvent('serviceworker', { timeout: 20_000 });
+    if (isExtensionServiceWorker(worker)) return worker;
+  }
 }
 
 // ─── Storage helpers ───────────────────────────────────────────────────────

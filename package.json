@@ -5,7 +5,7 @@
   "scripts": {
     "sync-tokens": "node scripts/sync-design-tokens.js",
     "test": "npm run test:unit && npm run test:yt",
-    "test:unit": "node --test tests/unit/logic.test.mjs",
+    "test:unit": "node --test tests/unit",
     "test:yt": "playwright test",
     "test:all": "npm run test:unit && npm run test:yt"
   },

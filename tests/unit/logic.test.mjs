@@ -8,7 +8,8 @@
  *   parseTags, getTagColor, stringToColor, ytWatchUrl, ytThumbnailUrl
  *     → extension/src/constants.js
  *   formatTimestamp, bmKey
- *     → extension/src/background/background.js  (also in content.js)
+ *     → extension/src/background/background.js
+ *     Note: content.js has a different formatTimestamp (minutes not zero-padded).
  *   clusterBookmarks, cleanTranscriptText, getTextAtTimestamp
  *     → extension/src/content/content.js
  *
