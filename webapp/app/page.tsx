@@ -154,7 +154,7 @@ export default async function Home({
           </div>
 
           {/* H1 */}
-          <h1 style={{
+          <h1 className="hero-h1" style={{
             fontSize: 'clamp(40px, 7vw, 72px)', fontWeight: 800,
             lineHeight: 1.1, letterSpacing: '-2px', maxWidth: 900, margin: '0 auto 32px',
             fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D',
@@ -164,11 +164,11 @@ export default async function Home({
           </h1>
 
           {/* Subtitle */}
-          <p style={{ fontSize: 20, color: '#545f6c', maxWidth: 640, margin: '0 auto 48px', lineHeight: 1.7 }}>
+          <p className="hero-sub" style={{ fontSize: 20, color: '#545f6c', maxWidth: 640, margin: '0 auto 48px', lineHeight: 1.7 }}>
             Quit wasting time rewatching tutorials or losing gems in your watch history. Build a personal knowledge system that remembers exactly where the value is.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 40 }}>
+          <div className="hero-cta-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 40 }}>
             <a href="https://chrome.google.com/webstore" 
                aria-label="Install Clipmark Chrome Extension"
                style={{
@@ -201,7 +201,7 @@ export default async function Home({
           <div style={{ marginTop: 96, position: 'relative', maxWidth: 1000, margin: '96px auto 0' }}>
             
             {/* Logic-driven callouts (Item 18, 42) */}
-            <div style={{
+            <div className="hero-callout" style={{
               position: 'absolute', top: -30, right: -40, zIndex: 10,
               background: '#ffffff', padding: '12px 20px', borderRadius: 16,
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
@@ -212,7 +212,7 @@ export default async function Home({
               <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1C1D' }}>AI auto-magically summarizes architecture</span>
             </div>
 
-            <div style={{
+            <div className="hero-callout" style={{
               position: 'absolute', bottom: 100, left: -60, zIndex: 10,
               background: '#ffffff', padding: '12px 20px', borderRadius: 16,
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
@@ -246,7 +246,7 @@ export default async function Home({
                   <div style={{ position: 'absolute', left: '70%', height: '100%', width: '20%', background: '#14B8A6', borderRadius: 9999, boxShadow: '0 0 0 4px rgba(20,184,166,0.20)' }} />
                 </div>
                 {/* Glass side panel */}
-                <div style={{
+                <div className="hero-mockup-panel" style={{
                   position: 'absolute', top: 16, right: 16, bottom: 16, width: 248,
                   background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
@@ -426,7 +426,7 @@ export default async function Home({
 
       {/* ── AI / Pro Section ────────────────────────────────────────────── */}
       <section style={{ padding: '128px 16px' }}>
-        <div style={{ background: '#1A1C1D', color: 'white', borderRadius: 64, padding: '128px 32px', maxWidth: 1280, margin: '0 auto' }}>
+        <div className="ai-section-inner" style={{ background: '#1A1C1D', color: 'white', borderRadius: 64, padding: '128px 32px', maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 80, alignItems: 'center' }}>
 
             {/* AI feature buttons */}
