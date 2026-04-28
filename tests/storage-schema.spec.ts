@@ -223,9 +223,17 @@ test.describe('Storage schema', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
-    // Wait until the YouTube title heading is populated (not empty)
+    // Wait until the YouTube title heading is populated AND stable.
+    // The content script reads this element synchronously on Alt+S, so we must
+    // ensure it has non-empty text before the keystroke, plus a settle buffer.
     const titleLocator = page.locator('h1.ytd-video-primary-info-renderer').first();
     await expect(titleLocator).not.toHaveText('', { timeout: 10_000 });
+    // Capture the expected title while we know it's populated
+    const pageTitle = (await titleLocator.textContent() ?? '').trim();
+    expect(pageTitle.length).toBeGreaterThan(0);
+    // Extra settle time so the content script's synchronous querySelector sees
+    // the same non-empty text that Playwright just observed
+    await page.waitForTimeout(1_000);
 
     // Pause at a stable timestamp, then save via Alt+S
     await page.locator('video').evaluate((v: HTMLVideoElement) => {
@@ -235,17 +243,19 @@ test.describe('Storage schema', () => {
     await page.waitForTimeout(400);
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
     await page.keyboard.press('Alt+s');
-    await page.waitForTimeout(2_000);
+
+    // Poll storage until videoTitle is a non-null string — it may take a moment
+    // for the background service worker to write the bookmark.
+    await expect.poll(
+      async () => {
+        const s = await getStoredBookmarks(context, VIDEO_ID);
+        return s.length > 0 ? s[0].videoTitle : null;
+      },
+      { timeout: 8_000 },
+    ).toEqual(expect.stringContaining(''));
 
     const stored = await getStoredBookmarks(context, VIDEO_ID);
-    expect(stored.length).toBeGreaterThanOrEqual(1);
-
-    const storedTitle = stored[0].videoTitle as string | null;
-    const pageTitle = await titleLocator.textContent();
-
-    // videoTitle must be a non-empty string matching the page heading
-    expect(typeof storedTitle).toBe('string');
-    expect((storedTitle as string).trim().length).toBeGreaterThan(0);
-    expect((storedTitle as string).trim()).toBe((pageTitle ?? '').trim());
+    const storedTitle = (stored[0].videoTitle as string).trim();
+    expect(storedTitle).toBe(pageTitle);
   });
 });
