@@ -14,7 +14,7 @@ test.describe('Extension UI injection', () => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'domcontentloaded' });
     // Hover to trigger player controls visibility — required for MutationObserver to fire
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await expect(page.locator('.yt-bookmark-player-btn')).toBeAttached({ timeout: 15_000 });
     // Must be a direct child of .ytp-right-controls
     const insideControls = await page.locator('.ytp-right-controls .yt-bookmark-player-btn').count();
@@ -24,7 +24,7 @@ test.describe('Extension UI injection', () => {
   test('bookmark markers container (.yt-bookmark-markers) injected inside .ytp-progress-bar', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'domcontentloaded' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await expect(page.locator('.yt-bookmark-markers')).toBeAttached({ timeout: 15_000 });
     // Must be inside the progress bar
     const insideBar = await page.locator('.ytp-progress-bar .yt-bookmark-markers').count();
@@ -48,7 +48,7 @@ test.describe('Extension UI injection', () => {
   test('no double-injection of bookmark button (guard check)', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
     // Wait for any late MutationObserver callbacks to settle
     await page.waitForTimeout(2_000);

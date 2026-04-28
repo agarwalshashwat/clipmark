@@ -446,6 +446,12 @@ async function silentSaveBookmark() {
     const videoTitles    = result.videoTitles;
     const videoDurations = result.videoDurations;
 
+    // Reject duplicate: same floor-second already bookmarked for this video
+    if (bookmarks.some(b => Math.floor(b.timestamp) === Math.floor(timestamp))) {
+      showSilentSaveIndicator('Already bookmarked at this moment', 'error');
+      return;
+    }
+
     bookmarks.push({
       id: Date.now(),
       videoId,

@@ -10,10 +10,14 @@
 |----------|-------|
 | Product name | Clipmark |
 | Type | Chrome Extension (Manifest V3) + Next.js 14 webapp |
-| Stack | Vanilla JS extension · Next.js + TypeScript + Supabase |
+| Stack | Vanilla JS extension · Next.js 14 + TypeScript + Supabase |
 | Storage | `chrome.storage.sync` + Supabase `user_bookmarks` (when signed in) |
 | Auth | Google OAuth via Supabase; token stored in sync storage |
 | AI | Claude Haiku — transcript auto-fill, summaries, tag suggestions, social posts |
+| AI (local) | Chrome built-in `LanguageModel` (Gemini Nano) — on-device, no network |
+| Payments | Dodo Payments — Monthly / Annual / Lifetime + commission-based affiliate |
+| Testing | 75 unit tests (Node.js) + Playwright E2E suite |
+| Latest phase | Phase 9 (Testing) complete |
 | Live at | https://clipmark.mithahara.com |
 
 ---
@@ -196,7 +200,58 @@
 
 ---
 
-## Phase 8 — Server Sync & Insights Platform 🔲 Next (Q2 2026)
+## Phase 8 — Growth & Monetisation Infrastructure ✅ Done
+
+> Viral growth loops, creator partnerships, and a broader Pro tier.
+
+### 8.1 Referral Program
+- [x] `referral_code` auto-generated for every user (8-char md5 slug)
+- [x] `referrals` table — tracks referrer, referred user, status, reward months
+- [x] `/ref/[code]` landing page — attribution cookie set on click (30-day window)
+- [x] **Refer & Earn dashboard page** — personal link, copy button, stat cards (friends referred, months earned), referral history table
+- [x] Reward: 3 free Pro months per successful conversion
+
+### 8.2 Affiliate Program
+- [x] Invite-only affiliate accounts (`is_affiliate` flag on profiles)
+- [x] `affiliate_clicks` table — anonymous click tracking per affiliate code
+- [x] `affiliate_conversions` table — commission tracking (30% default) with `pending / approved / paid / cancelled` lifecycle
+- [x] `affiliate_applications` table — intake form for new applicants; admin review workflow
+- [x] **Affiliate dashboard page** — apply form for non-affiliates; click/conversion stats + earnings table for approved affiliates
+- [x] Dodo webhook updates conversions on `payment.succeeded`
+
+### 8.3 Gifted Pro
+- [x] `is_gifted_pro`, `gifted_pro_expires_at`, `gifted_by_note` columns on profiles
+- [x] Admin can grant permanent or time-limited Pro to partners and creators without a Dodo payment
+- [x] Gifted accounts excluded from paid-subscriber analytics
+
+### 8.4 Analytics Dashboard
+- [x] **Analytics page** (`/dashboard/analytics`) — 14-day activity heatmap, tag frequency chart, top videos by bookmark count, total stats card
+- [x] All data computed server-side from `user_bookmarks`; zero extra API calls
+
+### 8.5 YouTube Comments Integration
+- [x] `GET /api/comments?videoId=...` — proxies YouTube Data API v3 `commentThreads`
+- [x] Returns top 20 comments by relevance; gracefully returns `[]` when comments are disabled
+- [x] Surfaced alongside bookmarks in the dashboard video view
+
+### 8.6 OG Image Generation
+- [x] `GET /api/og` — generates Open Graph images for share pages using `@vercel/og`
+
+---
+
+## Phase 9 — Comprehensive Testing ✅ Done
+
+> Make the extension safe to iterate on at speed.
+
+- [x] **Pure-logic unit tests** (75 tests, Node.js built-in runner, no browser) covering `parseTags`, `getTagColor`, `stringToColor`, `formatTimestamp`, `bmKey`, `ytWatchUrl`, `ytThumbnailUrl`, `clusterBookmarks`, `cleanTranscriptText`, `getTextAtTimestamp`
+- [x] **Shared E2E test helpers** (`tests/helpers.ts`) — `seedBookmarks`, `getStoredBookmarks`, `clearStoredBookmarks`, `makeBookmark` via the background service worker
+- [x] **Bookmark lifecycle spec** — save → persist → reload; pre-seeded markers; marker count; `data-timestamp` attribute; left-% positioning
+- [x] **Marker interactions spec** — click-to-seek, hover tooltips, tag chips, mouseleave hides tooltip, duplicate rejection, `.yt-save-flash`, `.yt-bookmark-toast`, `.clicked` animation, cluster tooltip header
+- [x] **Storage schema spec** — all required fields, correct types, ISO date strings, `reviewSchedule` default, insertion order, array accumulation
+- [x] `npm run test:unit` / `npm run test:yt` / `npm run test:all` scripts in root `package.json`
+
+---
+
+## Phase 10 — Server Sync & Insights Platform 🔲 Next (Q3 2026)
 
 > Enable cross-device sync, build analytics infrastructure, unlock data-driven features.
 
@@ -236,7 +291,7 @@ Move beyond local-only storage to enable cross-device sync, video insights, and 
 
 ---
 
-## Phase 9 — Smart Watching 🔲 (Q3 2026) — Pro Feature
+## Phase 11 — Smart Watching 🔲 (Q4 2026) — Pro Feature
 
 > Compress long videos into high-value segments using AI + engagement heatmaps.
 
@@ -264,7 +319,7 @@ Auto-seek through only the "hot points" of a long video — saving 50–75% of w
 
 ---
 
-## Phase 10 — Platform Expansion 🔲 (Q4 2026)
+## Phase 12 — Platform Expansion 🔲 (2027)
 
 > Extend beyond YouTube to other video platforms and use cases.
 
@@ -282,7 +337,7 @@ Auto-seek through only the "hot points" of a long video — saving 50–75% of w
 - [ ] Success animations — confetti on first share
 - [ ] Bookmark streak — "5-day streak! 🔥" badge in popup
 - [ ] Weekly digest email — "You bookmarked 12 moments this week" (opt-in, Pro)
-- [ ] Referral program — give 1 month Pro, get 1 month Pro
+- [ ] ~~Referral program~~ ✅ Shipped (Phase 8.1)
 - [ ] Testimonial carousel on /upgrade page
 - [ ] Cancel subscription UI — refund within 14 days vs. cancel-at-period-end
 - [ ] Public stats badge — embeddable "Bookmarked with Clipmark" SVG for READMEs

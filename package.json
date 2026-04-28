@@ -4,8 +4,10 @@
   "description": "Chrome extension + webapp to bookmark, revisit, and share YouTube video moments",
   "scripts": {
     "sync-tokens": "node scripts/sync-design-tokens.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test:yt": "playwright test"
+    "test": "npm run test:unit && npm run test:yt",
+    "test:unit": "node --test tests/unit",
+    "test:yt": "playwright test",
+    "test:all": "npm run test:unit && npm run test:yt"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0"
