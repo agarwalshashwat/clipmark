@@ -140,7 +140,7 @@ export default async function Home({
           position: 'absolute', inset: 0, zIndex: 0,
           backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(26%2C28%2C29%2C0.04)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E\")",
         }} />
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 32px 0', position: 'relative', zIndex: 1, textAlign: 'center' }}>
+        <div className="hero-content-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 32px 0', position: 'relative', zIndex: 1, textAlign: 'center' }}>
 
           {/* Badge */}
           <div style={{
@@ -281,8 +281,8 @@ export default async function Home({
       </section>
 
       {/* ── Problem / Solution ──────────────────────────────────────────── */}
-      <section style={{ padding: '128px 32px', background: '#ffffff' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 80, alignItems: 'center' }}>
+      <section className="section-lg" style={{ padding: '128px 32px', background: '#ffffff' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 80, alignItems: 'center' }}>
           <div>
             <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 800, marginBottom: 32, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D', letterSpacing: '-0.5px' }}>
               Stop Scrubbing, <br /><span style={{ color: '#006B5F' }}>Start Remembering.</span>
@@ -364,7 +364,7 @@ export default async function Home({
       </section>
 
       {/* ── Feature Showcases ───────────────────────────────────────────── */}
-      <section id="features" style={{ padding: '128px 32px' }}>
+      <section id="features" className="section-lg" style={{ padding: '128px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 96 }}>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', color: '#1A1C1D' }}>
@@ -427,7 +427,7 @@ export default async function Home({
       {/* ── AI / Pro Section ────────────────────────────────────────────── */}
       <section style={{ padding: '128px 16px' }}>
         <div className="ai-section-inner" style={{ background: '#1A1C1D', color: 'white', borderRadius: 64, padding: '128px 32px', maxWidth: 1280, margin: '0 auto' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 80, alignItems: 'center' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 80, alignItems: 'center' }}>
 
             {/* AI feature buttons */}
             <div style={{ position: 'relative' }}>
@@ -486,7 +486,7 @@ export default async function Home({
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: '128px 32px' }}>
+      <section id="how-it-works" className="section-lg" style={{ padding: '128px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, textAlign: 'center', marginBottom: 96, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', color: '#1A1C1D' }}>
             The Curator&apos;s Journey
@@ -525,7 +525,7 @@ export default async function Home({
           <p style={{ textAlign: 'center', color: '#9ca3af', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 48 }}>
             Built for Your Ecosystem
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 56, opacity: 0.8 }}>
+          <div className="compat-flex" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 56, opacity: 0.8 }}>
             {[
               { icon: 'brand_family',    label: 'YouTube Web', color: '#FF0000' },
               { icon: 'browser_updated', label: 'Chrome & Edge', color: '#4285F4' },
@@ -571,10 +571,10 @@ export default async function Home({
       </section>
 
       {/* ── Final CTA ───────────────────────────────────────────────────── */}
-      <section style={{ padding: '128px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section className="section-lg" style={{ padding: '128px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         
         {/* Founder Quote (Item 33) */}
-        <div style={{ maxWidth: 640, margin: '0 auto 80px', padding: 48, background: 'white', borderRadius: 32, border: '1px solid #e8e8e9', position: 'relative' }}>
+        <div className="founder-quote" style={{ maxWidth: 640, margin: '0 auto 80px', padding: 48, background: 'white', borderRadius: 32, border: '1px solid #e8e8e9', position: 'relative' }}>
           <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', width: 64, height: 64, background: '#14B8A6', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 24px rgba(20,184,166,0.2)' }}>
             <span className="material-symbols-outlined" style={{ fontSize: 32 }}>person</span>
           </div>
@@ -596,6 +596,7 @@ export default async function Home({
           </p>
           <a href="https://chrome.google.com/webstore" 
              aria-label="Install Clipmark Chrome Extension"
+             className="final-cta-btn"
              style={{
             display: 'inline-block', padding: '20px 48px',
             background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
