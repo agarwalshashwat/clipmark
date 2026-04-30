@@ -69,7 +69,7 @@ export default async function UpgradePage({
     prices = await fetchProductPrices();
   } catch (err) {
     console.error('[UpgradePage] Could not fetch Dodo prices, using defaults:', err);
-    prices = { monthly: '5', annual: '40', lifetime: '40' };
+    prices = { monthly: '1.99', annual: '19.99', lifetime: '39.99' };
   }
   const savingsPct = Math.round(
     (1 - (Number(prices.annual) / 12) / Number(prices.monthly)) * 100

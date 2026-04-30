@@ -24,7 +24,7 @@ export interface ProductPrices {
   lifetime: string;
 }
 
-const PRICE_DEFAULTS: ProductPrices = { monthly: '5', annual: '40', lifetime: '40' };
+const PRICE_DEFAULTS: ProductPrices = { monthly: '1.99', annual: '19.99', lifetime: '39.99' };
 
 function extractCentPrice(p: { type: string; price?: number; fixed_price?: number }): number {
   return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
