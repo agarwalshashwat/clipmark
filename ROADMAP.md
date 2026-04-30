@@ -6,19 +6,19 @@
 
 ## Current State
 
-| Property | Value |
-|----------|-------|
-| Product name | Clipmark |
-| Type | Chrome Extension (Manifest V3) + Next.js 14 webapp |
-| Stack | Vanilla JS extension · Next.js 14 + TypeScript + Supabase |
-| Storage | `chrome.storage.sync` + Supabase `user_bookmarks` (when signed in) |
-| Auth | Google OAuth via Supabase; token stored in sync storage |
-| AI | Claude Haiku — transcript auto-fill, summaries, tag suggestions, social posts |
-| AI (local) | Chrome built-in `LanguageModel` (Gemini Nano) — on-device, no network |
-| Payments | Dodo Payments — Monthly / Annual / Lifetime + commission-based affiliate |
-| Testing | 75 unit tests (Node.js) + Playwright E2E suite |
-| Latest phase | Phase 9 (Testing) complete |
-| Live at | https://clipmark.mithahara.com |
+| Property     | Value                                                                         |
+| ------------ | ----------------------------------------------------------------------------- |
+| Product name | Clipmark                                                                      |
+| Type         | Chrome Extension (Manifest V3) + Next.js 14 webapp                            |
+| Stack        | Vanilla JS extension · Next.js 14 + TypeScript + Supabase                     |
+| Storage      | `chrome.storage.sync` + Supabase `user_bookmarks` (when signed in)            |
+| Auth         | Google OAuth via Supabase; token stored in sync storage                       |
+| AI           | Claude Haiku — transcript auto-fill, summaries, tag suggestions, social posts |
+| AI (local)   | Chrome built-in `LanguageModel` (Gemini Nano) — on-device, no network         |
+| Payments     | Dodo Payments — Monthly / Annual / Lifetime + commission-based affiliate      |
+| Testing      | 75 unit tests (Node.js) + Playwright E2E suite                                |
+| Latest phase | Phase 9 (Testing) complete                                                    |
+| Live at      | https://clipmark.mithahara.com                                                |
 
 ---
 
@@ -123,19 +123,21 @@
 
 ### Pricing Tiers
 
-| Tier | Price | Notes |
-|------|-------|-------|
-| **Free** | $0 | Core bookmarking, local storage, limited sharing |
-| **Pro Monthly** | $5 / month | Full feature access |
-| **Pro Annual** | $40 / year (~$3.33/mo) | Best value |
+| Tier            | Price                  | Notes                                            |
+| --------------- | ---------------------- | ------------------------------------------------ |
+| **Free**        | $0                     | Core bookmarking, local storage, limited sharing |
+| **Pro Monthly** | $5 / month             | Full feature access                              |
+| **Pro Annual**  | $40 / year (~$3.33/mo) | Best value                                       |
 
 ### Free Tier Limits
+
 - Unlimited local bookmarks
 - 5 public shared collections
 - No AI features (Auto, Summary, Tags, Social Post)
 - No Revisit Mode
 
 ### Pro Tier Unlocks
+
 - Unlimited shared collections
 - AI auto-fill, summaries, smart tag suggestions
 - Social post generation (X, LinkedIn, Threads)
@@ -143,6 +145,7 @@
 - Priority support
 
 ### Implementation
+
 - [x] Dodo Payments integration — Merchant of Record, handles VAT/global compliance
 - [x] `POST /api/checkout` — creates Dodo checkout session with `metadata.user_id`
 - [x] `POST /api/webhooks/dodo` — verifies signature; `payment.succeeded / subscription.active/renewed` → `is_pro=true`; `subscription.cancelled/expired` → `is_pro=false`
@@ -169,6 +172,7 @@
 > Reminders, groups management, and marker UX shipped as a cohesive update.
 
 ### Reminders & Re-engagement (renamed from "Revisit Queue")
+
 - [x] `revisit_reminders` table — `target_type` (collection/group), `target_id` (TEXT), `frequency`, `next_due_at`, `last_done_at`, optional `label`
 - [x] Frequencies: once, daily, weekly, biweekly, monthly
 - [x] `markReminderDone` — advances `next_due_at` for recurring reminders; clears one-time reminders
@@ -182,6 +186,7 @@
 - [x] Fix: query `user_bookmarks` table (not `collections`) for video dropdown — all bookmarked videos now appear
 
 ### Groups
+
 - [x] `groups` table — `type: 'custom' | 'tag'`, optional `tag_name`
 - [x] `group_collections` table — stores `(group_id, collection_id TEXT)` where `collection_id` = `video_id`
 - [x] Custom groups: manually add/remove videos via inline dropdown + × overlay button
@@ -190,6 +195,7 @@
 - [x] Fix: `group_collections.collection_id` changed from UUID FK → TEXT (stores `video_id` string)
 
 ### YouTube Player Marker UI/UX
+
 - [x] **Always-visible diamond nub** — rotated 8×8px square above the progress bar at `opacity: 0.85`; scales up on hover
 - [x] **Rich DOM tooltip** — shared `#yt-bm-tooltip` element at `document.body`; shows timestamp (teal), description, tag chips with per-tag color backgrounds
 - [x] **Cluster tooltips** — "N clips nearby" header + one item per line for clustered markers
@@ -205,6 +211,7 @@
 > Viral growth loops, creator partnerships, and a broader Pro tier.
 
 ### 8.1 Referral Program
+
 - [x] `referral_code` auto-generated for every user (8-char md5 slug)
 - [x] `referrals` table — tracks referrer, referred user, status, reward months
 - [x] `/ref/[code]` landing page — attribution cookie set on click (30-day window)
@@ -212,6 +219,7 @@
 - [x] Reward: 3 free Pro months per successful conversion
 
 ### 8.2 Affiliate Program
+
 - [x] Invite-only affiliate accounts (`is_affiliate` flag on profiles)
 - [x] `affiliate_clicks` table — anonymous click tracking per affiliate code
 - [x] `affiliate_conversions` table — commission tracking (30% default) with `pending / approved / paid / cancelled` lifecycle
@@ -220,20 +228,24 @@
 - [x] Dodo webhook updates conversions on `payment.succeeded`
 
 ### 8.3 Gifted Pro
+
 - [x] `is_gifted_pro`, `gifted_pro_expires_at`, `gifted_by_note` columns on profiles
 - [x] Admin can grant permanent or time-limited Pro to partners and creators without a Dodo payment
 - [x] Gifted accounts excluded from paid-subscriber analytics
 
 ### 8.4 Analytics Dashboard
+
 - [x] **Analytics page** (`/dashboard/analytics`) — 14-day activity heatmap, tag frequency chart, top videos by bookmark count, total stats card
 - [x] All data computed server-side from `user_bookmarks`; zero extra API calls
 
 ### 8.5 YouTube Comments Integration
+
 - [x] `GET /api/comments?videoId=...` — proxies YouTube Data API v3 `commentThreads`
 - [x] Returns top 20 comments by relevance; gracefully returns `[]` when comments are disabled
 - [x] Surfaced alongside bookmarks in the dashboard video view
 
 ### 8.6 OG Image Generation
+
 - [x] `GET /api/og` — generates Open Graph images for share pages using `@vercel/og`
 
 ---
@@ -256,23 +268,26 @@
 > Enable cross-device sync, build analytics infrastructure, unlock data-driven features.
 
 ### Goal
+
 Move beyond local-only storage to enable cross-device sync, video insights, and predictive recommendations while maintaining fast offline access.
 
 ### Architecture
 
-| Layer | Purpose | Technology |
-|-------|---------|------------|
-| **Client (Extension)** | Instant offline access, low latency | `chrome.storage.sync` (local cache) |
-| **Server (Sync Engine)** | Persistence, backup, cross-device | Supabase PostgreSQL |
-| **Analytics Engine** | Insights, heatmaps, engagement data | PostgreSQL aggregations + Redis cache |
+| Layer                    | Purpose                             | Technology                            |
+| ------------------------ | ----------------------------------- | ------------------------------------- |
+| **Client (Extension)**   | Instant offline access, low latency | `chrome.storage.sync` (local cache)   |
+| **Server (Sync Engine)** | Persistence, backup, cross-device   | Supabase PostgreSQL                   |
+| **Analytics Engine**     | Insights, heatmaps, engagement data | PostgreSQL aggregations + Redis cache |
 
 **Sync Strategy:**
+
 - Client writes locally first (instant feedback)
 - Background sync every 30s when online
 - Server timestamp wins conflicts
 - Offline queue syncs when connection restored
 
 ### 8.1 Checklist
+
 - [ ] Design & migrate database schema (bookmarks, video_analytics, user_video_sessions)
 - [ ] Build sync API endpoints (`/api/sync/bookmarks`, `/api/bookmarks/*`)
 - [ ] Implement conflict resolution logic (server timestamp wins)
@@ -296,9 +311,11 @@ Move beyond local-only storage to enable cross-device sync, video insights, and 
 > Compress long videos into high-value segments using AI + engagement heatmaps.
 
 ### Goal
+
 Auto-seek through only the "hot points" of a long video — saving 50–75% of watch time while retaining key insights.
 
 ### How it works
+
 1. Extract YouTube's engagement heatmap (shows where users rewatch/slow down)
 2. Combine with Clipmark aggregate bookmark data across all users
 3. Identify "hot points" (peaks > 70th percentile, weighted 70% YT / 30% Clipmark)
@@ -306,6 +323,7 @@ Auto-seek through only the "hot points" of a long video — saving 50–75% of w
 5. Result: 1 hour → ~18 minutes of dense content
 
 ### 9.1 Checklist
+
 - [ ] Server-side video analysis job — `analyze-video.js` runs daily for videos with >10 bookmarks
 - [ ] `video_analytics.hot_points` stored per video
 - [ ] `/api/insights/video/:id` endpoint returns hot points to extension
