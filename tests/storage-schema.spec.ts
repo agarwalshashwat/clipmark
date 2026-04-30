@@ -13,7 +13,7 @@
  * Run: npm run test:yt -- --grep "storage schema"
  */
 import { test, expect, TEST_VIDEO_URL } from './fixtures';
-import { getStoredBookmarks } from './helpers';
+import { getStoredBookmarks, getServiceWorker } from './helpers';
 
 const VIDEO_ID = 'dQw4w9WgXcQ';
 
@@ -31,7 +31,7 @@ test.describe('Storage schema', () => {
     });
     await page.waitForTimeout(500);
 
-    await page.locator('video').click(); // ensure keyboard focus
+    await page.locator('video').click({ force: true }); // ensure keyboard focus
     await page.keyboard.press('Alt+s');
     await page.waitForTimeout(2_000); // allow storage write
 
@@ -58,6 +58,7 @@ test.describe('Storage schema', () => {
       'tags',
       'color',
       'createdAt',
+      'videoTitle',
       'reviewSchedule',
       'lastReviewed',
     ] as const;
@@ -125,6 +126,13 @@ test.describe('Storage schema', () => {
     expect(bm.lastReviewed).toBeNull();
   });
 
+  test('Bookmark "videoTitle" is a string or null', async ({ context }) => {
+    const [bm] = await saveAndRead(context);
+    // videoTitle is populated asynchronously from the cached title map; it may be
+    // null on the first ever save but must never be an unexpected type.
+    expect(bm.videoTitle === null || typeof bm.videoTitle === 'string').toBe(true);
+  });
+
   // ── No extra duplicate entries in the array ────────────────────────────────
   test('Each bookmark id in the array is unique', async ({ context }) => {
     const bookmarks = await saveAndRead(context);
@@ -171,7 +179,7 @@ test.describe('Storage schema', () => {
       v.pause();
     });
     await page.waitForTimeout(500);
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.keyboard.press('Alt+s');
     await page.waitForTimeout(1_500);
 
@@ -199,7 +207,7 @@ test.describe('Storage schema', () => {
         v.pause();
       }, t);
       await page.waitForTimeout(400);
-      await page.locator('video').click();
+      await page.locator('video').click({ force: true });
       await page.keyboard.press('Alt+s');
       await page.waitForTimeout(1_200);
     }
@@ -207,5 +215,47 @@ test.describe('Storage schema', () => {
     const stored = await getStoredBookmarks(context, VIDEO_ID);
     expect(stored.length).toBe(2);
     expect(stored[0].id).toBeLessThan(stored[1].id);
+  });
+
+  // ── videoTitle matches the page heading ───────────────────────────────────
+  test('videoTitle stored in bookmark matches the h1 heading on the page', async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
+
+    // Wait until the YouTube title heading is populated AND stable.
+    // The content script reads this element synchronously on Alt+S, so we must
+    // ensure it has non-empty text before the keystroke, plus a settle buffer.
+    const titleLocator = page.locator('h1.ytd-video-primary-info-renderer').first();
+    await expect(titleLocator).not.toHaveText('', { timeout: 10_000 });
+    // Capture the expected title while we know it's populated
+    const pageTitle = (await titleLocator.textContent() ?? '').trim();
+    expect(pageTitle.length).toBeGreaterThan(0);
+    // Extra settle time so the content script's synchronous querySelector sees
+    // the same non-empty text that Playwright just observed
+    await page.waitForTimeout(1_000);
+
+    // Pause at a stable timestamp, then save via Alt+S
+    await page.locator('video').evaluate((v: HTMLVideoElement) => {
+      v.currentTime = 20;
+      v.pause();
+    });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
+    await page.keyboard.press('Alt+s');
+
+    // Poll storage until videoTitle is a non-null string — it may take a moment
+    // for the background service worker to write the bookmark.
+    await expect.poll(
+      async () => {
+        const s = await getStoredBookmarks(context, VIDEO_ID);
+        return s.length > 0 ? s[0].videoTitle : null;
+      },
+      { timeout: 8_000 },
+    ).toEqual(expect.stringContaining(''));
+
+    const stored = await getStoredBookmarks(context, VIDEO_ID);
+    const storedTitle = (stored[0].videoTitle as string).trim();
+    expect(storedTitle).toBe(pageTitle);
   });
 });

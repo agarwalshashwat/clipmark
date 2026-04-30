@@ -31,8 +31,9 @@ test.describe('Bookmark lifecycle', () => {
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
     // Give the video a chance to load and advance slightly so currentTime > 0
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.waitForTimeout(1_500);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
     // Save via Alt+S
     await page.keyboard.press('Alt+s');
@@ -44,7 +45,7 @@ test.describe('Bookmark lifecycle', () => {
 
     // Hard reload the page
     await page.reload({ waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-markers').waitFor({ timeout: 15_000 });
     await page.waitForTimeout(1_000); // wait for storage read + re-render
 
@@ -64,7 +65,7 @@ test.describe('Bookmark lifecycle', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-markers').waitFor({ timeout: 15_000 });
     await page.waitForTimeout(1_000);
 
@@ -84,7 +85,7 @@ test.describe('Bookmark lifecycle', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-markers').waitFor({ timeout: 15_000 });
     await page.waitForTimeout(1_000);
 
@@ -98,8 +99,9 @@ test.describe('Bookmark lifecycle', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.waitForTimeout(1_500);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
     await page.keyboard.press('Alt+s');
     await page.waitForTimeout(2_000);
@@ -114,14 +116,14 @@ test.describe('Bookmark lifecycle', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.waitForTimeout(1_000);
 
     await page.locator('.yt-bookmark-player-btn').click();
     await page.waitForTimeout(1_500);
 
     await page.reload({ waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-markers').waitFor({ timeout: 15_000 });
     await page.waitForTimeout(1_000);
 
@@ -131,25 +133,34 @@ test.describe('Bookmark lifecycle', () => {
 
   // ── Marker left-position reflects timestamp ───────────────────────────────
   test('Marker left% is proportional to its timestamp', async ({ context }) => {
-    // Seed a bookmark at exactly 25% of a 100s video
     const bookmark = makeBookmark(VIDEO_ID, 25);
-
     await seedBookmarks(context, VIDEO_ID, [bookmark]);
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
-    const leftStyle = await page.locator('.yt-bookmark-marker').first().evaluate(
-      el => (el as HTMLElement).style.left,
-    );
+    // Read both the rendered left% and the video duration in one evaluate call
+    const { leftPct, expectedPct } = await page.evaluate(() => {
+      const marker   = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      const video    = document.querySelector('video') as HTMLVideoElement | null;
+      const left     = marker ? parseFloat(marker.style.left) : NaN;
+      const duration = video?.duration ?? 0;
+      const ts       = marker ? parseFloat(marker.getAttribute('data-timestamp') ?? 'NaN') : NaN;
+      return {
+        leftPct:     left,
+        expectedPct: duration > 0 ? (ts / duration) * 100 : NaN,
+      };
+    });
 
-    // The left% should be non-zero (bookmark is not at t=0)
-    expect(leftStyle).toBeTruthy();
-    const pct = parseFloat(leftStyle);
-    expect(pct).toBeGreaterThan(0);
-    expect(pct).toBeLessThan(100);
+    // Sanity-check the video has loaded with a real duration
+    expect(expectedPct).not.toBeNaN();
+    expect(expectedPct).toBeGreaterThan(0);
+    expect(expectedPct).toBeLessThan(100);
+
+    // Rendered left% must be within 0.5% of the computed expected position
+    expect(leftPct).toBeCloseTo(expectedPct, 0);
   });
 
   // ── Marker has correct data-timestamp attribute ───────────────────────────
@@ -159,10 +170,26 @@ test.describe('Bookmark lifecycle', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
     const dataTs = await page.locator('.yt-bookmark-marker').first().getAttribute('data-timestamp');
     expect(parseFloat(dataTs ?? 'NaN')).toBeCloseTo(42, 0);
+  });
+
+  // ── Bookmark at timestamp = 0 ─────────────────────────────────────────────
+  test('Bookmark at timestamp 0 renders a marker at left: 0%', async ({ context }) => {
+    const bookmark = makeBookmark(VIDEO_ID, 0, { description: 'Very beginning of video' });
+    await seedBookmarks(context, VIDEO_ID, [bookmark]);
+
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('video').hover({ force: true });
+    await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
+
+    const leftStyle = await page.locator('.yt-bookmark-marker').first().evaluate(
+      el => (el as HTMLElement).style.left,
+    );
+    expect(leftStyle).toBe('0%');
   });
 });

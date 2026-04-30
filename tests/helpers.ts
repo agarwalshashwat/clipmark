@@ -53,14 +53,26 @@ export function makeBookmark(
 
 // ─── Service-worker helper ─────────────────────────────────────────────────
 
+function isExtensionServiceWorker(worker: Worker): boolean {
+  return worker.url().startsWith('chrome-extension://');
+}
+
 /**
  * Returns the extension background service worker, waiting for it if it has
  * not yet registered (MV3 service workers start lazily).
+ *
+ * Filters by URL prefix so that YouTube's own service worker is never returned
+ * instead of the extension worker.
  */
 async function getServiceWorker(context: BrowserContext): Promise<Worker> {
-  const existing = context.serviceWorkers();
-  if (existing.length > 0) return existing[0];
-  return context.waitForEvent('serviceworker', { timeout: 20_000 });
+  const existing = context.serviceWorkers().find(isExtensionServiceWorker);
+  if (existing) return existing;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const worker = await context.waitForEvent('serviceworker', { timeout: 20_000 });
+    if (isExtensionServiceWorker(worker)) return worker;
+  }
 }
 
 // ─── Storage helpers ───────────────────────────────────────────────────────
@@ -111,5 +123,47 @@ export async function clearAllStorage(context: BrowserContext): Promise<void> {
   const sw = await getServiceWorker(context);
   await sw.evaluate(
     () => new Promise<void>(resolve => chrome.storage.sync.clear(() => resolve())),
+  );
+}
+
+/** Read a raw key from chrome.storage.sync and return the value (or the defaultValue). */
+export async function getSyncStorage<T>(
+  context: BrowserContext,
+  key: string,
+  defaultValue: T,
+): Promise<T> {
+  const sw = await getServiceWorker(context);
+  return sw.evaluate(
+    ({ k, def }: { k: string; def: T }) =>
+      new Promise<T>(resolve =>
+        chrome.storage.sync.get({ [k]: def }, r => resolve((r as Record<string, T>)[k])),
+      ),
+    { k: key, def: defaultValue },
+  );
+}
+
+/**
+ * Send a message to the content script running in the YouTube page and return
+ * the response. Uses the service worker to call chrome.tabs.sendMessage so
+ * that the call originates from a trusted extension context.
+ */
+export async function sendToContentScript(
+  context: BrowserContext,
+  tabUrl: string,
+  message: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const sw = await getServiceWorker(context);
+  return sw.evaluate(
+    ({ url, msg }: { url: string; msg: Record<string, unknown> }) =>
+      new Promise<Record<string, unknown>>((resolve, reject) => {
+        chrome.tabs.query({ url }, tabs => {
+          if (!tabs[0]?.id) { reject(new Error('No matching YouTube tab found')); return; }
+          chrome.tabs.sendMessage(tabs[0].id, msg, (resp: Record<string, unknown>) => {
+            if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+            resolve(resp ?? {});
+          });
+        });
+      }),
+    { url: tabUrl, msg: message },
   );
 }

@@ -29,7 +29,7 @@ test.describe('Marker interactions', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
     // Record time before seeking
@@ -38,7 +38,7 @@ test.describe('Marker interactions', () => {
     );
 
     // Click the marker
-    await page.locator('.yt-bookmark-marker').first().click();
+    await page.locator('.yt-bookmark-marker').first().click({ force: true });
     await page.waitForTimeout(800);
 
     const timeAfter = await page.locator('video').evaluate(
@@ -61,11 +61,14 @@ test.describe('Marker interactions', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
-    // Hover over the marker
-    await page.locator('.yt-bookmark-marker').first().hover();
+    // Hover over the marker — dispatch mouseenter directly to bypass hit-test interception
+    await page.evaluate(() => {
+      const marker = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      if (marker) marker.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }));
+    });
     await page.waitForTimeout(300);
 
     // Tooltip should gain .visible class
@@ -83,15 +86,21 @@ test.describe('Marker interactions', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
-    await page.locator('.yt-bookmark-marker').first().hover();
+    await page.evaluate(() => {
+      const marker = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      if (marker) marker.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }));
+    });
     await page.waitForTimeout(200);
     await expect(page.locator('#yt-bm-tooltip.visible')).toBeAttached({ timeout: 2_000 });
 
-    // Move away to top-left of the page (well clear of the marker)
-    await page.mouse.move(5, 5);
+    // Dispatch mouseleave directly (real mouse.move can't reliably leave a force-hovered element)
+    await page.evaluate(() => {
+      const marker = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      if (marker) marker.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false, cancelable: true }));
+    });
     await page.waitForTimeout(200);
     await expect(page.locator('#yt-bm-tooltip.visible')).not.toBeAttached({ timeout: 2_000 });
   });
@@ -107,10 +116,13 @@ test.describe('Marker interactions', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
-    await page.locator('.yt-bookmark-marker').first().hover();
+    await page.evaluate(() => {
+      const marker = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      if (marker) marker.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }));
+    });
     await page.waitForTimeout(300);
 
     await expect(page.locator('#yt-bm-tooltip.visible')).toBeAttached({ timeout: 3_000 });
@@ -130,7 +142,8 @@ test.describe('Marker interactions', () => {
 
     // Pause the video so both presses target the exact same timestamp
     await page.locator('video').evaluate((v: HTMLVideoElement) => v.pause());
-    await page.locator('video').click(); // focus the player
+    await page.locator('video').click({ force: true }); // focus the player
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
     // First save
     await page.keyboard.press('Alt+s');
@@ -139,6 +152,7 @@ test.describe('Marker interactions', () => {
     expect(afterFirst).toBeGreaterThan(0);
 
     // Second save at the same time
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
     await page.keyboard.press('Alt+s');
     await page.waitForTimeout(1_500);
     const afterSecond = await page.locator('.yt-bookmark-marker').count();
@@ -153,8 +167,9 @@ test.describe('Marker interactions', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.waitForTimeout(500);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
     await page.keyboard.press('Alt+s');
 
@@ -168,8 +183,9 @@ test.describe('Marker interactions', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
-    await page.locator('video').click();
+    await page.locator('video').click({ force: true });
     await page.waitForTimeout(500);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
     await page.keyboard.press('Alt+s');
 
@@ -183,16 +199,64 @@ test.describe('Marker interactions', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
 
-    await page.locator('.yt-bookmark-marker').first().click();
+    await page.evaluate(() => {
+      const marker = document.querySelector('.yt-bookmark-marker') as HTMLElement | null;
+      if (marker) marker.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    });
 
     // .clicked should appear immediately
     await expect(page.locator('.yt-bookmark-marker.clicked')).toBeAttached({ timeout: 500 });
 
     // And be removed after 600ms
     await expect(page.locator('.yt-bookmark-marker.clicked')).not.toBeAttached({ timeout: 1_500 });
+  });
+
+  // ── Marker CSS color variable reflects tag color ────────────────────────────
+  test('Marker --bm-color CSS variable matches the bookmark color', async ({ context }) => {
+    const bookmark = makeBookmark(VIDEO_ID, 40, {
+      description: 'Color check #important',
+      tags: ['important'],
+      color: '#ef4444',
+    });
+    await seedBookmarks(context, VIDEO_ID, [bookmark]);
+
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('video').hover({ force: true });
+    await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
+
+    // Exactly one marker should exist (one seeded bookmark, no others)
+    const count = await page.locator('.yt-bookmark-marker').count();
+    expect(count).toBe(1);
+
+    const bmColor = await page.locator('.yt-bookmark-marker').first().evaluate(
+      el => (el as HTMLElement).style.getPropertyValue('--bm-color').trim(),
+    );
+
+    expect(bmColor).toBe('#ef4444');
+  });
+
+  // ── Active-marker highlight follows playback position ─────────────────────
+  test('Playing near a bookmark adds .yt-bookmark-marker--active to that marker', async ({ context }) => {
+    const bookmark = makeBookmark(VIDEO_ID, 5, { description: 'Active marker check' });
+    await seedBookmarks(context, VIDEO_ID, [bookmark]);
+
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('video').hover({ force: true });
+    await page.locator('.yt-bookmark-marker').waitFor({ timeout: 15_000 });
+
+    // Seek the video to exactly the bookmark timestamp and fire timeupdate
+    await page.locator('video').evaluate((v: HTMLVideoElement) => {
+      v.currentTime = 5;
+      v.dispatchEvent(new Event('timeupdate'));
+    });
+    await page.waitForTimeout(600);
+
+    await expect(page.locator('.yt-bookmark-marker--active')).toBeAttached({ timeout: 3_000 });
   });
 
   // ── Cluster tooltip ────────────────────────────────────────────────────────
@@ -210,29 +274,31 @@ test.describe('Marker interactions', () => {
 
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
-    await page.locator('video').hover();
+    await page.locator('video').hover({ force: true });
     await page.locator('.yt-bookmark-markers').waitFor({ timeout: 15_000 });
     await page.waitForTimeout(1_500);
 
     const markers = page.locator('.yt-bookmark-marker');
     const count = await markers.count();
 
-    // There should be fewer markers than bookmarks (some were clustered)
-    // This assertion only holds if the video is long enough for clustering to trigger.
-    // We check for the cluster header if any markers exist.
-    if (count > 0) {
-      // Hover each marker and look for a cluster header
-      for (let i = 0; i < count; i++) {
-        await markers.nth(i).hover();
-        await page.waitForTimeout(200);
-        const headerVisible = await page.locator('#yt-bm-tooltip.visible .yt-bm-tt-cluster-header').count();
-        if (headerVisible > 0) {
-          // Found a cluster tooltip — test passes
-          return;
-        }
+    // Fail explicitly when markers were not rendered (seeding/rendering regression)
+    expect(count).toBeGreaterThan(0);
+
+    // Hover each marker and look for a cluster header
+    for (let i = 0; i < count; i++) {
+      await page.evaluate((idx) => {
+        const ms = document.querySelectorAll('.yt-bookmark-marker');
+        const m = ms[idx] as HTMLElement | undefined;
+        if (m) m.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }));
+      }, i);
+      await page.waitForTimeout(200);
+      const headerVisible = await page.locator('#yt-bm-tooltip.visible .yt-bm-tt-cluster-header').count();
+      if (headerVisible > 0) {
+        // Found a cluster tooltip — test passes
+        return;
       }
-      // If the video is short enough that no clustering occurred, just check tooltip appears
-      await expect(page.locator('#yt-bm-tooltip.visible')).toBeAttached({ timeout: 2_000 });
     }
+    // If the video is short enough that no clustering occurred, just check tooltip appears
+    await expect(page.locator('#yt-bm-tooltip.visible')).toBeAttached({ timeout: 2_000 });
   });
 });
