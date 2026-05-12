@@ -13,14 +13,14 @@ const dodo = new DodoPayments({
 });
 
 const PRODUCT_IDS: Record<string, string> = {
-  monthly:  process.env.DODO_MONTHLY_PRODUCT_ID!,
-  annual:   process.env.DODO_ANNUAL_PRODUCT_ID!,
+  monthly: process.env.DODO_MONTHLY_PRODUCT_ID!,
+  annual: process.env.DODO_ANNUAL_PRODUCT_ID!,
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
 
 export interface ProductPrices {
-  monthly:  string;
-  annual:   string;
+  monthly: string;
+  annual: string;
   lifetime: string;
 }
 
@@ -47,8 +47,8 @@ export const fetchProductPrices = unstable_cache(
       dodo.products.retrieve(PRODUCT_IDS.lifetime),
     ]);
     return {
-      monthly:  centsToDisplay(extractCentPrice(monthly.price  as { type: string; price?: number; fixed_price?: number })),
-      annual:   centsToDisplay(extractCentPrice(annual.price   as { type: string; price?: number; fixed_price?: number })),
+      monthly: centsToDisplay(extractCentPrice(monthly.price as { type: string; price?: number; fixed_price?: number })),
+      annual: centsToDisplay(extractCentPrice(annual.price as { type: string; price?: number; fixed_price?: number })),
       lifetime: centsToDisplay(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number })),
     };
   },
@@ -100,9 +100,9 @@ export async function createCheckoutSession(formData: FormData) {
   if (!productId) throw new Error(`Unknown plan: ${plan}`);
 
   const cookieStore = await cookies();
-  const affiliateCode   = cookieStore.get('clipmark_ref')?.value ?? null;
+  const affiliateCode = cookieStore.get('clipmark_ref')?.value ?? null;
   const userReferralCode = cookieStore.get('clipmark_user_ref')?.value ?? null;
-  if (affiliateCode)    cookieStore.delete('clipmark_ref');
+  if (affiliateCode) cookieStore.delete('clipmark_ref');
   if (userReferralCode) cookieStore.delete('clipmark_user_ref');
 
   // Look up the affiliate's Dodo discount code to apply at checkout
@@ -125,12 +125,12 @@ export async function createCheckoutSession(formData: FormData) {
     product_cart: [{ product_id: productId, quantity: 1 }],
     customer: {
       email: user.email!,
-      name:  user.user_metadata?.full_name ?? undefined,
+      name: user.user_metadata?.full_name ?? undefined,
     },
     ...(dodoDiscountCode ? { discount_code: dodoDiscountCode } : {}),
     metadata: {
       user_id: user.id,
-      ...(affiliateCode    ? { affiliate_code:    affiliateCode    } : {}),
+      ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
       ...(userReferralCode ? { user_referral_code: userReferralCode } : {}),
     },
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
