@@ -96,7 +96,7 @@ export default async function ReferralPage() {
 
       {/* ── Stats ── */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: 16, marginBottom: 36,
       }}>
         {STAT_CARDS.map((card) => (

@@ -1,5 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase';
-import { createCheckoutSession, fetchProductPrices } from './actions';
+import { createCheckoutSession, fetchProductPrices, PRICE_DEFAULTS } from './actions';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
 import LifetimeCountdown from './LifetimeCountdown';
 import { cookies } from 'next/headers';
@@ -69,7 +69,7 @@ export default async function UpgradePage({
     prices = await fetchProductPrices();
   } catch (err) {
     console.error('[UpgradePage] Could not fetch Dodo prices, using defaults:', err);
-    prices = { monthly: '5', annual: '40', lifetime: '40' };
+    prices = PRICE_DEFAULTS;
   }
   const savingsPct = Math.round(
     (1 - (Number(prices.annual) / 12) / Number(prices.monthly)) * 100

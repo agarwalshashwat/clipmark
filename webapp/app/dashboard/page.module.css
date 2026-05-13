@@ -1,6 +1,16 @@
 /* Content-area styles for the main dashboard page views.
    Shell styles (sidebar, topbar, nav) live in shell.module.css */
 
+/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+.pageWrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+@media (max-width: 639px) {
+  .pageWrap { padding: 24px 16px 60px; }
+}
+
 /* ── Page header ──────────────────────────────────────────────────────────── */
 .pageHeader { margin-bottom: 48px; }
 

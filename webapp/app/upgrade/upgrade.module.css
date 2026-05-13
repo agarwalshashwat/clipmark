@@ -1,0 +1,38 @@
+.check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #14B8A615;
+  color: #006b5f;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.cross {
+  color: #bbcac6;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.upgradePage {
+  padding: 24px;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+.featureList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.featureItem {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+}
