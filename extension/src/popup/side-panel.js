@@ -1,4 +1,6 @@
-// API_BASE is defined in config.js (loaded via <script> tag before this file)
+import { API_BASE } from '../config.js';
+import { TAG_COLORS, parseTags, stringToColor, getTagColor, ytWatchUrl, ytThumbnailUrl, APP_EXPORT_PREFIX } from '../constants.js';
+import { localAiAvailability, localSuggestTags, localSummarizeBookmarks } from '../ai/local-ai.js';
 
 async function checkPro() {
   const { bmUser } = await syncGet({ bmUser: null });
@@ -10,25 +12,40 @@ async function getValidToken() {
   const { bmUser } = await new Promise(resolve =>
     chrome.storage.sync.get({ bmUser: null }, resolve)
   );
-  if (!bmUser?.accessToken) return null;
+  if (!bmUser?.accessToken) {
+    debugLog('Auth', 'No access token in storage');
+    return null;
+  }
   try {
     const payload = JSON.parse(atob(bmUser.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (payload.exp * 1000 > Date.now() + 60_000) return bmUser.accessToken;
+    if (payload.exp * 1000 > Date.now() + 60_000) {
+      debugLog('Auth', 'Using existing access token');
+      return bmUser.accessToken;
+    }
   } catch { /* fall through to refresh */ }
-  if (!bmUser.refreshToken) return null;
+  if (!bmUser.refreshToken) {
+    debugLog('Auth', 'Token refresh unavailable: missing refresh token');
+    return null;
+  }
+  debugLog('Auth', 'Refreshing access token');
   try {
     const res = await fetch(`${API_BASE}/api/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: bmUser.refreshToken }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      debugLog('Auth', 'Token refresh failed', { status: res.status });
+      return null;
+    }
     const { access_token, refresh_token } = await res.json();
     await new Promise(resolve =>
       chrome.storage.sync.set({ bmUser: { ...bmUser, accessToken: access_token, refreshToken: refresh_token } }, resolve)
     );
+    debugLog('Auth', 'Token refresh succeeded');
     return access_token;
-  } catch {
+  } catch (error) {
+    debugError('Token refresh request failed', error);
     return null;
   }
 }
@@ -43,6 +60,18 @@ function formatTimestamp(seconds) {
 
 function debugLog(category, message, data = null) {
   console.log(`[SidePanel][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
+}
+
+function toErrorMessage(error) {
+  if (!error) return 'Unknown error';
+  return error instanceof Error ? error.message : String(error);
+}
+
+function debugError(operation, error, context = {}) {
+  debugLog('Error', operation, {
+    ...context,
+    error: toErrorMessage(error),
+  });
 }
 
 // ─── Storage helpers ────────────────────────────────────────────────────────
@@ -68,6 +97,9 @@ function syncSet(data) {
 
 async function getCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) {
+    debugLog('Tabs', 'No active tab found');
+  }
   return tab;
 }
 
@@ -85,42 +117,57 @@ async function getVideoBookmarksLocal(videoId) {
 }
 
 async function getVideoBookmarks(videoId) {
+  debugLog('Storage', 'Loading bookmarks for video', { videoId });
   await pullFromCloud(videoId);
   return getVideoBookmarksLocal(videoId);
 }
 
 async function saveVideoBookmarks(videoId, bookmarks) {
+  debugLog('Storage', 'Saving local bookmarks', { videoId, count: bookmarks.length });
   await syncSet({ [bmKey(videoId)]: bookmarks });
   // Cloud sync: push to backend if signed in
   try {
     const token = await getValidToken();
-    if (token) {
-      const res = await fetch(`${API_BASE}/api/bookmarks`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ videoId, bookmarks }),
-      });
-      if (res.status === 403) {
-        // Server says not Pro — sync local flag so UI reflects reality
-        const { bmUser } = await syncGet({ bmUser: null });
-        if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
-      }
+    if (!token) {
+      debugLog('CloudSync', 'Skipping push: no token', { videoId });
+      return;
     }
-  } catch {
+    const res = await fetch(`${API_BASE}/api/bookmarks`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ videoId, bookmarks }),
+    });
+    debugLog('CloudSync', 'Push completed', {
+      videoId,
+      status: res.status,
+      bookmarkCount: bookmarks.length,
+    });
+    if (res.status === 403) {
+      // Server says not Pro — sync local flag so UI reflects reality
+      const { bmUser } = await syncGet({ bmUser: null });
+      if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
+    }
+  } catch (error) {
     // Best-effort cloud sync
+    debugError('Cloud bookmark push failed', error, { videoId, bookmarkCount: bookmarks.length });
   }
 }
 
 async function pullFromCloud(videoId) {
   try {
     const token = await getValidToken();
-    if (!token) return;
+    if (!token) {
+      debugLog('CloudSync', 'Skipping pull: no token', { videoId });
+      return;
+    }
+    debugLog('CloudSync', 'Pulling cloud bookmarks', { videoId });
     const res = await fetch(`${API_BASE}/api/bookmarks?videoId=${encodeURIComponent(videoId)}`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
+    debugLog('CloudSync', 'Pull response', { videoId, status: res.status });
     if (res.status === 403) {
       // Server says not Pro — sync local flag so UI reflects reality
       const { bmUser } = await syncGet({ bmUser: null });
@@ -133,11 +180,22 @@ async function pullFromCloud(videoId) {
     const localBms = await getVideoBookmarksLocal(videoId);
     const localIds = new Set(localBms.map(b => b.id));
     const newFromCloud = cloudBms.filter(b => !localIds.has(b.id));
-    if (!newFromCloud.length) return;
+    if (!newFromCloud.length) {
+      debugLog('CloudSync', 'Pull completed with no new bookmarks', { videoId, cloudCount: cloudBms.length });
+      return;
+    }
     const merged = [...localBms, ...newFromCloud];
+    debugLog('CloudSync', 'Merging cloud bookmarks into local', {
+      videoId,
+      localCount: localBms.length,
+      cloudCount: cloudBms.length,
+      mergedCount: merged.length,
+      addedCount: newFromCloud.length,
+    });
     await saveVideoBookmarks(videoId, merged);
-  } catch {
+  } catch (error) {
     // Pull is best-effort — don't block the user
+    debugError('Cloud bookmark pull failed', error, { videoId });
   }
 }
 
@@ -165,11 +223,17 @@ async function waitForContentScript(tabId, maxRetries = MAX_RECONNECT_ATTEMPTS, 
   for (let i = 0; i < maxRetries; i++) {
     try {
       const r = await sendMessageToTab(tabId, { action: 'ping' });
-      if (r && r.status === 'ready') return true;
+      if (r && r.status === 'ready') {
+        if (i > 0) {
+          debugLog('Messaging', 'Content script became ready after retry', { tabId, attempts: i + 1 });
+        }
+        return true;
+      }
     } catch {
       if (i < maxRetries - 1) await new Promise(r => setTimeout(r, delay));
     }
   }
+  debugLog('Messaging', 'Content script unavailable after retries', { tabId, maxRetries });
   throw new Error('Content script not available. Please refresh the YouTube page.');
 }
 
@@ -202,6 +266,12 @@ async function saveBookmark(bookmark) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
+    debugLog('Bookmarks', 'Save requested', {
+      videoId: bookmark.videoId,
+      timestamp: Math.floor(bookmark.timestamp),
+      hasDescription: Boolean(bookmark.description?.trim()),
+    });
+
     await waitForContentScript(tab.id);
 
     // Parallel reads — dupe check list + video titles in one round-trip
@@ -211,6 +281,10 @@ async function saveBookmark(bookmark) {
     ]);
 
     if (bookmarks.some(b => Math.floor(b.timestamp) === Math.floor(bookmark.timestamp))) {
+      debugLog('Bookmarks', 'Duplicate bookmark prevented', {
+        videoId: bookmark.videoId,
+        timestamp: Math.floor(bookmark.timestamp),
+      });
       showError('Bookmark already exists.');
       return;
     }
@@ -255,7 +329,12 @@ async function saveBookmark(bookmark) {
       vd[bookmark.videoId] = bookmark.duration;
       await syncSet({ videoDurations: vd });
     }
-    debugLog('Bookmarks', 'Saved bookmark', { description, tags });
+    debugLog('Bookmarks', 'Saved bookmark', {
+      videoId: bookmark.videoId,
+      timestamp: Math.floor(bookmark.timestamp),
+      tagCount: tags.length,
+      usedFallbackDescription: !bookmark.description?.trim(),
+    });
 
     // Instant feedback — UI refresh runs in background
     sendMessageToTab(tab.id, { action: 'showSaveFlash' }).catch(() => {});
@@ -266,13 +345,17 @@ async function saveBookmark(bookmark) {
     loadBookmarks();
     sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }).catch(() => {});
   } catch (error) {
-    debugLog('Error', 'Failed to save bookmark', { error: error.message });
+    debugError('Failed to save bookmark', error, {
+      videoId: bookmark.videoId,
+      timestamp: Math.floor(bookmark.timestamp || 0),
+    });
     showError('Failed to save bookmark: ' + error.message);
   }
 }
 
 async function deleteBookmark(videoId, bookmarkId) {
   try {
+    debugLog('Bookmarks', 'Delete requested', { videoId, bookmarkId: parseInt(bookmarkId) });
     const tab = await getCurrentTab();
     await waitForContentScript(tab.id);
 
@@ -282,12 +365,18 @@ async function deleteBookmark(videoId, bookmarkId) {
     await loadBookmarks();
     try { await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }); } catch {}
   } catch (error) {
+    debugError('Failed to delete bookmark', error, { videoId, bookmarkId: parseInt(bookmarkId) });
     showError('Failed to delete bookmark: ' + error.message);
   }
 }
 
 async function updateBookmarkDescription(videoId, bookmarkId, newDescription) {
   try {
+    debugLog('Bookmarks', 'Update description requested', {
+      videoId,
+      bookmarkId: parseInt(bookmarkId),
+      newDescriptionLength: newDescription?.length || 0,
+    });
     showStatus('Saving…');
     const bookmarks = await getVideoBookmarks(videoId);
     const updated = bookmarks.map(b => {
@@ -304,6 +393,11 @@ async function updateBookmarkDescription(videoId, bookmarkId, newDescription) {
       await sendMessageToTab(tab.id, { action: 'bookmarkUpdated' });
     } catch {}
   } catch (error) {
+    debugError('Failed to update bookmark description', error, {
+      videoId,
+      bookmarkId: parseInt(bookmarkId),
+      newDescriptionLength: newDescription?.length || 0,
+    });
     showError('Failed to update bookmark: ' + error.message);
   }
 }
@@ -324,6 +418,7 @@ async function shareBookmarks() {
     if (bookmarks.length === 0) {
       throw new Error('Add some bookmarks before sharing');
     }
+    debugLog('Share', 'Share requested', { videoId, bookmarkCount: bookmarks.length });
 
     const videoTitles = await getVideoTitles();
 
@@ -345,6 +440,7 @@ async function shareBookmarks() {
     if (response.status === 403) {
       const err = await response.json().catch(() => ({}));
       if (err.error === 'free_limit_reached') {
+        debugLog('Share', 'Share blocked by free limit', { limit: err.limit });
         showError(`You've used all ${err.limit} free shares. ✦ Upgrade to Pro for unlimited sharing.`, 5000);
         chrome.tabs.create({ url: `${API_BASE}/upgrade` });
         btn.textContent = '↗ Share';
@@ -361,6 +457,7 @@ async function shareBookmarks() {
     await navigator.clipboard.writeText(shareUrl);
 
     btn.textContent = '✓ Copied!';
+    debugLog('Share', 'Share link created and copied', { videoId, shareId });
     setTimeout(() => {
       btn.textContent = '↗ Share';
       btn.disabled = false;
@@ -368,7 +465,7 @@ async function shareBookmarks() {
 
     return shareUrl;
   } catch (error) {
-    debugLog('Error', 'Share failed', { error: error.message });
+    debugError('Share failed', error);
     showError(error.message);
     btn.textContent = '↗ Share';
     btn.disabled = false;
@@ -383,6 +480,7 @@ async function summarizeBookmarks() {
   const content = document.getElementById('summary-content');
 
   if (panel.style.display !== 'none') {
+    debugLog('AI', 'Summary panel closed');
     panel.style.display = 'none';
     return;
   }
@@ -407,15 +505,32 @@ async function summarizeBookmarks() {
     const availability = await localAiAvailability();
     const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
     const isPro = bmUser?.isPro === true;
+    debugLog('AI', 'Summary requested', {
+      videoId,
+      bookmarkCount: bookmarks.length,
+      availability,
+      isPro,
+    });
     let result = null;
 
     if (availability === 'available') {
       // Local AI — works for everyone, no cost
+      debugLog('AI', 'Using local summary path', { videoId });
       btn.textContent = '…';
       btn.disabled = true;
-      try { result = await localSummarizeBookmarks(bookmarks, videoTitle); } catch { /* fall through to cloud */ }
+      try {
+        result = await localSummarizeBookmarks(bookmarks, videoTitle);
+        debugLog('AI', 'Local summary succeeded', {
+          hasSummary: Boolean(result?.summary),
+          topicCount: Array.isArray(result?.topics) ? result.topics.length : 0,
+          actionItemCount: Array.isArray(result?.actionItems) ? result.actionItems.length : 0,
+        });
+      } catch (error) {
+        debugError('Local summary failed, falling back to cloud', error, { videoId });
+      }
 
     } else if (availability === 'downloading') {
+      debugLog('AI', 'Summary deferred: local model downloading', { isPro });
       // Model is still downloading — show informational notice
       const hint = isPro
         ? 'Cloud AI will be used automatically once the download completes.'
@@ -429,6 +544,7 @@ async function summarizeBookmarks() {
       return;
 
     } else {
+      debugLog('AI', 'Local AI unavailable', { availability, isPro });
       // Local AI unavailable — soft paywall for free users, cloud for Pro
       if (!isPro) {
         content.innerHTML = `
@@ -455,6 +571,7 @@ async function summarizeBookmarks() {
 
     if (!result) {
       // Cloud fallback — Pro only (reached when local AI unavailable or errored)
+      debugLog('AI', 'Using cloud summary fallback', { videoId, isPro });
       btn.textContent = '…';
       btn.disabled = true;
       const response = await fetch(`${API_BASE}/api/summarize`, {
@@ -464,9 +581,15 @@ async function summarizeBookmarks() {
       });
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
+        debugLog('AI', 'Cloud summary failed response', { status: response.status });
         throw new Error(err.error || 'Server error');
       }
       result = await response.json();
+      debugLog('AI', 'Cloud summary succeeded', {
+        hasSummary: Boolean(result?.summary),
+        topicCount: Array.isArray(result?.topics) ? result.topics.length : 0,
+        actionItemCount: Array.isArray(result?.actionItems) ? result.actionItems.length : 0,
+      });
     }
 
     const { summary, topics, actionItems } = result;
@@ -488,6 +611,7 @@ async function summarizeBookmarks() {
     content.innerHTML = html;
     panel.style.display = 'block';
   } catch (error) {
+    debugError('Summarize failed', error);
     showError(error.message);
   } finally {
     btn.textContent = '✦ Summary';
@@ -516,6 +640,13 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
     const videoId = extractVideoId(tab.url);
     const bookmarks = await getVideoBookmarks(videoId);
     if (bookmarks.length === 0) throw new Error('No bookmarks to share');
+    debugLog('Share', 'Generate social post requested', {
+      platform,
+      videoId,
+      bookmarkCount: bookmarks.length,
+      hasShareUrl: Boolean(shareUrl),
+      autoOpen,
+    });
 
     const videoTitles = await getVideoTitles();
 
@@ -532,6 +663,7 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
+      debugLog('Share', 'Generate social post failed response', { status: response.status, platform });
       throw new Error(err.error || 'Server error');
     }
 
@@ -550,6 +682,7 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
     outputEl.style.display = 'block';
     if (autoOpen && composeUrls[platform]) chrome.tabs.create({ url: composeUrls[platform] });
   } catch (error) {
+    debugError('Generate social post failed', error, { platform });
     showError(error.message);
   } finally {
     platformBtns.forEach(b => { b.disabled = false; });
@@ -795,6 +928,7 @@ async function loadBookmarks() {
     const tab = await getCurrentTab();
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
       if (hasLoadedVideo) return;
+      debugLog('Init', 'Showing unsupported screen (not on YouTube watch page)');
       showUnsupportedScreen();
       return;
     }
@@ -803,6 +937,7 @@ async function loadBookmarks() {
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
+    debugLog('Bookmarks', 'Loading bookmarks for active video', { videoId, tabId: tab.id });
 
     // Auto-refresh comments if Comments tab is currently visible and video changed
     const commentsPanel = document.getElementById('comments-panel');
@@ -841,6 +976,7 @@ async function loadBookmarks() {
 
     const bookmarks = (await getVideoBookmarks(videoId))
       .sort((a, b) => a.timestamp - b.timestamp);
+    debugLog('Bookmarks', 'Loaded bookmarks', { videoId, count: bookmarks.length });
 
     const list = document.getElementById('bookmark-list');
 
@@ -934,7 +1070,7 @@ async function loadBookmarks() {
       });
     });
   } catch (error) {
-    debugLog('Error', 'Failed to load bookmarks', { error: error.message });
+    debugError('Failed to load bookmarks', error);
     showError('Failed to load bookmarks: ' + error.message);
   }
 }
@@ -948,6 +1084,7 @@ async function loadAuthState() {
   if (!signinBtn || !userChip) return;
 
   if (bmUser) {
+    debugLog('Auth', 'Rendering signed-in state');
     signinBtn.style.display  = 'none';
     userChip.style.display   = '';
     userChip.textContent     = bmUser.userEmail?.split('@')[0] || 'Signed in';
@@ -957,10 +1094,12 @@ async function loadAuthState() {
     // Silently validate/refresh token — sign out if session is fully expired
     const token = await getValidToken();
     if (!token) {
+      debugLog('Auth', 'Session expired, clearing bmUser');
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
     }
   } else {
+    debugLog('Auth', 'Rendering signed-out state');
     signinBtn.style.display  = '';
     userChip.style.display   = 'none';
     if (signoutBtn) signoutBtn.style.display = 'none';
@@ -1083,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error('Could not get current video timestamp');
       }
     } catch (error) {
-      debugLog('Error', 'Failed to add bookmark', { error: error.message });
+      debugError('Failed to add bookmark from UI click', error);
       showError(error.message);
     }
   });
@@ -1095,20 +1234,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const origHTML = btn.innerHTML;
     try {
       const tab = await getCurrentTab();
-      debugLog('AutoFill', 'Tab URL', tab.url);
       if (!tab.url.includes('youtube.com/watch')) {
-        debugLog('AutoFill', 'Not a YouTube watch page, aborting');
+        debugLog('AutoFill', 'Blocked: not on YouTube watch page');
         return;
       }
 
       btn.disabled = true;
+      debugLog('AutoFill', 'Auto-fill requested', { tabId: tab.id });
 
       await waitForContentScript(tab.id);
       const tsRes = await sendMessageToTab(tab.id, { action: 'getTimestamp' });
-      debugLog('AutoFill', 'Timestamp response', tsRes);
       if (!tsRes?.timestamp) throw new Error('no timestamp');
 
-      debugLog('AutoFill', 'Fetching transcript and chapter in parallel', tsRes.timestamp);
+      debugLog('AutoFill', 'Fetching transcript/chapter', { timestamp: Math.floor(tsRes.timestamp) });
       const [txResult, chResult] = await Promise.allSettled([
         sendMessageToTab(tab.id, { action: 'getTranscriptAtTimestamp', timestamp: tsRes.timestamp }),
         sendMessageToTab(tab.id, { action: 'getCurrentChapter' }),
@@ -1117,15 +1255,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       const transcript = txResult.status === 'fulfilled' ? txResult.value?.text  : null;
       const chapter    = chResult.status  === 'fulfilled' ? chResult.value?.chapter : null;
       const txRaw = txResult.status === 'fulfilled' ? txResult.value : null;
-      debugLog('AutoFill', 'Transcript raw response', {
+      debugLog('AutoFill', 'Transcript fetch result', {
         status: txResult.status,
-        text: txRaw?.text,
+        hasText: Boolean(txRaw?.text),
+        textLength: txRaw?.text?.length || 0,
         segmentCount: txRaw?._debug?.segmentCount,
         hasCaptions: txRaw?._debug?.hasCaptions,
-        error: txResult.reason?.message,
+        error: toErrorMessage(txResult.reason),
       });
-      debugLog('AutoFill', 'Transcript text', transcript);
-      debugLog('AutoFill', 'Chapter', chapter);
+      debugLog('AutoFill', 'Chapter fetch result', {
+        status: chResult.status,
+        hasChapter: Boolean(chapter),
+        chapterLength: chapter?.length || 0,
+      });
 
       let text = null;
       if (chapter && transcript) text = `${chapter} - ${transcript}`;
@@ -1133,7 +1275,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       else if (chapter)           text = chapter;
 
       if (text) {
-        debugLog('AutoFill', 'Filled with', text);
+        debugLog('AutoFill', 'Auto-fill succeeded', {
+          source: chapter && transcript ? 'chapter+transcript' : (transcript ? 'transcript' : 'chapter'),
+          valueLength: text.length,
+        });
         input.value = text;
         input.focus();
         input.select();
@@ -1142,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showStatus('No transcript available');
       }
     } catch (e) {
-      debugLog('AutoFill', 'Error', e?.message);
+      debugError('Auto-fill failed', e);
     } finally {
       btn.disabled = false;
       btn.innerHTML = origHTML;
@@ -1214,7 +1359,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Watch for storage changes (real-time sync from dashboard)
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync') {
-      debugLog('Storage', 'Change detected, reloading bookmarks');
+      debugLog('Storage', 'Sync change detected, reloading side panel', {
+        changedKeys: Object.keys(changes),
+      });
       loadBookmarks();
       if (changes.bmUser) loadAuthState();
     }
@@ -1225,6 +1372,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     debugLog('Tabs', 'Tab activated, reloading bookmarks');
     loadBookmarks();
   });
+
+  debugLog('Init', 'Side panel initialization complete');
 });
 
 // Auto-refresh when YouTube SPA navigates to a new video

@@ -64,15 +64,34 @@ function isExtensionServiceWorker(worker: Worker): boolean {
  * Filters by URL prefix so that YouTube's own service worker is never returned
  * instead of the extension worker.
  */
-async function getServiceWorker(context: BrowserContext): Promise<Worker> {
+export async function getServiceWorker(context: BrowserContext): Promise<Worker> {
   const existing = context.serviceWorkers().find(isExtensionServiceWorker);
   if (existing) return existing;
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const worker = await context.waitForEvent('serviceworker', { timeout: 20_000 });
+  try {
+    const worker = await context.waitForEvent('serviceworker', { timeout: 10_000 });
     if (isExtensionServiceWorker(worker)) return worker;
+  } catch (e) {
+    // If timeout, check again in case it registered just now
+    const retry = context.serviceWorkers().find(isExtensionServiceWorker);
+    if (retry) return retry;
+    throw new Error('Could not find extension service worker: ' + e.message);
   }
+
+  // Fallback: poll briefly
+  for (let i = 0; i < 10; i++) {
+    const sw = context.serviceWorkers().find(isExtensionServiceWorker);
+    if (sw) return sw;
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  throw new Error('Extension service worker not found after polling');
+}
+
+/** Returns the extension ID from the service worker URL. */
+export async function getExtensionId(context: BrowserContext): Promise<string> {
+  const sw = await getServiceWorker(context);
+  return sw.url().split('/')[2];
 }
 
 // ─── Storage helpers ───────────────────────────────────────────────────────

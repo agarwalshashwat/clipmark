@@ -1,3 +1,14 @@
+import { 
+  MAX_RECONNECT_ATTEMPTS, 
+  RECONNECT_DELAY, 
+  TAG_COLORS, 
+  parseTags, 
+  stringToColor, 
+  getTagColor,
+  TITLE_TRUNCATE_LENGTH,
+  TRANSCRIPT_TRUNCATE_LENGTH
+} from '../constants.js';
+
 // ─── Debug ────────────────────────────────────────────────────────────────────
 function debugLog(category, message, data = null) {
   console.log(`[ContentScript][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
@@ -446,6 +457,10 @@ async function silentSaveBookmark() {
     const videoTitles    = result.videoTitles;
     const videoDurations = result.videoDurations;
 
+    const storedTitle = videoTitles[videoId];
+    const liveTitle = await getVideoTitle();
+    const finalTitle = storedTitle || liveTitle || null;
+
     // Reject duplicate: same floor-second already bookmarked for this video
     if (bookmarks.some(b => Math.floor(b.timestamp) === Math.floor(timestamp))) {
       showSilentSaveIndicator('Already bookmarked at this moment', 'error');
@@ -460,7 +475,7 @@ async function silentSaveBookmark() {
       tags,
       color,
       createdAt:      new Date().toISOString(),
-      videoTitle:     videoTitles[videoId] || null,
+      videoTitle:     finalTitle,
       reviewSchedule: [1, 3, 7],
       lastReviewed:   null,
     });
@@ -567,6 +582,19 @@ function handleKeyboardShortcut(event) {
 // ─── Message listener ─────────────────────────────────────────────────────────
 function initializeMessageListener() {
   debugLog('Messaging', 'Setting up message listener');
+
+  // Listen for storage changes to update markers in real-time
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'sync' || !isContextValid()) return;
+    const videoId = new URLSearchParams(window.location.search).get('v');
+    if (!videoId) return;
+
+    if (changes[`bm_${videoId}`]) {
+      debugLog('Storage', 'Markers updated for current video');
+      updateBookmarkMarkers();
+    }
+  });
+
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (!isContextValid()) return;
     debugLog('Messaging', 'Received', { action: request.action });

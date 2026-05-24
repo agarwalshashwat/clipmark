@@ -1,10 +1,11 @@
 # Clipmark — dev commands
 # Usage: make <target>
 
-.PHONY: help dev build start migrate sync-tokens ext-zip ext-open test test-report clean
+.PHONY: help dev build start migrate sync-tokens ext-dev ext-build ext-zip ext-open test test-report clean
 
 WEBAPP_DIR := webapp
 EXT_DIR    := extension
+DIST_DIR   := dist
 ZIP_NAME   := clipmark-extension.zip
 
 # ── Default ───────────────────────────────────────────────────────────────────
@@ -19,7 +20,9 @@ help:
 	@echo "    make migrate    — run DB migrations"
 	@echo ""
 	@echo "  Extension"
-	@echo "    make ext-zip    — zip extension folder for Chrome Web Store"
+	@echo "    make ext-dev    — run extension in dev mode (HMR)"
+	@echo "    make ext-build  — build extension with Vite"
+	@echo "    make ext-zip    — zip dist folder for Chrome Web Store"
 	@echo "    make ext-open   — open chrome://extensions in default browser"
 	@echo ""
 	@echo "  Testing"
@@ -45,7 +48,7 @@ migrate:
 	cd $(WEBAPP_DIR) && npm run migrate
 
 # ── Testing ───────────────────────────────────────────────────────────────────
-test:
+test: ext-build
 	npm run test:yt
 
 test-report:
@@ -56,23 +59,29 @@ sync-tokens:
 	npm run sync-tokens
 
 # ── Extension ─────────────────────────────────────────────────────────────────
-ext-zip:
+ext-dev:
+	npm run dev
+
+ext-build:
+	npm run build
+
+ext-zip: ext-build
 	@rm -f $(ZIP_NAME)
-	@cd $(EXT_DIR) && zip -r ../$(ZIP_NAME) . \
+	@cd $(DIST_DIR) && zip -r ../$(ZIP_NAME) . \
 		--exclude "*.DS_Store" \
-		--exclude "__MACOSX/*" \
-		--exclude "*.map"
-	@echo "✓ $(ZIP_NAME) created"
+		--exclude "__MACOSX/*"
+	@echo "✓ $(ZIP_NAME) created from $(DIST_DIR)"
 
 ext-open:
 	@open -a "Google Chrome" "chrome://extensions" 2>/dev/null || \
 	 google-chrome "chrome://extensions" 2>/dev/null || \
 	 google-chrome-stable "chrome://extensions" 2>/dev/null || \
 	 chromium-browser "chrome://extensions" 2>/dev/null || \
-	 echo "Open chrome://extensions manually and enable Developer Mode, then load $(EXT_DIR)/"
+	 echo "Open chrome://extensions manually and enable Developer Mode, then load $(DIST_DIR)/"
 
 # ── Clean ─────────────────────────────────────────────────────────────────────
 clean:
 	@rm -f $(ZIP_NAME)
+	@rm -rf $(DIST_DIR)
 	@rm -rf $(WEBAPP_DIR)/.next
 	@echo "✓ cleaned"

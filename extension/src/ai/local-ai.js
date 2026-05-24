@@ -24,13 +24,14 @@ function _parseJson(raw, opener, closer) {
  * Check whether Chrome's built-in LanguageModel is available.
  * @returns {Promise<"available"|"downloadable"|"downloading"|"unavailable">}
  */
-async function localAiAvailability() {
-  if (typeof LanguageModel === 'undefined') return 'unavailable';
+export async function localAiAvailability() {
+  const ai = window.ai?.languageModel || window.LanguageModel;
+  if (!ai) return 'unavailable';
   try {
-    // Try with language options first (newer API), fall back to no-arg call
-    const fn = LanguageModel.availability.bind(LanguageModel);
-    try { return await fn({ expectedOutputLanguages: ['en'] }); }
-    catch { return await fn(); }
+    const fn = ai.capabilities || ai.availability;
+    if (typeof fn !== 'function') return 'unavailable';
+    const result = await fn();
+    return result.available || result;
   } catch { return 'unavailable'; }
 }
 
@@ -40,8 +41,11 @@ async function localAiAvailability() {
  * @param {string} [transcript]
  * @returns {Promise<string[]>}
  */
-async function localSuggestTags(description, transcript) {
-  const session = await LanguageModel.create({
+export async function localSuggestTags(description, transcript) {
+  const ai = window.ai?.languageModel || window.LanguageModel;
+  if (!ai) throw new Error('AI not available');
+
+  const session = await ai.create({
     expectedOutputLanguages: ['en'],
     systemPrompt:
       'You are a tagging assistant for YouTube video bookmarks. ' +
@@ -73,8 +77,11 @@ async function localSuggestTags(description, transcript) {
  * @param {string} [videoTitle]
  * @returns {Promise<{summary: string, topics: string[], actionItems: string[]}>}
  */
-async function localSummarizeBookmarks(bookmarks, videoTitle) {
-  const session = await LanguageModel.create({
+export async function localSummarizeBookmarks(bookmarks, videoTitle) {
+  const ai = window.ai?.languageModel || window.LanguageModel;
+  if (!ai) throw new Error('AI not available');
+
+  const session = await ai.create({
     expectedOutputLanguages: ['en'],
     systemPrompt:
       'You are an AI that summarizes YouTube video bookmark lists. ' +
@@ -102,4 +109,11 @@ async function localSummarizeBookmarks(bookmarks, videoTitle) {
   } finally {
     session.destroy();
   }
+}
+
+// Expose to window for testability and legacy global access
+if (typeof window !== 'undefined') {
+  window.localAiAvailability = localAiAvailability;
+  window.localSuggestTags = localSuggestTags;
+  window.localSummarizeBookmarks = localSummarizeBookmarks;
 }

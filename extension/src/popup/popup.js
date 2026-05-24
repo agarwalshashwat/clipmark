@@ -1,4 +1,18 @@
-// API_BASE is defined in config.js (loaded via <script> tag before this file)
+import { API_BASE } from '../config.js';
+import { 
+  TAG_COLORS, 
+  parseTags, 
+  stringToColor, 
+  getTagColor, 
+  ytWatchUrl, 
+  ytThumbnailUrl, 
+  APP_EXPORT_PREFIX 
+} from '../constants.js';
+import { 
+  localAiAvailability, 
+  localSuggestTags, 
+  localSummarizeBookmarks 
+} from '../ai/local-ai.js';
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
@@ -27,8 +41,6 @@ async function getValidToken() {
     return null;
   }
 }
-
-// TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 function extractVideoId(url) {

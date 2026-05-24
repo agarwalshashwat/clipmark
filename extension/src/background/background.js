@@ -1,41 +1,14 @@
-// ─── Constants ──────────────────────────────────────────────────────────────
-const TAG_COLORS = {
-    important: '#ff6b6b',
-    review:    '#ffa94d',
-    note:      '#74c0fc',
-    question:  '#a9e34b',
-    todo:      '#da77f2',
-    key:       '#f783ac',
-  };
-  
-  function parseTags(description) {
-    if (!description) return [];
-    const matches = description.match(/#(\w+)/g);
-    return matches ? matches.map(t => t.slice(1).toLowerCase()) : [];
-  }
-  
-  function stringToColor(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return `hsl(${Math.abs(hash) % 360}, 60%, 60%)`;
-  }
-  
-  function getTagColor(tags) {
-    if (!tags || tags.length === 0) return '#14B8A6';
-    return TAG_COLORS[tags[0]] || stringToColor(tags[0]);
-  }
-  
-  function formatTimestamp(seconds) {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-  
-  function bmKey(videoId) { return `bm_${videoId}`; }
+import { TAG_COLORS, parseTags, stringToColor, getTagColor } from '../constants.js';
 
-  // ─── Service Worker Keep-Alive (MV3) ─────────────────────────────────────────
+function formatTimestamp(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+function bmKey(videoId) { return `bm_${videoId}`; }
+
+// ─── Service Worker Keep-Alive (MV3) ─────────────────────────────────────────
   // MV3 service workers shut down after ~5 min of inactivity.
   // A recurring alarm prevents this for features that need persistence
   // (context menus, OAuth coordination, cloud sync events).

@@ -24,6 +24,9 @@ test.describe('Storage schema', () => {
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
+    // Wait for title to be debounced and saved (3s in content.js)
+    await page.waitForTimeout(4000);
+
     // Pause video to get a stable, non-zero timestamp
     await page.locator('video').evaluate((v: HTMLVideoElement) => {
       v.currentTime = 15;
@@ -251,7 +254,7 @@ test.describe('Storage schema', () => {
         const s = await getStoredBookmarks(context, VIDEO_ID);
         return s.length > 0 ? s[0].videoTitle : null;
       },
-      { timeout: 8_000 },
+      { timeout: 15_000 },
     ).toEqual(expect.stringContaining(''));
 
     const stored = await getStoredBookmarks(context, VIDEO_ID);

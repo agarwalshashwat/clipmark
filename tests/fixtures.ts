@@ -1,7 +1,7 @@
 import { test as base, chromium, BrowserContext } from '@playwright/test';
 import path from 'path';
 
-const EXTENSION_PATH = path.resolve(__dirname, '../extension');
+const EXTENSION_PATH = path.resolve(__dirname, '../dist');
 
 // A well-known public video with chapters (for .ytp-chapter-title-content test)
 export const TEST_VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
