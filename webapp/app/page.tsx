@@ -553,7 +553,7 @@ export default async function Home({
                 
                 <a
                   href="#faq"
-                  aria-label={`Learn more about ${title.toLowerCase()}`}
+                  aria-label={`Learn more: ${title}`}
                   style={{ 
                   marginTop: 'auto', 
                   paddingTop: 32, 
