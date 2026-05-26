@@ -73,6 +73,20 @@ Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 2. Go to `chrome://extensions/` → enable **Developer mode**
 3. **Load unpacked** → select the `extension/` folder
 
+**Load the extension with auto-reload workflow (CRXJS dev)**
+1. Install extension tooling once: `cd extension && npm install`
+2. Start extension dev server: `cd extension && npm run dev` (or `make ext-dev` from repo root)
+3. In `chrome://extensions/`, **Load unpacked** → select the `extension/dist/` folder
+4. Keep the dev server running while editing extension files; CRXJS rebuilds and updates extension artifacts automatically
+
+### Extension Debug Logging (Dev Mode)
+
+- Logs are automatically enabled for unpacked extensions and local API usage (`API_BASE` includes `localhost`).
+- Open Chrome DevTools for the active surface to inspect logs:
+  - Popup / Side panel / Dashboard: that page's DevTools console
+  - Content script logs: DevTools console on the YouTube tab
+- Global error handlers also log uncaught errors and unhandled promise rejections with context.
+
 **Run the webapp locally**
 ```bash
 cd webapp && npm install && npm run dev

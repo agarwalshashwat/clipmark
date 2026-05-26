@@ -1,4 +1,55 @@
-// API_BASE is defined in config.js (loaded via <script> tag before this file)
+import {
+  parseTags,
+  getTagColor,
+  ytWatchUrl,
+  MAX_RECONNECT_ATTEMPTS,
+  RECONNECT_DELAY,
+} from '../constants.module.js';
+import {
+  localAiAvailability,
+  localSummarizeBookmarks,
+} from '../ai/local-ai.js';
+import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+import './zen-garden.js';
+
+const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
+const logger = createDevLogger('SidePanel');
+installGlobalErrorLogging('SidePanel');
+
+let currentTimeSyncInterval = null;
+
+function normalizeYouTubeTitle(rawTitle) {
+  if (!rawTitle) return '';
+  return String(rawTitle)
+    .replace(/\s*-\s*YouTube\s*$/i, '')
+    .trim();
+}
+
+function stopCurrentTimeSync() {
+  if (currentTimeSyncInterval) {
+    clearInterval(currentTimeSyncInterval);
+    currentTimeSyncInterval = null;
+  }
+}
+
+function startCurrentTimeSync(tabId) {
+  stopCurrentTimeSync();
+
+  const tick = async () => {
+    try {
+      const response = await sendMessageToTab(tabId, { action: 'getCurrentTime' });
+      if (response && response.currentTime !== undefined) {
+        const currentTimeEl = document.getElementById('current-time');
+        if (currentTimeEl) currentTimeEl.textContent = `⏱ ${formatTimestamp(response.currentTime)}`;
+      }
+    } catch {
+      // Best effort; avoid noisy logs on transient tab/message state
+    }
+  };
+
+  tick().catch(() => {});
+  currentTimeSyncInterval = setInterval(() => { tick().catch(() => {}); }, 1000);
+}
 
 async function checkPro() {
   const { bmUser } = await syncGet({ bmUser: null });
@@ -29,11 +80,10 @@ async function getValidToken() {
     );
     return access_token;
   } catch {
+    logger.warn('Auth refresh failed in getValidToken');
     return null;
   }
 }
-
-// TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
 
 function formatTimestamp(seconds) {
   const m = Math.floor(seconds / 60);
@@ -42,7 +92,7 @@ function formatTimestamp(seconds) {
 }
 
 function debugLog(category, message, data = null) {
-  console.log(`[SidePanel][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
+  logger.debug(`[${category}] ${message}`, data ?? '');
 }
 
 // ─── Storage helpers ────────────────────────────────────────────────────────
@@ -144,6 +194,34 @@ async function pullFromCloud(videoId) {
 async function getVideoTitles() {
   const r = await syncGet({ videoTitles: {} });
   return r.videoTitles;
+}
+
+async function refreshTitleFromContentScript(tabId, expectedVideoId = null) {
+  if (!tabId) return null;
+  try {
+    const response = await sendMessageToTab(tabId, { action: 'getVideoTitle' });
+    const resolvedVideoId = response?.videoId || null;
+    const resolvedTitle = normalizeYouTubeTitle(response?.title);
+    if (!resolvedTitle) return null;
+    if (expectedVideoId && resolvedVideoId && expectedVideoId !== resolvedVideoId) return null;
+
+    const titleEl = document.querySelector('#video-title span');
+    if (titleEl) {
+      titleEl.className = '';
+      titleEl.textContent = resolvedTitle;
+    }
+
+    if (resolvedVideoId) {
+      const videoTitles = await getVideoTitles();
+      if (videoTitles[resolvedVideoId] !== resolvedTitle) {
+        videoTitles[resolvedVideoId] = resolvedTitle;
+        await syncSet({ videoTitles });
+      }
+    }
+    return resolvedTitle;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Messaging ───────────────────────────────────────────────────────────────
@@ -779,6 +857,19 @@ function sanitizeCommentHtml(html) {
 let hasLoadedVideo = false;
 let lastCommentVideoId = null;
 let _spZenGardenApi = null;
+let loadBookmarksInFlight = null;
+let loadBookmarksQueued = false;
+let loadBookmarksRetryTimer = null;
+let contentScriptRetryCount = 0;
+const MAX_SIDE_PANEL_CONTENT_RETRIES = 8;
+
+function scheduleBookmarksReload(delayMs = 150) {
+  if (loadBookmarksRetryTimer) clearTimeout(loadBookmarksRetryTimer);
+  loadBookmarksRetryTimer = setTimeout(() => {
+    loadBookmarksRetryTimer = null;
+    loadBookmarks();
+  }, delayMs);
+}
 
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
 function showUnsupportedScreen() {
@@ -797,10 +888,18 @@ function hideUnsupportedScreen() {
 }
 
 async function loadBookmarks() {
+  if (loadBookmarksInFlight) {
+    loadBookmarksQueued = true;
+    return loadBookmarksInFlight;
+  }
+
+  loadBookmarksInFlight = (async () => {
   try {
     const tab = await getCurrentTab();
+    logger.info('loadBookmarks called', { url: tab?.url });
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
       if (hasLoadedVideo) return;
+      stopCurrentTimeSync();
       showUnsupportedScreen();
       return;
     }
@@ -825,25 +924,31 @@ async function loadBookmarks() {
     // Update video title context
     const videoTitles = await getVideoTitles();
     const titleEl = document.querySelector('#video-title span');
-    if (titleEl && videoTitles[videoId]) {
+    if (titleEl) {
       titleEl.className = '';
-      titleEl.textContent = videoTitles[videoId];
+      titleEl.textContent = videoTitles[videoId] || normalizeYouTubeTitle(tab.title) || 'Current video';
     }
 
-    // Update timestamp
     try {
-      const response = await sendMessageToTab(tab.id, { action: 'getCurrentTime' });
-      if (response && response.currentTime !== undefined) {
-        const currentTimeEl = document.getElementById('current-time');
-        if (currentTimeEl) {
-          currentTimeEl.textContent = `⏱ ${formatTimestamp(response.currentTime)}`;
-        }
+      await waitForContentScript(tab.id, MAX_RECONNECT_ATTEMPTS + 2, RECONNECT_DELAY);
+      contentScriptRetryCount = 0;
+      await refreshTitleFromContentScript(tab.id, videoId);
+    } catch (error) {
+      const isScriptUnavailable = /Content script not available/i.test(error?.message || '');
+      if (isScriptUnavailable && contentScriptRetryCount < MAX_SIDE_PANEL_CONTENT_RETRIES) {
+        contentScriptRetryCount += 1;
+        debugLog('Init', 'Content script not ready yet, retrying', {
+          retry: contentScriptRetryCount,
+          tabId: tab.id,
+          url: tab.url,
+        });
+        stopCurrentTimeSync();
+        scheduleBookmarksReload(Math.min(4000, 600 + contentScriptRetryCount * 350));
+        return;
       }
-    } catch (e) {
-      debugLog('Error', 'Could not get current time', e.message);
+      throw error;
     }
-
-    await waitForContentScript(tab.id);
+    startCurrentTimeSync(tab.id);
 
     const bookmarks = (await getVideoBookmarks(videoId))
       .sort((a, b) => a.timestamp - b.timestamp);
@@ -940,9 +1045,28 @@ async function loadBookmarks() {
       });
     });
   } catch (error) {
-    debugLog('Error', 'Failed to load bookmarks', { error: error.message });
+    debugLog('Error', 'Failed to load bookmarks', {
+      error: error?.message || String(error),
+      stack: error?.stack,
+    });
+
+    // On startup races, avoid flashing hard errors while we keep retrying.
+    if (/Content script not available/i.test(error?.message || '')) {
+      scheduleBookmarksReload(1200);
+      return;
+    }
+
     showError('Failed to load bookmarks: ' + error.message);
   }
+  })().finally(() => {
+    loadBookmarksInFlight = null;
+    if (loadBookmarksQueued) {
+      loadBookmarksQueued = false;
+      scheduleBookmarksReload(0);
+    }
+  });
+
+  return loadBookmarksInFlight;
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -975,9 +1099,10 @@ async function loadAuthState() {
 
 // ─── Initialize ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  logger.info('Side panel initialized', { devLoggingEnabled: logger.enabled, apiBase: API_BASE });
   debugLog('Init', 'Side panel opened');
 
-  loadBookmarks();
+  scheduleBookmarksReload(0);
   loadAuthState();
 
   // Unsupported screen / Zen Garden button handlers
@@ -992,10 +1117,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Re-check when the active tab navigates (e.g. user goes to YouTube)
-  chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo) => {
     if (changeInfo.status === 'complete') {
-      loadBookmarks();
+      const active = await getCurrentTab();
+      if (active?.id === _tabId) scheduleBookmarksReload(0);
     }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    stopCurrentTimeSync();
+    stopCommentSync();
   });
 
   // Theme toggle (hidden)
@@ -1223,8 +1354,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Watch for storage changes (real-time sync from dashboard)
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync') {
+      const changedKeys = Object.keys(changes);
+      const hasRelevantChange =
+        changedKeys.includes('bmUser') ||
+        changedKeys.includes('videoTitles') ||
+        changedKeys.some(k => k.startsWith('bm_') || k.startsWith('rem_'));
+
+      if (!hasRelevantChange) return;
+
       debugLog('Storage', 'Change detected, reloading bookmarks');
-      loadBookmarks();
+      scheduleBookmarksReload(100);
       if (changes.bmUser) loadAuthState();
     }
   });
@@ -1232,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Reload bookmarks when tab changes
   chrome.tabs.onActivated.addListener(() => {
     debugLog('Tabs', 'Tab activated, reloading bookmarks');
-    loadBookmarks();
+    scheduleBookmarksReload(0);
   });
 });
 
@@ -1240,6 +1379,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.action === 'ytVideoChanged') {
     debugLog('Nav', 'YouTube video changed, reloading', { videoId: msg.videoId });
-    loadBookmarks();
+    scheduleBookmarksReload(0);
+    getCurrentTab()
+      .then(tab => refreshTitleFromContentScript(tab?.id, msg.videoId))
+      .catch(() => {});
   }
 });

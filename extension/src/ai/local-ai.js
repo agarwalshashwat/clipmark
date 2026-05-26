@@ -9,6 +9,21 @@ function _fmtTs(seconds) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+const _LM_LANGUAGE_OPTIONS = {
+  expectedInputs: [{ type: 'text', languages: ['en'] }],
+  expectedOutputs: [{ type: 'text', languages: ['en'] }],
+};
+
+function _localAiDebugEnabled() {
+  try {
+    if (globalThis.CLIPMARK_DEV_LOG === true) return true;
+    const manifest = chrome?.runtime?.getManifest?.();
+    return !!manifest && !manifest.update_url;
+  } catch {
+    return false;
+  }
+}
+
 // Parse JSON from model output — handles both full JSON and partial continuations.
 function _parseJson(raw, opener, closer) {
   const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
@@ -26,12 +41,16 @@ function _parseJson(raw, opener, closer) {
  */
 async function localAiAvailability() {
   if (typeof LanguageModel === 'undefined') return 'unavailable';
+
   try {
-    // Try with language options first (newer API), fall back to no-arg call
+    // Always send explicit language to satisfy newer safety/quality requirements.
     const fn = LanguageModel.availability.bind(LanguageModel);
-    try { return await fn({ expectedOutputLanguages: ['en'] }); }
-    catch { return await fn(); }
+    return await fn(_LM_LANGUAGE_OPTIONS);
   } catch { return 'unavailable'; }
+}
+
+async function _promptInEnglish(session, promptText) {
+  return await session.prompt(promptText);
 }
 
 /**
@@ -42,7 +61,7 @@ async function localAiAvailability() {
  */
 async function localSuggestTags(description, transcript) {
   const session = await LanguageModel.create({
-    expectedOutputLanguages: ['en'],
+    ..._LM_LANGUAGE_OPTIONS,
     systemPrompt:
       'You are a tagging assistant for YouTube video bookmarks. ' +
       'Respond ONLY with a raw JSON array of 1-3 lowercase single-word tags. ' +
@@ -53,7 +72,7 @@ async function localSuggestTags(description, transcript) {
     const ctx = transcript
       ? `Description: "${description}"\nTranscript context: "${transcript.slice(0, 300)}"`
       : `Description: "${description}"`;
-    const raw = await session.prompt(
+    const raw = await _promptInEnglish(session,
       `${ctx}\n\nSuggest tags for this bookmark. Reply with only a JSON array:\n[`
     );
     const tags = _parseJson(raw, '[', ']');
@@ -75,7 +94,7 @@ async function localSuggestTags(description, transcript) {
  */
 async function localSummarizeBookmarks(bookmarks, videoTitle) {
   const session = await LanguageModel.create({
-    expectedOutputLanguages: ['en'],
+    ..._LM_LANGUAGE_OPTIONS,
     systemPrompt:
       'You are an AI that summarizes YouTube video bookmark lists. ' +
       'Respond ONLY with a single JSON object matching this exact shape: ' +
@@ -90,10 +109,10 @@ async function localSummarizeBookmarks(bookmarks, videoTitle) {
       `Video: "${videoTitle || 'Unknown'}"\n` +
       `Bookmarks:\n${list}\n\n` +
       `Summarize these bookmarks. Return JSON matching {"summary":"...","topics":[...],"actionItems":[...]}:\n{`;
-    const raw = await session.prompt(prompt);
-    console.log('[local-ai] raw summarize output:', raw);
+    const raw = await _promptInEnglish(session, prompt);
+    if (_localAiDebugEnabled()) console.log('[local-ai] raw summarize output:', raw);
     const result = _parseJson(raw, '{', '}');
-    console.log('[local-ai] parsed result:', result);
+    if (_localAiDebugEnabled()) console.log('[local-ai] parsed result:', result);
     return {
       summary:     typeof result?.summary === 'string'     ? result.summary     : '',
       topics:      Array.isArray(result?.topics)           ? result.topics      : [],
@@ -103,3 +122,11 @@ async function localSummarizeBookmarks(bookmarks, videoTitle) {
     session.destroy();
   }
 }
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.localAiAvailability = localAiAvailability;
+  globalThis.localSuggestTags = localSuggestTags;
+  globalThis.localSummarizeBookmarks = localSummarizeBookmarks;
+}
+
+export { localAiAvailability, localSuggestTags, localSummarizeBookmarks };

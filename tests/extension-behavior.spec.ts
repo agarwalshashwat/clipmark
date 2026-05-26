@@ -10,6 +10,22 @@
  * Run: npm run test:yt -- --grep "behavior"
  */
 import { test, expect, TEST_VIDEO_URL, TEST_VIDEO_URL_2 } from './fixtures';
+import {
+  TEST_VIDEO_URL_LIST_STYLE,
+  TEST_VIDEO_URL_2_LIST_STYLE,
+  TEST_MOBILE_VIDEO_URL_LIST_STYLE,
+  TEST_MOBILE_VIDEO_URL_2_LIST_STYLE,
+} from './fixtures';
+import {
+  getSyncStorage,
+  normalizeYouTubeTitle,
+  waitForStoredVideoTitle,
+} from './helpers';
+
+function extractVideoId(url: string): string {
+  const parsed = new URL(url);
+  return parsed.searchParams.get('v') || '';
+}
 
 test.describe('Extension behavior', () => {
   test('Alt+S shows a toast notification (.yt-bookmark-toast)', async ({ context }) => {
@@ -75,6 +91,60 @@ test.describe('Extension behavior', () => {
 
     expect(await page.locator('.yt-bookmark-player-btn').count()).toBe(1);
     expect(await page.locator('.yt-bookmark-markers').count()).toBe(1);
+  });
+
+  test('SPA list-style navigation updates stored title for the new video (smoke)', async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL_LIST_STYLE, { waitUntil: 'networkidle' });
+    await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 20_000 });
+
+    await page.goto(TEST_VIDEO_URL_2_LIST_STYLE, { waitUntil: 'networkidle' });
+    await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 20_000 });
+
+    const targetVideoId = extractVideoId(TEST_VIDEO_URL_2_LIST_STYLE);
+    const expectedTitle = await page.evaluate(() => {
+      const clean = (raw: string | null | undefined) => String(raw || '').replace(/\s*-\s*YouTube\s*$/i, '').trim();
+      const selectors = [
+        'h1.ytd-video-primary-info-renderer',
+        'ytd-watch-metadata h1 yt-formatted-string',
+        'h1.ytd-watch-metadata yt-formatted-string',
+        'ytm-watch-metadata h1',
+        'h1.slim-video-metadata-title',
+        'h1',
+      ];
+      for (const selector of selectors) {
+        const text = clean(document.querySelector(selector)?.textContent);
+        if (text) return text;
+      }
+      return clean(document.title);
+    });
+
+    expect(expectedTitle).not.toBe('');
+    await waitForStoredVideoTitle(context, targetVideoId, expectedTitle, 20_000);
+
+    const videoTitles = await getSyncStorage<Record<string, string>>(context, 'videoTitles', {});
+    const stored = normalizeYouTubeTitle(videoTitles[targetVideoId] || '');
+    expect(stored).toBe(normalizeYouTubeTitle(expectedTitle));
+  });
+
+  test('m.youtube list-style navigation updates stored title for the new video (smoke)', async ({ context }) => {
+    test.slow();
+    const page = await context.newPage();
+    await page.goto(TEST_MOBILE_VIDEO_URL_LIST_STYLE, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+
+    await page.goto(TEST_MOBILE_VIDEO_URL_2_LIST_STYLE, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const targetVideoId = extractVideoId(TEST_MOBILE_VIDEO_URL_2_LIST_STYLE);
+    const expectedTitle = normalizeYouTubeTitle(await page.title());
+    expect(expectedTitle).not.toBe('');
+
+    await waitForStoredVideoTitle(context, targetVideoId, expectedTitle, 25_000);
+
+    const videoTitles = await getSyncStorage<Record<string, string>>(context, 'videoTitles', {});
+    const stored = normalizeYouTubeTitle(videoTitles[targetVideoId] || '');
+    expect(stored).toBe(normalizeYouTubeTitle(expectedTitle));
   });
 
   test('Alt+S is suppressed when a text input has focus (keyboard input guard)', async ({ context }) => {

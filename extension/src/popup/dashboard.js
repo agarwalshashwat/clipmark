@@ -1,4 +1,15 @@
-// API_BASE is defined in config.js (loaded via <script> tag before this file)
+import {
+  getTagColor,
+  stringToColor,
+  ytWatchUrl,
+  ytThumbnailUrl,
+  APP_EXPORT_PREFIX,
+} from '../constants.module.js';
+import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+
+const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
+const logger = createDevLogger('Dashboard');
+installGlobalErrorLogging('Dashboard');
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
@@ -24,11 +35,10 @@ async function getValidToken() {
     );
     return access_token;
   } catch {
+    logger.warn('Auth refresh failed in getValidToken');
     return null;
   }
 }
-
-// TAG_COLORS, stringToColor, getTagColor are defined in constants.js
 
 function bmKey(videoId) { return `bm_${videoId}`; }
 
@@ -1939,6 +1949,7 @@ async function renderSharedView(container) {
     if (!res.ok) throw new Error('fetch failed');
     collections = await res.json();
   } catch {
+    logger.warn('Failed to load shared collections');
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">⚠️</div>
@@ -2155,6 +2166,7 @@ async function syncAllWithCloud() {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  logger.info('Dashboard initialized', { devLoggingEnabled: logger.enabled });
   // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
   // function initTheme() {
   //   chrome.storage.local.get(['theme'], (result) => {

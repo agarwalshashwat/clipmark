@@ -1,0 +1,15 @@
+{
+  "name": "clipmark-extension",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Clipmark Chrome extension dev tooling",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.1.0-beta.29",
+    "vite": "^5.4.10"
+  }
+}
