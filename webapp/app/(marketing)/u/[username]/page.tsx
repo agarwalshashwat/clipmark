@@ -3,8 +3,6 @@ import type { Metadata } from 'next';
 import { supabase, type Profile, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
 import { APP_URL } from '@/app/lib/constants';
-import { Navigation } from '@/app/components/Navigation';
-import { Footer } from '@/app/components/Footer';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -102,13 +100,11 @@ export default async function UserProfilePage(
   const avatarInitial = username[0].toUpperCase();
 
   return (
-    <div className={styles.page}>
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      <Navigation />
 
       <main className={styles.main}>
 
@@ -203,10 +199,7 @@ export default async function UserProfilePage(
             </div>
           )}
         </section>
-
       </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

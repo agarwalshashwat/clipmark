@@ -2,8 +2,6 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase';
-import { Navigation } from './components/Navigation';
-import { Footer } from './components/Footer';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Your YouTube Second Brain',
@@ -105,7 +103,7 @@ export default async function Home({
   };
 
   return (
-    <main style={{ background: '#f9f9fa', color: '#1A1C1D', fontFamily: "'Inter', sans-serif", minHeight: '100vh', overflowX: 'hidden' }}>
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }}
@@ -114,8 +112,6 @@ export default async function Home({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-
-      <Navigation />
 
       {/* ── Referral Banner ────────────────────────────────────────────── */}
       {referrerUsername && (
@@ -486,8 +482,20 @@ export default async function Home({
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+      <section id="how-it-works" style={{ 
+        padding: '160px 32px', 
+        background: '#ffffff',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Subtle ambient light for the journey */}
+        <div style={{ 
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: '80%', height: '60%', background: 'radial-gradient(circle, rgba(20,184,166,0.03) 0%, transparent 70%)',
+          pointerEvents: 'none', zIndex: 0
+        }} />
+
+        <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <div style={{ textAlign: 'center', marginBottom: 80 }}>
             <span className="cm-section-label">How It Works</span>
             <h2 style={{ 
@@ -662,8 +670,6 @@ export default async function Home({
           <p style={{ marginTop: 24, fontSize: 14, color: '#9ca3af' }}>Available on Chrome, Edge, and Brave. Free forever for individuals.</p>
         </div>
       </section>
-
-      <Footer />
-    </main>
+    </>
   );
 }

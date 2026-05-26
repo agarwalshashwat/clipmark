@@ -9,7 +9,6 @@
     "migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.78.0",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.43.0",
     "dodopayments": "^2.23.2",

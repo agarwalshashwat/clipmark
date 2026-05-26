@@ -25,48 +25,7 @@ export default async function SignInPage({
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f9f9fa',
-      fontFamily: "'Inter', -apple-system, sans-serif",
-      color: '#1a1c1d',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundImage: `
-        radial-gradient(at 0% 0%, rgba(20,184,166,0.06) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(115,46,228,0.05) 0px, transparent 50%)
-      `,
-    }}>
-
-      {/* ── Fixed glass header (matches home page) ── */}
-      <nav style={{
-        position: 'fixed', top: 0, width: '100%', zIndex: 50,
-        background: 'rgba(255,255,255,0.85)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 1px 0 rgba(26,28,29,0.06)',
-      }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 72,
-        }}>
-          <a href="/" style={{
-            fontSize: 22, fontWeight: 800, color: '#14B8A6',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            letterSpacing: '-0.5px', textDecoration: 'none',
-          }}>
-            Clipmark
-          </a>
-          <a href="/signin" style={{
-            color: '#545f6c',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 600, fontSize: 14, textDecoration: 'none',
-          }}>
-            Sign Up
-          </a>
-        </div>
-      </nav>
-
+    <>
       {/* ── Main ── */}
       <main style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -182,36 +141,6 @@ export default async function SignInPage({
           </p>
         </div>
       </main>
-
-      {/* ── Footer ── */}
-      <footer style={{
-        textAlign: 'center', paddingBottom: 32,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
-      }}>
-        <div style={{ display: 'flex', gap: 32 }}>
-          {['Privacy', 'Terms', 'Help'].map(label => (
-            <a
-              key={label}
-              href={`/${label.toLowerCase()}`}
-              style={{
-                fontFamily: "'Inter', sans-serif",
-                fontSize: 11, fontWeight: 500,
-                textTransform: 'uppercase', letterSpacing: '0.1em',
-                color: '#9ca3af', textDecoration: 'none',
-              }}
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-        <div style={{
-          fontSize: 10, fontWeight: 500, textTransform: 'uppercase',
-          letterSpacing: '0.1em', color: 'rgba(156,163,175,0.6)',
-        }}>
-          © {new Date().getFullYear()} Clipmark. The Digital Curator.
-        </div>
-      </footer>
-
-    </div>
+    </>
   );
 }

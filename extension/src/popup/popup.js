@@ -9,6 +9,7 @@ import {
   localAiAvailability,
   localSuggestTags,
   localSummarizeBookmarks,
+  localGeneratePost,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import './zen-garden.js';
@@ -379,27 +380,14 @@ async function suggestTags(description, transcript) {
     return;
   }
 
-  let tags = null;
   const availability = await localAiAvailability();
+  let tags = null;
 
   if (availability === 'available') {
-    try { tags = await localSuggestTags(description, transcript); } catch { /* fall through */ }
+    try { tags = await localSuggestTags(description, transcript); } catch { /* fail */ }
   }
 
-  if (!tags) {
-    if (availability === 'downloading') return; // silently wait for model
-    const isPro = await checkPro();
-    if (!isPro) return; // free user + no local AI = silent skip
-    try {
-      const response = await fetch(`${API_BASE}/api/suggest-tags`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description, transcript }),
-      });
-      if (!response.ok) return;
-      tags = (await response.json()).tags;
-    } catch { return; }
-  }
+  if (!tags) return;
 
   try {
     if (!tags?.length) return;
@@ -507,26 +495,22 @@ async function summarizeBookmarks() {
         });
         return;
       }
-      // Pro + no local AI → fall through to cloud fetch below
-    }
-
-    if (!result) {
-      // Cloud fallback — Pro only (reached when local AI unavailable or errored)
-      btn.textContent = '…';
-      btn.disabled = true;
-      const response = await fetch(`${API_BASE}/api/summarize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookmarks, videoTitle }),
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Server error');
+      // Pro + no local AI → No cloud fallback to avoid costs
+      if (availability !== 'available') {
+        content.innerHTML = `
+          <div class="ai-unavailable">
+            <span class="material-symbols-outlined" style="font-size:48px;color:#94a3b8;margin-bottom:12px;">robot_2</span>
+            <h3>Local AI Required</h3>
+            <p>Clipmark uses Chrome's built-in <strong>Gemini Nano</strong> for your privacy and to keep Pro costs low.</p>
+            <p style="font-size:12px;color:#64748b;margin-top:12px;">Please ensure you are on Chrome 128+ and have "Enable Bypass for AI" flags set.</p>
+            <a href="https://clipmark.mithahara.com/docs/ai" target="_blank" class="ai-help-link">How to enable →</a>
+          </div>`;
+        panel.style.display = 'block';
+        return;
       }
-      result = await response.json();
     }
 
-    const { summary, topics, actionItems } = result;
+    const { summary, topics, actionItems } = result || { summary: 'Error generating summary.', topics: [], actionItems: [] };
 
     let html = `<p class="summary-text">${summary}</p>`;
 
@@ -575,24 +559,22 @@ async function generateSocialPost(platform, shareUrl) {
     if (bookmarks.length === 0) throw new Error('No bookmarks to share');
 
     const videoTitles = await getVideoTitles();
+    const videoTitle  = videoTitles[videoId] || '';
 
-    const response = await fetch(`${API_BASE}/api/generate-post`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bookmarks,
-        videoTitle: videoTitles[videoId] || '',
-        shareUrl:   shareUrl || '',
-        platform,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || 'Server error');
+    let post = '';
+    const availability = await localAiAvailability();
+    if (availability === 'available') {
+      try {
+        post = await localGeneratePost(bookmarks, videoTitle, shareUrl || '', platform);
+      } catch (err) {
+        logger.warn('Local post generation failed', err);
+      }
     }
 
-    const { post } = await response.json();
+    if (!post) {
+      throw new Error('Local AI required for social posts. Please check Chrome flags.');
+    }
+
     textareaEl.value = post;
 
     // Deep-link to platform compose

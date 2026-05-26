@@ -5,21 +5,19 @@ import CancelSubscriptionButton from './CancelSubscriptionButton';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import styles from './upgrade.module.css';
-import { Navigation } from '@/app/components/Navigation';
-import { Footer } from '@/app/components/Footer';
 
 const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,  pro: true  },
-  { label: 'Shareable public pages',             free: true,  pro: true  },
-  { label: 'Public collections limit',           free: '5',   pro: '∞'   },
-  { label: 'Cloud sync across devices',          free: false, pro: true  },
-  { label: 'AI auto-fill from transcript',       free: false, pro: true  },
-  { label: 'AI summaries',                       free: false, pro: true  },
-  { label: 'Smart tag suggestions',              free: false, pro: true  },
-  { label: 'Social post generation',             free: false, pro: true  },
-  { label: 'Revision Mode',                      free: false, pro: true  },
-  { label: 'Spaced revision',                    free: false, pro: true  },
-  { label: 'Request a feature',                  free: false, pro: true  },
+  { label: 'Cloud Sync across devices',          free: false, pro: true  },
+  { label: 'Auto-sync to Notion & Obsidian',     free: false, pro: true  },
+  { label: 'Daily Knowledge Review Queue',       free: false, pro: true  },
+  { label: 'Permanent Transcript Archiving',     free: false, pro: true  },
+  { label: 'Deep Search (inside transcripts)',   free: false, pro: true  },
+  { label: 'Smart AI Synthesis (Local-only)',    free: false, pro: true  },
+  { label: 'Unlimited Shared Collections',       free: '5',   pro: '∞'   },
+  { label: 'Custom Markdown Exports',            free: false, pro: true  },
+  { label: 'Spaced Repetition Reminders',        free: false, pro: true  },
+  { label: 'Priority Support',                   free: false, pro: true  },
 ];
 
 function Check() {
@@ -108,9 +106,7 @@ export default async function UpgradePage({
     : null;
 
   return (
-    <div className={styles.pageWrap}>
-      <Navigation />
-
+    <>
       <main className={styles.main}>
         {success && (
           <div className={styles.bannerSuccess}>
@@ -129,8 +125,8 @@ export default async function UpgradePage({
         )}
 
         <div className={styles.header}>
-          <h1 className={styles.title}>Future-proof your learning</h1>
-          <p className={styles.sub}>Clipmark is the easiest way to organize YouTube research. Upgrade to Pro for AI-powered intelligence.</p>
+          <h1 className={styles.title}>Power up your Second Brain</h1>
+          <p className={styles.sub}>Turn YouTube from a distraction into a high-performance research library. Sync to your favorite tools and never forget a key insight again.</p>
         </div>
 
         {isPro && !success && (
@@ -161,11 +157,11 @@ export default async function UpgradePage({
                 <span className={styles.period}>/month</span>
               </div>
               <div className={styles.featureList}>
-                <div className={styles.featureItem}><Check /> AI auto-fill snippets</div>
-                <div className={styles.featureItem}><Check /> AI-generated summaries</div>
-                <div className={styles.featureItem}><Check /> Smart tag suggestions</div>
-                <div className={styles.featureItem}><Check /> Unlimited shared pages</div>
-                <div className={styles.featureItem}><Check /> Priority support</div>
+                <div className={styles.featureItem}><Check /> Sync to Notion & Obsidian</div>
+                <div className={styles.featureItem}><Check /> Daily Review Dashboard</div>
+                <div className={styles.featureItem}><Check /> Deep Transcript Search</div>
+                <div className={styles.featureItem}><Check /> Unlimited Shared Pages</div>
+                <div className={styles.featureItem}><Check /> Priority Support</div>
               </div>
               <form action={createCheckoutSession}>
                 <input type="hidden" name="plan" value="monthly" />
@@ -182,14 +178,33 @@ export default async function UpgradePage({
               </div>
               <div className={styles.featureList}>
                 <div className={styles.featureItem}><Check /> Everything in Monthly</div>
-                <div className={styles.featureItem}><Check /> <strong>Exclusive: Beta AI Beta features</strong></div>
-                <div className={styles.featureItem}><Check /> Custom social posts (X/LinkedIn)</div>
-                <div className={styles.featureItem}><Check /> Advanced analytics</div>
-                <div className={styles.featureItem}><Check /> Pro Badge on profile</div>
+                <div className={styles.featureItem}><Check /> <strong>Pro: Local AI Optimization</strong></div>
+                <div className={styles.featureItem}><Check /> Custom Markdown Exports</div>
+                <div className={styles.featureItem}><Check /> Advanced Learning Stats</div>
+                <div className={styles.featureItem}><Check /> Spaced Repetition Logic</div>
               </div>
               <form action={createCheckoutSession}>
                 <input type="hidden" name="plan" value="annual" />
                 <button type="submit" className={`${styles.ctaBtn} ${styles.ctaBtnPro}`}>Go Pro Annual</button>
+              </form>
+            </div>
+
+            <div className={styles.pricingCard}>
+              <div className={styles.planName}>Lifetime</div>
+              <div className={styles.price}>
+                <span className={styles.amount}>${prices.lifetime}</span>
+                <span className={styles.period}>/once</span>
+              </div>
+              <div className={styles.featureList}>
+                <div className={styles.featureItem}><Check /> Everything in Pro</div>
+                <div className={styles.featureItem}><Check /> Own your data forever</div>
+                <div className={styles.featureItem}><Check /> Lifetime Cloud Archiving</div>
+                <div className={styles.featureItem}><Check /> No recurring fees</div>
+                <div className={styles.featureItem}><Check /> Early access to all labs</div>
+              </div>
+              <form action={createCheckoutSession}>
+                <input type="hidden" name="plan" value="lifetime" />
+                <button type="submit" className={styles.ctaBtn}>Get Lifetime Pro</button>
               </form>
             </div>
           </div>
@@ -216,8 +231,6 @@ export default async function UpgradePage({
           </div>
         </div>
       </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

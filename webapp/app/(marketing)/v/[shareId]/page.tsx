@@ -5,8 +5,6 @@ import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
 import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
-import { Navigation } from '@/app/components/Navigation';
-import { Footer } from '@/app/components/Footer';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -146,13 +144,11 @@ export default async function SharePage(
   const jsonLd = generateJsonLd(collection, shareId);
 
   return (
-    <div className={styles.page}>
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      <Navigation />
 
       {/* ── Main content ── */}
       <main className={styles.main}>
@@ -346,8 +342,6 @@ export default async function SharePage(
 
         </div>
       </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

@@ -47,6 +47,10 @@
   .grid { grid-template-columns: 1fr 1fr; }
 }
 
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 .pricingCard {
   background: white;
   border: 1px solid #f1f5f9;

@@ -1,7 +1,5 @@
 import { Metadata } from 'next';
-import { Navigation } from '@/app/components/Navigation';
-import { Footer } from '@/app/components/Footer';
-import { fetchProductPrices } from '@/app/upgrade/actions';
+import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
 
 export const metadata: Metadata = {
   title: 'Affiliate Program — Clipmark',
@@ -107,15 +105,7 @@ export default async function AffiliatePage() {
     { plan: 'Lifetime', price: `$${prices.lifetime} one-time`, commission: commissionDisplay(prices.lifetime, ' one-time'),   note: 'After 10% referral discount' },
   ];
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f9f9fa',
-      color: '#1a1c1d',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      WebkitFontSmoothing: 'antialiased',
-    }}>
-      <Navigation />
-
+    <>
       {/* ── Hero ── */}
       <section style={{
         paddingTop: 160,
@@ -402,8 +392,6 @@ export default async function AffiliatePage() {
         </p>
 
       </div>
-
-      <Footer />
-    </div>
+    </>
   );
 }
