@@ -296,6 +296,7 @@
   .cm-card,
   .cm-icon-badge {
     transition: none;
+    transform: none;
   }
 
   .cm-card:hover,
