@@ -269,7 +269,7 @@
 .cm-step-tag {
   font-size: 12px;
   font-weight: 800;
-  color: #9ca3af;
+  color: #4b5563;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -290,6 +290,18 @@
 @media (max-width: 768px) {
   .cm-timeline-line { display: none; }
   .cm-card { padding: 32px 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-card,
+  .cm-icon-badge {
+    transition: none;
+  }
+
+  .cm-card:hover,
+  .cm-card:hover .cm-icon-badge {
+    transform: none;
+  }
 }
 
 .switch-link {

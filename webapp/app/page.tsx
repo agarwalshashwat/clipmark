@@ -551,7 +551,10 @@ export default async function Home({
                 </h4>
                 <p style={{ color: '#545f6c', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
                 
-                <div style={{ 
+                <a
+                  href="#faq"
+                  aria-label={`Learn more about ${title.toLowerCase()}`}
+                  style={{ 
                   marginTop: 'auto', 
                   paddingTop: 32, 
                   display: 'flex', 
@@ -559,10 +562,12 @@ export default async function Home({
                   gap: 8, 
                   color: '#14B8A6', 
                   fontWeight: 700, 
-                  fontSize: 14 
-                }}>
+                  fontSize: 14,
+                  textDecoration: 'none'
+                }}
+                >
                   Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
-                </div>
+                </a>
               </div>
             ))}
           </div>
