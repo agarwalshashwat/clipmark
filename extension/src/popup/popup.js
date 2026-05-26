@@ -834,11 +834,35 @@ function showStatus(message, duration = 1500) {
   setTimeout(() => el.classList.remove('show'), duration);
 }
 
+// ─── Zen Garden ───────────────────────────────────────────────────────────────
+let _zenGardenApi = null;
+
+function showZenGarden() {
+  const screen = document.getElementById('zen-garden-screen');
+  if (!screen) return;
+  screen.style.display = 'flex';
+  if (!_zenGardenApi) {
+    const canvas = document.getElementById('zg-canvas');
+    if (canvas && typeof window.initZenGarden === 'function') {
+      _zenGardenApi = window.initZenGarden(canvas);
+    }
+  }
+}
+
+function hideZenGarden() {
+  const screen = document.getElementById('zen-garden-screen');
+  if (screen) screen.style.display = 'none';
+}
+
 // ─── Render bookmarks in popup ────────────────────────────────────────────────
 async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) return;
+    if (!tab.url.includes('youtube.com/watch')) {
+      showZenGarden();
+      return;
+    }
+    hideZenGarden();
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -1095,6 +1119,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Refresh auth state live when sign-in completes in another tab
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes.bmUser) loadAuthState();
+  });
+
+  // ── Zen Garden buttons ───────────────────────────────────────────────────────
+  document.getElementById('zg-reset-btn')?.addEventListener('click', () => {
+    if (_zenGardenApi) _zenGardenApi.reset();
+  });
+  document.getElementById('zg-youtube-btn')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://www.youtube.com' });
   });
 
   // Quick tag chips

@@ -778,11 +778,17 @@ function sanitizeCommentHtml(html) {
 // ─── Module-level state ───────────────────────────────────────────────────────
 let hasLoadedVideo = false;
 let lastCommentVideoId = null;
+let _spZenGardenApi = null;
 
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
 function showUnsupportedScreen() {
   const screen = document.getElementById('sp-unsupported-screen');
   if (screen) screen.style.display = 'flex';
+  // Initialise zen garden once
+  if (!_spZenGardenApi && typeof window.initZenGarden === 'function') {
+    const canvas = document.getElementById('sp-zg-canvas');
+    if (canvas) _spZenGardenApi = window.initZenGarden(canvas);
+  }
 }
 
 function hideUnsupportedScreen() {
@@ -974,12 +980,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadBookmarks();
   loadAuthState();
 
-  // Unsupported screen button handlers
+  // Unsupported screen / Zen Garden button handlers
   document.getElementById('sp-go-youtube-btn')?.addEventListener('click', () => {
     chrome.tabs.create({ url: 'https://www.youtube.com' });
   });
   document.getElementById('sp-open-dashboard-btn')?.addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
+  });
+  document.getElementById('sp-zg-reset-btn')?.addEventListener('click', () => {
+    if (_spZenGardenApi) _spZenGardenApi.reset();
   });
 
   // Re-check when the active tab navigates (e.g. user goes to YouTube)
