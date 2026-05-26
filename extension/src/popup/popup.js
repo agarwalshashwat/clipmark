@@ -1,4 +1,56 @@
-// API_BASE is defined in config.js (loaded via <script> tag before this file)
+import {
+  parseTags,
+  getTagColor,
+  ytWatchUrl,
+  MAX_RECONNECT_ATTEMPTS,
+  RECONNECT_DELAY,
+} from '../constants.module.js';
+import {
+  localAiAvailability,
+  localSuggestTags,
+  localSummarizeBookmarks,
+} from '../ai/local-ai.js';
+import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+import './zen-garden.js';
+
+const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
+const logger = createDevLogger('Popup');
+installGlobalErrorLogging('Popup');
+
+let popupTimeSyncInterval = null;
+
+function normalizeYouTubeTitle(rawTitle) {
+  if (!rawTitle) return '';
+  return String(rawTitle)
+    .replace(/\s*-\s*YouTube\s*$/i, '')
+    .trim();
+}
+
+function stopPopupTimeSync() {
+  if (popupTimeSyncInterval) {
+    clearInterval(popupTimeSyncInterval);
+    popupTimeSyncInterval = null;
+  }
+}
+
+function startPopupTimeSync(tabId) {
+  stopPopupTimeSync();
+
+  const tick = async () => {
+    try {
+      const response = await sendMessageToTab(tabId, { action: 'getCurrentTime' });
+      if (response && response.currentTime !== undefined) {
+        const currentTimeEl = document.getElementById('current-time');
+        if (currentTimeEl) currentTimeEl.textContent = `⏱ ${formatTimestamp(response.currentTime)}`;
+      }
+    } catch {
+      // Best effort only
+    }
+  };
+
+  tick().catch(() => {});
+  popupTimeSyncInterval = setInterval(() => { tick().catch(() => {}); }, 1000);
+}
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
@@ -24,11 +76,10 @@ async function getValidToken() {
     );
     return access_token;
   } catch {
+    logger.warn('Auth refresh failed in getValidToken');
     return null;
   }
 }
-
-// TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 function extractVideoId(url) {
@@ -47,7 +98,7 @@ function formatTimestamp(seconds) {
 }
 
 function debugLog(category, message, data = null) {
-  console.log(`[Popup][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
+  logger.debug(`[${category}] ${message}`, data ?? '');
 }
 
 // ─── Messaging ───────────────────────────────────────────────────────────────
@@ -834,11 +885,37 @@ function showStatus(message, duration = 1500) {
   setTimeout(() => el.classList.remove('show'), duration);
 }
 
+// ─── Zen Garden ───────────────────────────────────────────────────────────────
+let _zenGardenApi = null;
+
+function showZenGarden() {
+  const screen = document.getElementById('zen-garden-screen');
+  if (!screen) return;
+  screen.style.display = 'flex';
+  if (!_zenGardenApi) {
+    const canvas = document.getElementById('zg-canvas');
+    if (canvas && typeof window.initZenGarden === 'function') {
+      _zenGardenApi = window.initZenGarden(canvas);
+    }
+  }
+}
+
+function hideZenGarden() {
+  const screen = document.getElementById('zen-garden-screen');
+  if (screen) screen.style.display = 'none';
+}
+
 // ─── Render bookmarks in popup ────────────────────────────────────────────────
 async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) return;
+    logger.info('loadBookmarks called', { url: tab?.url });
+    if (!tab.url.includes('youtube.com/watch')) {
+      stopPopupTimeSync();
+      showZenGarden();
+      return;
+    }
+    hideZenGarden();
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -846,28 +923,16 @@ async function loadBookmarks() {
     // Update video title context
     const videoTitles = await getVideoTitles();
     const titleEl = document.querySelector('#video-title span');
-    if (titleEl && videoTitles[videoId]) {
+    if (titleEl) {
       titleEl.className = '';
-      titleEl.textContent = videoTitles[videoId];
+      titleEl.textContent = videoTitles[videoId] || normalizeYouTubeTitle(tab.title) || 'Current video';
     }
 
     // Load revisit reminder panel for this video
     loadRevisitReminderPanel(videoId, videoTitles[videoId] || '');
 
-    // Update timestamp preview
-    try {
-      const response = await sendMessageToTab(tab.id, { action: 'getCurrentTime' });
-      if (response && response.currentTime !== undefined) {
-        const currentTimeEl = document.getElementById('current-time');
-        if (currentTimeEl) {
-          currentTimeEl.textContent = `⏱ ${formatTimestamp(response.currentTime)}`;
-        }
-      }
-    } catch (e) {
-      debugLog('Error', 'Could not get current time', e.message);
-    }
-
     await waitForContentScript(tab.id);
+    startPopupTimeSync(tab.id);
 
     const bookmarks = (await getVideoBookmarks(videoId))
       .sort((a, b) => a.timestamp - b.timestamp);
@@ -1052,6 +1117,7 @@ async function initOnboardingTour() {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  logger.info('Popup initialized', { devLoggingEnabled: logger.enabled, apiBase: API_BASE });
   debugLog('Init', 'Popup opened');
 
   const tab = await getCurrentTab().catch(() => null);
@@ -1095,6 +1161,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Refresh auth state live when sign-in completes in another tab
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes.bmUser) loadAuthState();
+  });
+
+  // ── Zen Garden buttons ───────────────────────────────────────────────────────
+  document.getElementById('zg-reset-btn')?.addEventListener('click', () => {
+    if (_zenGardenApi) _zenGardenApi.reset();
+  });
+  document.getElementById('zg-youtube-btn')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://www.youtube.com' });
   });
 
   // Quick tag chips
@@ -1259,5 +1333,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('view-all-bookmarks').addEventListener('click', e => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
+  });
+
+  window.addEventListener('beforeunload', () => {
+    stopPopupTimeSync();
   });
 });

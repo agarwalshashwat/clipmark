@@ -204,10 +204,24 @@
     </div>
   </div>
 
+  <!-- Zen Garden Screen — shown when not on a YouTube video -->
+  <div id="zen-garden-screen" style="display:none;">
+    <div class="zg-header">
+      <span class="zg-label">ZEN GARDEN</span>
+      <span class="zg-hint">drag to rake</span>
+      <button id="zg-reset-btn" class="zg-reset-btn" title="Reset garden">Reset</button>
+    </div>
+    <canvas id="zg-canvas" class="zg-canvas"></canvas>
+    <div class="zg-footer">
+      <button id="zg-youtube-btn" class="zg-youtube-btn">
+        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">play_circle</span>
+        Open YouTube
+      </button>
+      <a href="dashboard.html" class="zg-dashboard-link">Dashboard</a>
+    </div>
+  </div>
+
 </div><!-- /.popup-root -->
-<script src="../constants.js"></script>
-<script src="../config.js"></script>
-<script src="../ai/local-ai.js"></script>
-<script src="../popup/popup.js"></script>
+<script type="module" src="./popup.entry.js"></script>
 </body>
 </html>

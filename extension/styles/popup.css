@@ -1475,3 +1475,101 @@ body {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* ── Zen Garden Screen ───────────────────────────────────────────────────────── */
+#zen-garden-screen {
+  position: absolute;
+  inset: 0;
+  background: #f2e8d0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.2s ease;
+}
+
+.zg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(242, 232, 208, 0.9);
+  border-bottom: 1px solid rgba(160, 130, 80, 0.18);
+  flex-shrink: 0;
+}
+
+.zg-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a6c3a;
+}
+
+.zg-hint {
+  font-size: 10px;
+  color: #a08050;
+  font-style: italic;
+  flex: 1;
+}
+
+.zg-reset-btn {
+  background: none;
+  border: 1px solid rgba(138, 108, 58, 0.35);
+  color: #8a6c3a;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 3px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.zg-reset-btn:hover {
+  background: rgba(138, 108, 58, 0.1);
+  color: #6b4e20;
+}
+
+.zg-canvas {
+  flex: 1;
+  width: 100%;
+  cursor: crosshair;
+  display: block;
+}
+
+.zg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: rgba(236, 223, 196, 0.95);
+  border-top: 1px solid rgba(160, 130, 80, 0.18);
+  flex-shrink: 0;
+}
+
+.zg-youtube-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  background: #14B8A6;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.zg-youtube-btn:hover { opacity: 0.87; }
+
+.zg-dashboard-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a6c3a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.zg-dashboard-link:hover { color: #5a3c10; }

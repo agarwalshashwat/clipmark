@@ -142,6 +142,34 @@ export async function getSyncStorage<T>(
   );
 }
 
+export function normalizeYouTubeTitle(rawTitle: string | null | undefined): string {
+  return String(rawTitle || '')
+    .replace(/\s*-\s*YouTube\s*$/i, '')
+    .trim();
+}
+
+export async function waitForStoredVideoTitle(
+  context: BrowserContext,
+  videoId: string,
+  expectedTitle: string,
+  timeoutMs = 15_000,
+): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  const expected = normalizeYouTubeTitle(expectedTitle);
+
+  while (Date.now() < deadline) {
+    const videoTitles = await getSyncStorage<Record<string, string>>(context, 'videoTitles', {});
+    const current = normalizeYouTubeTitle(videoTitles[videoId] || '');
+    if (current && current === expected) {
+      return current;
+    }
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  const latest = await getSyncStorage<Record<string, string>>(context, 'videoTitles', {});
+  throw new Error(`Timed out waiting for videoTitles[${videoId}] to match expected title. Current value: ${latest[videoId] || '[missing]'}`);
+}
+
 /**
  * Send a message to the content script running in the YouTube page and return
  * the response. Uses the service worker to call chrome.tabs.sendMessage so

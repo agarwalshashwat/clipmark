@@ -1,7 +1,7 @@
 # Clipmark — dev commands
 # Usage: make <target>
 
-.PHONY: help dev build start migrate sync-tokens ext-zip ext-open test test-report clean
+.PHONY: help dev build start migrate sync-tokens ext-dev ext-build ext-zip ext-open test test-report clean
 
 WEBAPP_DIR := webapp
 EXT_DIR    := extension
@@ -19,6 +19,8 @@ help:
 	@echo "    make migrate    — run DB migrations"
 	@echo ""
 	@echo "  Extension"
+	@echo "    make ext-dev    — extension dev server (CRXJS + auto reload workflow)"
+	@echo "    make ext-build  — build extension to extension/dist"
 	@echo "    make ext-zip    — zip extension folder for Chrome Web Store"
 	@echo "    make ext-open   — open chrome://extensions in default browser"
 	@echo ""
@@ -56,6 +58,12 @@ sync-tokens:
 	npm run sync-tokens
 
 # ── Extension ─────────────────────────────────────────────────────────────────
+ext-dev:
+	cd $(EXT_DIR) && npm run dev
+
+ext-build:
+	cd $(EXT_DIR) && npm run build
+
 ext-zip:
 	@rm -f $(ZIP_NAME)
 	@cd $(EXT_DIR) && zip -r ../$(ZIP_NAME) . \

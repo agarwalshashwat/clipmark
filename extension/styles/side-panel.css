@@ -1541,94 +1541,87 @@ body {
   .sp-social-title { font-size: 12px; }
 }
 
-/* ── Unsupported Website Screen ──────────────────────────────────────────────── */
+/* ── Zen Garden Screen (replaces old unsupported-screen content) ─────────────── */
 #sp-unsupported-screen {
   position: absolute;
   inset: 0;
-  background: #f5f3ef;
+  background: #f2e8d0;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
   animation: fadeIn 0.2s ease;
 }
 
-.sp-unsupported-hero {
-  position: relative;
-  width: 100%;
-  height: 42%;
-  min-height: 180px;
-  overflow: hidden;
+.sp-zg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(242, 232, 208, 0.95);
+  border-bottom: 1px solid rgba(160, 130, 80, 0.18);
   flex-shrink: 0;
 }
 
-.sp-unsupported-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
-  background: #e05a2b;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 4px;
-  line-height: 1;
-}
-
-.sp-unsupported-hero {
-  background: linear-gradient(135deg, #e8dcc8 0%, #c9b99a 50%, #d4c4a0 100%);
-}
-
-.sp-unsupported-body {
-  flex: 1;
-  padding: 24px 22px 32px;
+.sp-zg-title-row {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
-.sp-unsupported-eyebrow {
+.sp-zg-label {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #14B8A6;
-  margin: 0;
+  color: #8a6c3a;
 }
 
-.sp-unsupported-heading {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  color: #1a1c1d;
-  margin: 0;
-  line-height: 1.1;
-}
-
-.sp-unsupported-copy {
-  font-size: 13px;
-  color: #6c7a77;
-  line-height: 1.7;
-  margin: 0;
+.sp-zg-hint {
+  font-size: 10px;
+  color: #a08050;
   font-style: italic;
 }
 
-.sp-unsupported-yt {
-  color: #14B8A6;
-  font-style: normal;
+.sp-zg-reset-btn {
+  background: none;
+  border: 1px solid rgba(138, 108, 58, 0.35);
+  color: #8a6c3a;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sp-zg-reset-btn:hover {
+  background: rgba(138, 108, 58, 0.1);
+  color: #6b4e20;
 }
 
-.sp-unsupported-actions {
+.sp-zg-canvas {
+  flex: 1;
+  width: 100%;
+  cursor: crosshair;
+  display: block;
+  min-height: 0;
+}
+
+.sp-zg-footer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 4px;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: rgba(236, 223, 196, 0.95);
+  border-top: 1px solid rgba(160, 130, 80, 0.18);
+  flex-shrink: 0;
 }
+
+/* Keep existing button styles for sp-go-youtube-btn */
+
+/* ── Unsupported screen action buttons ───────────────────────────────────────── */
 
 .sp-unsupported-primary {
   display: inline-flex;

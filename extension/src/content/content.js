@@ -1,6 +1,51 @@
+function isDevLoggingEnabled() {
+  try {
+    const manifest = chrome?.runtime?.getManifest?.();
+    const unpacked = !!manifest && !manifest.update_url;
+    return unpacked || String(globalThis.API_BASE || '').includes('localhost');
+  } catch {
+    return false;
+  }
+}
+
+const __contentDevLogs = isDevLoggingEnabled();
+
+if (__contentDevLogs) {
+  console.log('[ContentScript][INFO] Dev logging enabled');
+}
+
+globalThis.addEventListener('error', (event) => {
+  if (!__contentDevLogs) return;
+  console.error('[ContentScript][ERROR]', {
+    message: event?.message,
+    source: event?.filename,
+    line: event?.lineno,
+    column: event?.colno,
+  });
+});
+
+globalThis.addEventListener('unhandledrejection', (event) => {
+  if (!__contentDevLogs) return;
+  console.error('[ContentScript][UNHANDLED_REJECTION]', event?.reason);
+});
+
 // ─── Debug ────────────────────────────────────────────────────────────────────
 function debugLog(category, message, data = null) {
+  if (!__contentDevLogs) return;
   console.log(`[ContentScript][${category}][${new Date().toISOString()}] ${message}`, data ?? '');
+}
+
+const _suppressedMessageActions = new Set([
+  'getCurrentTime',
+  'ping',
+]);
+const _messageLogState = {};
+
+function shouldLogMessageAction(action) {
+  if (_suppressedMessageActions.has(action)) return false;
+  const now = Date.now();
+  _messageLogState[action] = now;
+  return true;
 }
 
 debugLog('Init', 'Content script loading');
@@ -17,6 +62,8 @@ let revisionState = null; // { segments, index, countdownTimer, speed }
 
 let titleSaveTimer = null;
 const savedTitlesCache = {}; // avoid redundant sync writes
+let titleVideoWatchTimer = null;
+let lastObservedTitleVideoId = null;
 
 // ─── Resume playback state ────────────────────────────────────────────────────
 let progressSaveTimer = null;
@@ -29,6 +76,27 @@ let cachedTranscriptVideoId = null;
 // TAG_COLORS, parseTags, stringToColor, getTagColor are defined in constants.js
 
 function bmKey(videoId) { return `bm_${videoId}`; }
+
+function getCurrentVideoIdFromLocation() {
+  return new URLSearchParams(window.location.search).get('v');
+}
+
+function clearSavedTitleCache(exceptVideoId = null) {
+  for (const key of Object.keys(savedTitlesCache)) {
+    if (exceptVideoId && key === exceptVideoId) continue;
+    delete savedTitlesCache[key];
+  }
+}
+
+function handleVideoIdTransition(reason) {
+  const videoId = getCurrentVideoIdFromLocation();
+  if (!videoId || videoId === lastObservedTitleVideoId) return null;
+  lastObservedTitleVideoId = videoId;
+  clearSavedTitleCache(videoId);
+  scheduleTitleRefresh([0, 250, 700, 1500, 3000], videoId);
+  debugLog('Title', 'Detected video transition', { videoId, reason });
+  return videoId;
+}
 
 // ─── Extension context guard ──────────────────────────────────────────────────
 // After an extension reload/update the content script keeps running but
@@ -569,7 +637,9 @@ function initializeMessageListener() {
   debugLog('Messaging', 'Setting up message listener');
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (!isContextValid()) return;
-    debugLog('Messaging', 'Received', { action: request.action });
+    if (shouldLogMessageAction(request.action)) {
+      debugLog('Messaging', 'Received', { action: request.action });
+    }
 
     const handle = async () => {
       if (request.action === 'ping') {
@@ -583,12 +653,17 @@ function initializeMessageListener() {
       }
       if (request.action === 'getBookmarkData') {
         const activeVideo = document.querySelector('video') || video;
-        const titleEl = document.querySelector('h1.ytd-video-primary-info-renderer');
+        const resolvedTitle = await getVideoTitle();
         sendResponse({
           currentTime: activeVideo ? activeVideo.currentTime : 0,
           duration:    activeVideo ? (activeVideo.duration || 0) : 0,
-          title: titleEl ? titleEl.textContent.trim() : null
+          title: resolvedTitle || null,
         });
+        return;
+      }
+      if (request.action === 'getVideoTitle') {
+        const resolvedTitle = await getVideoTitle();
+        sendResponse({ title: resolvedTitle || null, videoId: getCurrentVideoIdFromLocation() });
         return;
       }
       if (request.action === 'getCurrentChapter') {
@@ -691,16 +766,74 @@ function initializeMessageListener() {
 
 // ─── Video title ──────────────────────────────────────────────────────────────
 async function getVideoTitle() {
-  const el = document.querySelector('h1.ytd-video-primary-info-renderer');
-  return el ? el.textContent.trim() : null;
+  const clean = (raw) => String(raw || '').replace(/\s*-\s*YouTube\s*$/i, '').trim();
+
+  const isLikelyVideoTitle = (raw) => {
+    const value = clean(raw);
+    if (!value || value.length < 3) return false;
+    const blocked = new Set([
+      'youtube',
+      'home',
+      'shorts',
+      'subscriptions',
+      'library',
+      'explore',
+      'music',
+      'gaming',
+      'news',
+      'live',
+    ]);
+    return !blocked.has(value.toLowerCase());
+  };
+
+  const selectorCandidates = [
+    'h1.ytd-video-primary-info-renderer',
+    'ytd-watch-metadata h1 yt-formatted-string',
+    'h1.ytd-watch-metadata yt-formatted-string',
+    'ytm-watch-metadata h1',
+    'h1.slim-video-metadata-title',
+    'h1',
+    'h1 span',
+  ];
+
+  for (const selector of selectorCandidates) {
+    const el = document.querySelector(selector);
+    if (!el) continue;
+    const text = clean(el.textContent);
+    if (isLikelyVideoTitle(text)) return text;
+  }
+
+  const metaTitle = clean(document.querySelector('meta[name="title"]')?.getAttribute('content'));
+  if (isLikelyVideoTitle(metaTitle)) return metaTitle;
+
+  const currentVideoId = getCurrentVideoIdFromLocation();
+  const ytVideoDetails = window.ytInitialPlayerResponse?.videoDetails;
+  const ytVideoId = ytVideoDetails?.videoId || null;
+  const ytTitle = clean(ytVideoDetails?.title);
+  if ((!currentVideoId || !ytVideoId || ytVideoId === currentVideoId) && isLikelyVideoTitle(ytTitle)) {
+    return ytTitle;
+  }
+
+  const ogTitle = clean(document.querySelector('meta[property="og:title"]')?.getAttribute('content'));
+  if (isLikelyVideoTitle(ogTitle)) return ogTitle;
+
+  const docTitle = clean(document.title);
+  if (isLikelyVideoTitle(docTitle)) return docTitle;
+
+  return null;
 }
 
-async function saveVideoTitle() {
+async function saveVideoTitle(expectedVideoId = null) {
   if (!isContextValid()) return;
-  const videoId = new URLSearchParams(window.location.search).get('v');
+  const videoId = getCurrentVideoIdFromLocation();
   if (!videoId) return;
+  if (expectedVideoId && expectedVideoId !== videoId) return;
+
   const title = await getVideoTitle();
   if (!title) return;
+
+  const latestVideoId = getCurrentVideoIdFromLocation();
+  if (!latestVideoId || latestVideoId !== videoId) return;
 
   // Skip write if we already saved this exact title
   if (savedTitlesCache[videoId] === title) return;
@@ -715,6 +848,14 @@ async function saveVideoTitle() {
   videoTitles[videoId] = title;
   chrome.storage.sync.set({ videoTitles });
   savedTitlesCache[videoId] = title;
+}
+
+function scheduleTitleRefresh(attempts = [0, 250, 700, 1500, 3000], expectedVideoId = null) {
+  attempts.forEach((delay) => {
+    setTimeout(() => {
+      saveVideoTitle(expectedVideoId).catch(() => {});
+    }, delay);
+  });
 }
 
 // ─── Resume playback tracking ─────────────────────────────────────────────────
@@ -1298,10 +1439,13 @@ function initialize() {
     // Debounce title saves — YouTube fires hundreds of DOM mutations per second
     const titleObserver = new MutationObserver(() => {
       clearTimeout(titleSaveTimer);
-      titleSaveTimer = setTimeout(() => saveVideoTitle().catch(() => {}), 3000);
+      titleSaveTimer = setTimeout(() => saveVideoTitle().catch(() => {}), 400);
     });
     titleObserver.observe(document.body, { subtree: true, childList: true });
-    saveVideoTitle().catch(() => {});
+    handleVideoIdTransition('initialize');
+    titleVideoWatchTimer = setInterval(() => {
+      handleVideoIdTransition('url-watch');
+    }, 1000);
 
     isInitialized = true;
     debugLog('Init', 'Content script initialized successfully');
@@ -1320,8 +1464,9 @@ try {
 
 // Detect YouTube SPA navigation and notify the side panel
 document.addEventListener('yt-navigate-finish', () => {
-  const videoId = new URLSearchParams(window.location.search).get('v');
+  const videoId = handleVideoIdTransition('yt-navigate-finish') || getCurrentVideoIdFromLocation();
   if (videoId) {
+    scheduleTitleRefresh([0, 250, 700, 1500, 3000], videoId);
     try {
       chrome.runtime.sendMessage({ action: 'ytVideoChanged', videoId }).catch(() => {});
     } catch { /* extension context invalidated after reload — ignore */ }
@@ -1335,6 +1480,8 @@ document.addEventListener('yt-page-data-updated', () => {
   cachedTranscript       = null;
   transcriptFetchPromise = null;
   cachedTranscriptVideoId = null;
+  const videoId = handleVideoIdTransition('yt-page-data-updated') || getCurrentVideoIdFromLocation();
+  scheduleTitleRefresh([0, 300, 900, 1800], videoId);
   fetchTranscript().catch(() => {});
 });
 
@@ -1349,10 +1496,13 @@ window.addEventListener('pagehide', () => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
   if (video) video.removeEventListener('durationchange', updateBookmarkMarkers);
   exitRevisionMode();
+  if (titleVideoWatchTimer) { clearInterval(titleVideoWatchTimer); titleVideoWatchTimer = null; }
   if (progressSaveTimer) { clearTimeout(progressSaveTimer); progressSaveTimer = null; }
   saveProgress(); // flush final position on page unload
   isInitialized       = false;
   reconnectAttempts   = 0;
+  lastObservedTitleVideoId = null;
+  clearSavedTitleCache();
   cachedTranscript    = null;
   transcriptFetchPromise = null;
   cachedTranscriptVideoId = null;

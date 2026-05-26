@@ -158,32 +158,22 @@
 
   <div id="error-message" class="error-message"></div>
 
-  <!-- Unsupported Website Screen -->
+  <!-- Zen Garden Screen — shown when not on a YouTube video -->
   <div id="sp-unsupported-screen" style="display:none;">
-    <div class="sp-unsupported-hero">
-      <span class="sp-unsupported-badge">OFFLINE MODE</span>
+    <div class="sp-zg-header">
+      <div class="sp-zg-title-row">
+        <span class="sp-zg-label">ZEN GARDEN</span>
+        <span class="sp-zg-hint">drag to rake the sand</span>
+      </div>
+      <button id="sp-zg-reset-btn" class="sp-zg-reset-btn" title="Reset garden">Reset</button>
     </div>
-    <div class="sp-unsupported-body">
-      <p class="sp-unsupported-eyebrow">THE DIGITAL CURATOR</p>
-      <h1 class="sp-unsupported-heading">Unsupported Website</h1>
-      <p class="sp-unsupported-copy">
-        <em>Clipmark currently works best on <strong class="sp-unsupported-yt">YouTube.</strong><br>
-        We're working on expanding to more knowledge-rich sites soon.</em>
-      </p>
-      <div class="sp-unsupported-actions">
-        <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
-          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
-          Go to YouTube
-        </button>
-        <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
-      </div>
-      <div class="sp-unsupported-info">
-        <p class="sp-unsupported-info-title">
-          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">auto_awesome</span>
-          WHY YOUTUBE?
-        </p>
-        <p class="sp-unsupported-info-text">Our proprietary algorithm focuses on temporal knowledge extraction. We are perfecting the transcription engine before we tackle the sprawling architecture of the modern web.</p>
-      </div>
+    <canvas id="sp-zg-canvas" class="sp-zg-canvas"></canvas>
+    <div class="sp-zg-footer">
+      <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
+        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
+        Go to YouTube
+      </button>
+      <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
     </div>
   </div>
 
@@ -223,9 +213,6 @@
 
 </div><!-- /.side-panel-container -->
 
-<script src="../constants.js"></script>
-<script src="../config.js"></script>
-<script src="../ai/local-ai.js"></script>
-<script src="../popup/side-panel.js"></script>
+<script type="module" src="./side-panel.entry.js"></script>
 </body>
 </html>
