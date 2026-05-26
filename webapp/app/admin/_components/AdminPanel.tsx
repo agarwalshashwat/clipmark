@@ -97,196 +97,231 @@ export default function AdminPanel() {
   };
 
   const inputStyle: React.CSSProperties = {
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderRadius: 8,
-    padding: '8px 12px',
-    color: 'var(--text-primary)',
+    background: 'white',
+    border: '1px solid #e2e8f0',
+    borderRadius: 12,
+    padding: '12px 16px',
+    color: '#1e293b',
     fontSize: 14,
     width: '100%',
     boxSizing: 'border-box',
+    fontFamily: "'Inter', sans-serif",
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
   };
 
   const btn = (variant: 'primary' | 'danger' | 'ghost' = 'primary'): React.CSSProperties => ({
-    padding: '8px 16px',
-    borderRadius: 8,
-    border: variant === 'ghost' ? '1px solid var(--border)' : 'none',
+    padding: '12px 24px',
+    borderRadius: 12,
+    border: variant === 'ghost' ? '1px solid #e2e8f0' : 'none',
     cursor: 'pointer',
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: 14,
-    background: variant === 'primary' ? 'var(--accent)' : variant === 'danger' ? '#ef4444' : 'var(--surface)',
-    color: variant === 'ghost' ? 'var(--text-primary)' : '#fff',
+    background: variant === 'primary' ? 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)' : variant === 'danger' ? '#ef4444' : 'white',
+    color: variant === 'ghost' ? '#64748b' : '#fff',
+    transition: 'all 0.2s ease',
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
   });
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px' }}>
-      <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 28, marginBottom: 8 }}>
-        Admin Panel
-      </h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: 32 }}>
-        Grant Pro access, manage affiliate partners, and configure creator deals.
-      </p>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
+      <header style={{ marginBottom: 48, textAlign: 'center' }}>
+        <span className="cm-section-label">System Operations</span>
+        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 40, fontWeight: 800, color: '#1a1c1d', letterSpacing: '-1.5px', marginBottom: 12 }}>
+          Admin Panel
+        </h1>
+        <p style={{ color: '#64748b', fontSize: 16, fontWeight: 500 }}>
+          Manage user permissions, gifted access, and affiliate partnerships.
+        </p>
+      </header>
 
       {/* ── Search ── */}
-      <div style={card}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Find a user</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div className="cm-card" style={{ padding: '32px', marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <div className="cm-icon-badge" style={{ background: 'rgba(20, 184, 166, 0.1)', color: '#14B8A6' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person_search</span>
+          </div>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>User Management</h2>
+        </div>
+        
+        <div style={{ display: 'flex', gap: 12 }}>
           <input
             style={inputStyle}
-            placeholder="Search by email…"
+            placeholder="Search by email address…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && search()}
           />
           <button style={{ ...btn('primary'), whiteSpace: 'nowrap' }} onClick={search}>
-            {loading ? 'Searching…' : 'Search'}
+            {loading ? 'Searching…' : 'Find User'}
           </button>
         </div>
 
         {users.length > 0 && (
-          <table style={{ width: '100%', marginTop: 16, borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ color: 'var(--text-secondary)', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '6px 8px' }}>Email</th>
-                <th style={{ padding: '6px 8px' }}>Pro</th>
-                <th style={{ padding: '6px 8px' }}>Gifted</th>
-                <th style={{ padding: '6px 8px' }}>Affiliate</th>
-                <th style={{ padding: '6px 8px' }}>Code</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '8px 8px' }}>{u.email}</td>
-                  <td style={{ padding: '8px 8px' }}>{u.is_pro ? '✓' : '—'}</td>
-                  <td style={{ padding: '8px 8px' }}>{u.is_gifted_pro ? '🎁' : '—'}</td>
-                  <td style={{ padding: '8px 8px' }}>{u.is_affiliate ? '✓' : '—'}</td>
-                  <td style={{ padding: '8px 8px', fontFamily: 'monospace' }}>{u.affiliate_code ?? '—'}</td>
-                  <td style={{ padding: '8px 8px' }}>
-                    <button style={btn('ghost')} onClick={() => { setSelected(u); setAffCode(u.affiliate_code ?? ''); }}>
-                      Manage
-                    </button>
-                  </td>
+          <div style={{ overflowX: 'auto', marginTop: 32 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ color: '#64748b', textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                  <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>User</th>
+                  <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>Status</th>
+                  <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>Affiliate</th>
+                  <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>Code</th>
+                  <th style={{ padding: '16px 12px' }}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                    <td style={{ padding: '16px 12px', fontWeight: 600, color: '#1e293b' }}>{u.email}</td>
+                    <td style={{ padding: '16px 12px' }}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {u.is_pro && (
+                          <span style={{ background: '#ecfdf5', color: '#10b981', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>PRO</span>
+                        )}
+                        {u.is_gifted_pro && (
+                          <span style={{ background: '#f5f3ff', color: '#8B5CF6', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>GIFTED</span>
+                        )}
+                        {!u.is_pro && (
+                          <span style={{ background: '#f8fafc', color: '#94a3b8', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>FREE</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 12px' }}>
+                      {u.is_affiliate ? (
+                        <span style={{ color: '#14B8A6', fontWeight: 700, fontSize: 13 }}>{u.affiliate_commission_rate}%</span>
+                      ) : '—'}
+                    </td>
+                    <td style={{ padding: '16px 12px', fontFamily: 'monospace', color: '#64748b', fontWeight: 600 }}>{u.affiliate_code ?? '—'}</td>
+                    <td style={{ padding: '16px 12px', textAlign: 'right' }}>
+                      <button style={{ ...btn('ghost'), padding: '8px 16px' }} onClick={() => { setSelected(u); setAffCode(u.affiliate_code ?? ''); }}>
+                        Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* ── Selected user actions ── */}
       {selected && (
-        <div style={{ ...card, borderColor: 'var(--accent)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700 }}>
-              Managing: <span style={{ color: 'var(--accent)' }}>{selected.email}</span>
-            </h2>
-            <button style={btn('ghost')} onClick={() => setSelected(null)}>✕ Close</button>
+        <div className="cm-card" style={{ padding: '40px', border: '2px solid #14B8A6', boxShadow: '0 20px 40px rgba(20, 184, 166, 0.1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="cm-icon-badge" style={{ background: '#14B8A6', color: 'white' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>account_circle</span>
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                {selected.email}
+              </h2>
+            </div>
+            <button style={{ ...btn('ghost'), padding: '6px' }} onClick={() => setSelected(null)}>
+              <span className="material-symbols-outlined">close</span>
+            </button>
           </div>
 
-          {/* Current status */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-            {selected.is_pro && (
-              <span style={{ background: '#22c55e22', color: '#22c55e', borderRadius: 6, padding: '2px 10px', fontSize: 12, fontWeight: 600 }}>
-                PRO
-              </span>
-            )}
-            {selected.is_gifted_pro && (
-              <span style={{ background: '#8b5cf622', color: '#8b5cf6', borderRadius: 6, padding: '2px 10px', fontSize: 12, fontWeight: 600 }}>
-                GIFTED
-              </span>
-            )}
-            {selected.is_affiliate && (
-              <span style={{ background: '#14b8a622', color: '#14b8a6', borderRadius: 6, padding: '2px 10px', fontSize: 12, fontWeight: 600 }}>
-                AFFILIATE {selected.affiliate_commission_rate ?? 30}%
-              </span>
-            )}
-            {selected.gifted_by_note && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
-                Note: {selected.gifted_by_note}
-              </span>
-            )}
-          </div>
-
-          {/* ── Grant Pro ── */}
-          <section style={{ marginBottom: 24 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>🎁 Grant Gifted Pro</h3>
-            <div style={{ display: 'grid', gap: 8 }}>
-              <input
-                style={inputStyle}
-                placeholder="Internal note — e.g. 'Ali Abdaal collab Q2 2026'"
-                value={grantNote}
-                onChange={(e) => setGrantNote(e.target.value)}
-              />
-              <input
-                style={inputStyle}
-                type="date"
-                placeholder="Expiry date (leave blank = permanent)"
-                value={grantExpiry}
-                onChange={(e) => setGrantExpiry(e.target.value)}
-              />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button style={btn('primary')} onClick={handleGrantPro}>
-                  Grant Pro
-                </button>
-                {selected.is_gifted_pro && (
-                  <button style={btn('danger')} onClick={handleRevokePro}>
-                    Revoke Gifted Pro
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+            {/* ── Grant Pro ── */}
+            <section>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <span className="material-symbols-outlined" style={{ color: '#8B5CF6', fontSize: 20 }}>card_membership</span>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Gifted Access</h3>
+              </div>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Gift Note</label>
+                  <input
+                    style={inputStyle}
+                    placeholder="e.g. Creator Collaboration Deal"
+                    value={grantNote}
+                    onChange={(e) => setGrantNote(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Expiry Date</label>
+                  <input
+                    style={inputStyle}
+                    type="date"
+                    value={grantExpiry}
+                    onChange={(e) => setGrantExpiry(e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button style={{ ...btn('primary'), flex: 1 }} onClick={handleGrantPro}>
+                    Grant Pro
                   </button>
-                )}
+                  {selected.is_gifted_pro && (
+                    <button style={{ ...btn('danger') }} onClick={handleRevokePro}>
+                      Revoke
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          {/* ── Affiliate setup ── */}
-          <section>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>🔗 Affiliate / Partner Setup</h3>
-            <div style={{ display: 'grid', gap: 8 }}>
-              <input
-                style={inputStyle}
-                placeholder="Vanity code — e.g. mkbhd (→ clipmark.mithahara.com/r/mkbhd)"
-                value={affCode}
-                onChange={(e) => setAffCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-              />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
-                    Commission % (e.g. 50 for big creators)
-                  </label>
-                  <input
-                    style={inputStyle}
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={affRate}
-                    onChange={(e) => setAffRate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
-                    Referral discount % for their audience
-                  </label>
-                  <input
-                    style={inputStyle}
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={affDiscount}
-                    onChange={(e) => setAffDiscount(e.target.value)}
-                  />
-                </div>
+            {/* ── Affiliate setup ── */}
+            <section>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontSize: 20 }}>share_reviews</span>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Partnership Setup</h3>
               </div>
-              <button style={btn('primary')} onClick={handleSetAffiliate}>
-                {selected.is_affiliate ? 'Update Affiliate Deal' : 'Approve as Affiliate + Set Deal'}
-              </button>
-            </div>
-          </section>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Partner Code</label>
+                  <input
+                    style={inputStyle}
+                    placeholder="e.g. mkbhd"
+                    value={affCode}
+                    onChange={(e) => setAffCode(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Comm. %</label>
+                    <input
+                      style={inputStyle}
+                      type="number"
+                      value={affRate}
+                      onChange={(e) => setAffRate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Discount %</label>
+                    <input
+                      style={inputStyle}
+                      type="number"
+                      value={affDiscount}
+                      onChange={(e) => setAffDiscount(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <button style={{ ...btn('primary'), marginTop: 8 }} onClick={handleSetAffiliate}>
+                  {selected.is_affiliate ? 'Update Partner' : 'Approve Partner'}
+                </button>
+              </div>
+            </section>
+          </div>
 
           {statusMsg && (
-            <p style={{ marginTop: 16, color: statusMsg.startsWith('✓') ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
+            <div style={{ 
+              marginTop: 32, 
+              padding: '12px 20px', 
+              borderRadius: 12, 
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: statusMsg.startsWith('✓') ? '#ecfdf5' : '#fef2f2',
+              color: statusMsg.startsWith('✓') ? '#059669' : '#dc2626',
+              fontWeight: 700,
+              fontSize: 14,
+              border: statusMsg.startsWith('✓') ? '1px solid #10b98133' : '1px solid #ef444433'
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                {statusMsg.startsWith('✓') ? 'check_circle' : 'error'}
+              </span>
               {statusMsg}
-            </p>
+            </div>
           )}
         </div>
       )}

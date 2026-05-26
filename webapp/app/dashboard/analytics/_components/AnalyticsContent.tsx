@@ -34,25 +34,31 @@ export default function AnalyticsContent({ heatmap, tags }: Props) {
       {/* ── Activity Heatmap ── */}
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>calendar_month</span>
+          <div className="cm-icon-badge">
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>calendar_month</span>
+          </div>
           Activity — Last 14 Days
         </h2>
         <div className={styles.heatmap}>
           {heatmap.map(cell => {
-            const intensity = cell.count / maxHeat;
+            let level = 0;
+            if (cell.count > 0) {
+              const ratio = cell.count / maxHeat;
+              if (ratio < 0.25) level = 1;
+              else if (ratio < 0.5) level = 2;
+              else if (ratio < 0.75) level = 3;
+              else level = 4;
+            }
+
             return (
               <div
                 key={cell.date}
-                className={styles.heatCell}
-                style={{ opacity: cell.count === 0 ? 0.08 : 0.15 + intensity * 0.85 }}
-                title={`${formatDate(cell.date)}: ${cell.count} bookmark${cell.count !== 1 ? 's' : ''}`}
+                className={styles.dayCell}
+                data-level={level}
               >
-                <span className={styles.heatDate}>
-                  {new Date(cell.date + 'T00:00:00').getDate()}
-                </span>
-                {cell.count > 0 && (
-                  <span className={styles.heatCount}>{cell.count}</span>
-                )}
+                <div className={styles.tooltip}>
+                  {formatDate(cell.date)}: {cell.count} bookmarks
+                </div>
               </div>
             );
           })}
@@ -63,16 +69,18 @@ export default function AnalyticsContent({ heatmap, tags }: Props) {
       {tags.length > 0 && (
         <section className={styles.card}>
           <h2 className={styles.cardTitle}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>sell</span>
+            <div className="cm-icon-badge">
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>sell</span>
+            </div>
             Tag Frequency
           </h2>
           <div className={styles.tagList}>
             {tags.map(tag => (
               <div key={tag.name} className={styles.tagRow}>
                 <span className={styles.tagName}>#{tag.name}</span>
-                <div className={styles.barTrack}>
+                <div className={styles.barWrap}>
                   <div
-                    className={styles.barFill}
+                    className={styles.bar}
                     style={{
                       width: `${(tag.count / maxTag) * 100}%`,
                       background: tag.color,

@@ -3,7 +3,7 @@
 
 /* ── Page wrapper ──────────────────────────────────────────────────────────── */
 .pageWrap {
-  max-width: 980px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 48px 24px 80px;
 }
@@ -18,24 +18,25 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 40px;
   font-weight: 800;
-  letter-spacing: -1px;
-  color: #1a1c1d;
+  letter-spacing: -2px;
+  color: #0f172a;
   margin: 0 0 8px;
 }
-@media (min-width: 768px) { .pageTitle { font-size: 48px; } }
+@media (min-width: 768px) { .pageTitle { font-size: 56px; } }
 
-.pageSub { font-size: 15px; color: #545f6c; margin: 0; }
+.pageSub { font-size: 16px; color: #64748b; margin: 0; font-weight: 500; }
 
 .empty {
   text-align: center;
-  padding: 80px 24px;
-  color: #9ca3af;
+  padding: 120px 24px;
+  color: #94a3b8;
   font-size: 15px;
+  font-weight: 500;
 }
 
 /* ── Timeline View ────────────────────────────────────────────────────────── */
 .timelineWrap {
-  max-width: 864px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 48px 24px;
 }
@@ -56,7 +57,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(0, 107, 95, 0.15);
+  background: #e2e8f0;
 }
 
 .monthMarker {
@@ -72,21 +73,21 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #006b5f;
-  border: 3px solid #f9f9fa;
-  outline: 1px solid rgba(20, 184, 166, 0.3);
+  background: #14B8A6;
+  border: 3px solid #f8fafc;
+  box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.2);
   flex-shrink: 0;
   margin-left: 26px;
 }
 
 .monthLabel {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #006b5f;
-  background: #f9f9fa;
+  color: #14B8A6;
+  background: #f8fafc;
   padding-right: 16px;
 }
 
@@ -108,10 +109,10 @@
 }
 
 .dayLabel {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  color: #6c7a77;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -119,24 +120,25 @@
 .entryCard {
   flex: 1;
   background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.06);
-  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   text-decoration: none;
   color: inherit;
   display: block;
-  transition: box-shadow 0.3s, border-color 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .entryCard:hover {
-  box-shadow: 0 8px 32px rgba(26, 28, 29, 0.1);
-  border-color: rgba(20, 184, 166, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+  border-color: rgba(20, 184, 166, 0.2);
 }
 
 .entryInner {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 @media (min-width: 640px) { .entryInner { flex-direction: row; } }
 
@@ -145,38 +147,39 @@
   flex-shrink: 0;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #e8e8e9;
+  background: #f1f5f9;
 }
-@media (min-width: 640px) { .entryThumb { width: 192px; } }
+@media (min-width: 640px) { .entryThumb { width: 220px; } }
 
 .entryThumbImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.entryCard:hover .entryThumbImg { transform: scale(1.04); }
+.entryCard:hover .entryThumbImg { transform: scale(1.06); }
 
 .entryTimestamp {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(26, 28, 29, 0.8);
+  bottom: 10px;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.9);
   color: #fff;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
 }
 
 .entryBody {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .entryTitleRow {
@@ -187,19 +190,20 @@
 
 .entryTitle {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  color: #1a1c1d;
-  line-height: 1.35;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.4;
   margin: 0;
-  transition: color 0.15s;
+  transition: color 0.2s;
+  letter-spacing: -0.5px;
 }
-.entryCard:hover .entryTitle { color: #006b5f; }
+.entryCard:hover .entryTitle { color: #14B8A6; }
 
 .entryNote {
-  font-size: 13px;
-  color: #545f6c;
-  line-height: 1.5;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -207,37 +211,34 @@
   overflow: hidden;
 }
 
-.entryTags { display: flex; flex-wrap: wrap; gap: 6px; }
+.entryTags { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .entryTag {
-  padding: 3px 10px;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  /* background and color set via inline style (per-tag) */
+  letter-spacing: 0.05em;
 }
 
 .jumpLink {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #006b5f;
-  transition: transform 0.2s;
+  font-size: 13px;
+  font-weight: 800;
+  color: #14B8A6;
+  transition: all 0.2s;
   margin-top: 4px;
 }
-.entryCard:hover .jumpLink { transform: translateX(2px); }
+.entryCard:hover .jumpLink { transform: translateX(4px); }
 
 /* ── Library View ─────────────────────────────────────────────────────────── */
 .libraryWrap {
   padding: 48px 24px;
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 @media (max-width: 639px) {
@@ -247,11 +248,11 @@
 .libraryHeader {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
   margin-bottom: 48px;
 }
 @media (max-width: 639px) {
-  .libraryHeader { margin-bottom: 24px; }
+  .libraryHeader { margin-bottom: 32px; }
 }
 @media (min-width: 768px) {
   .libraryHeader {
@@ -264,39 +265,41 @@
 .statsRow {
   display: flex;
   flex-wrap: wrap;
-  background: #f3f3f4;
-  padding: 20px 24px;
-  border-radius: 16px;
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .statItem {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 24px 0 0;
+  gap: 4px;
+  padding: 0 32px 0 0;
 }
 .statBorder {
-  border-left: 1px solid rgba(187, 202, 198, 0.4);
-  padding-left: 24px;
+  border-left: 1px solid #f1f5f9;
+  padding-left: 32px;
 }
 .statLabel {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #6c7a77;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
 }
 .statNum {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 800;
-  color: #006b5f;
-  letter-spacing: -0.5px;
+  color: #14B8A6;
+  letter-spacing: -1.5px;
 }
-.statNumSecondary { color: #545f6c; }
+.statNumSecondary { color: #64748b; }
 
 /* ── Video Cards ──────────────────────────────────────────────────────────── */
-.videoGrid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+.videoGrid { display: grid; grid-template-columns: 1fr; gap: 32px; }
 
 /* medium: 2-column grid — cards stack vertically */
 .videoGridMedium {

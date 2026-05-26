@@ -1,6 +1,6 @@
 'use client';
 
-export function CopyLinkButton({ url }: { url: string }) {
+export function CopyLinkButton({ url, className }: { url: string; className?: string }) {
   function handleCopy() {
     navigator.clipboard.writeText(url).then(() => {
       const btn = document.getElementById('copy-link-btn');
@@ -15,6 +15,7 @@ export function CopyLinkButton({ url }: { url: string }) {
     <button
       id="copy-link-btn"
       onClick={handleCopy}
+      className={className}
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 14px', borderRadius: 8,

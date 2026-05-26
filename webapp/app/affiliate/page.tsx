@@ -10,31 +10,30 @@ export const metadata: Metadata = {
 
 const H2 = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontSize: 28,
+  fontSize: 32,
   fontWeight: 800,
-  color: '#1a1c1d',
-  marginBottom: 16,
+  color: '#0f172a',
+  marginBottom: 20,
   marginTop: 0,
-  letterSpacing: '-0.5px',
+  letterSpacing: '-1px',
 };
 
 const P = {
-  fontSize: 15,
-  color: '#3c4947',
-  lineHeight: 1.75,
-  marginBottom: 12,
+  fontSize: 16,
+  color: '#64748b',
+  lineHeight: 1.6,
+  marginBottom: 16,
   marginTop: 0,
 };
 
 const CARD = {
   background: 'white',
-  borderRadius: 16,
-  border: '1px solid #e8e8e9',
-  padding: '28px 32px',
+  borderRadius: 20,
+  padding: '32px',
 };
 
 const SECTION = {
-  marginBottom: 72,
+  marginBottom: 120,
 };
 
 const FAQ_ITEMS = [
@@ -119,116 +118,118 @@ export default async function AffiliatePage() {
 
       {/* ── Hero ── */}
       <section style={{
-        paddingTop: 140,
-        paddingBottom: 80,
-        background: 'linear-gradient(180deg, #fff 0%, #f9f9fa 100%)',
+        paddingTop: 160,
+        paddingBottom: 96,
+        background: 'radial-gradient(circle at top right, rgba(20, 184, 166, 0.05), transparent 400px), radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.03), transparent 400px)',
         textAlign: 'center',
+        position: 'relative'
       }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 32px' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(20,184,166,0.1)', borderRadius: 9999,
-            padding: '6px 16px', marginBottom: 28,
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#14B8A6' }}>campaign</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#006b5f', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Affiliate Program
-            </span>
+        <div style={{ maxWidth: 840, margin: '0 auto', padding: '0 32px' }}>
+          <div className="cm-section-label" style={{ margin: '0 auto 32px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>campaign</span>
+            Affiliate Program
           </div>
 
           <h1 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 52, fontWeight: 800, letterSpacing: '-2px',
-            color: '#1a1c1d', marginBottom: 20, marginTop: 0,
-            lineHeight: 1.1,
+            fontSize: 'clamp(40px, 8vw, 64px)', fontWeight: 800, letterSpacing: '-3px',
+            color: '#0f172a', marginBottom: 24, marginTop: 0,
+            lineHeight: 1,
           }}>
-            Earn 30% revenue share.<br />
-            <span style={{ color: '#14B8A6' }}>Every single Pro upgrade.</span>
+            Share Clipmark.<br />
+            <span style={{ color: '#14B8A6' }}>Earn 30% for life.</span>
           </h1>
 
-          <p style={{ fontSize: 18, color: '#545f6c', lineHeight: 1.7, marginBottom: 40, marginTop: 0 }}>
-            Recommend Clipmark to your audience — YouTube creators, students, researchers, lifelong learners.
-            Everyone who upgrades to Pro through your link gets <strong>10% off</strong>,
-            and you keep <strong>30%</strong> of every sale.
+          <p style={{
+            fontSize: 20, color: '#64748b', lineHeight: 1.6,
+            marginBottom: 48, marginTop: 0, fontWeight: 500,
+            maxWidth: 640, margin: '0 auto 48px'
+          }}>
+            Help your audience become better curators. Everyone who joins through your link gets <strong>10% off</strong>, and you keep a <strong>30% cut</strong> of every sale.
           </p>
 
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/dashboard/affiliate" style={{
-              padding: '14px 32px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-              color: 'white', borderRadius: 12, fontSize: 15, fontWeight: 700,
-              textDecoration: 'none', display: 'inline-block',
+            <a href="/dashboard/affiliate" className="cm-card" style={{
+              padding: '16px 32px',
+              background: '#0f172a',
+              color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 12,
+              boxShadow: '0 10px 30px rgba(15, 23, 42, 0.15)',
+              transition: 'all 0.2s'
             }}>
-              Apply in Your Dashboard →
+              Join Program <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
-            <a href="/affiliate/terms" style={{
-              padding: '14px 28px',
-              background: 'white', border: '1px solid #e8e8e9',
-              color: '#545f6c', borderRadius: 12, fontSize: 15, fontWeight: 600,
+            <a href="/affiliate/terms" className="cm-card" style={{
+              padding: '16px 32px',
+              background: 'white',
+              color: '#0f172a', borderRadius: 14, fontSize: 16, fontWeight: 800,
               textDecoration: 'none', display: 'inline-block',
+              transition: 'all 0.2s'
             }}>
-              Read Affiliate Terms
+              Affiliate Terms
             </a>
           </div>
         </div>
       </section>
 
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '80px 32px 40px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px 100px' }}>
 
         {/* ── Quick Stats ── */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 20, marginBottom: 80,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 24, marginBottom: 120,
         }}>
           {[
-            { value: '30%', label: 'Revenue share on every sale' },
-            { value: '10% off', label: 'Discount for every referred user' },
-            { value: '30 days', label: 'Cookie attribution window' },
-            { value: '$25', label: 'Minimum payout threshold' },
+            { value: '30%', label: 'Recurring commission on every upgrade', icon: 'payments' },
+            { value: '10% off', label: 'Incentive discount for your audience', icon: 'sell' },
+            { value: '30 days', label: 'Long-lasting cookie attribution', icon: 'history' },
+            { value: '$25', label: 'Low minimum payout threshold', icon: 'account_balance_wallet' },
           ].map((stat) => (
-            <div key={stat.label} style={{ ...CARD, textAlign: 'center' }}>
+            <div key={stat.label} className="cm-card" style={{ padding: '32px', textAlign: 'center' }}>
+              <div className="cm-icon-badge" style={{ margin: '0 auto 20px', width: 48, height: 48 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>{stat.icon}</span>
+              </div>
               <p style={{
-                fontSize: 34, fontWeight: 800, color: '#14B8A6',
+                fontSize: 36, fontWeight: 800, color: '#0f172a',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                marginBottom: 6, marginTop: 0,
+                marginBottom: 8, marginTop: 0, letterSpacing: '-1px'
               }}>
                 {stat.value}
               </p>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>{stat.label}</p>
+              <p style={{ fontSize: 14, color: '#64748b', margin: 0, lineHeight: 1.5, fontWeight: 600 }}>{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* ── How It Works ── */}
         <div style={SECTION}>
-          <h2 style={{ ...H2, marginBottom: 40, textAlign: 'center' }}>How It Works</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <div className="cm-section-label" style={{ margin: '0 auto 16px' }}>Workflow</div>
+            <h2 style={{ ...H2, margin: 0, fontSize: 40 }}>Three steps to profit</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32 }}>
             {STEPS.map((step) => (
-              <div key={step.number} style={{ ...CARD, position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                    background: 'rgba(20,184,166,0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#14B8A6' }}>{step.icon}</span>
+              <div key={step.number} className="cm-card" style={{ padding: '40px', position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                  <div className="cm-icon-badge" style={{ width: 48, height: 48 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 24 }}>{step.icon}</span>
                   </div>
                   <span style={{
-                    fontSize: 13, fontWeight: 700, color: '#d1d5db',
+                    fontSize: 12, fontWeight: 800, color: '#94a3b8',
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    letterSpacing: '0.05em', marginTop: 10,
+                    letterSpacing: '0.1em',
                   }}>
                     STEP {step.number}
                   </span>
                 </div>
                 <h3 style={{
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: 17, fontWeight: 700, color: '#1a1c1d',
-                  marginBottom: 10, marginTop: 0,
+                  fontSize: 20, fontWeight: 800, color: '#0f172a',
+                  marginBottom: 12, marginTop: 0, letterSpacing: '-0.5px'
                 }}>
                   {step.title}
                 </h3>
-                <p style={{ ...P, marginBottom: 0 }}>{step.body}</p>
+                <p style={{ ...P, fontSize: 16, color: '#64748b', marginBottom: 0 }}>{step.body}</p>
               </div>
             ))}
           </div>
@@ -236,22 +237,26 @@ export default async function AffiliatePage() {
 
         {/* ── Commission Structure ── */}
         <div style={SECTION}>
-          <h2 style={H2}>Commission Structure</h2>
-          <p style={P}>
-            You earn <strong>30%</strong> of the net sale amount on every qualifying Pro upgrade.
-            Your referred users automatically get <strong>10% off</strong> at checkout via your link,
-            so commissions are calculated on the discounted price. Commissions are displayed in your dashboard in real time.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+            <div className="cm-icon-badge">
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>table_chart</span>
+            </div>
+            <h2 style={{ ...H2, margin: 0 }}>Commission Structure</h2>
+          </div>
+          <p style={{ ...P, fontSize: 16, color: '#64748b' }}>
+            Earn <strong>30%</strong> of the net sale on every qualifying Pro upgrade. 
+            Referred users get <strong>10% off</strong> automatically via your link, and commissions are calculated on the revenue after discount.
           </p>
 
-          <div style={{ ...CARD, padding: 0, overflow: 'hidden', marginTop: 28 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          <div className="cm-card" style={{ padding: 0, overflow: 'hidden', marginTop: 32 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
               <thead>
-                <tr style={{ background: '#f9f9fa' }}>
+                <tr style={{ background: '#f8fafc' }}>
                   {['Plan', 'Price', 'Your Commission', 'Notes'].map((h) => (
                     <th key={h} style={{
-                      padding: '14px 24px', textAlign: 'left', fontSize: 12,
-                      fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase',
-                      letterSpacing: '0.05em', whiteSpace: 'nowrap',
+                      padding: '16px 24px', textAlign: 'left', fontSize: 12,
+                      fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase',
+                      letterSpacing: '0.1em', whiteSpace: 'nowrap',
                     }}>
                       {h}
                     </th>
@@ -260,43 +265,43 @@ export default async function AffiliatePage() {
               </thead>
               <tbody>
                 {COMMISSION_ROWS.map((row, i) => (
-                  <tr key={row.plan} style={{ borderTop: i === 0 ? '1px solid #e8e8e9' : '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '16px 24px', fontWeight: 700, color: '#1a1c1d' }}>{row.plan}</td>
-                    <td style={{ padding: '16px 24px', color: '#545f6c' }}>{row.price}</td>
-                    <td style={{ padding: '16px 24px', fontWeight: 700, color: '#006b5f' }}>{row.commission}</td>
-                    <td style={{ padding: '16px 24px', color: '#9ca3af', fontSize: 13 }}>{row.note}</td>
+                  <tr key={row.plan} style={{ borderTop: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '20px 24px', fontWeight: 800, color: '#0f172a' }}>{row.plan}</td>
+                    <td style={{ padding: '20px 24px', color: '#64748b', fontWeight: 500 }}>{row.price}</td>
+                    <td style={{ padding: '20px 24px', fontWeight: 800, color: '#14B8A6' }}>{row.commission}</td>
+                    <td style={{ padding: '20px 24px', color: '#94a3b8', fontSize: 13, fontWeight: 500 }}>{row.note}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          <p style={{ ...P, marginTop: 16, fontSize: 13, color: '#9ca3af' }}>
+          <p style={{ ...P, marginTop: 24, fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>
             * Commissions from refunded purchases are automatically cancelled. Renewals on existing subscriptions do not generate new commissions.
           </p>
         </div>
 
         {/* ── Eligibility ── */}
         <div style={SECTION}>
-          <h2 style={H2}>Eligibility Requirements</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
+            <div className="cm-icon-badge">
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>verified_user</span>
+            </div>
+            <h2 style={{ ...H2, margin: 0 }}>Eligibility Requirements</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 24 }}>
             {[
               { icon: 'workspace_premium', title: 'Active Pro subscriber', body: 'You must have an active Clipmark Pro subscription (monthly, annual, or lifetime) to apply.' },
-              { icon: 'calendar_today', title: 'Account at least 30 days old', body: 'Your Clipmark account must be at least 30 days old at the time of application.' },
-              { icon: 'check_circle', title: 'Good standing', body: 'Your account must be in good standing with no violations of the main Terms of Service or these Affiliate Terms.' },
-              { icon: 'campaign', title: 'Genuine audience', body: 'You should have a real audience — YouTube subscribers, newsletter readers, social media followers, or a community — relevant to the product.' },
+              { icon: 'calendar_today', title: 'Account maturity', body: 'Your Clipmark account must be at least 30 days old at the time of your application.' },
+              { icon: 'check_circle', title: 'Good standing', body: 'Your account must have no violations of our main Terms of Service or Affiliate guidelines.' },
+              { icon: 'campaign', title: 'Genuine audience', body: 'You should have a real audience — YouTube subscribers, newsletter readers, or a community.' },
             ].map((item) => (
-              <div key={item.title} style={{ ...CARD, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                  background: 'rgba(20,184,166,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#14B8A6' }}>{item.icon}</span>
+              <div key={item.title} className="cm-card" style={{ display: 'flex', gap: 20, alignItems: 'flex-start', padding: '32px' }}>
+                <div className="cm-icon-badge" style={{ flexShrink: 0 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{item.icon}</span>
                 </div>
                 <div>
-                  <p style={{ fontWeight: 700, color: '#1a1c1d', marginBottom: 4, marginTop: 0, fontSize: 15 }}>{item.title}</p>
-                  <p style={{ ...P, marginBottom: 0, fontSize: 14 }}>{item.body}</p>
+                  <p style={{ fontWeight: 800, color: '#0f172a', marginBottom: 8, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.title}</p>
+                  <p style={{ ...P, marginBottom: 0, fontSize: 15, color: '#64748b' }}>{item.body}</p>
                 </div>
               </div>
             ))}
@@ -305,21 +310,26 @@ export default async function AffiliatePage() {
 
         {/* ── Payouts ── */}
         <div style={SECTION}>
-          <h2 style={H2}>Payouts</h2>
-          <div style={{ ...CARD }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
+            <div className="cm-icon-badge">
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>payments</span>
+            </div>
+            <h2 style={{ ...H2, margin: 0 }}>Payouts & Terms</h2>
+          </div>
+          <div className="cm-card" style={{ padding: '40px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 40 }}>
               {[
-                { icon: 'schedule', title: '30-day hold', body: 'Commissions are held for 30 days to cover potential refund windows before becoming eligible for payout.' },
-                { icon: 'event_repeat', title: 'Monthly payouts', body: 'Eligible commissions are paid out once a month, typically in the first week of the following month.' },
-                { icon: 'attach_money', title: '$25 minimum', body: 'You must have at least $25 in eligible (non-held) commissions to trigger a payout.' },
-                { icon: 'account_balance', title: 'Payment methods', body: 'Payouts via bank transfer (Wise) or PayPal. Email affiliates@clipmark.app to set up your payout method after approval.' },
+                { icon: 'schedule', title: '30-day hold', body: 'Commissions are held for 30 days to cover refund windows before becoming eligible.' },
+                { icon: 'event_repeat', title: 'Monthly cycle', body: 'Eligible commissions are paid out in the first week of every month.' },
+                { icon: 'attach_money', title: '$25 threshold', body: 'Payouts are triggered automatically once you reach $25 in eligible commissions.' },
+                { icon: 'account_balance', title: 'Payout methods', body: 'We support Bank Transfer (via Wise) or PayPal for all global affiliates.' },
               ].map((item) => (
                 <div key={item.title}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#14B8A6' }}>{item.icon}</span>
-                    <p style={{ fontWeight: 700, color: '#1a1c1d', margin: 0, fontSize: 15 }}>{item.title}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#14B8A6' }}>{item.icon}</span>
+                    <span style={{ fontWeight: 800, color: '#0f172a', fontSize: 15 }}>{item.title}</span>
                   </div>
-                  <p style={{ ...P, marginBottom: 0, fontSize: 14, paddingLeft: 28 }}>{item.body}</p>
+                  <p style={{ ...P, fontSize: 14, color: '#64748b', marginBottom: 0, lineHeight: 1.6 }}>{item.body}</p>
                 </div>
               ))}
             </div>
@@ -328,53 +338,67 @@ export default async function AffiliatePage() {
 
         {/* ── FAQ ── */}
         <div style={SECTION}>
-          <h2 style={H2}>Frequently Asked Questions</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
+            <div className="cm-icon-badge">
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>quiz</span>
+            </div>
+            <h2 style={{ ...H2, margin: 0 }}>Frequently Asked Questions</h2>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {FAQ_ITEMS.map((item) => (
-              <div key={item.q} style={{ ...CARD }}>
-                <p style={{ fontWeight: 700, color: '#1a1c1d', marginBottom: 8, marginTop: 0, fontSize: 15 }}>{item.q}</p>
-                <p style={{ ...P, marginBottom: 0, fontSize: 14 }}>{item.a}</p>
+              <div key={item.q} className="cm-card" style={{ padding: '32px' }}>
+                <p style={{ fontWeight: 800, color: '#0f172a', marginBottom: 12, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.q}</p>
+                <p style={{ ...P, marginBottom: 0, fontSize: 15, color: '#64748b' }}>{item.a}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── CTA ── */}
-        <div style={{
-          ...CARD,
+        <div className="cm-card" style={{
           textAlign: 'center',
-          background: 'linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(139,92,246,0.08) 100%)',
-          border: '1px solid rgba(20,184,166,0.2)',
-          padding: '56px 40px',
-          marginBottom: 40,
+          background: '#0f172a',
+          padding: '80px 40px',
+          marginBottom: 48,
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <h2 style={{ ...H2, fontSize: 32, marginBottom: 12 }}>Ready to start earning?</h2>
-          <p style={{ ...P, marginBottom: 36, fontSize: 16 }}>
-            Apply from your dashboard in under a minute. Eligible applications are approved instantly.
+          {/* Decorative radial blur */}
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            width: 400, height: 400, background: 'radial-gradient(circle, rgba(20, 184, 166, 0.15), transparent 70%)',
+            pointerEvents: 'none'
+          }} />
+
+          <h2 style={{ ...H2, fontSize: 40, color: 'white', marginBottom: 16, position: 'relative' }}>Ready to start earning?</h2>
+          <p style={{ ...P, marginBottom: 48, fontSize: 18, color: '#94a3b8', maxWidth: 500, margin: '0 auto 48px', position: 'relative' }}>
+            Join hundreds of creators already monetizing their curations with Clipmark.
           </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/dashboard/affiliate" style={{
-              padding: '14px 32px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-              color: 'white', borderRadius: 12, fontSize: 15, fontWeight: 700,
-              textDecoration: 'none', display: 'inline-block',
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
+            <a href="/dashboard/affiliate" className="cm-card" style={{
+              padding: '16px 32px',
+              background: '#14B8A6',
+              color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 12,
+              transition: 'all 0.2s', border: 'none'
             }}>
-              Apply Now →
+              Join Program <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
-            <a href="/affiliate/terms" style={{
-              padding: '14px 28px',
-              background: 'white', border: '1px solid #e8e8e9',
-              color: '#545f6c', borderRadius: 12, fontSize: 15, fontWeight: 600,
+            <a href="/affiliate/terms" className="cm-card" style={{
+              padding: '16px 32px',
+              background: 'rgba(255,255,255,0.05)',
+              color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
               textDecoration: 'none', display: 'inline-block',
+              transition: 'all 0.2s', border: '1px solid rgba(255,255,255,0.1)'
             }}>
-              Read Affiliate Terms
+              View Terms
             </a>
           </div>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#9ca3af' }}>
-          Questions? Email us at{' '}
-          <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none' }}>affiliates@clipmark.app</a>
+        <p style={{ textAlign: 'center', fontSize: 14, color: '#94a3b8', fontWeight: 500 }}>
+          Have a unique partnership request?{' '}
+          <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none', fontWeight: 700 }}>Contact partnerships</a>
         </p>
 
       </div>

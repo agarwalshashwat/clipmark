@@ -43,7 +43,11 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["src/constants.js", "src/content/content.js"],
+      "js": [
+        "src/constants.js",
+        "src/ai/local-ai.js",
+        "src/content/content.js"
+      ],
       "run_at": "document_end",
       "css": []
     }

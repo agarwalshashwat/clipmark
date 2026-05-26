@@ -6,16 +6,14 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 24px;
-  padding: 12px 16px;
-  background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.06);
+  padding: 8px 12px;
+  background: transparent;
 }
 
 .toolbarLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }
@@ -34,9 +32,17 @@
   gap: 8px;
   flex: 1;
   min-width: 0;
-  background: #f3f3f4;
-  border-radius: 10px;
-  padding: 8px 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px 16px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+}
+
+.searchWrap:focus-within {
+  border-color: #14B8A6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
 }
 
 .searchInput {
@@ -44,80 +50,99 @@
   min-width: 0;
   border: none;
   background: transparent;
-  font-size: 13px;
-  color: #1a1c1d;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
   outline: none;
-  font-family: inherit;
+  font-weight: 500;
 }
-.searchInput::placeholder { color: #9ca3af; }
+.searchInput::placeholder { color: #94a3b8; }
 
 .clearBtn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: #94a3b8;
   display: flex;
   align-items: center;
-  padding: 0;
-  transition: color 0.15s;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
-.clearBtn:hover { color: #1a1c1d; }
+.clearBtn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
 
 /* ── Sort ───────────────────────────────────────────────────────────────────── */
 .sortSelect {
-  border: 1px solid rgba(187, 202, 198, 0.4);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #545f6c;
-  background: #fff;
+  border: 1px solid #f1f5f9;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   outline: none;
+  transition: all 0.2s;
 }
-.sortSelect:hover { border-color: rgba(0, 107, 95, 0.3); }
+.sortSelect:hover {
+  border-color: #14B8A6;
+  color: #0f172a;
+}
 
 /* ── View toggle ─────────────────────────────────────────────────────────────── */
 .viewToggle {
   display: flex;
-  gap: 2px;
-  background: #f3f3f4;
-  border-radius: 10px;
-  padding: 3px;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 4px;
 }
 
 .viewBtn {
   background: none;
   border: none;
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 8px 12px;
   cursor: pointer;
-  color: #6c7a77;
+  color: #64748b;
   display: flex;
   align-items: center;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.2s;
 }
-.viewBtn:hover { background: rgba(0, 107, 95, 0.08); color: #006b5f; }
+.viewBtn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
 .viewBtnActive {
-  background: #ffffff;
-  color: #006b5f;
-  box-shadow: 0 1px 4px rgba(26, 28, 29, 0.1);
+  background: #0f172a;
+  color: #ffffff;
 }
 
 /* ── Toolbar button ──────────────────────────────────────────────────────────── */
 .toolbarBtn {
-  background: #f3f3f4;
-  border: none;
-  border-radius: 10px;
-  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 10px;
   cursor: pointer;
-  color: #545f6c;
+  color: #64748b;
   display: flex;
   align-items: center;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.2s;
 }
-.toolbarBtn:hover { background: #e8e8e9; color: #1a1c1d; }
+.toolbarBtn:hover {
+  border-color: #14B8A6;
+  color: #14B8A6;
+  background: rgba(20, 184, 166, 0.04);
+}
 
 /* ── Export popover ──────────────────────────────────────────────────────────── */
 .exportWrap { position: relative; }
@@ -134,10 +159,10 @@
   right: 0;
   z-index: 10;
   background: #ffffff;
-  border: 1px solid rgba(187, 202, 198, 0.3);
+  border: 1px solid #f1f5f9;
   border-radius: 14px;
   padding: 10px;
-  box-shadow: 0 8px 32px rgba(26, 28, 29, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   min-width: 160px;
   display: flex;
   flex-direction: column;
@@ -149,7 +174,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #9ca3af;
+  color: #94a3b8;
   padding: 4px 8px 2px;
   margin: 0;
 }
@@ -163,155 +188,14 @@
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #1a1c1d;
+  color: #0f172a;
   font-family: inherit;
   transition: background 0.12s;
 }
-.exportBtn:hover { background: #f3f3f4; }
+.exportBtn:hover { background: #f8fafc; }
 
 .exportDivider {
   border: none;
-  border-top: 1px solid rgba(187, 202, 198, 0.3);
+  border-top: 1px solid #f1f5f9;
   margin: 4px 0;
-}
-
-/* ── Bulk bar ────────────────────────────────────────────────────────────────── */
-.bulkBar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: rgba(0, 107, 95, 0.06);
-  border: 1px solid rgba(0, 107, 95, 0.15);
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.bulkCount {
-  font-size: 13px;
-  font-weight: 700;
-  color: #006b5f;
-  flex: 1;
-}
-
-.bulkDeleteBtn {
-  padding: 7px 16px;
-  background: #dc2626;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-}
-.bulkDeleteBtn:hover:not(:disabled) { background: #b91c1c; }
-.bulkDeleteBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.bulkCancelBtn {
-  padding: 7px 16px;
-  background: transparent;
-  border: 1px solid rgba(187, 202, 198, 0.4);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #545f6c;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-}
-.bulkCancelBtn:hover { background: #f3f3f4; }
-
-/* ── Bookmark actions (per item) ─────────────────────────────────────────────── */
-.bookmarkActions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-/* Show on threadItem hover — triggered by parent wrapper */
-.threadItemHover:hover .bookmarkActions { opacity: 1; }
-
-.actionBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: background 0.12s, color 0.12s;
-}
-.actionBtn:hover { background: #f3f3f4; color: #545f6c; }
-.actionBtnDanger:hover { background: rgba(220, 38, 38, 0.08); color: #dc2626; }
-.actionBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* ── Checkbox ────────────────────────────────────────────────────────────────── */
-.checkbox {
-  width: 15px;
-  height: 15px;
-  accent-color: #006b5f;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-/* ── Entry actions (timeline) ────────────────────────────────────────────────── */
-.entryActions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s;
-  z-index: 1;
-}
-.entryCardHover:hover .entryActions { opacity: 1; }
-
-.entrySelected {
-  border-color: rgba(0, 107, 95, 0.3) !important;
-  background: rgba(0, 107, 95, 0.03) !important;
-}
-
-/* ── Pending bar ────────────────────────────────────────────────────────────── */
-.pendingBar {
-  height: 2px;
-  background: linear-gradient(90deg, #006b5f 0%, #14B8A6 50%, #006b5f 100%);
-  background-size: 200% 100%;
-  animation: slide 1.2s linear infinite;
-  border-radius: 9999px;
-  margin-bottom: 12px;
-}
-@keyframes slide {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ── Copy toast ──────────────────────────────────────────────────────────────── */
-.copyToast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1a1c1d;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 20px;
-  border-radius: 9999px;
-  z-index: 100;
-  pointer-events: none;
-  font-family: inherit;
-}
-
-/* ── Thread item selected ────────────────────────────────────────────────────── */
-.threadItemSelected {
-  background: rgba(0, 107, 95, 0.04);
-  border-radius: 8px;
 }

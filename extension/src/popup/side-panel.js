@@ -1269,8 +1269,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let text = null;
       if (chapter && transcript) text = `${chapter} - ${transcript}`;
-      else if (transcript)        text = transcript;
-      else if (chapter)           text = chapter;
+      else if (transcript)       text = transcript;
+      else if (chapter)          text = chapter;
+
+      // AI MAGIC: Try to summarize the resulting text if it's long
+      if (text && text.length > 50) {
+        try {
+          const summarized = await localSummarizeSnippet(text);
+          if (summarized && summarized !== text) {
+            text = summarized;
+            debugLog('AutoFill', 'AI summarized to', text);
+          }
+        } catch (e) {
+          debugLog('AutoFill', 'AI summary failed', e);
+        }
+      }
 
       if (text) {
         debugLog('AutoFill', 'Filled with', text);

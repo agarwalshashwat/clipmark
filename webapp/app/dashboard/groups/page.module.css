@@ -1,27 +1,33 @@
 .wrap {
-  max-width: 1024px;
+  padding: 32px 24px 64px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 48px 24px;
 }
 
-.header { margin-bottom: 40px; }
+.header { margin-bottom: 32px; }
 
 .title {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 800;
-  letter-spacing: -0.5px;
-  color: #1a1c1d;
+  letter-spacing: -0.03em;
+  color: #0f172a;
   margin: 0 0 8px;
 }
 
-.sub { font-size: 14px; color: #545f6c; margin: 0; }
+.sub { 
+  font-size: 16px; 
+  color: #64748b; 
+  margin: 0; 
+  font-weight: 500;
+}
 
 /* Empty state */
 .empty {
-  background: rgba(243, 243, 244, 0.6);
-  border: 2px dashed rgba(187, 202, 198, 0.4);
-  border-radius: 24px;
+  background: white;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  border-radius: 20px;
   padding: 80px 32px;
   display: flex;
   flex-direction: column;
@@ -34,375 +40,272 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.08);
+  background: rgba(20, 184, 166, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #14B8A6;
+  margin-bottom: 8px;
 }
 
 .emptyTitle {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1c1d;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
 }
 
 .emptyText {
-  font-size: 13px;
-  color: #6c7a77;
-  max-width: 280px;
+  font-size: 15px;
+  color: #64748b;
+  max-width: 320px;
   line-height: 1.6;
   margin: 0;
 }
 
 /* Groups */
-.groups { display: flex; flex-direction: column; gap: 40px; }
-
-.group {}
+.groups { display: flex; flex-direction: column; gap: 48px; }
 
 .groupHeader {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .groupTag {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
-  color: #006b5f;
-  letter-spacing: -0.3px;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .groupCount {
-  font-size: 12px;
-  font-weight: 600;
-  color: #9ca3af;
-  background: #f3f3f4;
-  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #14B8A6;
+  background: rgba(20, 184, 166, 0.1);
+  padding: 4px 12px;
   border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .groupGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 20px;
 }
 
 @media (min-width: 640px) {
-  .groupGrid { grid-template-columns: repeat(3, 1fr); }
+  .groupGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1024px) {
+  .groupGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1280px) {
   .groupGrid { grid-template-columns: repeat(4, 1fr); }
 }
 
-.groupCard {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #e8e8e9;
-  display: block;
-  text-decoration: none;
-}
-
-.groupCardImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s;
-}
-
-.groupCard:hover .groupCardImg { transform: scale(1.06); }
-
-.groupCardOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 12px;
-  gap: 2px;
-}
-
-.groupCardTitle {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.groupCardClips {
-  font-size: 10px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.7);
-}
-
-/* ── Section headers ─────────────────────────────────────────────────────── */
+/* ── Section Header ───────────────────────────────────────────────────────── */
 .sectionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
 }
+
 .sectionTitle {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  color: #9ca3af;
-  letter-spacing: 0.06em;
+  font-size: 14px;
+  font-weight: 800;
+  color: #94a3b8;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
   margin: 0;
 }
 
-/* ── New Group button ─────────────────────────────────────────────────────── */
 .newGroupBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 107, 95, 0.3);
-  background: rgba(0, 107, 95, 0.05);
-  color: #006b5f;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-}
-.newGroupBtn:hover { background: rgba(0, 107, 95, 0.1); border-color: #006b5f; }
-
-/* ── Create form ─────────────────────────────────────────────────────────── */
-.createForm {
-  background: #fff;
-  border: 1px solid rgba(26, 28, 29, 0.1);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-.formRow {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.formInput {
-  flex: 1;
-  min-width: 180px;
-  padding: 9px 12px;
-  border: 1px solid rgba(26, 28, 29, 0.15);
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  color: #1a1c1d;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.formInput:focus { border-color: #006b5f; }
-.typeToggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid rgba(26, 28, 29, 0.15);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.typeBtn {
-  flex: 1;
-  padding: 9px 16px;
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  color: #545f6c;
-  transition: all 0.12s;
-}
-.typeBtn.active {
-  background: #006b5f;
-  color: #fff;
-}
-.formActions {
-  display: flex;
   gap: 8px;
-  justify-content: flex-end;
-}
-.formSubmit {
-  padding: 8px 18px;
-  border-radius: 8px;
+  background: #0f172a;
+  color: white;
   border: none;
-  background: linear-gradient(135deg, #14B8A6, #006b5f);
-  color: #fff;
+  padding: 8px 16px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  font-family: inherit;
+  transition: all 0.2s;
 }
-.formCancel {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: 1px solid rgba(26, 28, 29, 0.15);
-  background: transparent;
-  color: #545f6c;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
+.newGroupBtn:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
 }
 
-/* ── Group header with delete ────────────────────────────────────────────── */
-.groupHeaderRow {
+/* ── Create Form ──────────────────────────────────────────────────────────── */
+.createForm {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 40px;
+}
+
+.typeToggle {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.groupName {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  color: #1a1c1d;
-  letter-spacing: -0.3px;
-}
-.groupDeleteBtn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #9ca3af;
+  background: #ffffff;
   padding: 4px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  transition: color 0.12s;
+  border-radius: 12px;
+  width: fit-content;
+  margin-bottom: 20px;
+  border: 1px solid #f1f5f9;
 }
-.groupDeleteBtn:hover { color: #e53e3e; }
 
-/* ── Auto-groups divider ─────────────────────────────────────────────────── */
-.divider {
+.typeBtn {
   border: none;
-  border-top: 1px solid rgba(187, 202, 198, 0.3);
-  margin: 40px 0;
+  background: none;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
 }
 
-/* ── Add / Remove video controls ────────────────────────────────────────── */
-.groupCardWrap {
+.typeBtn.active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.formRow {
+  display: flex;
+  gap: 12px;
+}
+
+.formInput {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+}
+.formInput:focus {
+  border-color: #14B8A6;
+}
+
+/* ── Mini Cards (inside groups) ────────────────────────────────────────────── */
+.miniCard {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s;
+}
+.miniCard:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.miniThumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #f1f5f9;
+  border-radius: 8px;
+  overflow: hidden;
   position: relative;
 }
 
-.removeVideoBtn {
+.miniTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Tag groups ───────────────────────────────────────────────────────────── */
+.tagsSection {
+  margin-top: 64px;
+  padding-top: 48px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.removeBtn {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.55);
-  color: #fff;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
+  top: 8px;
+  right: 8px;
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s;
-  z-index: 2;
-}
-.groupCardWrap:hover .removeVideoBtn { opacity: 1; }
-
-.addVideoBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 10px;
-  padding: 6px 12px;
-  border-radius: 7px;
-  border: 1px dashed rgba(0,107,95,0.35);
-  background: transparent;
-  color: #006b5f;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  color: #94a3b8;
+  opacity: 0;
+  transition: all 0.2s;
+  z-index: 10;
 }
-.addVideoBtn:hover { background: rgba(0,107,95,0.06); border-color: #006b5f; }
+.miniCard:hover .removeBtn { opacity: 1; }
+.removeBtn:hover { color: #f43f5e; border-color: #fca5a5; }
 
-.addVideoRow {
+.thumbOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.02);
+}
+
+.addCard {
+  border: 2px dashed #f1f5f9;
+  border-radius: 14px;
+  padding: 12px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
   gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  background: #f8fafc;
+  min-height: 120px;
 }
 
-.addVideoSelect {
-  flex: 1;
-  min-width: 0;
-  padding: 7px 10px;
-  border: 1px solid rgba(26,28,29,0.15);
-  border-radius: 7px;
-  font-size: 13px;
-  font-family: inherit;
-  background: #fff;
-  color: #1a1c1d;
+.addSelect {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 11px;
+  font-weight: 600;
+  background: white;
   outline: none;
 }
-.addVideoSelect:focus { border-color: #006b5f; }
 
-.addVideoConfirm {
-  padding: 7px 14px;
-  border-radius: 7px;
+.addBtn {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: white;
   border: none;
-  background: linear-gradient(135deg, #14B8A6, #006b5f);
-  color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  font-family: inherit;
   cursor: pointer;
-  white-space: nowrap;
-}
-.addVideoConfirm:disabled { opacity: 0.5; cursor: default; }
-
-.addVideoCancel {
-  padding: 7px 14px;
-  border-radius: 7px;
-  border: 1px solid rgba(26,28,29,0.15);
-  background: transparent;
-  color: #545f6c;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.groupMore {
-  aspect-ratio: 16 / 9;
-  border-radius: 12px;
-  background: #f3f3f4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #545f6c;
-  border: 2px dashed rgba(187, 202, 198, 0.5);
 }

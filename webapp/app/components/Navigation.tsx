@@ -1,39 +1,57 @@
 import React from 'react';
+import { createServerSupabase } from '@/lib/supabase';
 
-export function Navigation() {
+export async function Navigation() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <nav style={{
-      position: 'fixed', top: 0, width: '100%', zIndex: 50,
-      background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      boxShadow: '0 1px 0 rgba(26,28,29,0.06)',
+      position: 'fixed', top: 0, width: '100%', zIndex: 100,
+      background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      borderBottom: '1px solid rgba(15, 23, 42, 0.05)',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 72 }}>
-        <a href="/" style={{ fontSize: 22, fontWeight: 800, color: '#14B8A6', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', textDecoration: 'none' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 80 }}>
+        <a href="/" style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-1px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 32, height: 32, background: '#14B8A6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'white' }}>bookmark</span>
+          </div>
           Clipmark
         </a>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
-          <a href="/#features" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Features</a>
-          <a href="/#how-it-works" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>How It Works</a>
-          <a href="/upgrade" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Pricing</a>
-          <a href="/affiliate" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Affiliate</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <a href="/#features" style={{ color: '#475569', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 13, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Features</a>
+          <a href="/upgrade" style={{ color: '#475569', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 13, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pricing</a>
+          <a href="/affiliate" style={{ color: '#475569', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 13, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Affiliate</a>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/signin" style={{
-            color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 600, fontSize: 14, textDecoration: 'none',
-            padding: '10px 16px',
-          }}>
-            Log In
-          </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {user ? (
+            <a href="/dashboard" style={{
+              color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 800, fontSize: 14, textDecoration: 'none',
+              padding: '10px 20px',
+            }}>
+              Dashboard
+            </a>
+          ) : (
+            <a href="/signin" style={{
+              color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 800, fontSize: 14, textDecoration: 'none',
+              padding: '10px 20px',
+            }}>
+              Log In
+            </a>
+          )}
           <a href="https://chrome.google.com/webstore" 
              aria-label="Add Clipmark to Chrome browser for free"
              style={{
-            padding: '10px 22px',
-            background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-            color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+            padding: '12px 24px',
+            background: '#14B8A6',
+            boxShadow: '0 4px 14px 0 rgba(20, 184, 166, 0.39)',
+            color: 'white', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
+            transition: 'all 0.2s ease',
           }}>
-            Build Your Second Brain — Free
+            Get the extension — Free
           </a>
         </div>
       </div>

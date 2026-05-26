@@ -504,7 +504,23 @@ async function silentSaveBookmark() {
   const transcript     = await fetchTranscript().catch(() => null);
   const transcriptText = transcript ? getTextAtTimestamp(transcript, timestamp) : null;
   const chapter     = getCurrentChapter();
-  const description = transcriptText || chapter || `Bookmark at ${formatTimestamp(timestamp)}`;
+  
+  let description = transcriptText || chapter || `Bookmark at ${formatTimestamp(timestamp)}`;
+
+  // AI MAGIC: If we have a transcript snippet, try to summarize it into a concept
+  if (transcriptText) {
+    try {
+      const summarized = await localSummarizeSnippet(transcriptText);
+      if (summarized && summarized !== transcriptText) {
+        description = summarized;
+        // Keep the raw transcript in the description if it's much longer than the summary?
+        // Actually, let's store both or just the summary as the title.
+        // For now, let's keep the summary as the primary description.
+      }
+    } catch (e) {
+      debugLog('Silent', 'AI summary failed', e);
+    }
+  }
 
   try {
     const result = await new Promise(resolve =>
@@ -619,10 +635,10 @@ function handleKeyboardShortcut(event) {
   // Alt+B / Alt+S global shortcuts
   if (event.altKey) {
     if (event.key.toLowerCase() === 'b') {
-      try { chrome.runtime.sendMessage({ action: 'openPopup' }); } catch { }
+      silentSaveBookmark();
     }
     if (event.key.toLowerCase() === 's') {
-      silentSaveBookmark();
+      try { chrome.runtime.sendMessage({ action: 'openPopup' }); } catch { }
     }
   }
 

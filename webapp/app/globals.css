@@ -65,8 +65,8 @@
 .primary-btn:active:not(:disabled) { transform: scale(0.97); }
 .primary-btn:disabled { background: #e8e8e9; color: #bbcac6; cursor: default; box-shadow: none; }
 
-/* ── Journey Section ───────────────────────────────────────────────────────── */
-.journey-section-label {
+/* ── Shared UI Components ─────────────────────────────────────────────────── */
+.cm-section-label {
   display: inline-block;
   padding: 6px 16px;
   border-radius: 9999px;
@@ -80,7 +80,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-.journey-card {
+.cm-card {
   background: white;
   border-radius: 20px;
   border: 1px solid rgba(26, 28, 29, 0.06);
@@ -96,13 +96,13 @@
   z-index: 2;
 }
 
-.journey-card:hover {
+.cm-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(20, 184, 166, 0.12);
   border-color: rgba(20, 184, 166, 0.3);
 }
 
-.journey-icon-badge {
+.cm-icon-badge {
   width: 64px;
   height: 64px;
   border-radius: 16px;
@@ -115,12 +115,12 @@
   transition: transform 0.3s ease;
 }
 
-.journey-card:hover .journey-icon-badge {
+.cm-card:hover .cm-icon-badge {
   transform: scale(1.1) rotate(-4deg);
   background: rgba(20, 184, 166, 0.15);
 }
 
-.journey-step-tag {
+.cm-step-tag {
   font-size: 12px;
   font-weight: 800;
   color: #9ca3af;
@@ -131,7 +131,7 @@
   display: block;
 }
 
-.journey-timeline-line {
+.cm-timeline-line {
   position: absolute;
   top: 140px;
   left: 10%;
@@ -142,8 +142,8 @@
 }
 
 @media (max-width: 768px) {
-  .journey-timeline-line { display: none; }
-  .journey-card { padding: 32px 24px; }
+  .cm-timeline-line { display: none; }
+  .cm-card { padding: 32px 24px; }
 }
 
 .switch-link {

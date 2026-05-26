@@ -5,6 +5,8 @@ import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
 import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { Navigation } from '@/app/components/Navigation';
+import { Footer } from '@/app/components/Footer';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -31,7 +33,7 @@ function formatDate(isoString: string): string {
 
 // Derive a stable tag color from the tag string or bookmark color
 function tagStyle(color: string | null | undefined): { background: string; color: string } {
-  const base = color || '#006b5f';
+  const base = color || '#14B8A6';
   return {
     background: `${base}18`,
     color: base,
@@ -150,18 +152,7 @@ export default async function SharePage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ── Fixed glass nav ── */}
-      <header className={styles.nav}>
-        <a href="/" className={styles.navLogo}>Clipmark</a>
-
-        <a href="/login" className={styles.navSecondaryAction}>
-          Save this Collection
-        </a>
-
-        <a href="https://chrome.google.com/webstore" className={styles.heroCta}>
-          Get Extension
-        </a>
-      </header>
+      <Navigation />
 
       {/* ── Main content ── */}
       <main className={styles.main}>
@@ -200,7 +191,7 @@ export default async function SharePage(
             <div className={styles.editorialHeader}>
               <h1 className={styles.videoTitle}>{title}</h1>
               <p className={styles.sharedBy}>
-                Shared via{' '}
+                Curated via{' '}
                 <span className={styles.sharedByHighlight}>Clipmark</span>
               </p>
             </div>
@@ -210,14 +201,16 @@ export default async function SharePage(
               <h3 className={styles.highlightsHeading}>
                 Curation Highlights
                 <span className={styles.clipsCount}>
-                  {bookmarks.length} Clip{bookmarks.length !== 1 ? 's' : ''}
+                  {bookmarks.length} Moment{bookmarks.length !== 1 ? 's' : ''}
                 </span>
               </h3>
 
               <ul className={styles.timelineList}>
                 {bookmarks.map((b: Bookmark, i: number) => (
                   <li key={b.id ?? i} className={styles.timelineItem}>
-                    <span className={styles.timelineDot} />
+                    <div className={styles.timelineDot}>
+                      <span className="material-symbols-rounded" style={{ color: '#14B8A6', fontSize: 24 }}>bookmark_heart</span>
+                    </div>
                     <div className={styles.timelineItemBody}>
                       <a
                         href={ytUrl(video_id, b.timestamp)}
@@ -294,9 +287,7 @@ export default async function SharePage(
                   >
                     Watch on YouTube
                   </a>
-                  <button className={styles.sideBtnSecondary}>
-                    Share this collection
-                  </button>
+                  <CopyLinkButton url={`${APP_URL}/v/${shareId}`} className={styles.sideBtnSecondary} />
                 </div>
               </div>
 
@@ -305,66 +296,48 @@ export default async function SharePage(
                 background: 'linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(0,107,95,0.06) 100%)',
                 border: '1px solid rgba(20,184,166,0.25)',
               }}>
-                <div style={{ fontSize: 22, marginBottom: 10 }}>📌</div>
-                <h6 className={styles.promoTitle} style={{ fontSize: 16, marginBottom: 8 }}>
-                  Bookmark YouTube moments like these
+                <div style={{ 
+                  width: 48, height: 48, background: 'rgba(20, 184, 166, 0.1)', 
+                  borderRadius: '50%', display: 'flex', alignItems: 'center', 
+                  justifyContent: 'center', margin: '0 auto 20px' 
+                }}>
+                  <span className="material-symbols-rounded" style={{ color: '#14B8A6' }}>extension</span>
+                </div>
+                <h6 className={styles.promoTitle} style={{ fontSize: 18, marginBottom: 12 }}>
+                  Create your own collections
                 </h6>
-                <p className={styles.promoBody} style={{ fontSize: 13, marginBottom: 18 }}>
-                  Clipmark is a free Chrome extension that lets you save, tag, and share
+                <p className={styles.promoBody} style={{ fontSize: 14, marginBottom: 24 }}>
+                  Clipmark is a free extension that lets you save, tag, and share
                   timestamped highlights from any YouTube video — in one click.
                 </p>
                 <a
                   href="https://chrome.google.com/webstore"
+                  className={styles.sideBtn}
                   style={{
-                    display: 'block', textAlign: 'center',
-                    padding: '12px 20px',
                     background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-                    color: 'white', borderRadius: 10,
-                    fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                    boxShadow: '0 4px 16px rgba(0,107,95,0.22)',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    marginBottom: 10,
+                    marginBottom: 12,
                   }}
                 >
                   Add to Chrome — it&apos;s free
                 </a>
                 <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
-                  No sign-up required to start bookmarking
+                  No sign-up required to start
                 </p>
               </div>
 
-              {/* Social share buttons */}
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid rgba(26,28,29,0.08)',
-                borderRadius: 14, padding: 22,
-                marginTop: 16,
-              }}>
-                <p style={{
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: 12, fontWeight: 700, color: '#545f6c',
-                  letterSpacing: '0.08em', textTransform: 'uppercase',
-                  marginBottom: 12, marginTop: 0,
-                }}>
-                  Share this collection
-                </p>
+              {/* Social share box */}
+              <div className={`${styles.sideCard} ${styles.socialBox}`}>
+                <h5 className={styles.sideCardHeading}>Share this Curation</h5>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <a
                     href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Bookmarked key moments from "${title}" — check them out`)}&url=${encodeURIComponent(`${APP_URL}/v/${video_id}`)}&via=clipmarkapp`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '10px 14px', borderRadius: 8,
-                      background: '#f9f9fa', border: '1px solid rgba(26,28,29,0.08)',
-                      color: '#1a1c1d', textDecoration: 'none',
-                      fontSize: 13, fontWeight: 600,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    }}
+                    className={styles.sideBtnSecondary}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                   >
-                    <span style={{ fontSize: 15 }}>𝕏</span> Share on X / Twitter
+                    <span className="material-symbols-rounded" style={{ fontSize: 18 }}>share</span> Share on X / Twitter
                   </a>
-                  <CopyLinkButton url={`${APP_URL}/v/${shareId}`} />
                 </div>
               </div>
 
@@ -374,21 +347,7 @@ export default async function SharePage(
         </div>
       </main>
 
-      {/* ── Footer ── */}
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div className={styles.footerBrand}>
-            <span className={styles.footerLogo}>Clipmark</span>
-            <span className={styles.footerTagline}>© {new Date().getFullYear()} Clipmark. The Digital Curator.</span>
-          </div>
-          <ul className={styles.footerLinks}>
-            <li><a href="/privacy" className={styles.footerLink}>Privacy</a></li>
-            <li><a href="/terms" className={styles.footerLink}>Terms</a></li>
-            <li><a href={`mailto:${SUPPORT_EMAIL}`} className={styles.footerLink}>Support</a></li>
-          </ul>
-        </div>
-      </footer>
-
+      <Footer />
     </div>
   );
 }

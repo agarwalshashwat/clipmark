@@ -489,7 +489,7 @@ export default async function Home({
       <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 80 }}>
-            <span className="journey-section-label">How It Works</span>
+            <span className="cm-section-label">How It Works</span>
             <h2 style={{ 
               fontSize: 'clamp(32px, 5vw, 48px)', 
               fontWeight: 800, 
@@ -513,7 +513,7 @@ export default async function Home({
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32, position: 'relative' }}>
             {/* Timeline connector (decorative, desktop only) */}
-            <div className="journey-timeline-line" />
+            <div className="cm-timeline-line" />
 
             {[
               { 
@@ -535,11 +535,11 @@ export default async function Home({
                 icon: 'auto_stories'
               },
             ].map(({ num, title, desc, icon }) => (
-              <div key={num} className="journey-card">
-                <div className="journey-icon-badge">
+              <div key={num} className="cm-card">
+                <div className="cm-icon-badge">
                   <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
                 </div>
-                <span className="journey-step-tag">Step {num}</span>
+                <span className="cm-step-tag">Step {num}</span>
                 <h4 style={{ 
                   fontSize: 22, 
                   fontWeight: 800, 

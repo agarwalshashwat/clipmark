@@ -75,26 +75,26 @@ export default async function SignInPage({
         <div style={{ width: '100%', maxWidth: 440 }}>
 
           {/* Glassmorphic card */}
-          <div style={{
+          <div className="cm-card" style={{
             background: '#ffffff',
-            borderRadius: 16,
             padding: '48px',
-            boxShadow: '0 12px 40px rgba(26,28,29,0.06)',
-            border: '1px solid rgba(187,202,198,0.15)',
           }}>
 
             {/* Heading */}
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <div className="cm-icon-badge" style={{ margin: '0 auto 24px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>login</span>
+              </div>
               <h1 style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 30, fontWeight: 800, color: '#1a1c1d',
-                letterSpacing: '-0.5px', margin: '0 0 12px',
+                fontSize: 32, fontWeight: 800, color: '#1a1c1d',
+                letterSpacing: '-1px', margin: '0 0 12px',
               }}>
                 Welcome Back
               </h1>
               <p style={{
-                fontSize: 14, color: '#545f6c', lineHeight: 1.6,
-                maxWidth: 280, margin: '0 auto',
+                fontSize: 15, color: '#64748b', lineHeight: 1.6,
+                maxWidth: 280, margin: '0 auto', fontWeight: 500
               }}>
                 {extensionId
                   ? 'Sign in to manage your collections and unlock Pro features.'
@@ -105,9 +105,12 @@ export default async function SignInPage({
             {/* Error banner */}
             {error && (
               <div style={{
-                fontSize: 13, color: '#ba1a1a', background: '#ffdad6',
-                padding: '10px 14px', borderRadius: 10, marginBottom: 24,
+                background: '#fef2f2', border: '1px solid #fee2e2',
+                borderRadius: 12, padding: '12px 16px', marginBottom: 24,
+                display: 'flex', alignItems: 'center', gap: 10,
+                color: '#dc2626', fontSize: 13, fontWeight: 600,
               }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
                 Sign-in failed — please try again.
               </div>
             )}
@@ -117,12 +120,22 @@ export default async function SignInPage({
               <button
                 type="submit"
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  gap: 12, padding: '14px 24px',
-                  background: '#f3f3f4',
-                  border: '1px solid rgba(187,202,198,0.25)',
-                  borderRadius: 12, fontSize: 15, fontWeight: 600, color: '#1a1c1d',
-                  cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  width: '100%',
+                  padding: '14px',
+                  background: 'white',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 12,
+                  color: '#1e293b',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  transition: 'all 0.2s',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                 }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -137,33 +150,33 @@ export default async function SignInPage({
 
             {/* Trust signals */}
             <div style={{ textAlign: 'center', marginTop: 32 }}>
-              <p style={{ fontSize: 11, color: '#6c7a77', marginBottom: 10 }}>
+              <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16, fontWeight: 500 }}>
                 By signing in you agree to our{' '}
-                <a href="/terms" style={{ color: '#006b5f', textDecoration: 'underline' }}>terms</a>.
+                <a href="/terms" style={{ color: '#14B8A6', textDecoration: 'underline', fontWeight: 700 }}>Terms</a>.
               </p>
               <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: 5, color: 'rgba(0,107,95,0.55)',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                gap: 8, padding: '8px 16px', background: '#f8fafc', borderRadius: 999
               }}>
                 <span
                   className="material-symbols-outlined"
-                  style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}
+                  style={{ fontSize: 16, color: '#14B8A6' }}
                 >
                   lock
                 </span>
                 <span style={{
-                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
+                  fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
+                  letterSpacing: '0.05em', color: '#64748b'
                 }}>
-                  Your bookmarks are private by default
+                  Always Private by default
                 </span>
               </div>
             </div>
           </div>
 
-          <p style={{ marginTop: 28, textAlign: 'center', fontSize: 14, color: '#545f6c' }}>
+          <p style={{ marginTop: 32, textAlign: 'center', fontSize: 14, color: '#64748b', fontWeight: 500 }}>
             Don&apos;t have an account?{' '}
-            <a href="/signin" style={{ color: '#006b5f', fontWeight: 700, textDecoration: 'none' }}>
+            <a href="/signin" style={{ color: '#14B8A6', fontWeight: 700, textDecoration: 'none' }}>
               Create collection
             </a>
           </p>
