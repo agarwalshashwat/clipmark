@@ -1,5 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase';
-import { createCheckoutSession, fetchProductPrices, PRICE_DEFAULTS } from './actions';
+import { createCheckoutSession, fetchProductPrices } from './actions';
+import { PRICE_DEFAULTS, type ProductPrices } from './pricing';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
 import LifetimeCountdown from './LifetimeCountdown';
 import { cookies } from 'next/headers';
@@ -64,7 +65,7 @@ export default async function UpgradePage({
     cancelAtPeriodEnd = profile?.cancel_at_period_end ?? false;
   }
 
-  let prices: import('./actions').ProductPrices;
+  let prices: ProductPrices;
   try {
     prices = await fetchProductPrices();
   } catch (err) {

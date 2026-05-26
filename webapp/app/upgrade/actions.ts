@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
+import { type ProductPrices } from './pricing';
 
 const dodo = new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
@@ -18,14 +19,6 @@ const PRODUCT_IDS: Record<string, string> = {
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
 
-export interface ProductPrices {
-  monthly: string;
-  annual: string;
-  lifetime: string;
-}
-
-export const PRICE_DEFAULTS: ProductPrices = { monthly: '1.99', annual: '19.99', lifetime: '39.99' };
-
 function extractCentPrice(p: { type: string; price?: number; fixed_price?: number }): number {
   return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
 }
@@ -35,7 +28,7 @@ function centsToDisplay(cents: number): string {
   return dollars % 1 === 0 ? String(dollars) : dollars.toFixed(2);
 }
 
-export const fetchProductPrices = unstable_cache(
+const getCachedProductPrices = unstable_cache(
   async (): Promise<ProductPrices> => {
     // Prices are in smallest currency unit (cents per Dodo API docs).
     // NOTE: No try/catch here — if the Dodo API call fails, the error propagates
@@ -55,6 +48,10 @@ export const fetchProductPrices = unstable_cache(
   ['dodo-product-prices'],
   { revalidate: 300, tags: ['dodo-product-prices'] }
 );
+
+export async function fetchProductPrices(): Promise<ProductPrices> {
+  return getCachedProductPrices();
+}
 
 export async function cancelSubscription() {
   const supabase = await createServerSupabase();
