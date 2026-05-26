@@ -197,21 +197,23 @@ export default async function UpgradePage({
 
         <div className={styles.comparisonSection}>
           <h2 className={styles.compTitle}>Choose your experience</h2>
-          <table className={styles.compTable}>
-            <tbody>
-              {FEATURES.map(f => (
-                <tr key={f.label} className={styles.compRow}>
-                  <td className={`${styles.compCell} ${styles.compLabel}`}>{f.label}</td>
-                  <td className={`${styles.compCell} ${styles.compVal}`}>
-                    {typeof f.free === 'boolean' ? (f.free ? <Check /> : <Cross />) : f.free}
-                  </td>
-                  <td className={`${styles.compCell} ${styles.compVal} ${styles.compValPro}`}>
-                    {typeof f.pro === 'boolean' ? (f.pro ? <Check /> : <Cross />) : f.pro}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={styles.compTableWrapper}>
+            <table className={styles.compTable}>
+              <tbody>
+                {FEATURES.map(f => (
+                  <tr key={f.label} className={styles.compRow}>
+                    <td className={`${styles.compCell} ${styles.compLabel}`}>{f.label}</td>
+                    <td className={`${styles.compCell} ${styles.compVal}`}>
+                      {typeof f.free === 'boolean' ? (f.free ? <Check /> : <Cross />) : f.free}
+                    </td>
+                    <td className={`${styles.compCell} ${styles.compVal} ${styles.compValPro}`}>
+                      {typeof f.pro === 'boolean' ? (f.pro ? <Check /> : <Cross />) : f.pro}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
 

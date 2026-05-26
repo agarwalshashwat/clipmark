@@ -64,6 +64,8 @@ clipmark-extension.zip
 # Playwright
 playwright-report/
 test-results/
+tests/visual/__snapshots__/
+*-snapshots/
 
 # Extension environment config (never commit — copy from config.example.js)
 extension/src/config.js
