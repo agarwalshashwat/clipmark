@@ -123,10 +123,46 @@ async function localSummarizeBookmarks(bookmarks, videoTitle) {
   }
 }
 
+/**
+ * Summarize a single transcript snippet into a concise bookmark title.
+ * @param {string} snippet
+ * @returns {Promise<string>}
+ */
+async function localSummarizeSnippet(snippet) {
+  if (!snippet) return '';
+  const availability = await localAiAvailability();
+  if (availability !== 'available') return snippet;
+
+  const session = await LanguageModel.create({
+    ..._LM_LANGUAGE_OPTIONS,
+    systemPrompt:
+      'You are a technical editor for a YouTube bookmarking tool. ' +
+      'Convert raw, messy transcript text into a concise, professional title (3-7 words). ' +
+      'Focus on the core concept, action, or architectural detail being discussed. ' +
+      'Respond ONLY with the title text. No quotes, no markdown, no explanation.',
+  });
+  try {
+    const raw = await _promptInEnglish(session, `Snippet: "${snippet}"\nShort Title:`);
+    return raw.replace(/["']/g, '').trim() || snippet;
+  } catch (err) {
+    if (_localAiDebugEnabled()) console.error('[local-ai] snippet summary failed:', err);
+    return snippet;
+  } finally {
+    session.destroy();
+  }
+}
+
 if (typeof globalThis !== 'undefined') {
   globalThis.localAiAvailability = localAiAvailability;
   globalThis.localSuggestTags = localSuggestTags;
   globalThis.localSummarizeBookmarks = localSummarizeBookmarks;
+  globalThis.localSummarizeSnippet = localSummarizeSnippet;
 }
 
-export { localAiAvailability, localSuggestTags, localSummarizeBookmarks };
+// Only export if we are in a module environment (e.g. for testing or modern environments)
+// Standard content scripts will ignore this or use the globalThis versions.
+if (typeof exports !== 'undefined' || typeof module !== 'undefined') {
+  try {
+    module.exports = { localAiAvailability, localSuggestTags, localSummarizeBookmarks, localSummarizeSnippet };
+  } catch (e) {}
+}

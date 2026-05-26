@@ -2,10 +2,11 @@ import { createServerSupabase } from '@/lib/supabase';
 import { createCheckoutSession, fetchProductPrices } from './actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './pricing';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
-import LifetimeCountdown from './LifetimeCountdown';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
-// import { ThemeToggle } from '../components/ThemeToggle';
+import styles from './upgrade.module.css';
+import { Navigation } from '@/app/components/Navigation';
+import { Footer } from '@/app/components/Footer';
 
 const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,  pro: true  },
@@ -23,16 +24,16 @@ const FEATURES = [
 
 function Check() {
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      width: 22, height: 22, borderRadius: '50%',
-      background: '#14B8A615', color: '#006b5f', fontWeight: 700, fontSize: 13,
-    }}>✓</span>
+    <span className="material-symbols-outlined" style={{
+      color: '#14B8A6', fontWeight: 700, fontSize: 20,
+    }}>check_circle</span>
   );
 }
 function Cross() {
   return (
-    <span style={{ color: '#bbcac6', fontSize: 18, lineHeight: 1 }}>—</span>
+    <span className="material-symbols-outlined" style={{ 
+      color: '#cbd5e1', fontSize: 20 
+    }}>cancel</span>
   );
 }
 
@@ -76,8 +77,6 @@ export default async function UpgradePage({
     (1 - (Number(prices.annual) / 12) / Number(prices.monthly)) * 100
   );
 
-  // ── Referral discount banner ──────────────────────────────────────────────
-  // Only available to non-Pro users who arrived via an affiliate link.
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -92,7 +91,6 @@ export default async function UpgradePage({
       .eq('affiliate_code', refCode)
       .eq('is_affiliate', true)
       .single();
-    // Only show banner if the affiliate has an active Dodo discount code (real discount)
     if (affiliateProfile?.dodo_discount_code) {
       referralBanner = {
         username:    affiliateProfile.username as string,
@@ -110,620 +108,116 @@ export default async function UpgradePage({
     : null;
 
   return (
-    <div style={{
-        minHeight: '100vh',
-        background: '#f9f9fa',
-        color: '#1a1c1d',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        WebkitFontSmoothing: 'antialiased',
-      }}>
+    <div className={styles.pageWrap}>
+      <Navigation />
 
-        {/* ── Fixed Glass Header (matches home page) ── */}
-        <nav style={{
-          position: 'fixed', top: 0, width: '100%', zIndex: 50,
-          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 1px 0 rgba(26,28,29,0.06)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 72 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#14B8A6', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px' }}>
-              <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Clipmark</a>
+      <main className={styles.main}>
+        {success && (
+          <div className={styles.bannerSuccess}>
+            Payment successful — welcome to Clipmark Pro! 🎉
+          </div>
+        )}
+
+        {referralBanner && (
+          <div className={styles.bannerReferral}>
+            <span style={{ fontSize: 18 }}>🎉</span>
+            <span>
+              <strong>{referralBanner.discountPct}% off</strong> automatically applied
+              {' '}— referred by <strong>{referralBanner.username}</strong>
+            </span>
+          </div>
+        )}
+
+        <div className={styles.header}>
+          <h1 className={styles.title}>Future-proof your learning</h1>
+          <p className={styles.sub}>Clipmark is the easiest way to organize YouTube research. Upgrade to Pro for AI-powered intelligence.</p>
+        </div>
+
+        {isPro && !success && (
+          <div className={styles.manageBox}>
+            <div className={styles.manageHeader}>
+              <span className="material-symbols-outlined" style={{ color: '#14B8A6' }}>verified</span>
+              <span className={styles.manageTitle}>You&apos;re on Clipmark Pro</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
-              <a href="/#features" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Features</a>
-              <a href="/#how-it-works" style={{ color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>How It Works</a>
-              <a href="/upgrade" style={{ color: '#006B5F', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, borderBottom: '2px solid #14B8A6', paddingBottom: 2, textDecoration: 'none' }}>Pricing</a>
+            {!subscriptionId ? (
+              <p className={styles.manageText}>Lifetime Access — your Pro benefits never expire.</p>
+            ) : cancelAtPeriodEnd && periodEndFormatted ? (
+              <p className={styles.manageText}>Your subscription cancels on <strong>{periodEndFormatted}</strong>.</p>
+            ) : (
+              <div className={styles.manageBody}>
+                {periodEndFormatted && <p className={styles.manageText}>Next billing date: <strong>{periodEndFormatted}</strong></p>}
+                <CancelSubscriptionButton isRefundEligible={isRefundEligible} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isPro && (
+          <div className={styles.grid}>
+            <div className={styles.pricingCard}>
+              <div className={styles.planName}>Monthly</div>
+              <div className={styles.price}>
+                <span className={styles.amount}>${prices.monthly}</span>
+                <span className={styles.period}>/month</span>
+              </div>
+              <div className={styles.featureList}>
+                <div className={styles.featureItem}><Check /> AI auto-fill snippets</div>
+                <div className={styles.featureItem}><Check /> AI-generated summaries</div>
+                <div className={styles.featureItem}><Check /> Smart tag suggestions</div>
+                <div className={styles.featureItem}><Check /> Unlimited shared pages</div>
+                <div className={styles.featureItem}><Check /> Priority support</div>
+              </div>
+              <form action={createCheckoutSession}>
+                <input type="hidden" name="plan" value="monthly" />
+                <button type="submit" className={styles.ctaBtn}>Go Pro Monthly</button>
+              </form>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {/* <ThemeToggle /> */}
-              {user ? (
-                <a href="/dashboard" style={{
-                  padding: '10px 22px',
-                  background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-                  color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                }}>
-                  Dashboard
-                </a>
-              ) : (
-                <>
-                  <a href="/signin" style={{
-                    color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontWeight: 600, fontSize: 14, textDecoration: 'none',
-                    padding: '10px 16px',
-                  }}>
-                    Log In
-                  </a>
-                  <a href="https://chrome.google.com/webstore" style={{
-                    padding: '10px 22px',
-                    background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-                    color: 'white', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                  }}>
-                    Add to Chrome — Free
-                  </a>
-                </>
-              )}
+
+            <div className={`${styles.pricingCard} ${styles.pricingCardPro}`}>
+              <div className={styles.badge}>Save {savingsPct}%</div>
+              <div className={styles.planName}>Annual</div>
+              <div className={styles.price}>
+                <span className={styles.amount}>${prices.annual}</span>
+                <span className={styles.period}>/year</span>
+              </div>
+              <div className={styles.featureList}>
+                <div className={styles.featureItem}><Check /> Everything in Monthly</div>
+                <div className={styles.featureItem}><Check /> <strong>Exclusive: Beta AI Beta features</strong></div>
+                <div className={styles.featureItem}><Check /> Custom social posts (X/LinkedIn)</div>
+                <div className={styles.featureItem}><Check /> Advanced analytics</div>
+                <div className={styles.featureItem}><Check /> Pro Badge on profile</div>
+              </div>
+              <form action={createCheckoutSession}>
+                <input type="hidden" name="plan" value="annual" />
+                <button type="submit" className={`${styles.ctaBtn} ${styles.ctaBtnPro}`}>Go Pro Annual</button>
+              </form>
             </div>
           </div>
-        </nav>
+        )}
 
-        <main style={{ paddingTop: 72 }}>
-
-          {/* ── Banner: Success ── */}
-          {success && (
-            <div style={{
-              background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)',
-              borderRadius: 10, padding: '14px 24px', margin: '24px auto 0',
-              maxWidth: 640, textAlign: 'center', fontSize: 15, color: '#006b5f',
-              fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
-            }}>
-              Payment successful — welcome to Clipmark Pro! 🎉
-            </div>
-          )}
-
-          {/* ── Banner: Referral discount ── */}
-          {referralBanner && (
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(20,184,166,0.12) 0%, rgba(139,92,246,0.10) 100%)',
-              border: '1px solid rgba(20,184,166,0.35)',
-              borderRadius: 10, padding: '14px 24px', margin: '24px auto 0',
-              maxWidth: 640, textAlign: 'center', fontSize: 15, color: '#006b5f',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            }}>
-              <span style={{ fontSize: 18 }}>🎉</span>
-              <span>
-                <strong>{referralBanner.discountPct}% off</strong> automatically applied
-                {' '}— referred by <strong>{referralBanner.username}</strong>
-              </span>
-            </div>
-          )}
-
-          {/* ── Manage Subscription (Pro users) ── */}
-          {isPro && !success && (
-            <div style={{
-              background: 'white', border: '1px solid rgba(26,28,29,0.1)',
-              borderRadius: 12, padding: '24px 28px', margin: '28px auto 0',
-              maxWidth: 640, fontFamily: "'Inter', sans-serif",
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <span style={{ fontSize: 18 }}>✦</span>
-                <span style={{ fontWeight: 700, fontSize: 16, color: '#1a1c1d', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  You&apos;re on Clipmark Pro
-                </span>
-              </div>
-
-              {!subscriptionId && (
-                <p style={{ fontSize: 14, color: '#545f6c', margin: '0 0 0 28px' }}>
-                  Lifetime Access — your Pro benefits never expire.
-                </p>
-              )}
-
-              {subscriptionId && cancelAtPeriodEnd && periodEndFormatted && (
-                <p style={{ fontSize: 14, color: '#545f6c', margin: '0 0 0 28px' }}>
-                  Your subscription cancels on <strong>{periodEndFormatted}</strong>. You can enjoy all Pro features until then.
-                </p>
-              )}
-
-              {subscriptionId && !cancelAtPeriodEnd && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 28 }}>
-                  {periodEndFormatted && (
-                    <p style={{ fontSize: 14, color: '#545f6c', margin: 0 }}>
-                      Next billing date: <strong>{periodEndFormatted}</strong>
-                    </p>
-                  )}
-                  {isRefundEligible && (
-                    <p style={{ fontSize: 13, color: '#006b5f', margin: 0 }}>
-                      Within your 14-day refund window — cancel for a full refund.
-                    </p>
-                  )}
-                  {!isRefundEligible && (
-                    <p style={{ fontSize: 13, color: '#545f6c', margin: 0 }}>
-                      Cancelling will keep Pro active until {periodEndFormatted ?? 'your billing date'}, after which AI features and shared collections will be deactivated.
-                    </p>
-                  )}
-                  <CancelSubscriptionButton isRefundEligible={isRefundEligible} />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Hero ── */}
-          <section style={{
-            textAlign: 'center', padding: '80px 24px 72px',
-          }}>
-            <h1
-              className="hero-h1"
-              style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 72, fontWeight: 800, letterSpacing: '-2px',
-                lineHeight: 1.05, color: '#1a1c1d', marginBottom: 24,
-              }}
-            >
-              The Curated{' '}
-              <span style={{ color: '#14B8A6' }}>Mind.</span>
-            </h1>
-            <p
-              className="hero-sub"
-              style={{
-                fontSize: 18, color: '#545f6c', maxWidth: 560, margin: '0 auto',
-                lineHeight: 1.7, fontWeight: 500,
-              }}
-            >
-              Elevate your digital library from a collection of links to an editorial
-              powerhouse. Unlock AI-driven insights and professional curation tools.
-            </p>
-          </section>
-
-          {/* ── Lifetime Launch Special ── */}
-          <section style={{ padding: '0 24px 48px', maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
-              borderRadius: 20,
-              padding: '40px 48px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 32,
-              position: 'relative',
-              overflow: 'hidden',
-            }}>
-              {/* Background glow */}
-              <div style={{
-                position: 'absolute', top: -60, right: -60,
-                width: 300, height: 300,
-                background: 'rgba(20,184,166,0.15)',
-                borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none',
-              }} />
-
-              {/* Left: copy */}
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(20,184,166,0.2)', color: '#14B8A6',
-                  padding: '4px 12px', borderRadius: 9999,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700, fontSize: 11, letterSpacing: '0.1em',
-                  textTransform: 'uppercase', marginBottom: 16,
-                }}>
-                  ✦ Launch Special — Limited Time
-                </div>
-                <LifetimeCountdown />
-                <h2 style={{
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: 32, fontWeight: 800, letterSpacing: '-0.5px',
-                  color: '#f9fafb', margin: '0 0 12px',
-                }}>
-                  Lifetime Pro — Pay Once, Own It Forever
-                </h2>
-                <p style={{ fontSize: 15, color: '#94a3b8', maxWidth: 480, lineHeight: 1.7, margin: '0 0 8px' }}>
-                  One payment unlocks every Pro feature — AI summaries, spaced revisit, unlimited collections —
-                  with no recurring charges. Ever.
-                </p>
-                <p style={{ fontSize: 13, color: '#64748b' }}>
-                  Price increases to $79.99 after the launch window. Early supporters lock in forever at $39.99.
-                </p>
-              </div>
-
-              {/* Right: price + CTA */}
-              <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ marginBottom: 6 }}>
-                  <span style={{
-                    fontSize: 14, color: '#64748b',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    textDecoration: 'line-through', marginRight: 8,
-                  }}>$79.99</span>
-                  <span style={{
-                    fontSize: 56, fontWeight: 800, color: '#f9fafb',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    letterSpacing: '-2px',
-                  }}>${prices.lifetime}</span>
-                </div>
-                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 20 }}>one-time · no subscription</p>
-                <form action={createCheckoutSession}>
-                  <input type="hidden" name="plan" value="lifetime" />
-                  <button
-                    type="submit"
-                    disabled={isPro}
-                    style={{
-                      padding: '14px 36px',
-                      background: isPro ? '#374151' : 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
-                      color: 'white', border: 'none', borderRadius: 12,
-                      fontSize: 15, fontWeight: 700, cursor: isPro ? 'default' : 'pointer',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      boxShadow: isPro ? 'none' : '0 8px 24px rgba(20,184,166,0.35)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {isPro ? 'Already Pro' : 'Get Lifetime Access →'}
-                  </button>
-                </form>
-                <p style={{ fontSize: 11, color: '#475569', marginTop: 10 }}>
-                  7-day money-back guarantee
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Pricing Bento Grid ── */}
-          <section id="pricing" style={{ padding: '0 24px 96px', maxWidth: 1100, margin: '0 auto' }}>
-            <div
-              className="pricing-grid"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '4fr 8fr',
-                gap: 24,
-              }}
-            >
-
-              {/* Free Card */}
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid rgba(26,28,29,0.08)',
-                borderRadius: 16,
-                padding: 32,
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                boxShadow: '0 12px 40px rgba(26,28,29,0.06)',
-              }}>
-                <div>
-                  <span style={{
-                    color: '#545f6c', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontWeight: 700, fontSize: 11, letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                  }}>
-                    Essential
-                  </span>
-                  <h2 style={{
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontSize: 40, fontWeight: 800, marginTop: 16, marginBottom: 8, color: '#1a1c1d',
-                  }}>
-                    Free
-                  </h2>
-                  <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 32 }}>
-                    Organize your digital life with the basics.
-                  </p>
-                  <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {[
-                      'Unlimited basic clips',
-                      'Standard collections',
-                      'Chrome extension access',
-                    ].map((item) => (
-                      <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#3c4947', fontSize: 14 }}>
-                        <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontSize: 20 }}>check_circle</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div style={{ marginTop: 40 }}>
-                  <button className="ghost-btn" disabled>
-                    {isPro ? 'Previous plan' : 'Current Plan'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Pro Card */}
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid rgba(0,107,95,0.2)',
-                borderRadius: 16,
-                position: 'relative', overflow: 'hidden',
-                display: 'flex', flexDirection: 'column',
-                boxShadow: '0 12px 40px rgba(0,107,95,0.08)',
-              }}>
-                {/* Most Popular badge */}
-                <div style={{
-                  position: 'absolute', top: 0, right: 0,
-                  background: '#14B8A6', color: '#00423b',
-                  padding: '5px 20px',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700, fontSize: 11, letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  borderBottomLeftRadius: 12,
-                }}>
-                  Most Popular
-                </div>
-
-                {/* Inner split: left pricing + right features */}
-                <div className="pro-card-inner" style={{ display: 'flex', flex: 1 }}>
-
-                  {/* Left half */}
-                  <div
-                    className="pro-left"
-                    style={{
-                      flex: '0 0 50%', padding: 32,
-                      borderRight: '1px solid rgba(187,202,198,0.2)',
-                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    }}
-                  >
-                    <div>
-                      <span style={{
-                        color: '#006b5f', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        fontWeight: 700, fontSize: 11, letterSpacing: '0.12em',
-                        textTransform: 'uppercase',
-                      }}>
-                        The Curator
-                      </span>
-                      <h2 style={{
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        fontSize: 40, fontWeight: 800, marginTop: 16, marginBottom: 8, color: '#1a1c1d',
-                      }}>
-                        Pro
-                      </h2>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 16, marginBottom: 32 }}>
-                        <span style={{
-                          fontSize: 52, fontWeight: 800, color: '#1a1c1d',
-                          fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          letterSpacing: '-2px',
-                        }}>
-                          ${prices.monthly}
-                        </span>
-                        <span style={{ color: '#545f6c', fontWeight: 500 }}>/month</span>
-                      </div>
-
-                      {/* AI Powerups box */}
-                      <div style={{
-                        background: 'rgba(115,46,228,0.07)',
-                        border: '1px solid rgba(115,46,228,0.18)',
-                        borderRadius: 12, padding: '16px 20px',
-                      }}>
-                        <p style={{
-                          color: '#732EE4', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          fontWeight: 700, fontSize: 11, letterSpacing: '0.1em',
-                          textTransform: 'uppercase', marginBottom: 12,
-                          display: 'flex', alignItems: 'center', gap: 6,
-                        }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#732EE4' }}>auto_awesome</span>
-                          AI Powerups Included
-                        </p>
-                        <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <li style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1a1c1d', fontSize: 14, fontWeight: 500 }}>
-                            <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 20 }}>edit_note</span>
-                            AI Auto-fill Metadata
-                          </li>
-                          <li style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1a1c1d', fontSize: 14, fontWeight: 500 }}>
-                            <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 20 }}>summarize</span>
-                            AI Intelligent Summaries
-                          </li>
-                        </ul>
-                      </div>
-                      <p style={{
-                        fontSize: 11, color: '#64748b', marginTop: 12, lineHeight: 1.6,
-                        fontStyle: 'italic',
-                      }}>
-                        * AI features are powered by Chrome&apos;s built-in AI (Gemini Nano).
-                        Availability depends on your Chrome version and Google&apos;s support —
-                        feature access may change if Google updates or discontinues the built-in AI API.
-                      </p>
-                    </div>
-
-                    {/* CTAs */}
-                    <div style={{ marginTop: 32 }}>
-                      <p style={{ fontSize: 12, color: '#545f6c', marginBottom: 12, fontStyle: 'italic' }}>
-                        Billed annually at ${prices.annual}/yr (Save {savingsPct}%)
-                      </p>
-                      <form action={createCheckoutSession}>
-                        <input type="hidden" name="plan" value="annual" />
-                        <button type="submit" className="primary-btn" disabled={isPro}>
-                          {isPro ? 'Current Plan' : 'Get Pro Annual'}
-                        </button>
-                      </form>
-                      <form action={createCheckoutSession}>
-                        <input type="hidden" name="plan" value="monthly" />
-                        <button type="submit" className="switch-link" disabled={isPro}>
-                          Switch to Monthly (${prices.monthly}/mo)
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-
-                  {/* Right half: feature list */}
-                  <div style={{
-                    flex: '0 0 50%', padding: 32,
-                    background: 'rgba(243,243,244,0.4)',
-                  }}>
-                    <h3 style={{
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontWeight: 700, color: '#1a1c1d', marginBottom: 28, fontSize: 16,
-                    }}>
-                      Pro Features
-                    </h3>
-                    <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
-                      {[
-                        { icon: 'sync', title: 'Cloud Sync', desc: 'Bookmarks synced across all your devices, instantly.' },
-                        { icon: 'history_edu', title: 'Social Post Generation', desc: 'Turn any clip into a LinkedIn or Twitter post instantly.' },
-                        { icon: 'psychology_alt', title: 'Spaced Revisit', desc: 'AI-scheduled reminders to help you actually learn your clips.' },
-                        { icon: 'folder_managed', title: 'Unlimited Collections', desc: 'Infinite depth for your personal knowledge base.' },
-                        { icon: 'rate_review', title: 'Request a Feature', desc: 'Vote on and request features directly — Pro members shape the roadmap.' },
-                      ].map((feat) => (
-                        <li key={feat.icon} style={{ display: 'flex', gap: 14 }}>
-                          <div style={{
-                            width: 40, height: 40, borderRadius: 10,
-                            background: '#ffffff', flexShrink: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 2px 8px rgba(26,28,29,0.08)',
-                          }}>
-                            <span className="material-symbols-outlined" style={{ color: '#006b5f', fontSize: 20 }}>{feat.icon}</span>
-                          </div>
-                          <div>
-                            <h4 style={{
-                              fontFamily: "'Plus Jakarta Sans', sans-serif",
-                              fontSize: 14, fontWeight: 700, color: '#1a1c1d',
-                            }}>
-                              {feat.title}
-                            </h4>
-                            <p style={{ fontSize: 13, color: '#545f6c', marginTop: 4, lineHeight: 1.5 }}>
-                              {feat.desc}
-                            </p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                </div>{/* end pro-card-inner */}
-              </div>{/* end Pro Card */}
-
-            </div>{/* end pricing-grid */}
-          </section>
-
-          {/* ── Feature Comparison Table ── */}
-          <section style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px 96px' }}>
-            <h2 style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 32, fontWeight: 800, textAlign: 'center',
-              color: '#1a1c1d', marginBottom: 48,
-            }}>
-              Feature Comparison
-            </h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(187,202,198,0.35)' }}>
-                    <th style={{
-                      textAlign: 'left', padding: '20px 16px',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      color: '#545f6c', fontWeight: 700, fontSize: 13,
-                    }}>
-                      Capabilities
-                    </th>
-                    <th style={{
-                      textAlign: 'center', padding: '20px 16px', width: 100,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      color: '#1a1c1d', fontWeight: 800, fontSize: 13,
-                    }}>
-                      Free
-                    </th>
-                    <th style={{
-                      textAlign: 'center', padding: '20px 16px', width: 100,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      color: '#006b5f', fontWeight: 800, fontSize: 13,
-                    }}>
-                      Pro
-                    </th>
+        <div className={styles.comparisonSection}>
+          <h2 className={styles.compTitle}>Choose your experience</h2>
+          <div className={styles.compTableWrapper}>
+            <table className={styles.compTable}>
+              <tbody>
+                {FEATURES.map(f => (
+                  <tr key={f.label} className={styles.compRow}>
+                    <td className={`${styles.compCell} ${styles.compLabel}`}>{f.label}</td>
+                    <td className={`${styles.compCell} ${styles.compVal}`}>
+                      {typeof f.free === 'boolean' ? (f.free ? <Check /> : <Cross />) : f.free}
+                    </td>
+                    <td className={`${styles.compCell} ${styles.compVal} ${styles.compValPro}`}>
+                      {typeof f.pro === 'boolean' ? (f.pro ? <Check /> : <Cross />) : f.pro}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {FEATURES.map(({ label, free, pro }) => (
-                    <tr
-                      key={label}
-                      className="feature-row"
-                      style={{ borderBottom: '1px solid rgba(187,202,198,0.15)', transition: 'background 0.15s' }}
-                    >
-                      <td style={{ padding: '18px 16px', color: '#1a1c1d', fontWeight: 500 }}>{label}</td>
-                      <td style={{ textAlign: 'center', padding: '18px 16px' }}>
-                        {free === true ? <Check /> : free === false ? <Cross /> : (
-                          <span style={{ color: '#545f6c', fontSize: 13 }}>{free}</span>
-                        )}
-                      </td>
-                      <td style={{ textAlign: 'center', padding: '18px 16px' }}>
-                        {pro === true ? <Check /> : pro === false ? <Cross /> : (
-                          <span style={{ color: '#006b5f', fontSize: 13, fontWeight: 700 }}>{pro}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* ── FAQ ── */}
-          <section style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px 96px' }}>
-            <h2 style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 32, fontWeight: 800, textAlign: 'center',
-              color: '#1a1c1d', marginBottom: 40,
-            }}>
-              Frequently Asked Questions
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {[
-                {
-                  q: 'Can I cancel my subscription at any time?',
-                  a: 'Absolutely. If you cancel, your Pro features will remain active until the end of your current billing period. No hidden fees or lock-ins.',
-                },
-                {
-                  q: 'How does AI Auto-fill work?',
-                  a: 'Our AI analyzes the content of the page you\'re clipping to automatically extract the author, primary topic, and key tags, saving you minutes per clip.',
-                },
-                {
-                  q: 'What happens to my clips if I downgrade?',
-                  a: 'Your data is yours. You will always have access to your existing clips, even if you downgrade to the Free tier. You just won\'t be able to add more beyond the free limit.',
-                },
-                {
-                  q: 'Do you offer educational discounts?',
-                  a: 'Yes! We support students and educators. Contact our support team with your .edu email for a special discount code.',
-                },
-                {
-                  q: 'How reliable are the AI features?',
-                  a: 'AI features run on Chrome\'s built-in AI model (Gemini Nano), processed locally in your browser — your data never leaves your device for AI tasks. Availability depends on your Chrome version and Google\'s ongoing support for the built-in AI API. If Google updates or discontinues this capability, AI features may be temporarily or permanently affected. We\'ll always communicate any changes that impact your subscription.',
-                },
-              ].map(({ q, a }) => (
-                <div key={q} className="faq-card">
-                  <h3 style={{
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontWeight: 700, fontSize: 16, color: '#1a1c1d', marginBottom: 8,
-                  }}>
-                    {q}
-                  </h3>
-                  <p style={{ fontSize: 14, color: '#545f6c', lineHeight: 1.65 }}>{a}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-        </main>
-
-        {/* ── Footer ── */}
-        <footer style={{
-          background: '#e8e8e9', padding: '48px 32px',
-        }}>
-          <div style={{
-            maxWidth: 1280, margin: '0 auto',
-            display: 'flex', flexWrap: 'wrap',
-            justifyContent: 'space-between', alignItems: 'center', gap: 24,
-          }}>
-            <div>
-              <span style={{
-                fontSize: 20, fontWeight: 800, letterSpacing: '-0.5px',
-                color: '#006b5f', fontFamily: "'Plus Jakarta Sans', sans-serif",
-              }}>
-                Clipmark
-              </span>
-              <p style={{ fontSize: 12, color: '#545f6c', marginTop: 6 }}>
-                © {new Date().getFullYear()} Clipmark. The Digital Curator&apos;s choice.
-              </p>
-            </div>
-            <nav style={{ display: 'flex', gap: 32 }}>
-              <a href="/privacy" className="footer-link">Privacy Policy</a>
-              <a href="/terms" className="footer-link">Terms of Service</a>
-              <a href="/contact" className="footer-link">Contact</a>
-            </nav>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </footer>
+        </div>
+      </main>
 
-      </div>
+      <Footer />
+    </div>
   );
 }

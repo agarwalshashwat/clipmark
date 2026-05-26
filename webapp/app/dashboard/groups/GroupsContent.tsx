@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import styles from './page.module.css';
 import { createGroup, deleteGroup, addCollectionToGroup, removeCollectionFromGroup } from './actions';
 import type { Collection } from '@/lib/supabase';
+import Link from 'next/link';
 
 interface UserGroup {
   id: string;
@@ -60,10 +61,10 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
     <div>
       {/* ── My Groups ─────────────────────────────── */}
       <div className={styles.sectionHeader}>
-        <p className={styles.sectionTitle}>My Groups</p>
+        <h2 className={styles.sectionTitle}>My Groups</h2>
         {!showForm && (
           <button className={styles.newGroupBtn} onClick={() => setShowForm(true)}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
             New Group
           </button>
         )}
@@ -77,14 +78,14 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
               className={`${styles.typeBtn} ${formType === 'tag' ? styles.active : ''}`}
               onClick={() => setFormType('tag')}
             >
-              By Tag
+              Smart (Tag Based)
             </button>
             <button
               type="button"
               className={`${styles.typeBtn} ${formType === 'custom' ? styles.active : ''}`}
               onClick={() => setFormType('custom')}
             >
-              Custom
+              Manual
             </button>
           </div>
           <input type="hidden" name="type" value={formType} />
@@ -92,7 +93,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
             <input
               name="name"
               className={styles.formInput}
-              placeholder={formType === 'tag' ? 'Group name (e.g. Learning Resources)' : 'Group name'}
+              placeholder={formType === 'tag' ? 'Group Name (e.g. Design Inspiration)' : 'Group Name'}
               required
               autoFocus
             />
@@ -100,161 +101,130 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
               <input
                 name="tag_name"
                 className={styles.formInput}
-                placeholder="Tag (e.g. idea)"
+                placeholder="Tag (e.g. design)"
                 required
-                style={{ flex: '0 0 160px' }}
               />
             )}
-          </div>
-          <div className={styles.formActions}>
-            <button type="button" className={styles.formCancel} onClick={() => setShowForm(false)}>
-              Cancel
+            <button type="submit" className={styles.newGroupBtn} disabled={isPending}>
+              Create
             </button>
-            <button type="submit" className={styles.formSubmit} disabled={isPending}>
-              {isPending ? 'Creating…' : 'Create Group'}
+            <button type="button" className={styles.typeBtn} onClick={() => setShowForm(false)}>
+              Cancel
             </button>
           </div>
         </form>
       )}
 
-      {userGroups.length === 0 && !showForm && (
-        <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 32 }}>
-          No custom groups yet. Create one above to organise your videos.
-        </p>
-      )}
+      <div className={styles.groups}>
+        {userGroups.map(group => (
+          <div key={group.id} className={styles.group}>
+            <div className={styles.groupHeader}>
+              <h3 className={styles.groupTag}>{group.name}</h3>
+              <span className={styles.groupCount}>
+                {group.type === 'tag' ? `Tag: #${group.tag_name}` : 'Manual'} · {group.collections.length} videos
+              </span>
+              <div style={{ flex: 1 }} />
+              <button 
+                className={styles.removeBtn} 
+                onClick={() => handleDelete(group.id)}
+                style={{ position: 'static', opacity: 1 }}
+                title="Delete group"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+              </button>
+            </div>
 
-      {userGroups.length > 0 && (
-        <div className={styles.groups} style={{ marginBottom: 48 }}>
-          {userGroups.map(g => (
-            <div key={g.id} className={styles.group}>
-              <div className={styles.groupHeaderRow}>
-                <span className={styles.groupName}>{g.name}</span>
-                {g.type === 'tag' && g.tag_name && (
-                  <span className={styles.groupCount}>#{g.tag_name}</span>
-                )}
-                <span className={styles.groupCount}>{g.collections.length} video{g.collections.length !== 1 ? 's' : ''}</span>
-                <button
-                  className={styles.groupDeleteBtn}
-                  title="Delete group"
-                  onClick={() => handleDelete(g.id)}
-                  disabled={isPending}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
-                </button>
-              </div>
-              {g.collections.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af' }}>
-                  {g.type === 'tag' ? 'No bookmarks with this tag yet.' : 'No videos added yet.'}
-                </p>
-              ) : (
-                <div className={styles.groupGrid}>
-                  {g.collections.slice(0, 4).map(c => (
-                    <div key={c.id} className={styles.groupCardWrap}>
-                      <a href={`/v/${c.id}`} className={styles.groupCard}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://img.youtube.com/vi/${c.video_id}/hqdefault.jpg`}
-                          alt={c.video_title ?? 'Video'}
-                          className={styles.groupCardImg}
-                        />
-                        <div className={styles.groupCardOverlay}>
-                          <p className={styles.groupCardTitle}>{c.video_title ?? 'Untitled Video'}</p>
-                          <span className={styles.groupCardClips}>{c.bookmarks?.length ?? 0} clips</span>
-                        </div>
-                      </a>
-                      {g.type === 'custom' && (
-                        <button
-                          className={styles.removeVideoBtn}
-                          title="Remove from group"
-                          onClick={() => handleRemoveVideo(g.id, c.id)}
-                          disabled={isPending}
-                        >×</button>
-                      )}
+            <div className={styles.groupGrid}>
+              {group.collections.map(col => (
+                <div key={col.id} className={styles.miniCard}>
+                  {group.type === 'custom' && (
+                    <button 
+                      className={styles.removeBtn}
+                      onClick={() => handleRemoveVideo(group.id, col.id)}
+                      title="Remove from group"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                    </button>
+                  )}
+                  <Link href={`/dashboard?v=${col.video_id}`}>
+                    <div className={styles.miniThumb}>
+                      <img 
+                        src={`https://i.ytimg.com/vi/${col.video_id}/mqdefault.jpg`} 
+                        alt="" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <div className={styles.thumbOverlay} />
                     </div>
-                  ))}
-                  {g.collections.length > 4 && (
-                    <div className={styles.groupMore}>+{g.collections.length - 4} more</div>
+                    <p className={styles.miniTitle}>{col.video_title || 'Untitled Video'}</p>
+                  </Link>
+                </div>
+              ))}
+
+              {group.type === 'custom' && (
+                <div className={styles.addCard}>
+                  {addingToGroup === group.id ? (
+                    <>
+                      <select 
+                        className={styles.addSelect}
+                        value={selectedVideoId}
+                        onChange={(e) => setSelectedVideoId(e.target.value)}
+                      >
+                        <option value="">Select video...</option>
+                        {allCollections
+                          .filter(c => !group.collections.find(gc => gc.id === c.id))
+                          .map(c => (
+                            <option key={c.id} value={c.id}>{c.video_title || c.video_id}</option>
+                          ))}
+                      </select>
+                      <button className={styles.addBtn} onClick={() => handleAddVideo(group.id)}>Add</button>
+                      <button className={styles.typeBtn} style={{ fontSize: 10 }} onClick={() => setAddingToGroup(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <button className={styles.addBtn} style={{ background: 'none', color: '#94a3b8' }} onClick={() => setAddingToGroup(group.id)}>
+                      <span className="material-symbols-outlined">add_circle</span>
+                      <span style={{ display: 'block', fontSize: 11, marginTop: 4 }}>Add Video</span>
+                    </button>
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        ))}
+      </div>
 
-              {/* Add Video row for custom groups */}
-              {g.type === 'custom' && (
-                addingToGroup === g.id ? (
-                  <div className={styles.addVideoRow}>
-                    <select
-                      className={styles.addVideoSelect}
-                      value={selectedVideoId}
-                      onChange={e => setSelectedVideoId(e.target.value)}
-                    >
-                      <option value="">— Select a video —</option>
-                      {allCollections
-                        .filter(c => !g.collections.some(gc => gc.id === c.id))
-                        .map(c => (
-                          <option key={c.id} value={c.id}>{c.video_title ?? c.video_id}</option>
-                        ))
-                      }
-                    </select>
-                    <button
-                      className={styles.addVideoConfirm}
-                      onClick={() => handleAddVideo(g.id)}
-                      disabled={isPending || !selectedVideoId}
-                    >Add</button>
-                    <button
-                      className={styles.addVideoCancel}
-                      onClick={() => { setAddingToGroup(null); setSelectedVideoId(''); }}
-                    >Cancel</button>
+      {/* ── Auto Tag Groups ─────────────────────────── */}
+      <div className={styles.tagsSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>All Tags</h2>
+        </div>
+        <div className={styles.groups}>
+          {autoTagGroups.map(group => (
+            <div key={group.tag} className={styles.group}>
+              <div className={styles.groupHeader}>
+                <h3 className={styles.groupTag}>#{group.tag}</h3>
+                <span className={styles.groupCount}>{group.collections.length} videos</span>
+              </div>
+              <div className={styles.groupGrid}>
+                {group.collections.map(col => (
+                  <div key={col.id} className={styles.miniCard}>
+                    <Link href={`/dashboard?v=${col.video_id}`}>
+                      <div className={styles.miniThumb}>
+                        <img 
+                          src={`https://i.ytimg.com/vi/${col.video_id}/mqdefault.jpg`} 
+                          alt="" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <div className={styles.thumbOverlay} />
+                      </div>
+                      <p className={styles.miniTitle}>{col.video_title || 'Untitled Video'}</p>
+                    </Link>
                   </div>
-                ) : (
-                  <button className={styles.addVideoBtn} onClick={() => { setAddingToGroup(g.id); setSelectedVideoId(''); }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
-                    Add Video
-                  </button>
-                )
-              )}
+                ))}
+              </div>
             </div>
           ))}
         </div>
-      )}
-
-      {/* ── Auto Groups (from tags) ────────────────── */}
-      {autoTagGroups.length > 0 && (
-        <>
-          <hr className={styles.divider} />
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionTitle}>Auto Groups <span style={{ fontWeight: 400, textTransform: 'none', fontSize: 12 }}>— from bookmark tags</span></p>
-          </div>
-          <div className={styles.groups}>
-            {autoTagGroups.map(({ tag, collections: cols }) => (
-              <div key={tag} className={styles.group}>
-                <div className={styles.groupHeader}>
-                  <span className={styles.groupTag}>#{tag}</span>
-                  <span className={styles.groupCount}>{cols.length} video{cols.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className={styles.groupGrid}>
-                  {cols.slice(0, 4).map(c => (
-                    <a key={c.id} href={`/v/${c.id}`} className={styles.groupCard}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`https://img.youtube.com/vi/${c.video_id}/hqdefault.jpg`}
-                        alt={c.video_title ?? 'Video'}
-                        className={styles.groupCardImg}
-                      />
-                      <div className={styles.groupCardOverlay}>
-                        <p className={styles.groupCardTitle}>{c.video_title ?? 'Untitled Video'}</p>
-                        <span className={styles.groupCardClips}>{c.bookmarks?.length ?? 0} clips</span>
-                      </div>
-                    </a>
-                  ))}
-                  {cols.length > 4 && (
-                    <div className={styles.groupMore}>+{cols.length - 4} more</div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 }

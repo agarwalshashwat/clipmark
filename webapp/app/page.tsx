@@ -486,33 +486,88 @@ export default async function Home({
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: '128px 32px' }}>
+      <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, textAlign: 'center', marginBottom: 96, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', color: '#1A1C1D' }}>
-            The Curator&apos;s Journey
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 48, position: 'relative' }}>
+          <div style={{ textAlign: 'center', marginBottom: 80 }}>
+            <span className="cm-section-label">How It Works</span>
+            <h2 style={{ 
+              fontSize: 'clamp(32px, 5vw, 48px)', 
+              fontWeight: 800, 
+              marginBottom: 24, 
+              fontFamily: "'Plus Jakarta Sans', sans-serif", 
+              letterSpacing: '-0.5px', 
+              color: '#1A1C1D' 
+            }}>
+              The Curator&apos;s Journey
+            </h2>
+            <p style={{ 
+              fontSize: 18, 
+              color: '#545f6c', 
+              lineHeight: 1.6, 
+              maxWidth: 600, 
+              margin: '0 auto'
+            }}>
+              Three steps to turn passive watching into active, searchable knowledge.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32, position: 'relative' }}>
             {/* Timeline connector (decorative, desktop only) */}
-            <div style={{ position: 'absolute', top: 48, left: '16.66%', right: '16.66%', height: 1, background: '#e8e8e9', zIndex: 0, pointerEvents: 'none' }} />
+            <div className="cm-timeline-line" />
 
             {[
-              { num: '01', title: 'Bookmark Instantly', desc: 'Hit Alt+B as you watch. No distractions, no friction — just capture the moment.' },
-              { num: '02', title: 'Organize with AI',   desc: 'Clipmark adds titles, summaries, and tags to your clips automatically.' },
-              { num: '03', title: 'Revisit What Matters', desc: 'Your knowledge syncs to a beautiful dashboard for focused, distraction-free study.' },
-            ].map(({ num, title, desc }) => (
-              <div key={num} style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                <div style={{
-                  width: 96, height: 96, borderRadius: 9999, background: 'white',
-                  boxShadow: '0 8px 32px rgba(26,28,29,0.10)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 32px',
-                  border: '4px solid #f9f9fa',
-                  outline: '8px solid #f3f3f4',
-                }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: '#006B5F', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{num}</span>
+              { 
+                num: '01', 
+                title: 'Bookmark Instantly', 
+                desc: 'Hit Alt+B as you watch. No distractions, no friction — just capture the moment.',
+                icon: 'flash_on'
+              },
+              { 
+                num: '02', 
+                title: 'Organize with AI',   
+                desc: 'Clipmark adds titles, summaries, and tags to your clips automatically using Gemini Nano.',
+                icon: 'psychology'
+              },
+              { 
+                num: '03', 
+                title: 'Revisit What Matters', 
+                desc: 'Your knowledge syncs to a beautiful dashboard for focused, distraction-free study.',
+                icon: 'auto_stories'
+              },
+            ].map(({ num, title, desc, icon }) => (
+              <div key={num} className="cm-card">
+                <div className="cm-icon-badge">
+                  <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
                 </div>
-                <h4 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>{title}</h4>
-                <p style={{ color: '#545f6c', fontSize: 14, lineHeight: 1.7 }}>{desc}</p>
+                <span className="cm-step-tag">Step {num}</span>
+                <h4 style={{ 
+                  fontSize: 22, 
+                  fontWeight: 800, 
+                  marginBottom: 16, 
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", 
+                  color: '#1A1C1D' 
+                }}>
+                  {title}
+                </h4>
+                <p style={{ color: '#545f6c', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
+                
+                <a
+                  href="#faq"
+                  aria-label={`Learn more: ${title}`}
+                  style={{ 
+                  marginTop: 'auto', 
+                  paddingTop: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8, 
+                  color: '#14B8A6', 
+                  fontWeight: 700, 
+                  fontSize: 14,
+                  textDecoration: 'none'
+                }}
+                >
+                  Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                </a>
               </div>
             ))}
           </div>

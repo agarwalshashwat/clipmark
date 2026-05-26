@@ -1,85 +1,108 @@
 .wrap {
-  padding: 48px 24px;
-  max-width: 1280px;
+  padding: 32px 24px 64px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.pageHeader { margin-bottom: 40px; }
+.pageHeader { 
+  margin-bottom: 32px;
+}
 
 .pageTitle {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 40px;
+  font-size: 32px;
   font-weight: 800;
-  letter-spacing: -1px;
-  color: #1a1c1d;
+  letter-spacing: -0.03em;
+  color: #0f172a;
   margin: 0 0 8px;
 }
-@media (min-width: 768px) { .pageTitle { font-size: 48px; } }
 
-.pageSub { font-size: 15px; color: #545f6c; margin: 0; }
+.pageSub { 
+  font-size: 16px; 
+  color: #64748b; 
+  margin: 0; 
+  font-weight: 500;
+}
 
 .analyticsGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
 }
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
   .analyticsGrid { grid-template-columns: 1fr 1fr; }
 }
 
 .card {
   background: #ffffff;
   border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 2px 12px rgba(26, 28, 29, 0.07);
+  padding: 32px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.04);
 }
 
 .cardTitle {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: #1a1c1d;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0 0 24px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 /* ── Heatmap ──────────────────────────────────────────────────────────────── */
 .heatmap {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 6px;
+  margin-top: 16px;
 }
 
-.heatCell {
+.dayCell {
   aspect-ratio: 1;
-  background: #006b5f;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  cursor: default;
-  transition: opacity 0.15s;
-}
-.heatCell:hover { opacity: 1 !important; }
-
-.heatDate {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
+  background: #f1f5f9;
+  border-radius: 4px;
+  position: relative;
+  transition: transform 0.2s;
 }
 
-.heatCount {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.8);
+.dayCell:hover {
+  transform: scale(1.1);
+  z-index: 10;
 }
 
-/* ── Tag list ─────────────────────────────────────────────────────────────── */
+.dayCell[data-level="1"] { background: rgba(20, 184, 166, 0.15); }
+.dayCell[data-level="2"] { background: rgba(20, 184, 166, 0.35); }
+.dayCell[data-level="3"] { background: rgba(20, 184, 166, 0.6); }
+.dayCell[data-level="4"] { background: #14B8A6; }
+
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  margin-bottom: 6px;
+  transition: opacity 0.2s;
+}
+
+.dayCell:hover .tooltip { opacity: 1; }
+
+/* ── Tags List ────────────────────────────────────────────────────────────── */
 .tagList {
   display: flex;
   flex-direction: column;
@@ -93,56 +116,55 @@
 }
 
 .tagName {
-  font-size: 12px;
-  font-weight: 700;
-  color: #545f6c;
-  width: 96px;
-  flex-shrink: 0;
+  width: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.barTrack {
+.barWrap {
   flex: 1;
   height: 8px;
-  background: #f3f3f4;
-  border-radius: 9999px;
+  background: #f1f5f9;
+  border-radius: 4px;
   overflow: hidden;
 }
 
-.barFill {
+.bar {
   height: 100%;
-  border-radius: 9999px;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  min-width: 8px;
+  background: #14B8A6;
+  border-radius: 4px;
 }
 
 .tagCount {
-  font-family: 'JetBrains Mono', monospace;
+  width: 40px;
   font-size: 12px;
   font-weight: 700;
-  color: #6c7a77;
-  width: 24px;
+  color: #94a3b8;
   text-align: right;
-  flex-shrink: 0;
 }
 
-/* ── Empty state ──────────────────────────────────────────────────────────── */
+/* ── Generic Empty State ──────────────────────────────────────────────────── */
 .empty {
-  text-align: center;
-  padding: 80px 24px;
-  color: #9ca3af;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
 }
-.empty h3 {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1c1d;
-  margin: 0;
+
+.emptyIcon {
+  font-size: 40px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
 }
-.empty p { font-size: 14px; margin: 0; }
+
+.emptyText {
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 500;
+}

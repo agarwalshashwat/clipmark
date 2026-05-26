@@ -62,27 +62,35 @@ export default function PrivacyPage() {
       </nav>
 
       {/* ── Content ── */}
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: '64px 32px 96px' }}>
+      <main style={{ maxWidth: 840, margin: '0 auto', padding: '80px 32px 128px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <span className="cm-section-label">Trust & Safety</span>
+          <h1 style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 'clamp(32px, 6vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px',
+            color: '#1a1c1d', marginBottom: 16, marginTop: 0,
+          }}>
+            Privacy Policy
+          </h1>
+          <p style={{ fontSize: 15, color: '#545f6c', marginBottom: 0 }}>
+            Last updated: March 25, 2026 • We respect your data.
+          </p>
+        </div>
 
-        <h1 style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 40, fontWeight: 800, letterSpacing: '-1px',
-          color: '#1a1c1d', marginBottom: 12, marginTop: 0,
-        }}>
-          Privacy Policy
-        </h1>
-        <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 56 }}>
-          Last updated: March 25, 2026
-        </p>
-
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>info</span>
+          </div>
           <p style={P_STYLE}>
             Clipmark (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is a YouTube bookmark manager. This policy explains
             what data we collect, how we use it, and your rights regarding that data.
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>database</span>
+          </div>
           <h2 style={H2_STYLE}>1. Data We Collect</h2>
           <p style={P_STYLE}>When you use Clipmark, we may collect the following:</p>
           <ul style={UL_STYLE}>
@@ -97,7 +105,10 @@ export default function PrivacyPage() {
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>lock</span>
+          </div>
           <h2 style={H2_STYLE}>2. How We Store Your Data</h2>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Local storage</strong> — bookmarks are stored in Chrome&apos;s <code>chrome.storage.sync</code>, which is encrypted and managed by Google.</li>
@@ -106,7 +117,10 @@ export default function PrivacyPage() {
           </ul>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>hub</span>
+          </div>
           <h2 style={H2_STYLE}>3. Third-Party Services</h2>
           <p style={P_STYLE}>Clipmark uses the following third-party services:</p>
           <ul style={UL_STYLE}>
@@ -118,7 +132,10 @@ export default function PrivacyPage() {
           </ul>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>play_arrow</span>
+          </div>
           <h2 style={H2_STYLE}>4. How We Use Your Data</h2>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>To provide and sync your bookmarks across devices.</li>
@@ -132,7 +149,10 @@ export default function PrivacyPage() {
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>verified_user</span>
+          </div>
           <h2 style={H2_STYLE}>5. Your Rights</h2>
           <p style={P_STYLE}>You have the right to:</p>
           <ul style={UL_STYLE}>
@@ -146,7 +166,10 @@ export default function PrivacyPage() {
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>history</span>
+          </div>
           <h2 style={H2_STYLE}>6. Data Retention</h2>
           <p style={P_STYLE}>
             We retain your data for as long as your account is active. If you delete your account, we will delete your personal data within 30 days, except where retention is required by law.
@@ -154,21 +177,30 @@ export default function PrivacyPage() {
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>child_care</span>
+          </div>
           <h2 style={H2_STYLE}>7. Children&apos;s Privacy</h2>
           <p style={P_STYLE}>
             Clipmark is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such data, please contact us immediately.
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>edit_note</span>
+          </div>
           <h2 style={H2_STYLE}>8. Changes to This Policy</h2>
           <p style={P_STYLE}>
             We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the date at the top of this page. Your continued use of Clipmark after any changes constitutes acceptance of the updated policy.
           </p>
         </div>
 
-        <div style={SECTION_STYLE}>
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>mail</span>
+          </div>
           <h2 style={H2_STYLE}>9. Contact</h2>
           <p style={P_STYLE}>
             If you have questions or requests regarding your data, please contact us at:<br />

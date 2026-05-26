@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { supabase, type Profile, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
 import { APP_URL } from '@/app/lib/constants';
+import { Navigation } from '@/app/components/Navigation';
+import { Footer } from '@/app/components/Footer';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -106,30 +108,7 @@ export default async function UserProfilePage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ── Fixed glass header ── */}
-      <nav className={styles.nav}>
-        <div className={styles.navInner}>
-          <a href="/" className={styles.navLogo}>Clipmark</a>
-          <div className={styles.navLinks}>
-            <a href={`/u/${username}`} className={`${styles.navLink} ${styles.navLinkActive}`}>Profile</a>
-            <a href="/#features" className={styles.navLink}>Explore</a>
-            <a href="/upgrade" className={styles.navLink}>Collections</a>
-          </div>
-          <div className={styles.navActions}>
-            <button className={styles.navIconBtn} aria-label="Search">
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
-            </button>
-            <button className={styles.navIconBtn} aria-label="Account">
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}
-              >
-                account_circle
-              </span>
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <main className={styles.main}>
 
@@ -176,8 +155,11 @@ export default async function UserProfilePage(
           </div>
 
           {collections.length === 0 ? (
-            <div className={styles.empty}>
-              <p>No public collections yet.</p>
+            <div className={styles.empty} style={{ textAlign: 'center', padding: '80px 0' }}>
+              <div className="cm-icon-badge" style={{ margin: '0 auto 24px', width: 64, height: 64 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 32 }}>folder_off</span>
+              </div>
+              <p style={{ fontSize: 18, color: '#64748b', fontWeight: 600 }}>No public collections yet.</p>
             </div>
           ) : (
             <div className={styles.grid}>
@@ -191,6 +173,7 @@ export default async function UserProfilePage(
                       className={styles.cardThumbImg}
                     />
                     <div className={styles.cardClipCount}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>bookmark</span>
                       {c.bookmarks?.length ?? 0} clips
                     </div>
                   </div>
@@ -203,8 +186,8 @@ export default async function UserProfilePage(
                     </p>
                     {c.bookmarks?.slice(0, 1).map((b, i) => (
                       <p key={i} className={styles.cardSnippet}>
-                        <span style={{ color: b.color || '#14B8A6', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
-                          {formatTimestamp(b.timestamp)}
+                        <span style={{ color: b.color || '#14B8A6', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                          [{formatTimestamp(b.timestamp)}]
                         </span>
                         {' '}
                         {b.description || 'No description'}
@@ -212,7 +195,7 @@ export default async function UserProfilePage(
                     ))}
                     <span className={styles.cardExploreLink}>
                       Explore Collection
-                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>chevron_right</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
                     </span>
                   </div>
                 </a>
@@ -223,20 +206,7 @@ export default async function UserProfilePage(
 
       </main>
 
-      {/* ── Footer ── */}
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <span className={styles.footerCopy}>© {new Date().getFullYear()} Clipmark. The Digital Curator.</span>
-          <nav className={styles.footerLinks}>
-            {['Privacy', 'Terms', 'Support'].map(label => (
-              <a key={label} href={`/${label.toLowerCase()}`} className={styles.footerLink}>
-                {label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      </footer>
-
+      <Footer />
     </div>
   );
 }
