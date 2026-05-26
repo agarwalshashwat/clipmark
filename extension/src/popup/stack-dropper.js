@@ -58,6 +58,7 @@ export function initStackDropper(root) {
     running: true,
     lastTs: 0,
     rafId: 0,
+    wobble: null,
   };
 
   const blockHeight = 24;
@@ -67,6 +68,29 @@ export function initStackDropper(root) {
   const baseSpeed = 2.8;
   const speedStep = 0.12;
   const perfectWindow = 6;
+  const baseDropHeight = step;
+  const dropHeightPerScore = 1.35;
+  const maxDropHeight = step * 2.4;
+  const baseGravity = 0.3;
+  const gravityStep = 0.008;
+  const maxGravity = 0.6;
+  const comTolerancePx = 2;
+  const minSupportPx = 6;
+  const wobbleDurationMs = 360;
+  const wobbleAmplitudePx = 10;
+  const wobbleCycles = 5;
+
+  function hydrateBlock(block) {
+    block.left = block.x;
+    block.right = block.x + block.width;
+    block.comX = block.x + block.width / 2;
+    block.mass = Math.max(1, block.width);
+    return block;
+  }
+
+  function nextDropHeight() {
+    return Math.min(maxDropHeight, baseDropHeight + state.score * dropHeightPerScore);
+  }
 
   function updateStats() {
     scoreEl.textContent = String(state.score);
@@ -105,19 +129,21 @@ export function initStackDropper(root) {
     const baseWidth = Math.min(158, Math.max(124, Math.floor(state.width * 0.56)));
     const baseX = Math.floor((state.width - baseWidth) / 2);
     const baseY = state.height - 56;
-    state.blocks = [{
+    state.blocks = [hydrateBlock({
       x: baseX,
       width: baseWidth,
       y: baseY,
       level: 0,
       color: '#14B8A6',
-    }];
+    })];
   }
 
   function createMover() {
     const topBlock = state.blocks[state.blocks.length - 1];
     const width = Math.max(minWidth, topBlock.width);
-    const y = topBlock.y - step;
+    const targetY = topBlock.y - step;
+    const dropHeight = nextDropHeight();
+    const y = Math.max(18, targetY - dropHeight);
     const speed = baseSpeed + state.score * speedStep;
 
     state.mover = {
@@ -126,13 +152,21 @@ export function initStackDropper(root) {
       width,
       speed,
       direction: 1,
+      mode: 'aiming',
+      vy: 0,
+      gravity: Math.min(maxGravity, baseGravity + state.score * gravityStep),
+      targetY,
+      dropHeight,
     };
+
+    overlayEl.textContent = 'Tap to drop';
   }
 
   function resetGame() {
     state.score = 0;
     state.gameOver = false;
     state.running = true;
+    state.wobble = null;
     state.lastTs = 0;
     overlayEl.textContent = 'Tap to drop';
     buildBlocks();
@@ -141,31 +175,48 @@ export function initStackDropper(root) {
     draw();
   }
 
-  function endGame() {
+  function endGame(reason = 'Game over') {
     state.gameOver = true;
     state.running = false;
     overlayEl.textContent = `Game over · score ${state.score}`;
+    showMessage(reason);
     draw();
   }
 
-  function dropBlock() {
-    if (state.gameOver) {
-      resetGame();
-      return;
-    }
+  function computeSupport(previous, mover) {
+    const left = Math.max(previous.left, mover.x);
+    const right = Math.min(previous.right, mover.x + mover.width);
+    const width = right - left;
+    return { left, right, width };
+  }
+
+  function isStableByCOM(support, mover) {
+    const centerX = mover.x + mover.width / 2;
+    return centerX >= support.left - comTolerancePx && centerX <= support.right + comTolerancePx;
+  }
+
+  function settleDrop() {
+    if (!state.mover) return;
 
     const mover = state.mover;
     const previous = state.blocks[state.blocks.length - 1];
-    const overlapLeft = Math.max(previous.x, mover.x);
-    const overlapRight = Math.min(previous.x + previous.width, mover.x + mover.width);
-    const overlap = overlapRight - overlapLeft;
+    const support = computeSupport(previous, mover);
 
-    if (overlap <= 0) {
-      endGame();
+    if (support.width <= minSupportPx) {
+      endGame('Missed stack');
       return;
     }
 
-    const perfect = Math.abs(overlap - previous.width) <= perfectWindow || overlap / previous.width >= 0.92;
+    if (!isStableByCOM(support, mover)) {
+      startOffBalanceWobble(mover, support);
+      return;
+    }
+
+    const previousCenter = previous.comX;
+    const moverCenter = mover.x + mover.width / 2;
+    const centerDelta = Math.abs(previousCenter - moverCenter);
+    const perfect = centerDelta <= perfectWindow;
+
     state.score += perfect ? 2 : 1;
 
     if (state.score > state.best) {
@@ -173,13 +224,13 @@ export function initStackDropper(root) {
       writeBestScore(state.best);
     }
 
-    const block = {
-      x: overlapLeft,
-      width: Math.max(minWidth, overlap),
+    const block = hydrateBlock({
+      x: mover.x,
+      width: mover.width,
       y: previous.y - step,
       level: previous.level + 1,
       color: perfect ? '#7dd3fc' : '#2dd4bf',
-    };
+    });
 
     state.blocks.push(block);
     createMover();
@@ -188,11 +239,47 @@ export function initStackDropper(root) {
     draw();
   }
 
+  function startDrop() {
+    if (state.gameOver) {
+      resetGame();
+      return;
+    }
+
+    if (!state.mover || state.mover.mode !== 'aiming') return;
+
+    state.mover.mode = 'falling';
+    state.mover.vy = 0;
+    overlayEl.textContent = 'Hold your line';
+  }
+
+  function startOffBalanceWobble(mover, support) {
+    const centerX = mover.x + mover.width / 2;
+    const direction = centerX > support.right ? 1 : -1;
+    mover.mode = 'wobble';
+    mover.vy = 0;
+    mover.y = mover.targetY;
+    state.wobble = {
+      startTs: performance.now(),
+      direction,
+    };
+    overlayEl.textContent = 'Off-balance';
+    showMessage('Off-balance');
+  }
+
+  function wobbleOffset() {
+    if (!state.wobble) return 0;
+    const elapsed = performance.now() - state.wobble.startTs;
+    const progress = Math.min(1, elapsed / wobbleDurationMs);
+    // Damped sinusoid gives a quick readable wobble that settles into failure.
+    const wave = Math.sin(progress * Math.PI * wobbleCycles);
+    return state.wobble.direction * wave * wobbleAmplitudePx * (1 - progress);
+  }
+
   function drawBlock(block, isMover = false) {
     const radius = 8;
     const lift = Math.max(0, (state.blocks.length - 7) * step);
     const y = block.y + lift;
-    const x = block.x;
+    const x = block.x + (isMover ? wobbleOffset() : 0);
     const width = block.width;
     const height = blockHeight;
 
@@ -285,6 +372,14 @@ export function initStackDropper(root) {
     const delta = state.lastTs ? Math.min(32, ts - state.lastTs) : 16;
     state.lastTs = ts;
 
+    if (state.mover.mode === 'wobble') {
+      if (state.wobble && ts - state.wobble.startTs >= wobbleDurationMs) {
+        state.wobble = null;
+        endGame('Off-balance');
+      }
+      return;
+    }
+
     state.mover.x += state.mover.direction * state.mover.speed * delta / 16;
 
     const minX = 12;
@@ -297,6 +392,16 @@ export function initStackDropper(root) {
       state.mover.x = maxX;
       state.mover.direction = -1;
     }
+
+    if (state.mover.mode !== 'falling') return;
+
+    state.mover.vy += state.mover.gravity * delta / 16;
+    state.mover.y += state.mover.vy * delta / 16;
+
+    if (state.mover.y >= state.mover.targetY) {
+      state.mover.y = state.mover.targetY;
+      settleDrop();
+    }
   }
 
   function loop(ts) {
@@ -308,7 +413,7 @@ export function initStackDropper(root) {
   function onPrimaryAction(event) {
     if (event && typeof event.button === 'number' && event.button !== 0) return;
     if (event) event.preventDefault();
-    dropBlock();
+    startDrop();
   }
 
   function onKeyDown(event) {
@@ -317,7 +422,7 @@ export function initStackDropper(root) {
     const tag = event.target?.tagName?.toLowerCase();
     if (tag === 'input' || tag === 'textarea' || event.target?.isContentEditable) return;
     event.preventDefault();
-    dropBlock();
+    startDrop();
   }
 
   function restart() {
@@ -352,6 +457,7 @@ export function initStackDropper(root) {
       window.removeEventListener('resize', resizeCanvas);
       resizeObserver?.disconnect();
       if (state.messageTimer) clearTimeout(state.messageTimer);
+      state.wobble = null;
       delete root.__stackDropperInstance;
     },
   };
