@@ -1,0 +1,204 @@
+.stack-dropper-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  min-height: 100%;
+  background: radial-gradient(circle at top, rgba(20, 184, 166, 0.18), transparent 30%),
+    linear-gradient(180deg, #0f172a 0%, #111827 60%, #0b1220 100%);
+  color: #f8fafc;
+}
+
+.stack-dropper-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+}
+
+.stack-dropper-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stack-dropper-kicker {
+  margin: 0;
+  color: rgba(125, 211, 252, 0.88);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.stack-dropper-title {
+  margin: 0;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.6px;
+  color: #f8fafc;
+}
+
+.stack-dropper-copy {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.stack-dropper-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stack-dropper-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.56);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.stack-dropper-stat span {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.stack-dropper-stat strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.stack-dropper-stage {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.36);
+  cursor: pointer;
+}
+
+.stack-dropper-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: manipulation;
+}
+
+.stack-dropper-overlay {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.56);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.stack-dropper-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.52);
+  color: rgba(248, 250, 252, 0.8);
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stack-dropper-status {
+  min-height: 18px;
+  color: rgba(125, 211, 252, 0.96);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.stack-dropper-status.is-visible {
+  opacity: 1;
+}
+
+.stack-dropper-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stack-dropper-restart,
+.stack-dropper-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.stack-dropper-restart:hover,
+.stack-dropper-secondary:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stack-dropper-secondary {
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.stack-dropper-note {
+  margin-top: auto;
+  color: rgba(226, 232, 240, 0.56);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.sp-unsupported-body .stack-dropper-stage {
+  min-height: 340px;
+}
+
+.sp-unsupported-body .sp-unsupported-info {
+  margin-top: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-dropper-status,
+  .stack-dropper-restart,
+  .stack-dropper-secondary {
+    transition: none;
+  }
+}

@@ -1,6 +1,9 @@
 import { API_BASE } from '../config.js';
 import { TAG_COLORS, parseTags, stringToColor, getTagColor, ytWatchUrl, ytThumbnailUrl, APP_EXPORT_PREFIX } from '../constants.js';
 import { localAiAvailability, localSuggestTags, localSummarizeBookmarks } from '../ai/local-ai.js';
+import { initStackDropper } from './stack-dropper.js';
+
+let stackDropper = null;
 
 async function checkPro() {
   const { bmUser } = await syncGet({ bmUser: null });
@@ -909,13 +912,13 @@ function sanitizeCommentHtml(html) {
 }
 
 // ─── Module-level state ───────────────────────────────────────────────────────
-let hasLoadedVideo = false;
 let lastCommentVideoId = null;
 
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
 function showUnsupportedScreen() {
   const screen = document.getElementById('sp-unsupported-screen');
   if (screen) screen.style.display = 'flex';
+  stackDropper?.restart();
 }
 
 function hideUnsupportedScreen() {
@@ -927,13 +930,11 @@ async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
-      if (hasLoadedVideo) return;
       debugLog('Init', 'Showing unsupported screen (not on YouTube watch page)');
       showUnsupportedScreen();
       return;
     }
     hideUnsupportedScreen();
-    hasLoadedVideo = true;
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -1109,6 +1110,8 @@ async function loadAuthState() {
 // ─── Initialize ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   debugLog('Init', 'Side panel opened');
+
+  stackDropper = initStackDropper(document.getElementById('sp-unsupported-screen'));
 
   loadBookmarks();
   loadAuthState();

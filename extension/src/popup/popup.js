@@ -13,6 +13,9 @@ import {
   localSuggestTags, 
   localSummarizeBookmarks 
 } from '../ai/local-ai.js';
+import { initStackDropper } from './stack-dropper.js';
+
+let stackDropper = null;
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
 async function getValidToken() {
@@ -850,7 +853,16 @@ function showStatus(message, duration = 1500) {
 async function loadBookmarks() {
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) return;
+    if (!tab?.url?.includes('youtube.com/watch')) {
+      document.getElementById('stack-dropper-screen').style.display = 'flex';
+      document.querySelector('.popup-main')?.style.setProperty('display', 'none');
+      document.querySelector('.popup-footer-upgrade')?.style.setProperty('display', 'none');
+      stackDropper?.restart();
+      return;
+    }
+    document.getElementById('stack-dropper-screen').style.display = 'none';
+    document.querySelector('.popup-main')?.style.removeProperty('display');
+    document.querySelector('.popup-footer-upgrade')?.style.removeProperty('display');
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -1065,6 +1077,12 @@ async function initOnboardingTour() {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   debugLog('Init', 'Popup opened');
+
+  stackDropper = initStackDropper(document.getElementById('stack-dropper-screen'));
+
+  document.getElementById('stack-dropper-open-youtube')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://www.youtube.com' });
+  });
 
   const tab = await getCurrentTab().catch(() => null);
   if (tab) await migrateToSync(tab.id).catch(() => {});

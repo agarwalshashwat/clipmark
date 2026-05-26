@@ -158,25 +158,46 @@
 
   <div id="error-message" class="error-message"></div>
 
-  <!-- Unsupported Website Screen -->
+  <!-- Stack Dropper game (shown when not on a YouTube watch page) -->
   <div id="sp-unsupported-screen" style="display:none;">
-    <div class="sp-unsupported-hero">
-      <span class="sp-unsupported-badge">OFFLINE MODE</span>
-    </div>
-    <div class="sp-unsupported-body">
-      <p class="sp-unsupported-eyebrow">THE DIGITAL CURATOR</p>
-      <h1 class="sp-unsupported-heading">Unsupported Website</h1>
-      <p class="sp-unsupported-copy">
-        <em>Clipmark currently works best on <strong class="sp-unsupported-yt">YouTube.</strong><br>
-        We're working on expanding to more knowledge-rich sites soon.</em>
-      </p>
-      <div class="sp-unsupported-actions">
-        <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
+    <div class="stack-dropper-shell sp-unsupported-body">
+      <div class="stack-dropper-hero">
+        <span class="sp-unsupported-badge">OFFLINE MODE</span>
+        <p class="stack-dropper-kicker">THE DIGITAL CURATOR</p>
+        <h1 class="stack-dropper-title">Stack Dropper</h1>
+        <p class="stack-dropper-copy">
+          <em>Clipmark works best on <strong class="sp-unsupported-yt">YouTube.</strong><br>
+          Stack the blocks while you're away.</em>
+        </p>
+      </div>
+
+      <div class="stack-dropper-stats">
+        <div class="stack-dropper-stat">
+          <span>Score</span>
+          <strong data-stack-dropper-score>0</strong>
+        </div>
+        <div class="stack-dropper-stat">
+          <span>Best</span>
+          <strong data-stack-dropper-best>0</strong>
+        </div>
+      </div>
+
+      <div class="stack-dropper-status" data-stack-dropper-status></div>
+
+      <div class="stack-dropper-stage" data-stack-dropper-stage>
+        <canvas data-stack-dropper-canvas aria-label="Stack Dropper game"></canvas>
+        <div class="stack-dropper-overlay" data-stack-dropper-overlay>Tap to drop</div>
+        <div class="stack-dropper-hint">Space, click, or tap to stack</div>
+      </div>
+
+      <div class="stack-dropper-actions">
+        <button id="sp-go-youtube-btn" class="stack-dropper-restart" data-stack-dropper-restart>
           <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
           Go to YouTube
         </button>
-        <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
+        <button id="sp-open-dashboard-btn" class="stack-dropper-secondary">Open Dashboard</button>
       </div>
+
       <div class="sp-unsupported-info">
         <p class="sp-unsupported-info-title">
           <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">auto_awesome</span>
