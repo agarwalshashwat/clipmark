@@ -104,7 +104,7 @@ cd webapp && npm install && npm run dev
 
 Copy `.env.example` to `.env.local` and fill in your Supabase, Anthropic, and Dodo Payments keys.
 
-Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost:3000` for local dev.
+Set `API_BASE` at the top of `extension/src/popup/side-panel.js` to `http://localhost:3000` for local dev.
 
 ---
 
@@ -113,8 +113,9 @@ Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost
 | Shortcut                       | Action                                                                |
 | ------------------------------ | --------------------------------------------------------------------- |
 | `Alt+S`                        | Silent-save bookmark at current timestamp (with transcript auto-fill) |
-| `Alt+B`                        | Open the extension popup                                              |
+| `Alt+B`                        | Silent save bookmark                                                  |
 | `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick save bookmark                                                   |
+| Clicking the extension icon    | Open the side panel                                                    |
 | `[` / `]`                      | Skip to prev / next clip during Revisit Mode                          |
 
 ---
@@ -141,7 +142,7 @@ extension/          Chrome extension source (Manifest V3, no build step)
   src/
     constants.js    Shared constants, tag colors, URL helpers
     content/        Content script — injected into YouTube
-    popup/          Extension popup UI + dashboard + side panel
+    popup/          Side panel + dashboard logic (legacy name)
     background/     Service worker (keep-alive, context menus, commands, OAuth)
     ai/             On-device Gemini Nano helpers
 packages/

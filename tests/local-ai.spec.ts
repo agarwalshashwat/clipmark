@@ -27,7 +27,7 @@ test('Extension identifies local AI availability correctly', async ({ page, cont
         };
     });
 
-    await page.goto(`chrome-extension://${extensionId}/src/pages/popup.html`);
+    await page.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
     
     // Wait for scripts to load and assign functions to globalThis
     await page.waitForFunction(() => typeof (window as any).localAiAvailability === 'function');
@@ -63,7 +63,7 @@ test('localSuggestTags correctly parses tags from AI response', async ({ page, c
         };
     });
 
-    await page.goto(`chrome-extension://${extensionId}/src/pages/popup.html`);
+    await page.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
     await page.waitForFunction(() => typeof (window as any).localSuggestTags === 'function');
     
     const tags = await page.evaluate(async () => {

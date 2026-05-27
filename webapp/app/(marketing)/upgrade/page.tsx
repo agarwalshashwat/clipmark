@@ -106,7 +106,7 @@ export default async function UpgradePage({
     : null;
 
   return (
-    <>
+    <div className={styles.pageWrap}>
       <main className={styles.main}>
         {success && (
           <div className={styles.bannerSuccess}>
@@ -125,8 +125,8 @@ export default async function UpgradePage({
         )}
 
         <div className={styles.header}>
-          <h1 className={styles.title}>Power up your Second Brain</h1>
-          <p className={styles.sub}>Turn YouTube from a distraction into a high-performance research library. Sync to your favorite tools and never forget a key insight again.</p>
+          <h1 className={styles.title}>Simple, transparent pricing</h1>
+          <p className={styles.sub}>Choose the plan that fits your learning pace. From casual bookmarking to a full-scale research engine.</p>
         </div>
 
         {isPro && !success && (
@@ -190,10 +190,11 @@ export default async function UpgradePage({
             </div>
 
             <div className={styles.pricingCard}>
+              <div className={styles.badge} style={{ background: '#732EE4' }}>Launch Special</div>
               <div className={styles.planName}>Lifetime</div>
               <div className={styles.price}>
                 <span className={styles.amount}>${prices.lifetime}</span>
-                <span className={styles.period}>/once</span>
+                <span className={styles.period} style={{ textDecoration: 'line-through', marginLeft: 8 }}>$79.99</span>
               </div>
               <div className={styles.featureList}>
                 <div className={styles.featureItem}><Check /> Everything in Pro</div>
@@ -231,6 +232,6 @@ export default async function UpgradePage({
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }

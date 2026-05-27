@@ -130,7 +130,7 @@ export default async function Home({
       )}
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section style={{ paddingTop: 72, position: 'relative', overflow: 'hidden' }}>
+      <section style={{ paddingTop: 120, position: 'relative', overflow: 'hidden' }}>
         {/* Subtle grid background */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
@@ -149,11 +149,10 @@ export default async function Home({
             The Digital Curator for YouTube Professionals
           </div>
 
-          {/* H1 */}
           <h1 style={{
             fontSize: 'clamp(40px, 7vw, 72px)', fontWeight: 800,
             lineHeight: 1.1, letterSpacing: '-2px', maxWidth: 900, margin: '0 auto 32px',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D',
+            color: '#1A1C1D',
           }}>
             Stop Forgetting What You Watch —<br />
             <em style={{ color: '#006B5F', fontStyle: 'italic' }}>Your YouTube Second Brain.</em>
@@ -193,11 +192,12 @@ export default async function Home({
             Privacy First: AI processing (Gemini Nano) happens 100% on your device.
           </p>
 
-          {/* Cinematic UI Mockup (Items 16, 45, 42) */}
+          {/* UI Mockup */}
           <div style={{ marginTop: 96, position: 'relative', maxWidth: 1000, margin: '96px auto 0' }}>
             
-            {/* Logic-driven callouts (Item 18, 42) */}
-            <div style={{
+            <div 
+              data-testid="ai-summary-label"
+              style={{
               position: 'absolute', top: -30, right: -40, zIndex: 10,
               background: '#ffffff', padding: '12px 20px', borderRadius: 16,
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
@@ -215,7 +215,7 @@ export default async function Home({
               display: 'flex', alignItems: 'center', gap: 10,
               animation: 'float 5s ease-in-out infinite reverse'
             }}>
-              <span className="material-symbols-outlined" style={{ color: '#732EE4', fontSize: 18 }}>history</span>
+              <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontSize: 18 }}>history</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1C1D' }}>Skip the fluff, play only the gems</span>
             </div>
 
@@ -227,47 +227,64 @@ export default async function Home({
             `}} />
 
             <div style={{
-              position: 'absolute', inset: -16,
-              background: 'linear-gradient(to top right, rgba(20,184,166,0.20), rgba(115,46,228,0.20))',
-              borderRadius: 32, filter: 'blur(60px)', zIndex: 0,
+              position: 'absolute', inset: -30,
+              background: 'radial-gradient(circle at center, rgba(20,184,166,0.15) 0%, transparent 70%)',
+              filter: 'blur(40px)', zIndex: 0,
             }} />
-            <div style={{ position: 'relative', zIndex: 1, background: '#1A1C1D', borderRadius: 32, padding: 16, boxShadow: '0 24px 80px rgba(0,0,0,0.40)' }}>
-              <div style={{ aspectRatio: '16/9', background: '#0f172a', borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
-                {/* Ambient gradient instead of external image */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', opacity: 0.9 }} />
-                {/* Progress bar */}
-                <div style={{ position: 'absolute', bottom: 48, left: 32, right: 32, height: 6, background: 'rgba(255,255,255,0.15)', borderRadius: 9999 }}>
-                  <div style={{ position: 'absolute', left: '15%', height: '100%', width: '24%', background: '#14B8A6', borderRadius: 9999, boxShadow: '0 0 0 4px rgba(20,184,166,0.20)' }} />
-                  <div style={{ position: 'absolute', left: '45%', height: '100%', width: '12%', background: '#732EE4', borderRadius: 9999, boxShadow: '0 0 0 4px rgba(115,46,228,0.20)' }} />
-                  <div style={{ position: 'absolute', left: '70%', height: '100%', width: '20%', background: '#14B8A6', borderRadius: 9999, boxShadow: '0 0 0 4px rgba(20,184,166,0.20)' }} />
+
+            <div style={{ 
+              position: 'relative', zIndex: 1, 
+              background: '#ffffff', 
+              borderRadius: 24, 
+              padding: 12, 
+              boxShadow: '0 40px 100px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05)',
+            }}>
+              <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
+                {/* Simulated YouTube Video */}
+                <div style={{ 
+                  position: 'absolute', inset: 0, 
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                }}>
+                   <span className="material-symbols-outlined" style={{ fontSize: 80, color: 'white', opacity: 0.4 }}>play_circle</span>
                 </div>
+                
+                {/* Progress bar */}
+                <div style={{ position: 'absolute', bottom: 48, left: 32, right: 280, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 9999 }}>
+                  <div style={{ position: 'absolute', left: '15%', height: '100%', width: '24%', background: '#14B8A6', boxShadow: '0 0 12px rgba(20,184,166,0.6)' }} />
+                  <div style={{ position: 'absolute', left: '40%', height: '100%', width: '15%', background: '#14B8A6', boxShadow: '0 0 12px rgba(20,184,166,0.6)' }} />
+                </div>
+
                 {/* Glass side panel */}
                 <div style={{
-                  position: 'absolute', top: 16, right: 16, bottom: 16, width: 248,
-                  background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(20px)',
+                  position: 'absolute', top: 12, right: 12, bottom: 12, width: 240,
+                  background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
+                  borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
+                  boxShadow: '-4px 0 24px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(255,255,255,0.4)',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1A1C1D', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Your Library</span>
-                    <span className="material-symbols-outlined" style={{ color: '#9ca3af', fontSize: 16 }}>close</span>
+                    <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>YOUR CLIPS</span>
+                    <span className="material-symbols-outlined" style={{ color: '#94a3b8', fontSize: 18 }}>settings</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ padding: 12, background: 'white', borderRadius: 8, borderLeft: '3px solid #14B8A6' }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', marginBottom: 4, fontFamily: "'JetBrains Mono', monospace" }}>04:12 — Scalability</p>
-                      <p style={{ fontSize: 10, color: '#545f6c', lineHeight: 1.5 }}>Use server components for zero-bundle hydrations...</p>
+                    <div style={{ padding: 12, background: 'white', borderRadius: 8, borderLeft: '3px solid #14B8A6', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <p style={{ fontSize: 10, fontWeight: 800, color: '#14B8A6', marginBottom: 4 }}>04:12 — Performance</p>
+                      <p style={{ fontSize: 10, color: '#475569', lineHeight: 1.4 }}>Optimization tips for large datasets...</p>
                     </div>
-                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.50)', borderRadius: 8 }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', fontFamily: "'JetBrains Mono', monospace" }}>12:45 — Microservices</p>
+                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.5)', borderRadius: 8 }}>
+                      <p style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8' }}>12:45 — Summary</p>
                     </div>
                   </div>
                   <button style={{
-                    marginTop: 'auto', width: '100%', padding: '8px 0',
-                    background: '#006B5F', color: 'white', borderRadius: 8, border: 'none',
-                    fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    marginTop: 'auto', width: '100%', padding: '10px 0',
+                    background: '#14B8A6', color: 'white', borderRadius: 8, border: 'none',
+                    fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    cursor: 'default'
                   }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add_circle</span>
-                    New Bookmark (Alt+B)
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add_circle</span>
+                    New Bookmark
                   </button>
                 </div>
               </div>

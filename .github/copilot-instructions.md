@@ -19,14 +19,13 @@ extension/                   Chrome Extension (Manifest V3, vanilla JS)
   src/
     background/background.js Service worker — auth, alarms, context menus, cloud sync
     content/content.js       YouTube page injection — markers, revisit mode, shortcuts
-    popup/popup.js           Extension popup UI — bookmark CRUD, AI, auth, reminders
     popup/dashboard.js       Full-page dashboard (card/timeline/groups/export/import)
     popup/side-panel.js      Persistent side panel alongside YouTube
     popup/theme-loader.js    Theme (light/dark) bootstrapper
-    ai/local-ai.js           On-device Gemini Nano helpers (localAiAvailability, localSuggestTags, localSummarizeBookmarks)
-    pages/                   popup.html, dashboard.html, side-panel.html
+    ai/local-ai.js           On-device Gemini Nano helpers (localAiAvailability, localSummarizeBookmarks)
+    pages/                   dashboard.html, side-panel.html
     config.example.js        Copy to config.js (gitignored); sets API_BASE
-  styles/                    popup.css, dashboard.css, side-panel.css, design-tokens.css
+  styles/                    dashboard.css, side-panel.css, design-tokens.css
 
 packages/design-system/      Single source of truth for CSS design tokens
   tokens.css                 Edit ONLY this file; never edit tokens in extension or webapp directly
@@ -117,7 +116,7 @@ Tests are non-headless (`headless: false`) because Chrome extensions cannot run 
 
 1. Go to `chrome://extensions/` → enable **Developer mode**
 2. Click **Load unpacked** → select the `extension/` folder
-3. Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost:3000`
+3. Set `API_BASE` at the top of `extension/src/popup/side-panel.js` to `http://localhost:3000`
 
 ### Webapp
 
@@ -219,10 +218,10 @@ Unknown tags get a deterministic hash-based HSL color.
 
 - **No build step** in the extension — all JS is plain ES2020, loaded directly by Chrome
 - **No module imports** in extension JS files — all helpers must be globals or inline
-- `local-ai.js` is loaded before `popup.js` / `side-panel.js` via `<script>` tags; its functions are globals
+- `local-ai.js` is loaded before `side-panel.js` via `<script>` tags; its functions are globals
 - The service worker (`background.js`) uses a `keepalive` alarm (every 0.4 min) to prevent MV3 service worker shutdown
 - The extension communicates with the webapp via `chrome.runtime.onMessageExternal` (for auth token handoff after OAuth) and `fetch` calls to `API_BASE`
-- `API_BASE` is set in `extension/src/popup/popup.js` (top of file). In production it points to `https://clipmark.mithahara.com`; change to `http://localhost:3000` for local dev. The file `extension/src/config.example.js` documents this
+- `API_BASE` is set in `extension/src/popup/side-panel.js` (top of file). In production it points to `https://clipmark.mithahara.com`; change to `http://localhost:3000` for local dev. The file `extension/src/config.example.js` documents this
 
 ---
 

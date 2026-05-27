@@ -7,9 +7,6 @@ export default async function MarketingLayout({ children }: { children: React.Re
       minHeight: '100vh', 
       display: 'flex', 
       flexDirection: 'column',
-      background: '#f9f9fa',
-      color: '#1A1C1D',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
     }}>
       <Navigation />
       <div style={{ flex: 1, paddingTop: 80 }}>
