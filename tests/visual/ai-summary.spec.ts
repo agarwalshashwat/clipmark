@@ -18,7 +18,7 @@ test.describe('AI Summary Visual Test', () => {
 
     test('should display the local AI availability benefits in the FAQ', async ({ page }) => {
         await page.goto('/');
-        
+
         // Scroll to FAQ
         const faqSection = page.locator('#faq');
         await faqSection.scrollIntoViewIfNeeded();
@@ -26,7 +26,7 @@ test.describe('AI Summary Visual Test', () => {
         // Check for Local AI FAQ item (using data-testid for robustness)
         const localAiFaq = page.locator('div:has-text("Gemini Nano")');
         await expect(localAiFaq.first()).toBeVisible();
-        
+
         await expect(page).toHaveScreenshot('faq-ai-section.png', {
             maxDiffPixelRatio: 0.2,
         });
