@@ -91,7 +91,7 @@
 
 .price {
   display: flex;
-  align-baseline: baseline;
+  align-items: baseline;
   gap: 6px;
   margin-bottom: 32px;
 }
