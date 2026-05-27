@@ -8,6 +8,7 @@ import {
 import {
   localAiAvailability,
   localSummarizeBookmarks,
+  localGeneratePost,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import './zen-garden.js';
@@ -546,14 +547,9 @@ async function summarizeBookmarks() {
 
 // ─── Social Post Generation ───────────────────────────────────────────────────
 async function generateSocialPost(platform, shareUrl, autoOpen = false) {
-  const showErrorNotice = () => {
-    const outputEl = document.getElementById('social-output');
-    const textareaEl = document.getElementById('social-post-text');
-    textareaEl.value = "Social post generation now requires Local AI (Gemini Nano) which doesn't support long-form content generation yet. This feature is being rebuilt for privacy.";
-    outputEl.style.display = 'block';
-  };
-  showErrorNotice();
-}
+  const outputEl = document.getElementById('social-output');
+  const textareaEl = document.getElementById('social-post-text');
+  const openLink = document.getElementById('social-open-link');
   const platformBtns = document.querySelectorAll('.social-platform-btn');
 
   platformBtns.forEach(b => {
@@ -564,6 +560,13 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
   outputEl.style.display = 'none';
 
   try {
+    const availability = await localAiAvailability();
+    if (availability !== 'available') {
+      textareaEl.value = "Local AI (Gemini Nano) is required for social post generation.";
+      outputEl.style.display = 'block';
+      return;
+    }
+
     const tab = await getCurrentTab();
     if (!tab.url.includes('youtube.com/watch')) throw new Error('Open a YouTube video first');
 
@@ -572,24 +575,11 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
     if (bookmarks.length === 0) throw new Error('No bookmarks to share');
 
     const videoTitles = await getVideoTitles();
+    const videoTitle = videoTitles[videoId] || '';
 
-    const response = await fetch(`${API_BASE}/api/generate-post`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bookmarks,
-        videoTitle: videoTitles[videoId] || '',
-        shareUrl: shareUrl || '',
-        platform,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || 'Server error');
-    }
-
-    const { post } = await response.json();
+    showStatus('Generating post...');
+    const post = await localGeneratePost(bookmarks, videoTitle, shareUrl || '', platform);
+    
     textareaEl.value = post;
 
     const encoded = encodeURIComponent(post);

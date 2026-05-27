@@ -103,7 +103,7 @@ export default async function Home({
   };
 
   return (
-    <>
+    <main style={{ color: 'var(--text)', fontFamily: "var(--font)", overflowX: 'hidden' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }}
@@ -121,7 +121,7 @@ export default async function Home({
           padding: '10px 24px',
           textAlign: 'center',
           fontSize: 14,
-          color: '#006B5F',
+          color: 'var(--primary-deep)',
           fontWeight: 500,
         }}>
           <span style={{ marginRight: 6 }}>👋</span>
@@ -130,162 +130,153 @@ export default async function Home({
       )}
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section style={{ paddingTop: 120, position: 'relative', overflow: 'hidden' }}>
+      <section style={{ position: 'relative', overflow: 'hidden' }}>
         {/* Subtle grid background */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(26%2C28%2C29%2C0.04)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E\")",
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(0%2C0%2C0%2C0.03)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E\")",
         }} />
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 32px 0', position: 'relative', zIndex: 1, textAlign: 'center' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '100px 32px 0', position: 'relative', zIndex: 1, textAlign: 'center' }}>
 
           {/* Badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '5px 14px', borderRadius: 9999,
-            background: 'rgba(20,184,166,0.10)', color: '#006B5F',
+            padding: '6px 14px', borderRadius: 9999,
+            background: 'rgba(20,184,166,0.10)', color: '#0D9488',
             fontWeight: 600, fontSize: 13, marginBottom: 32,
+            border: '1px solid rgba(20,184,166,0.15)'
           }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>verified</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>verified</span>
             The Digital Curator for YouTube Professionals
           </div>
 
+          {/* H1 */}
           <h1 style={{
-            fontSize: 'clamp(40px, 7vw, 72px)', fontWeight: 800,
-            lineHeight: 1.1, letterSpacing: '-2px', maxWidth: 900, margin: '0 auto 32px',
-            color: '#111827',
+            fontSize: 'clamp(44px, 7.5vw, 88px)', fontWeight: 800,
+            lineHeight: 0.95, letterSpacing: '-0.05em', maxWidth: 1000, margin: '0 auto 32px',
+            fontFamily: "var(--font-display)", color: '#0F172A',
           }}>
             Stop Forgetting What You Watch —<br />
-            <em style={{ color: '#006B5F', fontStyle: 'italic' }}>Your YouTube Second Brain.</em>
+            <em style={{ 
+              color: '#0D9488', 
+              fontStyle: 'italic', 
+              fontWeight: 800,
+              textDecoration: 'none',
+              background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              display: 'inline-block'
+            }}>Your YouTube Second Brain.</em>
           </h1>
 
           {/* Subtitle */}
-          <p style={{ fontSize: 20, color: '#374151', maxWidth: 640, margin: '0 auto 48px', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 21, color: '#475569', maxWidth: 720, margin: '0 auto 56px', lineHeight: 1.6, fontWeight: 450 }}>
             Quit wasting time rewatching tutorials or losing gems in your watch history. Build a personal knowledge system that remembers exactly where the value is.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 40 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
             <a href="https://chrome.google.com/webstore" 
-               aria-label="Install Clipmark Chrome Extension"
                style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '20px 48px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '20px 44px',
+              background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
               color: 'white', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
-              boxShadow: '0 16px 48px rgba(20,184,166,0.28)',
+              boxShadow: '0 20px 50px rgba(13, 148, 136, 0.25)',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}>
               Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
             <button 
-              aria-label="Watch product demo video"
               style={{
               display: 'inline-flex', alignItems: 'center', gap: 12,
-              padding: '20px 48px', background: 'white', border: '1px solid #e8e8e9',
-              color: '#1A1C1D', borderRadius: 16, fontSize: 18, fontWeight: 700,
+              padding: '20px 44px', background: 'white', border: '1px solid #E2E8F0',
+              color: '#0F172A', borderRadius: 16, fontSize: 18, fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             }}>
               <span className="material-symbols-outlined" style={{ fontSize: 24 }}>play_circle</span>
               Watch Demo
             </button>
           </div>
 
-          <p style={{ marginTop: 20, fontSize: 13, color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>shield_with_heart</span>
+          <p style={{ marginTop: 24, fontSize: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16, opacity: 0.7 }}>shield_with_heart</span>
             Privacy First: AI processing (Gemini Nano) happens 100% on your device.
           </p>
 
-          {/* UI Mockup */}
-          <div style={{ marginTop: 96, position: 'relative', maxWidth: 1000, margin: '96px auto 0' }}>
+          {/* Cinematic UI Mockup */}
+          <div style={{ marginTop: 120, position: 'relative', maxWidth: 1080, margin: '120px auto 0' }}>
             
             <div 
               data-testid="ai-summary-label"
               style={{
-              position: 'absolute', top: -30, right: -40, zIndex: 10,
-              background: '#ffffff', padding: '12px 20px', borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
-              display: 'flex', alignItems: 'center', gap: 10,
-              animation: 'float 4s ease-in-out infinite'
-            }}>
-              <div style={{ width: 8, height: 8, background: '#14B8A6', borderRadius: 9999 }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1C1D' }}>AI auto-magically summarizes architecture</span>
+                position: 'absolute', top: -30, right: -20, zIndex: 10,
+                background: 'var(--bg-sub)', padding: '14px 24px', borderRadius: 20,
+                boxShadow: '0 12px 40px rgba(0,0,0,0.12)', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', gap: 12,
+                animation: 'float 4.5s ease-in-out infinite'
+              }}>
+              <div style={{ width: 10, height: 10, background: 'var(--accent)', borderRadius: 9999 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Gemini Nano Insight: Key Architectural Patterns</span>
             </div>
 
             <div style={{
-              position: 'absolute', bottom: 100, left: -60, zIndex: 10,
-              background: '#ffffff', padding: '12px 20px', borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)', border: '1px solid #e8e8e9',
-              display: 'flex', alignItems: 'center', gap: 10,
-              animation: 'float 5s ease-in-out infinite reverse'
+              position: 'absolute', bottom: 180, left: -40, zIndex: 10,
+              background: 'var(--bg-sub)', padding: '14px 24px', borderRadius: 20,
+              boxShadow: '0 12px 40px rgba(0,0,0,0.12)', border: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', gap: 12,
+              animation: 'float 5.5s ease-in-out infinite reverse'
             }}>
-              <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontSize: 18 }}>history</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1C1D' }}>Skip the fluff, play only the gems</span>
+              <span className="material-symbols-outlined" style={{ color: 'var(--secondary)', fontSize: 20 }}>history</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Skip the fluff, play only the gems</span>
             </div>
 
             <style dangerouslySetInnerHTML={{ __html: `
               @keyframes float {
                 0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
+                50% { transform: translateY(-12px); }
               }
             `}} />
 
             <div style={{
-              position: 'absolute', inset: -30,
-              background: 'radial-gradient(circle at center, rgba(20,184,166,0.15) 0%, transparent 70%)',
-              filter: 'blur(40px)', zIndex: 0,
+              position: 'absolute', inset: -20,
+              background: 'linear-gradient(to top right, rgba(20,184,166,0.15), rgba(139,92,246,0.15))',
+              borderRadius: 40, filter: 'blur(80px)', zIndex: 0,
             }} />
-
-            <div style={{ 
-              position: 'relative', zIndex: 1, 
-              background: '#ffffff', 
-              borderRadius: 24, 
-              padding: 12, 
-              boxShadow: '0 40px 100px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05)',
-            }}>
-              <div style={{ aspectRatio: '16/9', background: '#000', borderRadius: 16, position: 'relative', overflow: 'hidden' }}>
-                {/* Simulated YouTube Video */}
-                <div style={{ 
-                  position: 'absolute', inset: 0, 
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                }}>
-                   <span className="material-symbols-outlined" style={{ fontSize: 80, color: 'white', opacity: 0.4 }}>play_circle</span>
-                </div>
-                
+            <div style={{ position: 'relative', zIndex: 1, background: '#111111', borderRadius: 36, padding: 16, boxShadow: '0 32px 100px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ aspectRatio: '16/9', background: '#050505', borderRadius: 24, position: 'relative', overflow: 'hidden' }}>
+                {/* Ambient gradient instead of external image */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a, #050505, #1e1b4b)', opacity: 0.95 }} />
                 {/* Progress bar */}
-                <div style={{ position: 'absolute', bottom: 48, left: 32, right: 280, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 9999 }}>
-                  <div style={{ position: 'absolute', left: '15%', height: '100%', width: '24%', background: '#14B8A6', boxShadow: '0 0 12px rgba(20,184,166,0.6)' }} />
-                  <div style={{ position: 'absolute', left: '40%', height: '100%', width: '15%', background: '#14B8A6', boxShadow: '0 0 12px rgba(20,184,166,0.6)' }} />
+                <div style={{ position: 'absolute', bottom: 48, left: 32, right: 32, height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 9999 }}>
+                  <div style={{ position: 'absolute', left: '15%', height: '100%', width: '24%', background: 'var(--accent)', borderRadius: 9999, boxShadow: '0 0 12px rgba(20,184,166,0.3)' }} />
+                  <div style={{ position: 'absolute', left: '45%', height: '100%', width: '12%', background: 'var(--secondary)', borderRadius: 9999, boxShadow: '0 0 12px rgba(139,92,246,0.3)' }} />
+                  <div style={{ position: 'absolute', left: '70%', height: '100%', width: '20%', background: 'var(--accent)', borderRadius: 9999, boxShadow: '0 0 12px rgba(20,184,166,0.3)' }} />
                 </div>
-
                 {/* Glass side panel */}
                 <div style={{
-                  position: 'absolute', top: 12, right: 12, bottom: 12, width: 240,
-                  background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
-                  boxShadow: '-4px 0 24px rgba(0,0,0,0.1)',
-                  border: '1px solid rgba(255,255,255,0.4)',
+                  position: 'absolute', top: 20, right: 20, bottom: 20, width: 260,
+                  background: 'rgba(20, 20, 25, 0.7)', backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20,
+                  padding: 24, display: 'flex', flexDirection: 'column', gap: 20
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>YOUR CLIPS</span>
-                    <span className="material-symbols-outlined" style={{ color: '#94a3b8', fontSize: 18 }}>settings</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 9999, background: '#ef4444' }} />
+                    <div style={{ height: 10, width: 80, background: 'rgba(255,255,255,0.2)', borderRadius: 5 }} />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ padding: 12, background: 'white', borderRadius: 8, borderLeft: '3px solid #14B8A6', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                      <p style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', marginBottom: 4 }}>04:12 — Performance</p>
-                      <p style={{ fontSize: 11, color: '#1e293b', lineHeight: 1.4 }}>Optimization tips for large datasets...</p>
-                    </div>
-                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.5)', borderRadius: 8 }}>
-                      <p style={{ fontSize: 11, fontWeight: 800, color: '#64748b' }}>12:45 — Summary</p>
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {[1, 2, 3].map(i => (
+                      <div key={i} style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ height: 8, width: i === 2 ? '85%' : '60%', background: 'rgba(255,255,255,0.15)', borderRadius: 4, marginBottom: 8 }} />
+                        <div style={{ height: 6, width: '40%', background: 'var(--accent)', opacity: 0.6, borderRadius: 3 }} />
+                      </div>
+                    ))}
                   </div>
-                  <button style={{
-                    marginTop: 'auto', width: '100%', padding: '10px 0',
-                    background: '#14B8A6', color: 'white', borderRadius: 8, border: 'none',
-                    fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    cursor: 'default'
-                  }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add_circle</span>
-                    New Bookmark
-                  </button>
+                </div>
+                {/* Play icon */}
+                <div style={{ position: 'absolute', top: '50%', left: '40%', transform: 'translate(-50%, -50%)' }}>
+                  <div style={{ width: 84, height: 84, borderRadius: 9999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 48, color: 'white', marginLeft: 4 }}>play_arrow</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -499,20 +490,8 @@ export default async function Home({
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ 
-        padding: '160px 32px', 
-        background: '#ffffff',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* Subtle ambient light for the journey */}
-        <div style={{ 
-          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          width: '80%', height: '60%', background: 'radial-gradient(circle, rgba(20,184,166,0.03) 0%, transparent 70%)',
-          pointerEvents: 'none', zIndex: 0
-        }} />
-
-        <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 80 }}>
             <span className="cm-section-label">How It Works</span>
             <h2 style={{ 
@@ -687,6 +666,6 @@ export default async function Home({
           <p style={{ marginTop: 24, fontSize: 14, color: '#9ca3af' }}>Available on Chrome, Edge, and Brave. Free forever for individuals.</p>
         </div>
       </section>
-    </>
+    </main>
   );
 }

@@ -5,16 +5,30 @@ test.describe('AI Summary Visual Test', () => {
         // Go to the home page
         await page.goto('/');
 
-        // Find the AI summary label
+        // Find the AI summary label (Gemini Nano Insight card)
         const aiLabel = page.getByTestId('ai-summary-label');
         await expect(aiLabel).toBeVisible();
-        await expect(aiLabel).toContainText('AI auto-magically summarizes architecture');
+        await expect(aiLabel).toContainText('Gemini Nano Insight');
 
-        // Snapshot of just the hero mockup area to ensure visual integrity of AI features
-        // We use a clip to focus on the mockup
+        // Snapshot of the hero mockup area that includes the AI cards
         await expect(page).toHaveScreenshot('ai-summary-mockup.png', {
-            clip: { x: 140, y: 500, width: 1000, height: 600 },
-            maxDiffPixelRatio: 0.1, // Higher tolerance for animations
+            maxDiffPixelRatio: 0.1,
+        });
+    });
+
+    test('should display the local AI availability benefits in the FAQ', async ({ page }) => {
+        await page.goto('/');
+        
+        // Scroll to FAQ
+        const faqSection = page.locator('#faq');
+        await faqSection.scrollIntoViewIfNeeded();
+
+        // Check for Local AI FAQ item (using data-testid for robustness)
+        const localAiFaq = page.locator('div:has-text("Gemini Nano")');
+        await expect(localAiFaq.first()).toBeVisible();
+        
+        await expect(page).toHaveScreenshot('faq-ai-section.png', {
+            maxDiffPixelRatio: 0.2,
         });
     });
 });
