@@ -62,17 +62,17 @@ tests/                       Playwright e2e tests (extension behavior + YouTube 
 
 ## Tech stack at a glance
 
-| Layer | Technology |
-|---|---|
-| Extension | Vanilla JS, Chrome Manifest V3, no build step |
-| Webapp | Next.js 14 (App Router), TypeScript |
-| Database | Supabase (PostgreSQL) |
-| Auth | Google OAuth via Supabase; token stored in `chrome.storage.sync` as `bmUser` |
+| Layer      | Technology                                                                              |
+| ---------- | --------------------------------------------------------------------------------------- |
+| Extension  | Vanilla JS, Chrome Manifest V3, no build step                                           |
+| Webapp     | Next.js 14 (App Router), TypeScript                                                     |
+| Database   | Supabase (PostgreSQL)                                                                   |
+| Auth       | Google OAuth via Supabase; token stored in `chrome.storage.sync` as `bmUser`            |
 | AI (cloud) | Anthropic Claude Haiku — transcript auto-fill, summaries, tag suggestions, social posts |
-| AI (local) | Chrome built-in `LanguageModel` (Gemini Nano) — `local-ai.js` |
-| Payments | Dodo Payments (Merchant of Record) |
-| Hosting | Vercel |
-| Testing | Playwright (non-headless, loads extension via persistent context) |
+| AI (local) | Chrome built-in `LanguageModel` (Gemini Nano) — `local-ai.js`                           |
+| Payments   | Dodo Payments (Merchant of Record)                                                      |
+| Hosting    | Vercel                                                                                  |
+| Testing    | Playwright (non-headless, loads extension via persistent context)                       |
 
 ---
 
@@ -129,18 +129,18 @@ npm run dev
 
 Required environment variables (see `webapp/.env.example` for the full list with comments):
 
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (used by webhooks + migration runner) |
-| `DATABASE_URL` | PostgreSQL connection string (for migrations) |
-| `NEXT_PUBLIC_APP_URL` | App base URL (`http://localhost:3000` locally) |
-| `ANTHROPIC_API_KEY` | Claude Haiku API key |
-| `YOUTUBE_API_KEY` | YouTube Data API v3 key |
-| `DODO_PAYMENTS_API_KEY` | Dodo Payments API key |
-| `DODO_PAYMENTS_WEBHOOK_SECRET` | Dodo webhook signing secret |
-| `DODO_MONTHLY_PRODUCT_ID` | Dodo product IDs for Pro Monthly/Annual/Lifetime |
+| Variable                        | Purpose                                                |
+| ------------------------------- | ------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL                                   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key                                 |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Service role key (used by webhooks + migration runner) |
+| `DATABASE_URL`                  | PostgreSQL connection string (for migrations)          |
+| `NEXT_PUBLIC_APP_URL`           | App base URL (`http://localhost:3000` locally)         |
+| `ANTHROPIC_API_KEY`             | Claude Haiku API key                                   |
+| `YOUTUBE_API_KEY`               | YouTube Data API v3 key                                |
+| `DODO_PAYMENTS_API_KEY`         | Dodo Payments API key                                  |
+| `DODO_PAYMENTS_WEBHOOK_SECRET`  | Dodo webhook signing secret                            |
+| `DODO_MONTHLY_PRODUCT_ID`       | Dodo product IDs for Pro Monthly/Annual/Lifetime       |
 
 ---
 
@@ -176,14 +176,14 @@ Required environment variables (see `webapp/.env.example` for the full list with
 
 ### Supabase tables (see `webapp/migrations/`)
 
-| Table | Description |
-|---|---|
-| `collections` | Public shared bookmark pages (`/v/[shareId]`) |
-| `profiles` | User accounts; `is_pro` flag; `username` |
-| `user_bookmarks` | Cloud-synced bookmarks per user+video |
+| Table               | Description                                            |
+| ------------------- | ------------------------------------------------------ |
+| `collections`       | Public shared bookmark pages (`/v/[shareId]`)          |
+| `profiles`          | User accounts; `is_pro` flag; `username`               |
+| `user_bookmarks`    | Cloud-synced bookmarks per user+video                  |
 | `revisit_reminders` | Server-side revisit reminders (frequency, next_due_at) |
-| `groups` | User-defined video groups (`custom` or `tag` type) |
-| `group_collections` | Many-to-many: group ↔ video_id (TEXT, not UUID FK) |
+| `groups`            | User-defined video groups (`custom` or `tag` type)     |
+| `group_collections` | Many-to-many: group ↔ video_id (TEXT, not UUID FK)     |
 
 ---
 
@@ -201,14 +201,14 @@ Required environment variables (see `webapp/.env.example` for the full list with
 
 Tags are parsed from `#word` patterns in bookmark descriptions. Named tag colors:
 
-| Tag | Color |
-|---|---|
-| `#important` | `#ff6b6b` (red) |
-| `#review` | `#ffa94d` (orange) |
-| `#note` | `#74c0fc` (blue) |
-| `#question` | `#a9e34b` (green) |
-| `#todo` | `#da77f2` (purple) |
-| `#key` | `#f783ac` (pink) |
+| Tag          | Color              |
+| ------------ | ------------------ |
+| `#important` | `#ff6b6b` (red)    |
+| `#review`    | `#ffa94d` (orange) |
+| `#note`      | `#74c0fc` (blue)   |
+| `#question`  | `#a9e34b` (green)  |
+| `#todo`      | `#da77f2` (purple) |
+| `#key`       | `#f783ac` (pink)   |
 
 Unknown tags get a deterministic hash-based HSL color.
 
@@ -247,10 +247,10 @@ Unknown tags get a deterministic hash-based HSL color.
 
 ## Keyboard shortcuts (extension)
 
-| Shortcut | Action |
-|---|---|
-| `Alt+B` | Silent-save bookmark (with transcript auto-fill) |
-| `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick-save bookmark |
+| Shortcut                       | Action                                           |
+| ------------------------------ | ------------------------------------------------ |
+| `Alt+B`                        | Silent-save bookmark (with transcript auto-fill) |
+| `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick-save bookmark                              |
 
 ---
 

@@ -115,7 +115,7 @@ Set `API_BASE` at the top of `extension/src/popup/side-panel.js` to `http://loca
 | `Alt+S`                        | Silent-save bookmark at current timestamp (with transcript auto-fill) |
 | `Alt+B`                        | Silent save bookmark                                                  |
 | `Ctrl+Shift+S` / `Cmd+Shift+S` | Quick save bookmark                                                   |
-| Clicking the extension icon    | Open the side panel                                                    |
+| Clicking the extension icon    | Open the side panel                                                   |
 | `[` / `]`                      | Skip to prev / next clip during Revisit Mode                          |
 
 ---

@@ -22,21 +22,21 @@ test('Extension identifies local AI availability correctly', async ({ page, cont
                     if (promptText.includes('Suggest tags')) return '["important", "review"]';
                     return "Mocked AI Response";
                 },
-                destroy: () => {}
+                destroy: () => { }
             })
         };
     });
 
     await page.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
-    
+
     // Wait for scripts to load and assign functions to globalThis
     await page.waitForFunction(() => typeof (window as any).localAiAvailability === 'function');
-    
+
     const availability = await page.evaluate(async () => {
         // @ts-ignore
         return await localAiAvailability();
     });
-    
+
     expect(availability).toBe('available');
 });
 
@@ -58,19 +58,19 @@ test('localSuggestTags correctly parses tags from AI response', async ({ page, c
             availability: async () => 'available',
             create: async () => ({
                 prompt: async () => '["important", "review"]',
-                destroy: () => {}
+                destroy: () => { }
             })
         };
     });
 
     await page.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
     await page.waitForFunction(() => typeof (window as any).localSuggestTags === 'function');
-    
+
     const tags = await page.evaluate(async () => {
         // @ts-ignore
         return await localSuggestTags("A tutorial", "Transcript...");
     });
-    
+
     expect(Array.isArray(tags)).toBe(true);
     expect(tags).toContain('important');
 });

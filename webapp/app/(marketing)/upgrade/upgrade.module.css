@@ -27,7 +27,7 @@
 
 .sub {
   font-size: 20px;
-  color: #64748b;
+  color: #374151;
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
@@ -91,7 +91,7 @@
 
 .price {
   display: flex;
-  align-items: baseline;
+  align-baseline: baseline;
   gap: 6px;
   margin-bottom: 32px;
 }
@@ -105,7 +105,7 @@
 
 .period {
   font-size: 16px;
-  color: #64748b;
+  color: #4b5563;
 }
 
 .featureList {
@@ -120,7 +120,7 @@
   align-items: center;
   gap: 12px;
   font-size: 15px;
-  color: #475569;
+  color: #1f2937;
 }
 
 .ctaBtn {
@@ -133,6 +133,8 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
 }
 
 .ctaBtn:hover {
@@ -192,7 +194,7 @@
 .compVal {
   text-align: center;
   width: 120px;
-  color: #64748b;
+  color: #374151;
 }
 
 .compValPro {
@@ -249,63 +251,6 @@
 }
 
 .manageText {
-  color: #64748b;
+  color: #374151;
   margin-bottom: 24px;
-}
-
-.period {
-  font-size: 18px;
-  color: #64748b;
-}
-
-.featureList {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 40px;
-  flex-grow: 1;
-}
-
-.featureItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-  color: #cbd5e1;
-}
-
-.ctaBtn {
-  background: #ffffff;
-  color: #0f172a;
-  border: none;
-  padding: 18px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-  text-decoration: none;
-}
-
-.ctaBtnPro {
-  background: var(--accent);
-  color: white;
-}
-
-.ctaBtnPro:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.4);
-}
-
-/* Success/Referral Banners in Dark Mode */
-.bannerSuccess, .bannerReferral {
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 40px;
-  text-align: center;
-  font-weight: 700;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  color: #f8fafc;
 }
