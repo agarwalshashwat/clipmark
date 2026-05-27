@@ -12,6 +12,7 @@ test('Extension identifies local AI availability correctly', async ({ page, cont
         }
     }
     const extensionId = background ? background.url().split('/')[2] : '';
+    if (!extensionId) throw new Error('Extension ID not found');
 
     // Mock the window.LanguageModel API (Gemini Nano)
     await context.addInitScript(() => {
