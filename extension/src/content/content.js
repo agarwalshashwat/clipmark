@@ -987,7 +987,7 @@ function injectStyles() {
       color: #fff;
       border-radius: 8px;
       padding: 9px 12px;
-      font-family: 'YouTube Noto', 'Roboto', Arial, sans-serif;
+      font-family: ${FONT_FAMILY_NATIVE};
       pointer-events: none;
       opacity: 0;
       transform: translateY(6px);
@@ -1060,7 +1060,7 @@ function injectStyles() {
       padding: 10px 18px;
       border-radius: 8px;
       font-size: 13px;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: ${FONT_FAMILY_NATIVE};
       border-left: 3px solid #4da1ee;
       opacity: 0;
       transform: translateY(-8px);
@@ -1114,7 +1114,7 @@ function injectStyles() {
       border-radius: 12px;
       padding: 14px 18px 12px;
       color: white;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: ${FONT_FAMILY_NATIVE};
       min-width: 190px;
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 24px rgba(0,0,0,0.4);

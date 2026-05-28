@@ -39,30 +39,9 @@ const LI_STYLE = {
 
 export default function TermsPage() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f9f9fa',
-      color: '#1a1c1d',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      WebkitFontSmoothing: 'antialiased',
-    }}>
-
-      {/* ── Nav ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 1px 0 rgba(26,28,29,0.06)',
-      }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center' }}>
-          <a href="/" style={{ fontSize: 20, fontWeight: 800, color: '#14B8A6', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', textDecoration: 'none' }}>
-            Clipmark
-          </a>
-        </div>
-      </nav>
-
+    <>
       {/* ── Content ── */}
-      <main style={{ maxWidth: 840, margin: '0 auto', padding: '80px 32px 128px' }}>
+      <main style={{ maxWidth: 840, margin: '0 auto', padding: '60px 32px 128px' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <span className="cm-section-label">Legal Agreement</span>
           <h1 style={{
@@ -226,19 +205,6 @@ export default function TermsPage() {
         </div>
 
       </main>
-
-      {/* ── Footer ── */}
-      <footer style={{ padding: '32px', borderTop: '1px solid rgba(26,28,29,0.06)', background: '#f3f3f4' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <span style={{ fontSize: 13, color: '#9ca3af' }}>© 2026 Clipmark.</span>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <a href="/privacy" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none', fontWeight: 600 }}>Privacy</a>
-            <a href="/terms" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none' }}>Terms</a>
-            <a href="/" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none' }}>Home</a>
-          </div>
-        </div>
-      </footer>
-
-    </div>
+    </>
   );
 }

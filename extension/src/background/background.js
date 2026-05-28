@@ -276,8 +276,7 @@ const TAG_COLORS = {
             chrome.tabs.sendMessage(tab.id, { action: 'showToast', message: 'Bookmark saved ✓', type: 'success' });
 
             if (command === 'quick_save') {
-                // For quick_save, we want to open the popup (though Chrome doesn't allow programmatically opening the popup)
-                // Instead, we just rely on the toast confirmation.
+                // For quick_save, we rely on the toast confirmation in the content script.
             }
         } catch (error) {
             console.error('Failed to save via command:', error);

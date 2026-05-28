@@ -1,0 +1,256 @@
+.pageWrap {
+  background: #f9fafb;
+  min-height: 100vh;
+  color: #111827;
+  padding-bottom: 100px;
+}
+
+.main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 120px 24px 0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 8vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.sub {
+  font-size: 20px;
+  color: #374151;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+}
+
+.pricingCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s ease;
+  flex: 1 1 340px;
+  max-width: 420px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.pricingCard:hover {
+  transform: translateY(-8px);
+  border-color: #14B8A6;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.pricingCardPro {
+  border: 2px solid #14B8A6;
+  box-shadow: 0 20px 25px -5px rgba(20, 184, 166, 0.1), 0 10px 10px -5px rgba(20, 184, 166, 0.04);
+}
+
+.badge {
+  position: absolute;
+  top: -14px;
+  left: 32px;
+  background: #14B8A6;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.planName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: #14B8A6;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+
+.amount {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.period {
+  font-size: 16px;
+  color: #4b5563;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  color: #1f2937;
+}
+
+.ctaBtn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: white;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.ctaBtn:hover {
+  background: #1e293b;
+  transform: scale(1.02);
+}
+
+.ctaBtnPro {
+  background: #14B8A6;
+  color: white;
+}
+
+.ctaBtnPro:hover {
+  background: #0d9488;
+}
+
+.comparisonSection {
+  margin-top: 120px;
+  padding: 80px 0;
+}
+
+.compTitle {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 48px;
+  color: #0f172a;
+}
+
+.compTableWrapper {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  overflow: hidden;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.compTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.compRow {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.compCell {
+  padding: 20px 32px;
+}
+
+.compLabel {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.compVal {
+  text-align: center;
+  width: 120px;
+  color: #374151;
+}
+
+.compValPro {
+  color: #14B8A6;
+  font-weight: 700;
+  background: #f0fdfa;
+}
+
+.bannerSuccess {
+  background: #14B8A6;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 32px;
+  font-weight: 600;
+}
+
+.bannerReferral {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #7c3aed;
+  padding: 12px 24px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.manageBox {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 32px;
+  border-radius: 24px;
+  max-width: 600px;
+  margin: 0 auto 60px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.manageHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.manageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.manageText {
+  color: #374151;
+  margin-bottom: 24px;
+}

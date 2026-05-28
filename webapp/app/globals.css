@@ -8,6 +8,14 @@
 
 @import url('./design-tokens.css');
 
+/* ── Typography Mapping ─────────────────────────────────────────────────── */
+/* Map Next.js optimized fonts to design system tokens */
+:root {
+  --font-family-display: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-family-body:    var(--font-inter), system-ui, sans-serif;
+  --font-family-mono:    var(--font-jetbrains), monospace;
+}
+
 /* Material Symbols config */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -107,13 +115,13 @@
 .footer-links-title {
   font-size: 12px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .footer-link {
-  color: #475569;
+  color: var(--text-sub);
   font-size: 13px;
   text-decoration: none;
   font-weight: 600;
@@ -124,7 +132,7 @@
 }
 
 .footer-bottom {
-  border-top: 1px solid #f8fafc;
+  border-top: 1px solid var(--border);
   margin-top: 64px;
   padding-top: 24px;
 }
@@ -134,7 +142,7 @@
   margin: 0 auto;
   padding: 0 24px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-weight: 500;
 }
 

@@ -152,15 +152,57 @@ async function localSummarizeSnippet(snippet) {
   }
 }
 
+/**
+ * Generate a social post based on bookmarks using on-device Gemini Nano.
+ * @param {Array<{timestamp: number, description: string}>} bookmarks
+ * @param {string} videoTitle
+ * @param {string} shareUrl
+ * @param {"twitter"|"linkedin"|"threads"} platform
+ * @returns {Promise<string>}
+ */
+async function localGeneratePost(bookmarks, videoTitle, shareUrl, platform) {
+  const charLimits = { twitter: 260, linkedin: 1500, threads: 480 };
+  const platformGuide = {
+    twitter:  'Punchy, max 2 lines, 1 hashtag, no emojis.',
+    linkedin: 'Professional tone, use short paragraphs with line breaks, 3-5 bullet key takeaways, end with CTA.',
+    threads:  'Casual, relatable hook, 1 emoji max.',
+  };
+
+  const session = await LanguageModel.create({
+    ..._LM_LANGUAGE_OPTIONS,
+    systemPrompt: `You are an assistant that writes ${platform} posts based on video notes. ` +
+                  `Style: ${platformGuide[platform]}. Limit: ${charLimits[platform]} characters. ` +
+                  `Include this link: ${shareUrl}`,
+  });
+
+  try {
+    const lines = bookmarks.slice(0, 8).map(b => `- ${b.description}`).join('\n');
+    const prompt = `Video: "${videoTitle}"\nNotes:\n${lines}\n\nWrite one ${platform} post. Output ONLY the post text.`;
+    const res = await _promptInEnglish(session, prompt);
+    return res.trim();
+  } finally {
+    session.destroy();
+  }
+}
+
 if (typeof globalThis !== 'undefined') {
   globalThis.localAiAvailability = localAiAvailability;
   globalThis.localSuggestTags = localSuggestTags;
   globalThis.localSummarizeBookmarks = localSummarizeBookmarks;
   globalThis.localSummarizeSnippet = localSummarizeSnippet;
+  globalThis.localGeneratePost = localGeneratePost;
 }
 
-// Only export if we are in a module environment (e.g. for testing or modern environments)
-// Standard content scripts will ignore this or use the globalThis versions.
+// Ensure they are available as exports for Vite/ESM
+export {
+  localAiAvailability,
+  localSuggestTags,
+  localSummarizeBookmarks,
+  localSummarizeSnippet,
+  localGeneratePost
+};
+
+// Only export if we are in a CommonJS environment
 if (typeof exports !== 'undefined' || typeof module !== 'undefined') {
   try {
     module.exports = { localAiAvailability, localSuggestTags, localSummarizeBookmarks, localSummarizeSnippet };

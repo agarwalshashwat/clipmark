@@ -45,3 +45,10 @@ const RECONNECT_DELAY        = 1000; // ms
 // ─── String limits ──────────────────────────────────────────────────────────
 const TITLE_TRUNCATE_LENGTH      = 60;
 const TRANSCRIPT_TRUNCATE_LENGTH = 120;
+
+/* ── Typography (Design System Aligned) ────────────────────────────────────── */
+const FONT_FAMILY_DISPLAY = "'Plus Jakarta Sans', system-ui, sans-serif";
+const FONT_FAMILY_BODY    = "'Inter', system-ui, sans-serif";
+const FONT_FAMILY_MONO    = "'JetBrains Mono', monospace";
+const FONT_FAMILY_NATIVE  = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+

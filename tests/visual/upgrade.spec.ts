@@ -6,7 +6,7 @@ test.describe('Upgrade Page Visual Regression', () => {
         await page.goto('/upgrade');
 
         // Wait for critical elements to be visible to ensure page is loaded
-        await expect(page.locator('h1')).toContainText('Future-proof your learning');
+        await expect(page.locator('h1')).toContainText('Simple, transparent pricing');
 
         // Perform the snapshot comparison
         // We use fullPage: true to ensure the navigation and footer are included in alignment check
