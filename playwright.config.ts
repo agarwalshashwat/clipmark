@@ -20,7 +20,7 @@ export default defineConfig({
     },
     {
       name: 'webapp',
-      testMatch: /visual\/.*\.spec\.ts/,
+      testMatch: /(visual|ci)\/.*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         headless: true,
