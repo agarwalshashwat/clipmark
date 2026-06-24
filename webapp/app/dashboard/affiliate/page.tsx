@@ -231,7 +231,7 @@ export default async function AffiliatePage() {
               Updated in real-time from Dodo Payments. Each row has a Reference ID you can verify
               directly with <a href="https://dodopayments.com" target="_blank" rel="noopener noreferrer"
               style={{ color: '#14B8A6', textDecoration: 'none' }}>Dodo</a> or{' '}
-              <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none' }}>our team</a> if you have a dispute.
+              <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6', textDecoration: 'none' }}>our team</a> if you have a dispute.
             </p>
           </div>
           {conversionList.length > 0 && (
@@ -341,7 +341,7 @@ export default async function AffiliatePage() {
         Your participation is governed by the{' '}
         <a href="/affiliate/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6', textDecoration: 'none' }}>Affiliate Terms &amp; Conditions</a>.
         Questions? Email{' '}
-        <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none' }}>affiliates@clipmark.app</a>.
+        <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6', textDecoration: 'none' }}>affiliates@clipmark.mithahara.com</a>.
       </p>
 
       {/* Copy-to-clipboard client script */}

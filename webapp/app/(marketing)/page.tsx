@@ -147,7 +147,7 @@ export default async function Home({
             border: '1px solid rgba(20,184,166,0.15)'
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>verified</span>
-            The Digital Curator for YouTube Professionals
+            The Second Brain for YouTube Professionals
           </div>
 
           {/* H1 */}
@@ -288,8 +288,8 @@ export default async function Home({
       <section style={{ padding: '128px 32px', background: '#ffffff' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 80, alignItems: 'center' }}>
           <div>
-            <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 800, marginBottom: 32, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D', letterSpacing: '-0.5px' }}>
-              Stop Scrubbing, <br /><span style={{ color: '#006B5F' }}>Start Remembering.</span>
+            <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 800, marginBottom: 32, fontFamily: "var(--font-display)", color: '#1A1C1D', letterSpacing: '-0.5px' }}>
+              Stop Scrubbing, <br /><span style={{ color: 'var(--primary-deep)' }}>Start Remembering.</span>
             </h2>
             <p style={{ fontSize: 18, color: '#545f6c', marginBottom: 40, lineHeight: 1.75 }}>
               The average learner forgets 70% of what they watch within 24 hours. Clipmark&apos;s <strong>Revisit Mode</strong> forces you to focus only on the breakthroughs you saved, turning hours of idle watching into minutes of active mastery.
@@ -300,16 +300,16 @@ export default async function Home({
                   <span className="material-symbols-outlined">timer_off</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Passive Consumption (Bad)</h4>
+                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>Passive Consumption (Bad)</h4>
                   <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Where was that part? *scrubs timeline for 15 minutes*&rdquo;</p>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#006B5F', flexShrink: 0 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-deep)', flexShrink: 0 }}>
                   <span className="material-symbols-outlined">bolt</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>The Clipmark System (Pro)</h4>
+                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>The Clipmark System (Pro)</h4>
                   <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Playing 4 peak moments in 6 minutes. System locked in.&rdquo;</p>
                 </div>
               </div>
@@ -335,11 +335,11 @@ export default async function Home({
                     <div style={{ width: '70%', height: 8, background: '#fecaca', borderRadius: 4 }} />
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', color: '#006B5F' }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', color: 'var(--primary-deep)' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 32 }}>arrow_forward</span>
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <div style={{ color: '#006B5F', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The Clipmark Way</div>
+                  <div style={{ color: 'var(--primary-deep)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The Clipmark Way</div>
                   <div style={{ height: 120, background: '#ccfbf1', borderRadius: 16, border: '2px solid #99f6e4', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 12 }}>
                     <div style={{ width: '90%', height: 12, background: '#14B8A6', borderRadius: 6 }} />
                     <div style={{ width: '90%', height: 12, background: '#14B8A6', borderRadius: 6 }} />
@@ -351,15 +351,15 @@ export default async function Home({
               <div style={{ borderTop: '1px solid #e8e8e9', paddingTop: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: 120, marginBottom: 16 }}>
                   <div style={{ flex: 1, background: '#e8e8e9', height: '100%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
-                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#9ca3af', whiteSpace: 'nowrap' }}>120m</span>
+                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: '#9ca3af', whiteSpace: 'nowrap' }}>120m</span>
                   </div>
-                  <div style={{ flex: 1, background: '#14B8A6', height: '5%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
-                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: '#006B5F', whiteSpace: 'nowrap' }}>6m</span>
+                  <div style={{ flex: 1, background: 'var(--accent)', height: '5%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
+                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: 'var(--primary-deep)', whiteSpace: 'nowrap' }}>6m</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 11, letterSpacing: '0.08em', color: '#545f6c', textTransform: 'uppercase' }}>
                   <span>Mental Fatigue</span>
-                  <span style={{ color: '#006B5F' }}>Knowledge Retained</span>
+                  <span style={{ color: 'var(--primary-deep)' }}>Knowledge Retained</span>
                 </div>
               </div>
             </div>
@@ -371,7 +371,7 @@ export default async function Home({
       <section id="features" style={{ padding: '128px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 96 }}>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', color: '#1A1C1D' }}>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: 16, fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: '#1A1C1D' }}>
               Curated For Your Workflow
             </h2>
             <p style={{ color: '#545f6c', maxWidth: 480, margin: '0 auto', fontSize: 16 }}>
@@ -385,7 +385,7 @@ export default async function Home({
               <div style={{ width: 48, height: 48, borderRadius: 12, background: '#1A1C1D', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined">code</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For the Builder</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: '#1A1C1D' }}>For the Builder</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
                 Stop "tutorial hell." Instantly capture code snippets and architecture shifts from technical deep dives. Build a searchable library of 100+ tutorials you actually understand.
               </p>
@@ -397,10 +397,10 @@ export default async function Home({
 
             {/* Founders */}
             <div style={{ padding: 32, borderRadius: 32, background: '#f3f3f4' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(20,184,166,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined">rocket_launch</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For the Founder</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: '#1A1C1D' }}>For the Founder</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
                 Extract insights from 3-hour podcasts with industry leaders in seconds. Use AI to summarize key takeaways and turn them into actionable tasks for your team.
               </p>
@@ -412,10 +412,10 @@ export default async function Home({
 
             {/* Serious Learners */}
             <div style={{ padding: 32, borderRadius: 32, background: '#f3f3f4' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(115,46,228,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: '#8b5cf6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined">psychology</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>For the Serious Learner</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: '#1A1C1D' }}>For the Serious Learner</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
                 Treat YouTube like a structured course. Spaced Revisit reminds you to review key bookmarks at the optimal time, ensuring 100% retention for exam day.
               </p>
@@ -469,11 +469,11 @@ export default async function Home({
               }}>
                 Pro Features
               </span>
-              <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, marginBottom: 32, lineHeight: 1.2, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, marginBottom: 32, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>
                 Effortless curation powered by Intelligence.
               </h2>
               <p style={{ color: '#9ca3af', fontSize: 18, lineHeight: 1.75, marginBottom: 16 }}>
-                The &ldquo;Digital Curator&rdquo; doesn&apos;t just store; it understands. Our AI engine analyzes transcripts in real-time to surface the gold nuggets so you don&apos;t have to.
+                Your &ldquo;Second Brain&rdquo; doesn&apos;t just store; it understands. Our AI engine analyzes transcripts in real-time to surface the gold nuggets so you don&apos;t have to.
               </p>
               <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 40, fontStyle: 'italic' }}>
                 * AI features use Chrome&apos;s built-in AI (Gemini Nano). Availability is subject to Google&apos;s support and may vary by Chrome version.
@@ -498,7 +498,7 @@ export default async function Home({
               fontSize: 'clamp(32px, 5vw, 48px)', 
               fontWeight: 800, 
               marginBottom: 24, 
-              fontFamily: "'Plus Jakarta Sans', sans-serif", 
+              fontFamily: "var(--font-display)", 
               letterSpacing: '-0.5px', 
               color: '#1A1C1D' 
             }}>
@@ -548,7 +548,7 @@ export default async function Home({
                   fontSize: 22, 
                   fontWeight: 800, 
                   marginBottom: 16, 
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", 
+                  fontFamily: "var(--font-display)", 
                   color: '#1A1C1D' 
                 }}>
                   {title}
@@ -605,7 +605,7 @@ export default async function Home({
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{
             fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, textAlign: 'center',
-            marginBottom: 64, fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D'
+            marginBottom: 64, fontFamily: "var(--font-display)", color: '#1A1C1D'
           }}>
             Questions? We have answers.
           </h2>
@@ -618,7 +618,7 @@ export default async function Home({
               }}>
                 <h3 style={{
                   fontSize: 18, fontWeight: 700, marginBottom: 12,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D'
+                  fontFamily: "var(--font-display)", color: '#1A1C1D'
                 }}>
                   {q}
                 </h3>
@@ -641,13 +641,13 @@ export default async function Home({
             &ldquo;I built Clipmark because I was tired of re-watching the same 3-hour podcasts just to find that one 30-second gem I forgot to write down. YouTube is a goldmine, but only if you have a way to mine it.&rdquo;
           </p>
           <p style={{ fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#545f6c' }}>
-            — Mith, Creator of Clipmark
+            — Creator of Clipmark
           </p>
         </div>
 
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, background: 'rgba(20,184,166,0.05)', borderRadius: 9999, filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }} />
         <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, marginBottom: 24, letterSpacing: '-1px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1A1C1D' }}>
+          <h2 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, marginBottom: 24, letterSpacing: '-1px', fontFamily: "var(--font-display)", color: '#1A1C1D' }}>
             Ready to Build Your Second Brain?
           </h2>
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
@@ -657,9 +657,9 @@ export default async function Home({
              aria-label="Install Clipmark Chrome Extension"
              style={{
             display: 'inline-block', padding: '20px 48px',
-            background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+            background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)',
             color: 'white', borderRadius: 16, fontWeight: 700, fontSize: 18, textDecoration: 'none',
-            boxShadow: '0 16px 48px rgba(0,107,95,0.28)',
+            boxShadow: '0 16px 48px rgba(20, 184, 166, 0.28)',
           }}>
             Install Extension &amp; Get Started
           </a>

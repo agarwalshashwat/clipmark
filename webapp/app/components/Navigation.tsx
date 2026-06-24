@@ -14,9 +14,7 @@ export async function Navigation() {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1240, margin: '0 auto', padding: '0 24px', height: 80 }}>
         <a href="/" style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: '-1px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-display)' }}>
-          <div style={{ width: 34, height: 34, background: 'var(--accent)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(20, 184, 166, 0.2)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 22, color: 'white' }}>bookmark</span>
-          </div>
+          <img src="/clipmark-logo.png" style={{ width: 34, height: 34, objectFit: 'contain' }} alt="Clipmark" />
           Clipmark
         </a>
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>

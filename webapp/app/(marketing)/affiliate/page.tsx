@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const H2 = {
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  fontFamily: "var(--font-display)",
   fontSize: 32,
   fontWeight: 800,
   color: '#0f172a',
@@ -121,7 +121,7 @@ export default async function AffiliatePage() {
           </div>
 
           <h1 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 'clamp(40px, 8vw, 64px)', fontWeight: 800, letterSpacing: '-3px',
             color: '#0f172a', marginBottom: 24, marginTop: 0,
             lineHeight: 1,
@@ -143,7 +143,7 @@ export default async function AffiliatePage() {
               padding: '16px 32px',
               background: '#0f172a',
               color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 12,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 12,
               boxShadow: '0 10px 30px rgba(15, 23, 42, 0.15)',
               transition: 'all 0.2s'
             }}>
@@ -153,7 +153,7 @@ export default async function AffiliatePage() {
               padding: '16px 32px',
               background: 'white',
               color: '#0f172a', borderRadius: 14, fontSize: 16, fontWeight: 800,
-              textDecoration: 'none', display: 'inline-block',
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s'
             }}>
               Affiliate Terms
@@ -181,7 +181,7 @@ export default async function AffiliatePage() {
               </div>
               <p style={{
                 fontSize: 36, fontWeight: 800, color: '#0f172a',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontFamily: "var(--font-display)",
                 marginBottom: 8, marginTop: 0, letterSpacing: '-1px'
               }}>
                 {stat.value}
@@ -206,14 +206,14 @@ export default async function AffiliatePage() {
                   </div>
                   <span style={{
                     fontSize: 12, fontWeight: 800, color: '#94a3b8',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontFamily: "var(--font-display)",
                     letterSpacing: '0.1em',
                   }}>
                     STEP {step.number}
                   </span>
                 </div>
                 <h3 style={{
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontFamily: "var(--font-display)",
                   fontSize: 20, fontWeight: 800, color: '#0f172a',
                   marginBottom: 12, marginTop: 0, letterSpacing: '-0.5px'
                 }}>
@@ -369,7 +369,7 @@ export default async function AffiliatePage() {
               padding: '16px 32px',
               background: '#14B8A6',
               color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 12,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 12,
               transition: 'all 0.2s', border: 'none'
             }}>
               Join Program <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
@@ -378,7 +378,7 @@ export default async function AffiliatePage() {
               padding: '16px 32px',
               background: 'rgba(255,255,255,0.05)',
               color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
-              textDecoration: 'none', display: 'inline-block',
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s', border: '1px solid rgba(255,255,255,0.1)'
             }}>
               View Terms
@@ -388,7 +388,7 @@ export default async function AffiliatePage() {
 
         <p style={{ textAlign: 'center', fontSize: 14, color: '#94a3b8', fontWeight: 500 }}>
           Have a unique partnership request?{' '}
-          <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', textDecoration: 'none', fontWeight: 700 }}>Contact partnerships</a>
+          <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6', textDecoration: 'none', fontWeight: 700 }}>Contact partnerships</a>
         </p>
 
       </div>

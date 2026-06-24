@@ -138,7 +138,7 @@ export default function AffiliateTermsPage() {
           <h3 style={{ ...H2_STYLE, fontSize: 17, fontWeight: 600, marginBottom: 10 }}>3.4 Payment Methods</h3>
           <p style={P_STYLE}>
             Payouts are made via Wise (bank transfer) or PayPal. You are responsible for providing accurate payment details and for any fees charged by your payment provider. Contact{' '}
-            <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6' }}>affiliates@clipmark.app</a> after approval to register your payout method.
+            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6' }}>affiliates@clipmark.mithahara.com</a> after approval to register your payout method.
           </p>
 
           <h3 style={{ ...H2_STYLE, fontSize: 17, fontWeight: 600, marginBottom: 10 }}>3.5 Refunds &amp; Chargebacks</h3>
@@ -202,7 +202,7 @@ export default function AffiliateTermsPage() {
           </p>
           <p style={P_STYLE}>
             Clipmark&apos;s tracking records are the authoritative source for commission calculations. Discrepancies must be reported within 30 days of the relevant payout statement by emailing{' '}
-            <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6' }}>affiliates@clipmark.app</a>.
+            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6' }}>affiliates@clipmark.mithahara.com</a>.
           </p>
         </div>
 
@@ -278,7 +278,7 @@ export default function AffiliateTermsPage() {
           <h2 style={H2_STYLE}>14. Contact</h2>
           <p style={P_STYLE}>
             For questions about the Affiliate Program or these terms, contact:<br />
-            <a href="mailto:affiliates@clipmark.app" style={{ color: '#14B8A6', fontWeight: 600 }}>affiliates@clipmark.app</a>
+            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6', fontWeight: 600 }}>affiliates@clipmark.mithahara.com</a>
           </p>
           <p style={P_STYLE}>
             For general legal enquiries:<br />

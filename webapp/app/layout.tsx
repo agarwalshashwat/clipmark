@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   title: 'Clipmark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
+  icons: {
+    icon: '/clipmark-logo.png',
+    shortcut: '/clipmark-logo.png',
+    apple: '/clipmark-logo.png',
+  },
   alternates: {
     canonical: '/',
   },
