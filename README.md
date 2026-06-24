@@ -102,7 +102,7 @@ Live at **[clipmark.mithahara.com](https://clipmark.mithahara.com)**
 cd webapp && npm install && npm run dev
 ```
 
-Copy `.env.example` to `.env.local` and fill in your Supabase, Anthropic, and Dodo Payments keys.
+Copy `.env.example` to `.env.local` and fill in your Supabase and Dodo Payments keys.
 
 Set `API_BASE` at the top of `extension/src/popup/side-panel.js` to `http://localhost:3000` for local dev.
 
