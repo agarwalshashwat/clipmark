@@ -5,6 +5,7 @@
 
 WEBAPP_DIR := webapp
 EXT_DIR    := extension
+EXT_DIST   := $(EXT_DIR)/dist
 ZIP_NAME   := clipmark-extension.zip
 
 # ── Default ───────────────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@ help:
 	@echo "  Extension"
 	@echo "    make ext-dev    — extension dev server (CRXJS + auto reload workflow)"
 	@echo "    make ext-build  — build extension to extension/dist"
-	@echo "    make ext-zip    — zip extension folder for Chrome Web Store"
+	@echo "    make ext-zip    — build + zip extension/dist for Chrome Web Store"
 	@echo "    make ext-open   — open chrome://extensions in default browser"
 	@echo ""
 	@echo "  Testing"
@@ -64,13 +65,18 @@ ext-dev:
 ext-build:
 	cd $(EXT_DIR) && npm run build
 
-ext-zip:
+# Package the BUILT extension (extension/dist) for the Chrome Web Store.
+# Never zip the repo root: that ships the dev manifest (which loads src/*.js
+# ES modules as classic content scripts and breaks on install), plus src/ and
+# node_modules. Always rebuild dist first so the zip matches current source.
+ext-zip: ext-build
 	@rm -f $(ZIP_NAME)
-	@cd $(EXT_DIR) && zip -r ../$(ZIP_NAME) . \
+	@test -f $(EXT_DIST)/manifest.json || { echo "✗ $(EXT_DIST)/manifest.json missing — run 'make ext-build'"; exit 1; }
+	@cd $(EXT_DIST) && zip -r ../../$(ZIP_NAME) . \
 		--exclude "*.DS_Store" \
 		--exclude "__MACOSX/*" \
 		--exclude "*.map"
-	@echo "✓ $(ZIP_NAME) created"
+	@echo "✓ $(ZIP_NAME) created from $(EXT_DIST)/"
 
 ext-open:
 	@open -a "Google Chrome" "chrome://extensions" 2>/dev/null || \
