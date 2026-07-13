@@ -409,17 +409,37 @@ async function shareBookmarks() {
     btn.textContent = 'Sharing…';
     btn.disabled = true;
 
-    const { bmUser } = await syncGet({ bmUser: null });
+    // Sharing requires sign-in: the server derives the owner from this token,
+    // so we no longer send a spoofable userId in the body.
+    const token = await getValidToken();
+    if (!token) {
+      showError('Please sign in to share a collection.', 5000);
+      chrome.tabs.create({ url: `${API_BASE}/signin?extensionId=${chrome.runtime.id}` });
+      btn.textContent = '↗ Share';
+      btn.disabled = false;
+      return null;
+    }
+
     const response = await fetch(`${API_BASE}/api/share`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({
         videoId,
         videoTitle: videoTitles[videoId] || '',
         bookmarks,
-        userId: bmUser?.userId || null,
       }),
     });
+
+    if (response.status === 401) {
+      showError('Your session expired. Please sign in again to share.', 5000);
+      chrome.tabs.create({ url: `${API_BASE}/signin?extensionId=${chrome.runtime.id}` });
+      btn.textContent = '↗ Share';
+      btn.disabled = false;
+      return null;
+    }
 
     if (response.status === 403) {
       const err = await response.json().catch(() => ({}));

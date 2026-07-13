@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { supabase, type Bookmark } from '@/lib/supabase';
+import { supabase, createServerSupabase, type Bookmark } from '@/lib/supabase';
 
 const FREE_SHARE_LIMIT = 5;
 
-// Service-role client for Pro + collection-count checks (bypasses RLS)
+// Service-role client for Pro + collection-count checks and the insert (bypasses RLS)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -15,14 +15,37 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204 });
 }
 
+// Authenticate via Bearer token (extension) or cookie session (webapp).
+// Returns the verified user id, or null when the request is unauthenticated.
+async function getAuthenticatedUserId(request: NextRequest): Promise<string | null> {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    return user.id;
+  }
+
+  const serverClient = await createServerSupabase();
+  const { data: { user } } = await serverClient.auth.getUser();
+  return user?.id ?? null;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Sharing requires an authenticated user: the owner is derived from the
+    // verified token, never trusted from the request body. This prevents
+    // attribution spoofing and free-tier-limit bypass.
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { videoId, videoTitle, bookmarks, userId } = body as {
+    const { videoId, videoTitle, bookmarks } = body as {
       videoId: string;
       videoTitle: string;
       bookmarks: Bookmark[];
-      userId?: string;
     };
 
     if (!videoId || !Array.isArray(bookmarks) || bookmarks.length === 0) {
@@ -33,45 +56,43 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Free-tier limit check ────────────────────────────────────────────────
-    if (userId) {
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('is_pro')
-        .eq('id', userId)
-        .single();
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', userId)
+      .single();
 
-      const isPro = profile?.is_pro === true;
+    const isPro = profile?.is_pro === true;
 
-      if (!isPro) {
-        const { count } = await supabaseAdmin
-          .from('collections')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId);
+    if (!isPro) {
+      const { count } = await supabaseAdmin
+        .from('collections')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
 
-        if ((count ?? 0) >= FREE_SHARE_LIMIT) {
-          return NextResponse.json(
-            {
-              error: 'free_limit_reached',
-              message: `Free plan allows ${FREE_SHARE_LIMIT} shared collections. Upgrade to Clipmark Pro for unlimited sharing.`,
-              limit: FREE_SHARE_LIMIT,
-              count,
-            },
-            { status: 403 }
-          );
-        }
+      if ((count ?? 0) >= FREE_SHARE_LIMIT) {
+        return NextResponse.json(
+          {
+            error: 'free_limit_reached',
+            message: `Free plan allows ${FREE_SHARE_LIMIT} shared collections. Upgrade to Clipmark Pro for unlimited sharing.`,
+            limit: FREE_SHARE_LIMIT,
+            count,
+          },
+          { status: 403 }
+        );
       }
     }
 
     // Sort bookmarks by timestamp before storing
     const sorted = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('collections')
       .insert({
         video_id:    videoId,
         video_title: videoTitle || null,
         bookmarks:   sorted,
-        user_id:     userId || null,
+        user_id:     userId,
       })
       .select('id')
       .single();
@@ -82,16 +103,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Return current collection count for free-tier nudge in the extension
-    let collectionsUsed: number | null = null;
-    if (userId) {
-      const { count } = await supabaseAdmin
-        .from('collections')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId);
-      collectionsUsed = count ?? null;
-    }
+    const { count } = await supabaseAdmin
+      .from('collections')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
 
-    return NextResponse.json({ shareId: data.id, collectionsUsed, freeLimit: FREE_SHARE_LIMIT }, { status: 201 });
+    return NextResponse.json(
+      { shareId: data.id, collectionsUsed: count ?? null, freeLimit: FREE_SHARE_LIMIT },
+      { status: 201 }
+    );
   } catch (err) {
     console.error('Unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
