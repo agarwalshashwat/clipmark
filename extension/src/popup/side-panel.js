@@ -13,6 +13,18 @@ import {
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import './zen-garden.js';
 
+// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
+// Init context 2 of 4: popup / side-panel pages (this file is the side-panel
+// entry; mirror the same block in any future popup page). Initialize the Sentry
+// SDK HERE, before installGlobalErrorLogging, using the SAME DSN/project as the
+// webapp, background, and content-script contexts.
+//   import * as Sentry from '@sentry/browser';
+//   Sentry.init({ dsn: SENTRY_DSN, release: chrome.runtime.getManifest().version,
+//                 environment: API_BASE.includes('localhost') ? 'dev' : 'prod' });
+//   Sentry.setTag('context', 'extension-side-panel');
+// Do NOT add the @sentry/* dependency yet — this is a placeholder only.
+// ──────────────────────────────────────────────────────────────────────────────
+
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('SidePanel');
 installGlobalErrorLogging('SidePanel');
@@ -277,7 +289,7 @@ function showStatus(message, duration = 1500) {
 async function saveBookmark(bookmark) {
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
+    if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
@@ -392,7 +404,7 @@ async function shareBookmarks() {
   const btn = document.getElementById('share-btn');
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
+    if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
@@ -488,7 +500,7 @@ async function summarizeBookmarks() {
 
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
+    if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
@@ -588,7 +600,7 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
     }
 
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) throw new Error('Open a YouTube video first');
+    if (!(tab.url || '').includes('youtube.com/watch')) throw new Error('Open a YouTube video first');
 
     const videoId = extractVideoId(tab.url);
     const bookmarks = await getVideoBookmarks(videoId);
@@ -1191,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('add-bookmark').addEventListener('click', async () => {
     try {
       const tab = await getCurrentTab();
-      if (!tab.url.includes('youtube.com/watch')) {
+      if (!(tab.url || '').includes('youtube.com/watch')) {
         throw new Error('Please navigate to a YouTube video first!');
       }
 
@@ -1222,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const tab = await getCurrentTab();
       debugLog('AutoFill', 'Tab URL', tab.url);
-      if (!tab.url.includes('youtube.com/watch')) {
+      if (!(tab.url || '').includes('youtube.com/watch')) {
         debugLog('AutoFill', 'Not a YouTube watch page, aborting');
         return;
       }
@@ -1309,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       const tab = await getCurrentTab();
-      if (!tab.url.includes('youtube.com/watch')) {
+      if (!(tab.url || '').includes('youtube.com/watch')) {
         showError('Please navigate to a YouTube video first.');
         return;
       }

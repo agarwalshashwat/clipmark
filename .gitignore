@@ -67,7 +67,8 @@ test-results/
 tests/visual/__snapshots__/
 *-snapshots/
 
-# Extension environment config (never commit — copy from config.example.js)
-extension/src/config.js
+# extension/src/config.js is committed as the production default (no secrets —
+# just the public API base URL). Override it locally for dev; the extension
+# build guard in vite.config.mjs fails the build if API_BASE points at localhost.
 extension/dist/
 screenshots/
