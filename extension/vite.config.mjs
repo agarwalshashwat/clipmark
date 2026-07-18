@@ -3,10 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
+import { assertProdApiBase } from './scripts/api-base-guard.mjs';
 
 // Fail a production build if the extension is configured to talk to a local
 // dev server. Runs only on `vite build` (not `vite dev`), so localhost is still
 // allowed while developing but can never be packaged for the Chrome Web Store.
+// The parse/validate logic lives in ./scripts/api-base-guard.mjs so it can be
+// unit-tested; this plugin only handles file reading + surfacing errors.
 function apiBaseGuard() {
   return {
     name: 'clipmark-api-base-guard',
@@ -23,17 +26,10 @@ function apiBaseGuard() {
         );
         return;
       }
-      const match = source.match(/API_BASE\s*=\s*['"`]([^'"`]*)['"`]/);
-      if (!match) {
-        this.error('Could not find API_BASE in src/config.js.');
-        return;
-      }
-      const apiBase = match[1];
-      if (/localhost|127\.0\.0\.1/i.test(apiBase)) {
-        this.error(
-          `API_BASE points at a local dev server ("${apiBase}"). Set it to the ` +
-            'production URL in src/config.js before building for release.'
-        );
+      try {
+        assertProdApiBase(source);
+      } catch (err) {
+        this.error(err.message);
       }
     },
   };
