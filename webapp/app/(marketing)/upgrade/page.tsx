@@ -99,7 +99,7 @@ export default async function UpgradePage({
   const daysSinceStart = subscriptionStartedAt
     ? (Date.now() - new Date(subscriptionStartedAt).getTime()) / 86400000
     : Infinity;
-  const isRefundEligible = subscriptionId !== null && daysSinceStart <= 14;
+  const isRefundEligible = subscriptionId !== null && daysSinceStart <= 7;
   const periodEndFormatted = subscriptionPeriodEnd
     ? new Date(subscriptionPeriodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : null;
@@ -152,9 +152,8 @@ export default async function UpgradePage({
         {!isPro && (
           <>
             <PlanCards prices={prices} variant="full" />
-            {/* Risk reversal directly under the CTAs. Number-free until refund
-                window is decided (D1); pass refundDays to GuaranteeLine then. */}
-            <GuaranteeLine />
+            {/* Risk reversal directly under the CTAs (D1: 7-day window). */}
+            <GuaranteeLine refundDays={7} />
           </>
         )}
 

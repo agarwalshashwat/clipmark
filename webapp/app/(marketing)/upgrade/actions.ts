@@ -72,12 +72,12 @@ export async function cancelSubscription() {
     ? (Date.now() - new Date(profile.subscription_started_at).getTime()) / 86400000
     : Infinity;
 
-  if (daysSinceStart <= 14) {
-    // Within 14-day window: immediate cancellation
+  if (daysSinceStart <= 7) {
+    // Within the 7-day money-back window: immediate cancellation + refund
     await dodo.subscriptions.update(profile.subscription_id, { status: 'cancelled' });
     // Webhook will fire subscription.cancelled → is_pro = false automatically
   } else {
-    // After 14 days: cancel at next billing date — user keeps Pro until period end
+    // After 7 days: cancel at next billing date — user keeps Pro until period end
     await dodo.subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
     await supabase.from('profiles').update({ cancel_at_period_end: true }).eq('id', user.id);
   }

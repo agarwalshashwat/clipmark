@@ -628,7 +628,7 @@ export default async function Home({
             </p>
           </div>
           <PlanCards prices={prices} variant="preview" />
-          <GuaranteeLine style={{ marginTop: 24 }} />
+          <GuaranteeLine refundDays={7} style={{ marginTop: 24 }} />
           <div style={{ textAlign: 'center', marginTop: 24 }}>
             <a href="/upgrade" style={{ color: '#0D9488', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
               Compare all plans <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
