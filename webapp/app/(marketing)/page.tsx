@@ -2,6 +2,10 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase';
+import PlanCards from './upgrade/PlanCards';
+import { fetchProductPrices } from './upgrade/actions';
+import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
+import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Your YouTube Second Brain',
@@ -88,6 +92,14 @@ export default async function Home({
       }
     ]
   };
+
+  // Live prices for the pricing preview; fall back to defaults if Dodo is unreachable.
+  let prices: ProductPrices;
+  try {
+    prices = await fetchProductPrices();
+  } catch {
+    prices = PRICE_DEFAULTS;
+  }
 
   const faqLd = {
     '@context': 'https://schema.org',
@@ -596,6 +608,31 @@ export default async function Home({
                 {label}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing Preview ─────────────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: '128px 32px', background: 'white' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <span className="cm-section-label">Pricing</span>
+            <h2 style={{
+              fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, marginBottom: 16,
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: '#1A1C1D',
+            }}>
+              Simple pricing. Absurdly affordable.
+            </h2>
+            <p style={{ color: '#545f6c', maxWidth: 560, margin: '0 auto', fontSize: 16 }}>
+              Start free, forever. Upgrade when you&apos;re ready — from <strong>${prices.monthly}/mo</strong> for a permanent second brain.
+            </p>
+          </div>
+          <PlanCards prices={prices} variant="preview" />
+          <GuaranteeLine style={{ marginTop: 24 }} />
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <a href="/upgrade" style={{ color: '#0D9488', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+              Compare all plans <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
+            </a>
           </div>
         </div>
       </section>
