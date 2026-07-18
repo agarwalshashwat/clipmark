@@ -87,19 +87,23 @@ jobs:
       # Reproduce the hosted platform's data grants BEFORE migrations so migration
       # 012 can refine profiles UPDATE to column-level on top of them.
       - name: Bootstrap DB grants
-        run: node --import tsx tests/integration/fixtures/db-admin.ts bootstrap
+        working-directory: webapp
+        run: npm run db:bootstrap
 
       - name: Apply migrations
         working-directory: webapp
         run: npx tsx scripts/migrate.ts
 
       - name: Reload PostgREST schema
-        run: node --import tsx tests/integration/fixtures/db-admin.ts reload
+        working-directory: webapp
+        run: npm run db:reload
 
       - name: Seed test users
-        run: node --import tsx tests/integration/fixtures/seed.ts
+        working-directory: webapp
+        run: npm run db:seed
 
       - name: Run integration tests
+        working-directory: webapp
         run: npm run test:integration
 
       - name: Stop Supabase

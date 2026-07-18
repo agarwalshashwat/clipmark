@@ -11,9 +11,9 @@
  */
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient } from '../fixtures/supabase.js';
-import { createTestUser, type TestUser } from '../fixtures/seed.js';
-import { userClient } from '../fixtures/supabase.js';
+import { adminClient } from './fixtures/supabase.js';
+import { createTestUser, type TestUser } from './fixtures/seed.js';
+import { userClient } from './fixtures/supabase.js';
 
 describe('integration smoke: local Supabase foundation', () => {
   it('migrated core tables are queryable via the service role', async () => {

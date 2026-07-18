@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "tsx scripts/migrate.ts && next build",
     "start": "next start",
-    "migrate": "tsx scripts/migrate.ts"
+    "migrate": "tsx scripts/migrate.ts",
+    "test:unit": "node --import tsx --test tests/unit/*.test.ts",
+    "test:integration": "node --import tsx --test tests/integration/*.test.ts",
+    "db:bootstrap": "tsx tests/integration/fixtures/db-admin.ts bootstrap",
+    "db:reload": "tsx tests/integration/fixtures/db-admin.ts reload",
+    "db:seed": "tsx tests/integration/fixtures/seed.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.0",
