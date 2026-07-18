@@ -1,7 +1,10 @@
 import { createServerSupabase } from '@/lib/supabase';
-import { createCheckoutSession, fetchProductPrices } from './actions';
+import { fetchProductPrices } from './actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './pricing';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
+import PlanCards from './PlanCards';
+import { GuaranteeLine } from '@/app/components/GuaranteeLine';
+import { SocialProof } from '@/app/components/SocialProof';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import styles from './upgrade.module.css';
@@ -71,10 +74,6 @@ export default async function UpgradePage({
     console.error('[UpgradePage] Could not fetch Dodo prices, using defaults:', err);
     prices = PRICE_DEFAULTS;
   }
-  const savingsPct = Math.round(
-    (1 - (Number(prices.annual) / 12) / Number(prices.monthly)) * 100
-  );
-
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -127,6 +126,8 @@ export default async function UpgradePage({
         <div className={styles.header}>
           <h1 className={styles.title}>Simple, transparent pricing</h1>
           <p className={styles.sub}>Choose the plan that fits your learning pace. From casual bookmarking to a full-scale research engine.</p>
+          {/* Renders nothing until verified Web Store numbers land (decision D6). */}
+          <SocialProof style={{ marginTop: 16 }} />
         </div>
 
         {isPro && !success && (
@@ -149,66 +150,12 @@ export default async function UpgradePage({
         )}
 
         {!isPro && (
-          <div className={styles.grid}>
-            <div className={styles.pricingCard}>
-              <div className={styles.planName}>Monthly</div>
-              <div className={styles.price}>
-                <span className={styles.amount}>${prices.monthly}</span>
-                <span className={styles.period}>/month</span>
-              </div>
-              <div className={styles.featureList}>
-                <div className={styles.featureItem}><Check /> Sync to Notion & Obsidian</div>
-                <div className={styles.featureItem}><Check /> Daily Review Dashboard</div>
-                <div className={styles.featureItem}><Check /> Deep Transcript Search</div>
-                <div className={styles.featureItem}><Check /> Unlimited Shared Pages</div>
-                <div className={styles.featureItem}><Check /> Priority Support</div>
-              </div>
-              <form action={createCheckoutSession}>
-                <input type="hidden" name="plan" value="monthly" />
-                <button type="submit" className={styles.ctaBtn}>Go Pro Monthly</button>
-              </form>
-            </div>
-
-            <div className={`${styles.pricingCard} ${styles.pricingCardPro}`}>
-              <div className={styles.badge}>Save {savingsPct}%</div>
-              <div className={styles.planName}>Annual</div>
-              <div className={styles.price}>
-                <span className={styles.amount}>${prices.annual}</span>
-                <span className={styles.period}>/year</span>
-              </div>
-              <div className={styles.featureList}>
-                <div className={styles.featureItem}><Check /> Everything in Monthly</div>
-                <div className={styles.featureItem}><Check /> <strong>Pro: Local AI Optimization</strong></div>
-                <div className={styles.featureItem}><Check /> Custom Markdown Exports</div>
-                <div className={styles.featureItem}><Check /> Advanced Learning Stats</div>
-                <div className={styles.featureItem}><Check /> Spaced Repetition Logic</div>
-              </div>
-              <form action={createCheckoutSession}>
-                <input type="hidden" name="plan" value="annual" />
-                <button type="submit" className={`${styles.ctaBtn} ${styles.ctaBtnPro}`}>Go Pro Annual</button>
-              </form>
-            </div>
-
-            <div className={styles.pricingCard}>
-              <div className={styles.badge} style={{ background: '#732EE4' }}>Launch Special</div>
-              <div className={styles.planName}>Lifetime</div>
-              <div className={styles.price}>
-                <span className={styles.amount}>${prices.lifetime}</span>
-                <span className={styles.period} style={{ textDecoration: 'line-through', marginLeft: 8 }}>$79.99</span>
-              </div>
-              <div className={styles.featureList}>
-                <div className={styles.featureItem}><Check /> Everything in Pro</div>
-                <div className={styles.featureItem}><Check /> Own your data forever</div>
-                <div className={styles.featureItem}><Check /> Lifetime Cloud Archiving</div>
-                <div className={styles.featureItem}><Check /> No recurring fees</div>
-                <div className={styles.featureItem}><Check /> Early access to all labs</div>
-              </div>
-              <form action={createCheckoutSession}>
-                <input type="hidden" name="plan" value="lifetime" />
-                <button type="submit" className={styles.ctaBtn}>Get Lifetime Pro</button>
-              </form>
-            </div>
-          </div>
+          <>
+            <PlanCards prices={prices} variant="full" />
+            {/* Risk reversal directly under the CTAs. Number-free until refund
+                window is decided (D1); pass refundDays to GuaranteeLine then. */}
+            <GuaranteeLine />
+          </>
         )}
 
         <div className={styles.comparisonSection}>

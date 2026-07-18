@@ -1,5 +1,10 @@
 'use client';
 
+// ⚠️ UNUSED — do NOT wire up as-is. This countdown auto-resets to "next Sunday"
+// every week, i.e. a perpetual/renewing countdown, which is a dark pattern
+// (decision D5: dropped for now). Before using it anywhere, replace getNextSunday()
+// with a single real, fixed launch-end date. Left in place intentionally.
+
 import { useState, useEffect } from 'react';
 
 function getNextSunday(): Date {
