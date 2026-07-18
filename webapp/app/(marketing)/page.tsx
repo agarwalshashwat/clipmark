@@ -198,16 +198,6 @@ export default async function Home({
             }}>
               Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
-            <button 
-              style={{
-              display: 'inline-flex', alignItems: 'center', gap: 12,
-              padding: '20px 44px', background: 'white', border: '1px solid #E2E8F0',
-              color: '#0F172A', borderRadius: 16, fontSize: 18, fontWeight: 700,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>play_circle</span>
-              Watch Demo
-            </button>
           </div>
 
           <p style={{ marginTop: 24, fontSize: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -688,7 +678,7 @@ export default async function Home({
             Ready to Build Your Second Brain?
           </h2>
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
-            Join 15,000+ power learners who use Clipmark to turn casual watching into lifelong knowledge.
+            Turn casual watching into lifelong knowledge — build a second brain you&apos;ll actually revisit.
           </p>
           <a href="https://chrome.google.com/webstore" 
              aria-label="Install Clipmark Chrome Extension"
