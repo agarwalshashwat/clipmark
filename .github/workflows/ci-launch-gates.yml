@@ -54,3 +54,54 @@ jobs:
       - run: npm --prefix webapp ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:webapp:smoke
+
+  integration:
+    name: ci-integration
+    runs-on: ubuntu-latest
+    # Local Supabase stack (Postgres + GoTrue + PostgREST) for RLS / API / webhook
+    # integration tests. Kept separate from the fast gates so a Docker/stack flake
+    # doesn't block them. See docs/TEST_PLAN_launch.md (enabler a).
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: npm ci
+      - run: npm --prefix webapp ci
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Export stack env for tests
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(supabase status -o json | jq -r .API_URL)" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(supabase status -o json | jq -r .ANON_KEY)" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r .SERVICE_ROLE_KEY)" >> "$GITHUB_ENV"
+
+      # Reproduce the hosted platform's data grants BEFORE migrations so migration
+      # 012 can refine profiles UPDATE to column-level on top of them.
+      - name: Bootstrap DB grants
+        run: node --import tsx tests/integration/fixtures/db-admin.ts bootstrap
+
+      - name: Apply migrations
+        working-directory: webapp
+        run: npx tsx scripts/migrate.ts
+
+      - name: Reload PostgREST schema
+        run: node --import tsx tests/integration/fixtures/db-admin.ts reload
+
+      - name: Seed test users
+        run: node --import tsx tests/integration/fixtures/seed.ts
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
