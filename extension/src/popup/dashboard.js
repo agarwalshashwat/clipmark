@@ -7,6 +7,7 @@ import {
 } from '../constants.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
+import { applyProGating } from './pro-gating.js';
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('Dashboard');
@@ -427,7 +428,7 @@ async function renderBookmarks() {
             </div>
           </div>
           <div class="vc-card-btns">
-            <button class="vc-revisit-btn" data-video-id="${videoId}">
+            <button class="vc-revisit-btn cm-pro-gated" data-video-id="${videoId}">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_circle</span> Revisit
             </button>
             <button class="vc-group-btn" data-video-id="${videoId}">
@@ -468,7 +469,7 @@ async function renderBookmarks() {
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
-                      <button class="vc-action-btn vc-notes-btn${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
+                      <button class="vc-action-btn vc-notes-btn cm-pro-gated${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
                       <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
                       <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
                       <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
@@ -501,7 +502,7 @@ async function renderBookmarks() {
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
-                      <button class="vc-action-btn vc-notes-btn${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
+                      <button class="vc-action-btn vc-notes-btn cm-pro-gated${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
                       <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
                       <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
                       <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
@@ -2173,6 +2174,7 @@ async function syncAllWithCloud() {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   logger.info('Dashboard initialized', { devLoggingEnabled: logger.enabled });
+  checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
   // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
   // function initTheme() {
   //   chrome.storage.local.get(['theme'], (result) => {

@@ -12,6 +12,7 @@ import {
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
+import { applyProGating } from './pro-gating.js';
 import './zen-garden.js';
 
 // ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
@@ -1105,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   scheduleBookmarksReload(0);
   loadAuthState();
+  checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
 
   // Unsupported screen / Zen Garden button handlers
   document.getElementById('sp-go-youtube-btn')?.addEventListener('click', () => {
