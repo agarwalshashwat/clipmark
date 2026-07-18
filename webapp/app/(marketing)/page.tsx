@@ -198,6 +198,16 @@ export default async function Home({
             }}>
               Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
+            <a href="#pricing"
+              style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '20px 44px', background: 'white', border: '1px solid #E2E8F0',
+              color: '#0F172A', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 24, color: '#0D9488' }}>bolt</span>
+              See Pricing
+            </a>
           </div>
 
           <p style={{ marginTop: 24, fontSize: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>

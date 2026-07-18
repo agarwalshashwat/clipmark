@@ -40,7 +40,18 @@ export async function Navigation() {
               Log In
             </a>
           )}
-          <a href="https://chrome.google.com/webstore" 
+          <a href="/upgrade"
+             className="nav-gopro"
+             style={{
+            padding: '12px 20px',
+            background: 'transparent',
+            color: 'var(--accent)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
+            border: '1px solid var(--accent)',
+            transition: 'all 0.2s ease',
+          }}>
+            ✦ Go Pro
+          </a>
+          <a href="https://chrome.google.com/webstore"
              aria-label="Add Clipmark to Chrome browser for free"
              className="nav-cta"
              style={{
