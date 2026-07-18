@@ -12,7 +12,7 @@
  */
 import DodoPayments from 'dodopayments';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, supabaseAdmin } from '../_lib';
+import { requireAdmin, getSupabaseAdmin } from '../_lib';
 
 const dodo = new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
@@ -22,6 +22,7 @@ const dodo = new DodoPayments({
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
+  const supabaseAdmin = getSupabaseAdmin();
 
   let body: {
     userId?: string;

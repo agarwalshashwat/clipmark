@@ -7,11 +7,12 @@
  * that will re-set is_pro on the next webhook event.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, supabaseAdmin } from '../_lib';
+import { requireAdmin, getSupabaseAdmin } from '../_lib';
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
+  const supabaseAdmin = getSupabaseAdmin();
 
   let body: { userId?: string };
   try {

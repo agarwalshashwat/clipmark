@@ -3,11 +3,12 @@
  * Search users by email prefix or username. Returns up to 20 results.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, supabaseAdmin } from '../_lib';
+import { requireAdmin, getSupabaseAdmin } from '../_lib';
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
+  const supabaseAdmin = getSupabaseAdmin();
 
   const q = (request.nextUrl.searchParams.get('q') ?? '').trim();
   if (!q) return NextResponse.json({ users: [] });

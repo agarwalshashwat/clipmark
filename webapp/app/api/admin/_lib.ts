@@ -2,18 +2,24 @@
  * Admin helper — re-used by every admin API route.
  * Verifies the calling user is in ADMIN_USER_IDS.
  */
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerSupabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/clients';
 import { NextResponse } from 'next/server';
 
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// Re-exported so admin routes keep a single import site; lazy so that importing
+// an admin route in a unit test does not eagerly construct a real client.
+export { getSupabaseAdmin };
 
-/** Returns the authed user if they are an admin, otherwise returns a 401/403 Response. */
-export async function requireAdmin(): Promise<{ userId: string } | NextResponse> {
-  const supabase = await createServerSupabase();
+/**
+ * Returns the authed user if they are an admin, otherwise a 401/403 Response.
+ * `getServerClient` is injectable so the check can be unit-tested with a fake
+ * auth client; production defaults to the cookie-session server client.
+ */
+export async function requireAdmin(
+  getServerClient: () => Promise<Pick<SupabaseClient, 'auth'>> = createServerSupabase,
+): Promise<{ userId: string } | NextResponse> {
+  const supabase = await getServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
