@@ -6,6 +6,7 @@ import {
   APP_EXPORT_PREFIX,
 } from '../constants.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+import { showUpgradeModal } from './upgrade-modal.js';
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('Dashboard');
@@ -725,8 +726,10 @@ function attachEventListeners() {
     btn.addEventListener('click', async () => {
       const isPro = await checkPro();
       if (!isPro) {
-        showToast('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro to unlock it.', 'error');
-        window.open('https://clipmark.mithahara.com/upgrade', '_blank');
+        showUpgradeModal({
+          feature: 'Revisit Mode',
+          benefit: 'Revisit Mode replays only your saved moments — turn hours of video into minutes. Unlock it with Pro.',
+        });
         return;
       }
       const videoId   = btn.dataset.videoId;
@@ -794,7 +797,10 @@ function attachEventListeners() {
       e.stopPropagation();
       const isPro = await checkPro();
       if (!isPro) {
-        showToast('✦ Extended Notes is a Pro feature. Upgrade to Clipmark Pro.');
+        showUpgradeModal({
+          feature: 'Extended Notes',
+          benefit: 'Add rich, extended notes to any bookmark to capture your full thinking. Available on Pro.',
+        });
         return;
       }
       const bookmarkId = btn.dataset.bookmarkId;
@@ -950,7 +956,7 @@ function exportMarkdown() {
 
 async function exportObsidian() {
   const isPro = await checkPro();
-  if (!isPro) { showToast('✦ Obsidian export is a Pro feature. Upgrade to Clipmark Pro.'); return; }
+  if (!isPro) { showUpgradeModal({ feature: 'Obsidian export', benefit: 'Export your clips straight to Obsidian and keep your second brain in sync. Available on Pro.' }); return; }
 
   const groups = groupByVideo(allBookmarks);
   const lines  = ['# Clipmark Export — Obsidian\n'];
@@ -973,7 +979,7 @@ async function exportObsidian() {
 
 async function exportNotionCSV() {
   const isPro = await checkPro();
-  if (!isPro) { showToast('✦ Notion CSV export is a Pro feature. Upgrade to Clipmark Pro.'); return; }
+  if (!isPro) { showUpgradeModal({ feature: 'Notion export', benefit: 'Export your clips as a Notion-ready CSV and drop them into any database. Available on Pro.' }); return; }
 
   const header = 'Name,Video,URL,Tags,Notes,Date\n';
   const rows   = allBookmarks.map(b => {
@@ -993,7 +999,7 @@ async function exportNotionCSV() {
 
 async function exportReadingList() {
   const isPro = await checkPro();
-  if (!isPro) { showToast('✦ Reading List export is a Pro feature. Upgrade to Clipmark Pro.'); return; }
+  if (!isPro) { showUpgradeModal({ feature: 'Reading List export', benefit: 'Export a clean reading list of everything you saved. Available on Pro.' }); return; }
 
   const groups = groupByVideo(allBookmarks);
   const lines  = ['Clipmark — Reading List Export', '='.repeat(40), ''];
@@ -2281,7 +2287,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save filter (Pro)
   document.getElementById('save-filter-btn').addEventListener('click', async () => {
     const isPro = await checkPro();
-    if (!isPro) { showToast('✦ Saved Filters is a Pro feature. Upgrade to Clipmark Pro.'); return; }
+    if (!isPro) { showUpgradeModal({ feature: 'Saved Filters', benefit: 'Save your favorite tag/date filters and reuse them in one click. Available on Pro.' }); return; }
     const name = prompt('Name this filter:', filterQuery);
     if (!name || !name.trim()) return;
     await saveSavedSearch(name.trim(), filterQuery, sortOrder);

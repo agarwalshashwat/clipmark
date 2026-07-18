@@ -11,6 +11,7 @@ import {
   localGeneratePost,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+import { showUpgradeModal } from './upgrade-modal.js';
 import './zen-garden.js';
 
 // ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
@@ -456,8 +457,10 @@ async function shareBookmarks() {
     if (response.status === 403) {
       const err = await response.json().catch(() => ({}));
       if (err.error === 'free_limit_reached') {
-        showError(`You've used all ${err.limit} free shares. ✦ Upgrade to Pro for unlimited sharing.`, 5000);
-        chrome.tabs.create({ url: `${API_BASE}/upgrade` });
+        showUpgradeModal({
+          feature: 'Unlimited sharing',
+          benefit: `You've used all ${err.limit} free shared collections. Go Pro for unlimited public share pages.`,
+        });
         btn.textContent = '↗ Share';
         btn.disabled = false;
         return null;
@@ -1317,7 +1320,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const isPro = await checkPro();
       if (!isPro) {
-        showError('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro.', 4000);
+        showUpgradeModal({
+          feature: 'Revisit Mode',
+          benefit: 'Revisit Mode replays only your saved moments — turn hours of video into minutes. Unlock it with Pro.',
+        });
         return;
       }
       const tab = await getCurrentTab();
