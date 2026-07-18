@@ -2,13 +2,9 @@
  * Dodo webhook unit tests (audit #2) — branch coverage with injected fakes.
  * No DB/network. Entitlement correctness against a real DB is covered in
  * tests/integration/webhook-entitlements.test.ts.
+ *
+ * Placeholder env is set by the --import preload in the test:unit script.
  */
-// Placeholder env so importing @/lib/supabase (eager client) doesn't throw.
-process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'http://localhost:54321';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'test-anon';
-process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'test-service';
-process.env.DODO_ANNUAL_PRODUCT_ID ??= 'prod_annual_123';
-
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { handleDodoWebhook } from '../../app/api/webhooks/dodo/handler.js';
