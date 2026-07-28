@@ -18,7 +18,7 @@ const FEATURES = [
   { label: 'Deep Search (inside transcripts)',   free: false, pro: true  },
   { label: 'Smart AI Synthesis (Local-only)',    free: false, pro: true  },
   { label: 'Unlimited Shared Collections',       free: '5',   pro: '∞'   },
-  { label: 'Custom Markdown Exports',            free: false, pro: true  },
+  { label: 'Anki, Obsidian & Notion exports',     free: false, pro: true  },
   { label: 'Spaced Repetition Reminders',        free: false, pro: true  },
   { label: 'Priority Support',                   free: false, pro: true  },
 ];
