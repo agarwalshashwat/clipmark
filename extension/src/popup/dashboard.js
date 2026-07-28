@@ -429,7 +429,7 @@ async function renderBookmarks() {
             </div>
           </div>
           <div class="vc-card-btns">
-            <button class="vc-revisit-btn cm-pro-gated" data-video-id="${videoId}">
+            <button class="vc-revisit-btn cm-pro-gated" data-video-id="${videoId}" title="Start Active Recall">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_circle</span> Revisit
             </button>
             <button class="vc-group-btn" data-video-id="${videoId}">
@@ -729,8 +729,8 @@ function attachEventListeners() {
       const isPro = await checkPro();
       if (!isPro) {
         showUpgradeModal({
-          feature: 'Revisit Mode',
-          benefit: 'Revisit Mode replays only your saved moments — turn hours of video into minutes. Unlock it with Pro.',
+          feature: 'Active Recall Mode',
+          benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
         });
         return;
       }
@@ -739,7 +739,7 @@ function attachEventListeners() {
         .filter(b => b.videoId === videoId)
         .sort((a, b) => a.timestamp - b.timestamp);
       if (!bookmarks.length) return;
-      await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks } });
+      await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks, recall: true } });
       chrome.tabs.create({ url: ytWatchUrl(videoId) });
     });
   });
