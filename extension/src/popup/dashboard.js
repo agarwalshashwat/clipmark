@@ -5,6 +5,7 @@ import {
   ytThumbnailUrl,
   APP_EXPORT_PREFIX,
 } from '../constants.module.js';
+import { buildAnkiTsv } from '../export-anki.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
@@ -996,6 +997,14 @@ async function exportNotionCSV() {
   }).join('\n');
 
   downloadFile(header + rows, `${APP_EXPORT_PREFIX}-notion.csv`, 'text/csv');
+}
+
+async function exportAnki() {
+  const isPro = await checkPro();
+  if (!isPro) { showUpgradeModal({ feature: 'Anki export', benefit: 'Turn your clips into Anki cards — with a link back to the exact video moment. Available on Pro.' }); return; }
+
+  const videoTitles = await getVideoTitles();
+  downloadFile(buildAnkiTsv(allBookmarks, videoTitles), `${APP_EXPORT_PREFIX}-anki.txt`, 'text/plain');
 }
 
 async function exportReadingList() {
@@ -2356,6 +2365,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('export-md').addEventListener('click',   withClose(exportMarkdown));
   document.getElementById('export-obsidian').addEventListener('click',   () => { exportObsidian(); toggleExportPopover(true); });
   document.getElementById('export-notion-csv').addEventListener('click', () => { exportNotionCSV(); toggleExportPopover(true); });
+  document.getElementById('export-anki').addEventListener('click',       () => { exportAnki(); toggleExportPopover(true); });
   document.getElementById('export-reading').addEventListener('click',    () => { exportReadingList(); toggleExportPopover(true); });
 
   // Import
