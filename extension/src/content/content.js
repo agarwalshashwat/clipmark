@@ -1575,6 +1575,9 @@ function updateRevisionOverlay(hideNote = false) {
   const total    = revisionState.segments.length;
   const rawNote  = seg.bookmark.description || '';
   const note     = rawNote.length > 90 ? rawNote.slice(0, 90) + '…' : rawNote;
+  // Same overlay serves both modes — label it for the one that's actually running.
+  overlay.querySelector('.yt-revision-label').textContent =
+    revisionState.recall ? '🧠 Active Recall' : '▶ Revisit Mode';
   overlay.querySelector('.yt-revision-clip').textContent  = `Clip ${current} / ${total}`;
   overlay.querySelector('.yt-revision-range').textContent =
     `${formatTimestamp(seg.start)} → ${formatTimestamp(seg.end)}`;

@@ -435,7 +435,7 @@ async function renderBookmarks() {
           </div>
           <div class="vc-card-btns">
             <button class="vc-revisit-btn cm-pro-gated" data-video-id="${videoId}" title="Start Active Recall">
-              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_circle</span> Revisit
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_circle</span> Recall
             </button>
             <button class="vc-group-btn" data-video-id="${videoId}">
               <span class="material-symbols-outlined">folder</span> Group

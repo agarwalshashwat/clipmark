@@ -527,9 +527,11 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   </div>
                 </div>
                 <div className={styles.videoActions}>
+                  {/* Plain link to the video — Active Recall lives in the extension,
+                      so don't imply this starts it. */}
                   <a href={`https://www.youtube.com/watch?v=${c.video_id}`} className={styles.videoActionBtn}>
                     <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
-                    Revisit
+                    Watch
                   </a>
                   <button
                     className={`${styles.videoActionBtn} ${styles.videoActionBtnSecondary}`}
