@@ -129,6 +129,14 @@ function formatTimestamp(seconds) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// Shared tag-chip HTML (used by the marker tooltip and the recall panels)
+function buildTagChipsHtml(tags, tagClass) {
+  return (tags || []).map(t => {
+    const c = TAG_COLORS[t] || stringToColor(t);
+    return `<span class="${tagClass}" style="background:${c}22;color:${c}">${String(t).replace(/</g, '&lt;')}</span>`;
+  }).join('');
+}
+
 // ─── Video observer ───────────────────────────────────────────────────────────
 function initializeVideoObserver() {
   debugLog('Observer', 'Setting up video observer');
@@ -182,7 +190,7 @@ function setupBookmarkMarkers() {
   chrome.storage.local.get({ pendingRevision: null }, r => {
     if (r.pendingRevision?.videoId === currentVideoId && r.pendingRevision.bookmarks?.length) {
       chrome.storage.local.remove('pendingRevision');
-      setTimeout(() => startRevisionMode(r.pendingRevision.bookmarks), 800);
+      setTimeout(() => startRevisionMode(r.pendingRevision.bookmarks, r.pendingRevision.recall), 800);
     }
   });
 
@@ -323,10 +331,7 @@ function updateBookmarkMarkers() {
           } else {
             const tags = (bookmark.tags || []);
             const tagHtml = tags.length
-              ? `<div class="yt-bm-tt-tags">${tags.map(t => {
-                  const c = TAG_COLORS[t] || stringToColor(t);
-                  return `<span class="yt-bm-tt-tag" style="background:${c}22;color:${c}">${t}</span>`;
-                }).join('')}</div>`
+              ? `<div class="yt-bm-tt-tags">${buildTagChipsHtml(tags, 'yt-bm-tt-tag')}</div>`
               : '';
             const desc = (bookmark.description || '').replace(/</g, '&lt;');
             bmTooltip.innerHTML = `<div class="yt-bm-tt-time">${formatTimestamp(bookmark.timestamp)}</div>${desc ? `<div class="yt-bm-tt-desc">${desc}</div>` : ''}${tagHtml}`;
@@ -752,7 +757,7 @@ function initializeMessageListener() {
         return;
       }
       if (request.action === 'startRevision') {
-        startRevisionMode(request.bookmarks);
+        startRevisionMode(request.bookmarks, request.recall);
         sendResponse({});
         return;
       }
@@ -1233,6 +1238,104 @@ function injectStyles() {
     }
     .yt-revision-extend:hover { background: rgba(255,255,255,0.14); color: white; }
 
+    /* ── Active Recall panels ────────────────────────────────────────────── */
+    .yt-recall-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 999999;
+      background: rgba(15, 15, 15, 0.94);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 20px 24px 18px;
+      color: white;
+      font-family: ${FONT_FAMILY_NATIVE};
+      min-width: 280px;
+      max-width: 400px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+    }
+    .yt-recall-label {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .yt-recall-time {
+      font-size: 13px;
+      font-weight: 700;
+      color: #14B8A6;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 10px;
+    }
+    .yt-recall-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .yt-recall-tag {
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .yt-recall-hint {
+      font-size: 11px;
+      color: rgba(255,255,255,0.50);
+      font-style: italic;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .yt-recall-desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.5;
+      margin-bottom: 14px;
+      word-break: break-word;
+    }
+    .yt-recall-btn {
+      width: 100%;
+      background: #14B8A6;
+      border: 1px solid #14B8A6;
+      border-radius: 6px;
+      color: #000;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 8px 0;
+      transition: filter 0.12s;
+    }
+    .yt-recall-btn:hover { filter: brightness(1.15); }
+    .yt-recall-grade-row {
+      display: flex;
+      gap: 8px;
+    }
+    .yt-recall-grade-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 7px 0;
+      transition: background 0.12s, color 0.12s;
+    }
+    .yt-recall-grade-btn:hover { background: rgba(255,255,255,0.18); color: white; }
+    .yt-recall-grade-btn--good {
+      background: rgba(20,184,166,0.18);
+      border-color: rgba(20,184,166,0.5);
+      color: #14B8A6;
+    }
+    .yt-recall-grade-btn--good:hover { background: rgba(20,184,166,0.32); color: #5eead4; }
+
     /* Player bookmark button */
     .yt-bookmark-player-btn {
       color: white;
@@ -1273,11 +1376,38 @@ function buildRevisionSegments(bookmarks) {
   });
 }
 
-function startRevisionMode(bookmarks) {
+function startRevisionMode(bookmarks, recall = false) {
   if (!bookmarks.length) return;
   exitRevisionMode(); // clean up any prior session
-  revisionState = { segments: buildRevisionSegments(bookmarks), index: 0, countdownTimer: null, speed: 1 };
-  playRevisionSegment(0);
+  revisionState = { segments: buildRevisionSegments(bookmarks), index: 0, countdownTimer: null, speed: 1, recall: !!recall };
+  enterSegment(0);
+}
+
+// Single seam deciding how a segment is entered: recall mode prompts first,
+// classic revisit plays immediately.
+function enterSegment(index) {
+  if (!revisionState) return;
+  if (revisionState.recall) {
+    showRecallPrompt(index);
+  } else {
+    playRevisionSegment(index);
+  }
+}
+
+function finishRevisionSession() {
+  const recall = !!revisionState?.recall;
+  exitRevisionMode();
+  showSilentSaveIndicator(recall ? 'Recall session complete ✓' : 'Revision complete ✓');
+}
+
+function advanceToNextOrFinish() {
+  if (!revisionState) return;
+  const next = revisionState.index + 1;
+  if (next >= revisionState.segments.length) {
+    finishRevisionSession();
+    return;
+  }
+  enterSegment(next);
 }
 
 function playRevisionSegment(index) {
@@ -1304,10 +1434,16 @@ function revisionTimeUpdateHandler() {
 
 function advanceRevision() {
   if (!revisionState) return;
+  if (revisionState.recall) {
+    // Recall mode: pause and self-grade instead of the auto-advance countdown
+    const v = document.querySelector('video') || video;
+    if (v) v.pause();
+    showRecallGrade();
+    return;
+  }
   const next = revisionState.index + 1;
   if (next >= revisionState.segments.length) {
-    exitRevisionMode();
-    showSilentSaveIndicator('Revision complete ✓');
+    finishRevisionSession();
     return;
   }
   let countdown = 3;
@@ -1327,23 +1463,19 @@ function advanceRevision() {
 function skipToNext() {
   if (!revisionState) return;
   if (revisionState.countdownTimer) { clearInterval(revisionState.countdownTimer); revisionState.countdownTimer = null; }
+  removeRecallPanels(); // discard any pending recall prompt/grade panel
   const v = document.querySelector('video') || video;
   if (v) v.removeEventListener('timeupdate', revisionTimeUpdateHandler);
-  const next = revisionState.index + 1;
-  if (next >= revisionState.segments.length) {
-    exitRevisionMode();
-    showSilentSaveIndicator('Revision complete ✓');
-    return;
-  }
-  playRevisionSegment(next);
+  advanceToNextOrFinish();
 }
 
 function skipToPrev() {
   if (!revisionState || revisionState.index <= 0) return;
   if (revisionState.countdownTimer) { clearInterval(revisionState.countdownTimer); revisionState.countdownTimer = null; }
+  removeRecallPanels(); // discard any pending recall prompt/grade panel
   const v = document.querySelector('video') || video;
   if (v) v.removeEventListener('timeupdate', revisionTimeUpdateHandler);
-  playRevisionSegment(revisionState.index - 1);
+  enterSegment(revisionState.index - 1);
 }
 
 function exitRevisionMode() {
@@ -1352,6 +1484,7 @@ function exitRevisionMode() {
   if (revisionState?.countdownTimer) clearInterval(revisionState.countdownTimer);
   revisionState = null;
   document.querySelector('.yt-revision-overlay')?.remove();
+  removeRecallPanels();
 }
 
 function ensureRevisionOverlay() {
@@ -1434,7 +1567,7 @@ function updateSpeedButtons(overlay, activeRate) {
   });
 }
 
-function updateRevisionOverlay() {
+function updateRevisionOverlay(hideNote = false) {
   if (!revisionState) return;
   const overlay  = ensureRevisionOverlay();
   const seg      = revisionState.segments[revisionState.index];
@@ -1445,7 +1578,7 @@ function updateRevisionOverlay() {
   overlay.querySelector('.yt-revision-clip').textContent  = `Clip ${current} / ${total}`;
   overlay.querySelector('.yt-revision-range').textContent =
     `${formatTimestamp(seg.start)} → ${formatTimestamp(seg.end)}`;
-  overlay.querySelector('.yt-revision-note').textContent  = note;
+  overlay.querySelector('.yt-revision-note').textContent  = hideNote ? '' : note;
   overlay.querySelector('.yt-revision-next').textContent  = '';
   overlay.querySelector('[data-dir="prev"]').disabled = revisionState.index === 0;
   updateSpeedButtons(overlay, revisionState.speed);
@@ -1454,6 +1587,109 @@ function updateRevisionOverlay() {
 function updateRevisionCountdown(sec) {
   const el = document.querySelector('.yt-revision-next');
   if (el) el.textContent = `Next clip in ${sec}s`;
+}
+
+// ─── Active Recall mode ───────────────────────────────────────────────────────
+// Recall-before-reveal flow layered on Revisit Mode: prompt (description hidden)
+// → reveal & play the segment → self-grade → persist → next prompt.
+
+function removeRecallPanels() {
+  document.querySelectorAll('.yt-recall-panel').forEach(el => el.remove());
+}
+
+// Shown BEFORE a segment plays: timestamp + tags only — the description is the
+// answer, so it stays hidden until the user reveals.
+function showRecallPrompt(index) {
+  if (!revisionState) return;
+  removeRecallPanels();
+  revisionState.index = index;
+  const v = document.querySelector('video') || video;
+  if (v) v.pause();
+  // Keep the revisit overlay (Prev/Next/✕/speed) present and in sync during the
+  // prompt, but hide its note — the description is the answer.
+  updateRevisionOverlay(true);
+
+  const seg   = revisionState.segments[index];
+  const total = revisionState.segments.length;
+  const tags  = seg.bookmark.tags || [];
+  const panel = document.createElement('div');
+  panel.className = 'yt-recall-panel';
+  panel.innerHTML = `
+    <div class="yt-recall-label">🧠 Recall this moment</div>
+    <div class="yt-recall-time">${formatTimestamp(seg.start)} · Clip ${index + 1} / ${total}</div>
+    ${tags.length ? `<div class="yt-recall-tags">${buildTagChipsHtml(tags, 'yt-recall-tag')}</div>` : ''}
+    <div class="yt-recall-hint">Try to recall what happens here before revealing.</div>
+    <button class="yt-recall-btn">Reveal &amp; Play ▶</button>
+  `;
+  panel.querySelector('.yt-recall-btn').addEventListener('click', () => {
+    if (!revisionState) return;
+    removeRecallPanels();
+    playRevisionSegment(index);
+  });
+  document.body.appendChild(panel);
+}
+
+// Shown AFTER a segment ends in recall mode: reveal the note and self-grade.
+function showRecallGrade() {
+  if (!revisionState) return;
+  removeRecallPanels();
+  const seg  = revisionState.segments[revisionState.index];
+  const desc = (seg.bookmark.description || 'No description').replace(/</g, '&lt;');
+  const panel = document.createElement('div');
+  panel.className = 'yt-recall-panel';
+  panel.innerHTML = `
+    <div class="yt-recall-label">Did you recall it?</div>
+    <div class="yt-recall-desc">${desc}</div>
+    <div class="yt-recall-grade-row">
+      <button class="yt-recall-grade-btn" data-grade="again">🔁 Again</button>
+      <button class="yt-recall-grade-btn yt-recall-grade-btn--good" data-grade="good">✅ Got it</button>
+    </div>
+  `;
+  panel.querySelectorAll('.yt-recall-grade-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleRecallGrade(seg.bookmark, btn.dataset.grade));
+  });
+  document.body.appendChild(panel);
+}
+
+function handleRecallGrade(bookmark, grade) {
+  if (!revisionState) return;
+  removeRecallPanels();
+  gradeAndPersistBookmark(bookmark, grade);
+  advanceToNextOrFinish();
+}
+
+// Read-modify-write on bm_<videoId>: grade the FRESH stored copy (not the
+// session-start snapshot) so a concurrent edit from the side panel/dashboard
+// isn't silently reverted.
+function gradeAndPersistBookmark(bookmark, grade) {
+  if (!isContextValid() || !bookmark) return;
+  const videoId = bookmark.videoId || getCurrentVideoIdFromLocation();
+  if (!videoId) return;
+  chrome.storage.sync.get({ [bmKey(videoId)]: [] }, result => {
+    const bookmarks = result[bmKey(videoId)];
+    const idx = bookmarks.findIndex(b => b.id === bookmark.id);
+    if (idx === -1) {
+      debugLog('Recall', 'Graded bookmark not found in storage', { id: bookmark.id, videoId });
+      return;
+    }
+    const fresh = bookmarks[idx];
+    let updated;
+    try {
+      // gradeRecall ships in src/recall.js (sibling PR) — guard until it lands.
+      updated = typeof gradeRecall === 'function'
+        ? gradeRecall(fresh, grade, Date.now())
+        : { ...fresh, lastReviewed: new Date().toISOString() };
+    } catch (error) {
+      debugLog('Recall', 'gradeRecall failed, falling back', { error: error?.message });
+      updated = { ...fresh, lastReviewed: new Date().toISOString() };
+    }
+    bookmarks[idx] = updated;
+    chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks }, () => {
+      if (chrome.runtime.lastError) {
+        debugLog('Recall', 'Failed to persist grade', { error: chrome.runtime.lastError.message });
+      }
+    });
+  });
 }
 
 // ─── Initialize ───────────────────────────────────────────────────────────────
