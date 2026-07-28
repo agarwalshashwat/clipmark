@@ -304,7 +304,7 @@ export default async function Home({
               Stop Scrubbing, <br /><span style={{ color: 'var(--primary-deep)' }}>Start Remembering.</span>
             </h2>
             <p style={{ fontSize: 18, color: '#545f6c', marginBottom: 40, lineHeight: 1.75 }}>
-              The average learner forgets 70% of what they watch within 24 hours. Clipmark&apos;s <strong>Revisit Mode</strong> forces you to focus only on the breakthroughs you saved, turning hours of idle watching into minutes of active mastery.
+              Most of what you watch fades within a day. Clipmark&apos;s <strong>Active Recall</strong> quizzes you on the moments you saved before replaying them — turning hours of idle watching into minutes of active mastery.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -429,7 +429,7 @@ export default async function Home({
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: '#1A1C1D' }}>For the Serious Learner</h3>
               <p style={{ color: '#545f6c', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Treat YouTube like a structured course. Spaced Revisit reminds you to review key bookmarks at the optimal time, ensuring 100% retention for exam day.
+                Treat YouTube like a structured course. Active Recall resurfaces your saved moments on a spaced schedule and quizzes you before the reveal — so what you study actually sticks by exam day.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#f3e8ff', color: '#7c3aed', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#retention</span>
