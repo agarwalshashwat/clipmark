@@ -13,7 +13,7 @@ const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,  pro: true  },
   { label: 'Cloud Sync across devices',          free: false, pro: true  },
   { label: 'Auto-sync to Notion & Obsidian',     free: false, pro: true  },
-  { label: 'Daily Knowledge Review Queue',       free: false, pro: true  },
+  { label: 'Active Recall Mode (video flashcards)', free: false, pro: true },
   { label: 'Permanent Transcript Archiving',     free: false, pro: true  },
   { label: 'Deep Search (inside transcripts)',   free: false, pro: true  },
   { label: 'Smart AI Synthesis (Local-only)',    free: false, pro: true  },

@@ -1323,8 +1323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isPro = await checkPro();
       if (!isPro) {
         showUpgradeModal({
-          feature: 'Revisit Mode',
-          benefit: 'Revisit Mode replays only your saved moments — turn hours of video into minutes. Unlock it with Pro.',
+          feature: 'Active Recall Mode',
+          benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
         });
         return;
       }
@@ -1341,9 +1341,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       await waitForContentScript(tab.id);
-      await sendMessageToTab(tab.id, { action: 'startRevision', bookmarks });
+      await sendMessageToTab(tab.id, { action: 'startRevision', bookmarks, recall: true });
     } catch (error) {
-      showError('Could not start Revisit Mode: ' + error.message);
+      showError('Could not start Active Recall: ' + error.message);
     }
   });
 
