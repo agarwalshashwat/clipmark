@@ -4177,3 +4177,109 @@
     color: var(--text-primary, #1a1a1a);
 }
 .sh-btn-open:hover { background: rgba(20,184,166,0.1); color: #14B8A6; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ACTIVE RECALL DUE QUEUE (Unit 5)
+   ══════════════════════════════════════════════════════════════════════════ */
+.recall-due-strip {
+    background: rgba(20, 184, 166, 0.06);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+}
+
+[data-theme="dark"] .recall-due-strip {
+    background: rgba(20, 184, 166, 0.08);
+    border-color: rgba(20, 184, 166, 0.3);
+}
+
+.recall-due-header {
+    margin-bottom: 10px;
+}
+
+.recall-due-title {
+    font-size: 14px;
+    font-weight: 800;
+    font-family: var(--font-display);
+    color: #006b5f;
+    letter-spacing: -0.2px;
+}
+
+[data-theme="dark"] .recall-due-title {
+    color: #4db8a8;
+}
+
+.recall-due-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.recall-due-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 6px 8px 6px 14px;
+    background: #fff;
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+[data-theme="dark"] .recall-due-chip {
+    background: var(--bg-sub);
+    border-color: var(--border);
+}
+
+.recall-due-chip-title {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.recall-due-chip-count {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #006b5f;
+    background: rgba(20, 184, 166, 0.12);
+    border-radius: 9999px;
+    padding: 2px 8px;
+}
+
+[data-theme="dark"] .recall-due-chip-count {
+    color: #4db8a8;
+}
+
+.recall-due-start-btn {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: filter 0.12s;
+}
+
+.recall-due-start-btn:hover {
+    filter: brightness(1.08);
+}
+
+/* Hide the strip on sub-views (mirrors the all-bookmarks chrome rules) */
+.bm-main[data-view="revisit"] #recall-due-strip,
+.bm-main[data-view="videos"] #recall-due-strip,
+.bm-main[data-view="analytics"] #recall-due-strip,
+.bm-main[data-view="groups"] #recall-due-strip {
+    display: none !important;
+}
