@@ -1,7 +1,11 @@
--- 012_rls_hardening.sql
+-- 013_rls_hardening.sql
 -- Pre-launch security hardening for the profiles + collections tables.
 --
--- Fixes three critical RLS gaps found in the launch-readiness audit:
+-- (Renumbered from 012 → 013: the production DB's schema_migrations already
+-- recorded a separate `012_db_helpers.sql` that is not in this repo. See
+-- migrations/README.md for the reconciliation the owner still needs to do.)
+--
+-- Fixes four RLS gaps found in the launch-readiness / Supabase-advisor audits:
 --   1. profiles: RLS is row-level, not column-level, so any authenticated user
 --      could self-grant Pro/affiliate by writing sensitive columns directly with
 --      the public anon key (e.g. is_pro, is_affiliate, commission_rate). We
@@ -15,6 +19,11 @@
 --   3. collections: the INSERT policy was WITH CHECK(true) (anonymous mass
 --      insert). We scope it to the owning user; /api/share now inserts via the
 --      service role after authenticating the caller.
+--   4. schema_migrations: this bookkeeping table lives in the public schema with
+--      no RLS, so PostgREST exposes it to anon/authenticated (Supabase advisor
+--      flags it CRITICAL). We enable RLS with no policies (deny-all via the API).
+--      migrate.ts connects as the postgres superuser over a direct connection,
+--      which bypasses RLS, so migration tracking is unaffected.
 
 -- ── profiles: column-level UPDATE allow-list ────────────────────────────────
 -- Supabase grants UPDATE on all columns to anon/authenticated by default; revoke
@@ -54,3 +63,11 @@ AS $$
 $$;
 
 GRANT EXECUTE ON FUNCTION public.increment_collection_view(UUID) TO anon, authenticated;
+
+-- ── schema_migrations: deny all API access (closes the CRITICAL advisor item) ─
+-- Enabling RLS with no policies means anon/authenticated get zero rows through
+-- PostgREST. The migration runner uses a direct postgres superuser connection,
+-- which bypasses RLS, so tracking still works. Table is created by migrate.ts
+-- before any migration runs, so it exists here.
+ALTER TABLE public.schema_migrations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.schema_migrations FROM anon, authenticated;
