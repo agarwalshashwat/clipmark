@@ -30,7 +30,14 @@ if (!DATABASE_URL) {
 const MIGRATIONS_DIR = path.join(__dirname, '..', 'migrations');
 
 async function run() {
-  const client = new Client({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  // Local Postgres (e.g. `supabase start` in dev/CI) doesn't serve SSL; hosted
+  // Supabase requires it. Disable SSL only for local hosts so the same script
+  // works for production migrations and local/CI integration setups.
+  const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(DATABASE_URL!);
+  const client = new Client({
+    connectionString: DATABASE_URL,
+    ssl: isLocal ? false : { rejectUnauthorized: false },
+  });
 
   await client.connect();
   console.log('🔌  Connected to database');

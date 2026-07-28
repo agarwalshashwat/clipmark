@@ -8,10 +8,18 @@ import { createClient } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 import { type ProductPrices } from './pricing';
 
-const dodo = new DodoPayments({
-  bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-  environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode',
-});
+// Lazy, memoized Dodo client. Constructing eagerly at module scope throws when
+// DODO_PAYMENTS_API_KEY is unset — and since the landing page imports this module
+// (PlanCards + fetchProductPrices), that would 500 `/` in any keyless environment
+// (e.g. CI smoke jobs). Defer construction until a Dodo call actually runs; the
+// price fetch's try/catch then falls back to PRICE_DEFAULTS instead of crashing.
+let _dodo: DodoPayments | null = null;
+function dodoClient(): DodoPayments {
+  return (_dodo ??= new DodoPayments({
+    bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
+    environment: process.env.NODE_ENV === 'production' ? 'live_mode' : 'test_mode',
+  }));
+}
 
 const PRODUCT_IDS: Record<string, string> = {
   monthly: process.env.DODO_MONTHLY_PRODUCT_ID!,
@@ -35,9 +43,9 @@ const getCachedProductPrices = unstable_cache(
     // out of the cached function so unstable_cache does NOT store a failed result.
     // The public getProductPrices() wrapper below catches errors without caching them.
     const [monthly, annual, lifetime] = await Promise.all([
-      dodo.products.retrieve(PRODUCT_IDS.monthly),
-      dodo.products.retrieve(PRODUCT_IDS.annual),
-      dodo.products.retrieve(PRODUCT_IDS.lifetime),
+      dodoClient().products.retrieve(PRODUCT_IDS.monthly),
+      dodoClient().products.retrieve(PRODUCT_IDS.annual),
+      dodoClient().products.retrieve(PRODUCT_IDS.lifetime),
     ]);
     return {
       monthly: centsToDisplay(extractCentPrice(monthly.price as { type: string; price?: number; fixed_price?: number })),
@@ -72,13 +80,13 @@ export async function cancelSubscription() {
     ? (Date.now() - new Date(profile.subscription_started_at).getTime()) / 86400000
     : Infinity;
 
-  if (daysSinceStart <= 14) {
-    // Within 14-day window: immediate cancellation
-    await dodo.subscriptions.update(profile.subscription_id, { status: 'cancelled' });
+  if (daysSinceStart <= 7) {
+    // Within the 7-day money-back window: immediate cancellation + refund
+    await dodoClient().subscriptions.update(profile.subscription_id, { status: 'cancelled' });
     // Webhook will fire subscription.cancelled → is_pro = false automatically
   } else {
-    // After 14 days: cancel at next billing date — user keeps Pro until period end
-    await dodo.subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
+    // After 7 days: cancel at next billing date — user keeps Pro until period end
+    await dodoClient().subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
     await supabase.from('profiles').update({ cancel_at_period_end: true }).eq('id', user.id);
   }
 }
@@ -118,7 +126,7 @@ export async function createCheckoutSession(formData: FormData) {
     dodoDiscountCode = (affiliateProfile?.dodo_discount_code as string | null) ?? null;
   }
 
-  const session = await dodo.checkoutSessions.create({
+  const session = await dodoClient().checkoutSessions.create({
     product_cart: [{ product_id: productId, quantity: 1 }],
     customer: {
       email: user.email!,

@@ -1,3 +1,16 @@
+// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
+// Init context 1 of 4: extension background service worker.
+// When the Sentry dependency is added, initialize the SDK HERE, at the very top
+// of the service worker, before any listeners are registered, so early errors
+// are captured. Use the SAME DSN/project as the webapp, background, popup/side-
+// panel, and content-script contexts (distinguish them with a `context` tag).
+//   import * as Sentry from '@sentry/browser';
+//   Sentry.init({ dsn: SENTRY_DSN, release: chrome.runtime.getManifest().version,
+//                 environment: API_BASE.includes('localhost') ? 'dev' : 'prod' });
+//   Sentry.setTag('context', 'extension-background');
+// Do NOT add the @sentry/* dependency yet — this is a placeholder only.
+// ──────────────────────────────────────────────────────────────────────────────
+
 // ─── Constants ──────────────────────────────────────────────────────────────
 const TAG_COLORS = {
     important: '#ff6b6b',

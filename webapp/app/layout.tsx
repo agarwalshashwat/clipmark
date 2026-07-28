@@ -1,3 +1,17 @@
+// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
+// Init context 4 of 4: Next.js webapp (this is the root layout / app entry).
+// When the Sentry dependency is added, wire up the standard Next.js integration
+// using the SAME DSN/project as the three extension contexts (tag context
+// 'webapp'):
+//   • sentry.client.config.ts  — Sentry.init for the browser bundle
+//   • sentry.server.config.ts  — Sentry.init for Node runtime
+//   • sentry.edge.config.ts    — Sentry.init for the edge runtime
+//   • instrumentation.ts       — export register() that imports the above
+//     (requires experimental.instrumentationHook in next.config.mjs on Next 14)
+// Read DSN from process.env.NEXT_PUBLIC_SENTRY_DSN; set environment from
+// NODE_ENV. Do NOT add the @sentry/nextjs dependency yet — placeholder only.
+// ──────────────────────────────────────────────────────────────────────────────
+
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';

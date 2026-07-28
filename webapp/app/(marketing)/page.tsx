@@ -2,6 +2,10 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase';
+import PlanCards from './upgrade/PlanCards';
+import { fetchProductPrices } from './upgrade/actions';
+import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
+import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Your YouTube Second Brain',
@@ -88,6 +92,14 @@ export default async function Home({
       }
     ]
   };
+
+  // Live prices for the pricing preview; fall back to defaults if Dodo is unreachable.
+  let prices: ProductPrices;
+  try {
+    prices = await fetchProductPrices();
+  } catch {
+    prices = PRICE_DEFAULTS;
+  }
 
   const faqLd = {
     '@context': 'https://schema.org',
@@ -186,16 +198,16 @@ export default async function Home({
             }}>
               Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
-            <button 
+            <a href="#pricing"
               style={{
-              display: 'inline-flex', alignItems: 'center', gap: 12,
+              display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '20px 44px', background: 'white', border: '1px solid #E2E8F0',
-              color: '#0F172A', borderRadius: 16, fontSize: 18, fontWeight: 700,
+              color: '#0F172A', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>play_circle</span>
-              Watch Demo
-            </button>
+              <span className="material-symbols-outlined" style={{ fontSize: 24, color: '#0D9488' }}>bolt</span>
+              See Pricing
+            </a>
           </div>
 
           <p style={{ marginTop: 24, fontSize: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -600,6 +612,31 @@ export default async function Home({
         </div>
       </section>
 
+      {/* ── Pricing Preview ─────────────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: '128px 32px', background: 'white' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <span className="cm-section-label">Pricing</span>
+            <h2 style={{
+              fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, marginBottom: 16,
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: '#1A1C1D',
+            }}>
+              Simple pricing. Absurdly affordable.
+            </h2>
+            <p style={{ color: '#545f6c', maxWidth: 560, margin: '0 auto', fontSize: 16 }}>
+              Start free, forever. Upgrade when you&apos;re ready — from <strong>${prices.monthly}/mo</strong> for a permanent second brain.
+            </p>
+          </div>
+          <PlanCards prices={prices} variant="preview" />
+          <GuaranteeLine refundDays={7} style={{ marginTop: 24 }} />
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <a href="/upgrade" style={{ color: '#0D9488', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+              Compare all plans <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ Section ────────────────────────────────────────────────── */}
       <section id="faq" style={{ padding: '96px 32px', background: '#fcfcfd' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
@@ -651,7 +688,7 @@ export default async function Home({
             Ready to Build Your Second Brain?
           </h2>
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
-            Join 15,000+ power learners who use Clipmark to turn casual watching into lifelong knowledge.
+            Turn casual watching into lifelong knowledge — build a second brain you&apos;ll actually revisit.
           </p>
           <a href="https://chrome.google.com/webstore" 
              aria-label="Install Clipmark Chrome Extension"

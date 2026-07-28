@@ -1,3 +1,19 @@
+// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
+// Init context 3 of 4: content script (runs in YouTube's page, isolated world).
+// CAUTION — content scripts need extra care:
+//   • Use @sentry/browser but scope it to a *dedicated* Client so we do NOT hook
+//     global window handlers on youtube.com and accidentally capture YouTube's
+//     own errors (noise + privacy). Prefer a manually-constructed Client +
+//     Scope over Sentry.init(), and set defaultIntegrations:false / disable
+//     GlobalHandlers + TryCatch + Breadcrumbs(dom) integrations.
+//   • YouTube ships a strict CSP: sending directly may be blocked. Route events
+//     through the background service worker (postMessage → chrome.runtime) so
+//     the transport runs in the extension origin, not the page.
+//   • Never attach page DOM/URL/PII to events; keep captures to our own code.
+//   • Use the SAME DSN/project as the other three contexts; tag context
+//     'extension-content'. Do NOT add the @sentry/* dependency yet.
+// ──────────────────────────────────────────────────────────────────────────────
+
 function isDevLoggingEnabled() {
   try {
     const manifest = chrome?.runtime?.getManifest?.();

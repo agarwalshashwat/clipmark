@@ -48,11 +48,11 @@ async function getCollection(shareId: string): Promise<Collection | null> {
 
   if (error || !data) return null;
 
-  // Increment view count (fire-and-forget)
+  // Increment view count (fire-and-forget) via a SECURITY DEFINER RPC.
+  // Direct UPDATEs on collections are no longer allowed for the anon role
+  // (see migration 012) — the RPC is the only sanctioned view_count write.
   supabase
-    .from('collections')
-    .update({ view_count: (data.view_count ?? 0) + 1 })
-    .eq('id', shareId)
+    .rpc('increment_collection_view', { collection_id: shareId })
     .then(() => {});
 
   return data as Collection;

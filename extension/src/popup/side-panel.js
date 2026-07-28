@@ -11,7 +11,21 @@ import {
   localGeneratePost,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+import { showUpgradeModal } from './upgrade-modal.js';
+import { applyProGating } from './pro-gating.js';
 import './zen-garden.js';
+
+// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
+// Init context 2 of 4: popup / side-panel pages (this file is the side-panel
+// entry; mirror the same block in any future popup page). Initialize the Sentry
+// SDK HERE, before installGlobalErrorLogging, using the SAME DSN/project as the
+// webapp, background, and content-script contexts.
+//   import * as Sentry from '@sentry/browser';
+//   Sentry.init({ dsn: SENTRY_DSN, release: chrome.runtime.getManifest().version,
+//                 environment: API_BASE.includes('localhost') ? 'dev' : 'prod' });
+//   Sentry.setTag('context', 'extension-side-panel');
+// Do NOT add the @sentry/* dependency yet — this is a placeholder only.
+// ──────────────────────────────────────────────────────────────────────────────
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('SidePanel');
@@ -277,7 +291,7 @@ function showStatus(message, duration = 1500) {
 async function saveBookmark(bookmark) {
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
+    if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
@@ -392,7 +406,7 @@ async function shareBookmarks() {
   const btn = document.getElementById('share-btn');
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
+    if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
@@ -409,23 +423,45 @@ async function shareBookmarks() {
     btn.textContent = 'Sharing…';
     btn.disabled = true;
 
-    const { bmUser } = await syncGet({ bmUser: null });
+    // Sharing requires sign-in: the server derives the owner from this token,
+    // so we no longer send a spoofable userId in the body.
+    const token = await getValidToken();
+    if (!token) {
+      showError('Please sign in to share a collection.', 5000);
+      chrome.tabs.create({ url: `${API_BASE}/signin?extensionId=${chrome.runtime.id}` });
+      btn.textContent = '↗ Share';
+      btn.disabled = false;
+      return null;
+    }
+
     const response = await fetch(`${API_BASE}/api/share`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({
         videoId,
         videoTitle: videoTitles[videoId] || '',
         bookmarks,
-        userId: bmUser?.userId || null,
       }),
     });
+
+    if (response.status === 401) {
+      showError('Your session expired. Please sign in again to share.', 5000);
+      chrome.tabs.create({ url: `${API_BASE}/signin?extensionId=${chrome.runtime.id}` });
+      btn.textContent = '↗ Share';
+      btn.disabled = false;
+      return null;
+    }
 
     if (response.status === 403) {
       const err = await response.json().catch(() => ({}));
       if (err.error === 'free_limit_reached') {
-        showError(`You've used all ${err.limit} free shares. ✦ Upgrade to Pro for unlimited sharing.`, 5000);
-        chrome.tabs.create({ url: `${API_BASE}/upgrade` });
+        showUpgradeModal({
+          feature: 'Unlimited sharing',
+          benefit: `You've used all ${err.limit} free shared collections. Go Pro for unlimited public share pages.`,
+        });
         btn.textContent = '↗ Share';
         btn.disabled = false;
         return null;
@@ -468,7 +504,7 @@ async function summarizeBookmarks() {
 
   try {
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) {
+    if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
@@ -568,7 +604,7 @@ async function generateSocialPost(platform, shareUrl, autoOpen = false) {
     }
 
     const tab = await getCurrentTab();
-    if (!tab.url.includes('youtube.com/watch')) throw new Error('Open a YouTube video first');
+    if (!(tab.url || '').includes('youtube.com/watch')) throw new Error('Open a YouTube video first');
 
     const videoId = extractVideoId(tab.url);
     const bookmarks = await getVideoBookmarks(videoId);
@@ -1070,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   scheduleBookmarksReload(0);
   loadAuthState();
+  checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
 
   // Unsupported screen / Zen Garden button handlers
   document.getElementById('sp-go-youtube-btn')?.addEventListener('click', () => {
@@ -1171,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('add-bookmark').addEventListener('click', async () => {
     try {
       const tab = await getCurrentTab();
-      if (!tab.url.includes('youtube.com/watch')) {
+      if (!(tab.url || '').includes('youtube.com/watch')) {
         throw new Error('Please navigate to a YouTube video first!');
       }
 
@@ -1202,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const tab = await getCurrentTab();
       debugLog('AutoFill', 'Tab URL', tab.url);
-      if (!tab.url.includes('youtube.com/watch')) {
+      if (!(tab.url || '').includes('youtube.com/watch')) {
         debugLog('AutoFill', 'Not a YouTube watch page, aborting');
         return;
       }
@@ -1285,11 +1322,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const isPro = await checkPro();
       if (!isPro) {
-        showError('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro.', 4000);
+        showUpgradeModal({
+          feature: 'Revisit Mode',
+          benefit: 'Revisit Mode replays only your saved moments — turn hours of video into minutes. Unlock it with Pro.',
+        });
         return;
       }
       const tab = await getCurrentTab();
-      if (!tab.url.includes('youtube.com/watch')) {
+      if (!(tab.url || '').includes('youtube.com/watch')) {
         showError('Please navigate to a YouTube video first.');
         return;
       }

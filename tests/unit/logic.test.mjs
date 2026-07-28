@@ -1,19 +1,22 @@
 /**
  * Pure-logic unit tests — no browser, no Chrome APIs required.
  *
- * Functions are inlined from their source files verbatim so that tests run
- * in a plain Node.js context without VM realm-mismatch issues.
+ * Tag/color/URL helpers are imported directly from the shipped source module
+ * (extension/src/constants.module.js) so these tests guard the real code and
+ * cannot silently drift from it (audit gap #11).
  *
- * Source file locations:
- *   parseTags, getTagColor, stringToColor, ytWatchUrl, ytThumbnailUrl
- *     → extension/src/constants.js
- *   formatTimestamp, bmKey
- *     → extension/src/background/background.js
+ * The remaining helpers below are still inlined from source because they live
+ * in non-importable contexts (the classic content script, the classic service
+ * worker, and DOM-coupled page scripts). De-duplicating them requires
+ * extracting the pure logic into a shared module across three module contexts
+ * — tracked as a follow-up in docs/TEST_PLAN_launch.md (#11). Until then:
+ *   formatTimestamp, bmKey, frequencyLabel → extension/src/background/background.js
  *     Note: content.js has a different formatTimestamp (minutes not zero-padded).
- *   clusterBookmarks, cleanTranscriptText, getTextAtTimestamp
- *     → extension/src/content/content.js
+ *   clusterBookmarks, cleanTranscriptText, getTextAtTimestamp, buildRevisionSegments
+ *                                          → extension/src/content/content.js
+ *   extractVideoId, remKey, isDueForReview → extension/src/popup/*.js
  *
- * IMPORTANT: Keep these copies in sync with their source files.
+ * IMPORTANT: keep the remaining inlined copies in sync with their source files.
  * The Playwright E2E specs exercise the real source in a live browser.
  *
  * Run: npm run test:unit
@@ -22,43 +25,17 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert'; // non-strict: deepEqual handles plain-value comparison
 
-// ─── Inlined from extension/src/constants.js ──────────────────────────────
-
-const TAG_COLORS = {
-  important: '#ef4444',
-  review:    '#f97316',
-  note:      '#3b82f6',
-  question:  '#22c55e',
-  todo:      '#a855f7',
-  key:       '#ec4899',
-};
+// ─── Imported from shipped source: extension/src/constants.module.js ──────────
+import {
+  TAG_COLORS,
+  parseTags,
+  stringToColor,
+  getTagColor,
+  ytWatchUrl,
+  ytThumbnailUrl,
+} from '../../extension/src/constants.module.js';
 
 const TRANSCRIPT_TRUNCATE_LENGTH = 120;
-
-function parseTags(description) {
-  if (!description) return [];
-  const matches = description.match(/#(\w+)/g);
-  return matches ? matches.map(t => t.slice(1).toLowerCase()) : [];
-}
-
-function stringToColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
-}
-
-function getTagColor(tags) {
-  if (!tags || tags.length === 0) return '#4da1ee';
-  return TAG_COLORS[tags[0]] || stringToColor(tags[0]);
-}
-
-function ytWatchUrl(videoId, t = 0) {
-  return `https://www.youtube.com/watch?v=${videoId}${t ? `&t=${Math.floor(t)}s` : ''}`;
-}
-
-function ytThumbnailUrl(videoId, quality = 'mqdefault') {
-  return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
-}
 
 // ─── Inlined from extension/src/background/background.js ──────────────────
 
