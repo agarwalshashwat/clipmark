@@ -1642,7 +1642,7 @@ function showRecallGrade() {
     <div class="yt-recall-desc">${desc}</div>
     <div class="yt-recall-grade-row">
       <button class="yt-recall-grade-btn" data-grade="again">🔁 Again</button>
-      <button class="yt-recall-grade-btn yt-recall-grade-btn--good" data-grade="good">✅ Got it</button>
+      <button class="yt-recall-grade-btn yt-recall-grade-btn--good" data-grade="got_it">✅ Got it</button>
     </div>
   `;
   panel.querySelectorAll('.yt-recall-grade-btn').forEach(btn => {
