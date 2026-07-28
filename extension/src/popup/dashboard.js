@@ -304,6 +304,11 @@ async function renderBookmarks() {
 
   updateSaveFilterBtn();
 
+  // Keep the Active Recall due strip in sync on every re-render (deletes,
+  // imports, cloud sync, storage changes). Fire-and-forget; CSS hides it on
+  // sub-views. Hoisted declaration — defined below near the other renderers.
+  renderRecallDueStrip();
+
   // Groups, analytics, revisit, and videos manage their own container
   if (viewMode === 'groups') {
     await renderGroupsView();
@@ -1408,6 +1413,75 @@ async function updateRevisitBadge() {
       b.style.display = count > 0 ? '' : 'none';
     });
   } catch {}
+}
+
+// ─── Active Recall due queue ─────────────────────────────────────────────────
+// TODO: consolidate with recall.module.js once it lands
+function isDueForRecall(b, nowMs = Date.now()) {
+  if (!b.reviewSchedule?.length || !b.createdAt) return false;
+  const created = new Date(b.createdAt).getTime();
+  const last = b.lastReviewed ? new Date(b.lastReviewed).getTime() : 0;
+  return b.reviewSchedule.some(days => {
+    const dueAt = created + days * 86400000;
+    return nowMs >= dueAt && last < dueAt;
+  });
+}
+
+async function startRecallForVideo(videoId) {
+  const isPro = await checkPro();
+  if (!isPro) {
+    showUpgradeModal({
+      feature: 'Active Recall Mode',
+      benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
+    });
+    return;
+  }
+  const dueOnes = allBookmarks
+    .filter(b => b.videoId === videoId && isDueForRecall(b))
+    .sort((a, b) => a.timestamp - b.timestamp);
+  if (!dueOnes.length) return;
+  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks: dueOnes, recall: true } });
+  chrome.tabs.create({ url: ytWatchUrl(videoId) });
+}
+
+async function renderRecallDueStrip() {
+  const strip = document.getElementById('recall-due-strip');
+  if (!strip) return;
+
+  const dueBookmarks = allBookmarks.filter(b => isDueForRecall(b));
+  if (!dueBookmarks.length) {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+
+  const byVideo = groupByVideo(dueBookmarks);
+  // Titles map is only needed as a fallback for bookmarks saved without videoTitle
+  const needsTitleMap = Object.values(byVideo).some(bms => !bms[0].videoTitle);
+  const videoTitles = needsTitleMap ? await getVideoTitles() : {};
+  const esc = s => String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+  strip.innerHTML = `
+    <div class="recall-due-header">
+      <span class="recall-due-title">🧠 ${dueBookmarks.length} moment${dueBookmarks.length !== 1 ? 's' : ''} due for recall</span>
+    </div>
+    <div class="recall-due-chips">
+      ${Object.entries(byVideo).map(([videoId, bms]) => {
+        const title = esc(bms[0].videoTitle || videoTitles[videoId] || 'Unknown video');
+        return `
+          <div class="recall-due-chip">
+            <span class="recall-due-chip-title" title="${title}">${title}</span>
+            <span class="recall-due-chip-count">${bms.length} due</span>
+            <button class="recall-due-start-btn cm-pro-gated" data-video-id="${videoId}">Start Active Recall</button>
+          </div>`;
+      }).join('')}
+    </div>`;
+  strip.style.display = '';
+
+  strip.querySelectorAll('.recall-due-start-btn').forEach(btn => {
+    btn.addEventListener('click', () => startRecallForVideo(btn.dataset.videoId));
+  });
 }
 
 // ─── Main load ────────────────────────────────────────────────────────────────
