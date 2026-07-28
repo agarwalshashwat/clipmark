@@ -6,6 +6,7 @@ import styles from '../page.module.css';
 import toolbarStyles from './toolbar.module.css';
 import { deleteBookmark, bulkDeleteBookmarks, importBookmarks } from '../actions';
 import { getTagColor } from '../_utils/tagColors';
+import { buildAnkiTsvFromCollections } from '../_utils/anki';
 import GroupPickerModal from './GroupPickerModal';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
@@ -137,6 +138,12 @@ function exportMarkdown(collections: Collection[]) {
     lines.push('');
   }
   downloadFile(lines.join('\n'), 'clipmark-bookmarks.md', 'text/markdown');
+}
+
+// Pro. Mirrors the extension's Anki exporter (see _utils/anki.ts for the
+// twin-sync note); .txt because that's what Anki's importer expects for TSV.
+function exportAnki(collections: Collection[]) {
+  downloadFile(buildAnkiTsvFromCollections(collections), 'clipmark-anki.txt', 'text/plain');
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -405,6 +412,21 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   <button className={toolbarStyles.exportBtn} onClick={() => { exportJSON(collections); setExportOpen(false); }}>↓ JSON</button>
                   <button className={toolbarStyles.exportBtn} onClick={() => { exportCSV(collections); setExportOpen(false); }}>↓ CSV</button>
                   <button className={toolbarStyles.exportBtn} onClick={() => { exportMarkdown(collections); setExportOpen(false); }}>↓ Markdown</button>
+                  <hr className={toolbarStyles.exportDivider} />
+                  <p className={toolbarStyles.exportSection}>Pro</p>
+                  {/* Anki export mirrors the extension's Pro exporter. Free users
+                      get the upgrade page instead of a file. */}
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) { window.location.href = '/upgrade'; return; }
+                      exportAnki(collections);
+                    }}
+                    title={isPro ? 'Export as an Anki-importable TSV' : 'Anki export is a Pro feature'}
+                  >
+                    ↓ Anki{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
                   <hr className={toolbarStyles.exportDivider} />
                   <button className={toolbarStyles.exportBtn} onClick={() => { importInputRef.current?.click(); setExportOpen(false); }}>↑ Import JSON</button>
                 </div>

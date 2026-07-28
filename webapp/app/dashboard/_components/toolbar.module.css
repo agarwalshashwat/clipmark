@@ -199,3 +199,16 @@
   border-top: 1px solid #f1f5f9;
   margin: 4px 0;
 }
+
+/* "PRO" pill on gated export rows (free users only). */
+.exportProTag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
