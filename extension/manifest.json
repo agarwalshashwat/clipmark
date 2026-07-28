@@ -45,6 +45,7 @@
       "js": [
         "src/constants.js",
         "src/ai/local-ai.js",
+        "src/recall.js",
         "src/content/content.js"
       ],
       "run_at": "document_end",
