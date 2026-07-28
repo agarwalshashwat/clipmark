@@ -9,6 +9,7 @@ import { buildAnkiTsv } from '../export-anki.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
+import { isDueForRecall } from '../recall.module.js';
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('Dashboard');
@@ -1416,16 +1417,8 @@ async function updateRevisitBadge() {
 }
 
 // ─── Active Recall due queue ─────────────────────────────────────────────────
-// TODO: consolidate with recall.module.js once it lands
-function isDueForRecall(b, nowMs = Date.now()) {
-  if (!b.reviewSchedule?.length || !b.createdAt) return false;
-  const created = new Date(b.createdAt).getTime();
-  const last = b.lastReviewed ? new Date(b.lastReviewed).getTime() : 0;
-  return b.reviewSchedule.some(days => {
-    const dueAt = created + days * 86400000;
-    return nowMs >= dueAt && last < dueAt;
-  });
-}
+// Due-check comes from the shared engine (see the import at the top of this
+// file) — the previously inlined copy has been removed.
 
 async function startRecallForVideo(videoId) {
   const isPro = await checkPro();
@@ -1436,8 +1429,9 @@ async function startRecallForVideo(videoId) {
     });
     return;
   }
+  const now = Date.now();
   const dueOnes = allBookmarks
-    .filter(b => b.videoId === videoId && isDueForRecall(b))
+    .filter(b => b.videoId === videoId && isDueForRecall(b, now))
     .sort((a, b) => a.timestamp - b.timestamp);
   if (!dueOnes.length) return;
   await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks: dueOnes, recall: true } });
@@ -1448,7 +1442,7 @@ async function renderRecallDueStrip() {
   const strip = document.getElementById('recall-due-strip');
   if (!strip) return;
 
-  const dueBookmarks = allBookmarks.filter(b => isDueForRecall(b));
+  const dueBookmarks = allBookmarks.filter(b => isDueForRecall(b, Date.now()));
   if (!dueBookmarks.length) {
     strip.style.display = 'none';
     strip.innerHTML = '';

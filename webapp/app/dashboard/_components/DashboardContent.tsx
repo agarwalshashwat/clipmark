@@ -7,6 +7,7 @@ import toolbarStyles from './toolbar.module.css';
 import { deleteBookmark, bulkDeleteBookmarks, importBookmarks } from '../actions';
 import { getTagColor } from '../_utils/tagColors';
 import { buildAnkiTsvFromCollections } from '../_utils/anki';
+import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
 import GroupPickerModal from './GroupPickerModal';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
@@ -222,6 +223,13 @@ export default function DashboardContent({ collections, isPro, initialView, succ
   const totalBookmarks = collections.reduce((s, c) => s + (c.bookmarks?.length ?? 0), 0);
   const uniqueTags = Array.from(new Set(collections.flatMap(c => (c.bookmarks ?? []).flatMap((b: Bookmark) => b.tags ?? []))));
   const lastSaved = collections[0]?.created_at ?? null;
+
+  // Due-for-recall is time-dependent, so compute it after mount only: the server
+  // and the browser can disagree on "now", which would be a hydration mismatch.
+  const [recallDue, setRecallDue] = useState<RecallDueSummary>({ total: 0, videos: [] });
+  useEffect(() => {
+    setRecallDue(summariseRecallDue(collections));
+  }, [collections]);
 
   // ── View toggle ─────────────────────────────────────────────────────────────
 
@@ -483,6 +491,40 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                 {lastSaved ? timeAgo(lastSaved) : '—'}
               </span>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Due for recall (read-only) ──
+          Grading happens in the extension (Active Recall drives the YouTube
+          player), so the web surface only reports what's waiting. */}
+      {viewMode === 'library' && recallDue.total > 0 && (
+        <section className={styles.recallDueStrip}>
+          <div className={styles.recallDueHead}>
+            <span className={styles.recallDueCount}>
+              🧠 {recallDue.total} {recallDue.total === 1 ? 'moment' : 'moments'} due for recall
+            </span>
+            <span className={styles.recallDueHint}>
+              Open a video with the Clipmark extension to start Active Recall.
+            </span>
+          </div>
+          <div className={styles.recallDueChips}>
+            {recallDue.videos.slice(0, 6).map(v => (
+              <a
+                key={v.videoId}
+                href={`https://www.youtube.com/watch?v=${v.videoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.recallDueChip}
+                title={`${v.due} due — open on YouTube`}
+              >
+                <span className={styles.recallDueChipTitle}>{v.title}</span>
+                <span className={styles.recallDueChipNum}>{v.due}</span>
+              </a>
+            ))}
+            {recallDue.videos.length > 6 && (
+              <span className={styles.recallDueMore}>+{recallDue.videos.length - 6} more</span>
+            )}
           </div>
         </section>
       )}

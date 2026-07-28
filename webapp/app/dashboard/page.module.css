@@ -793,3 +793,79 @@
   transition: box-shadow 0.2s;
 }
 .suggestionCta:hover { box-shadow: 0 4px 16px rgba(26, 28, 29, 0.12); }
+
+/* ── Due for recall (read-only strip; Active Recall itself runs in the extension) ── */
+.recallDueStrip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  border-radius: 16px;
+  background: rgba(20, 184, 166, 0.06);
+  border: 1px solid rgba(20, 184, 166, 0.18);
+}
+
+.recallDueHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.recallDueCount {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0d9488;
+}
+
+.recallDueHint {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.recallDueChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.recallDueChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.recallDueChip:hover { background: rgba(20, 184, 166, 0.08); }
+
+.recallDueChipTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recallDueChipNum {
+  flex-shrink: 0;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.recallDueMore {
+  font-size: 12px;
+  color: #64748b;
+}

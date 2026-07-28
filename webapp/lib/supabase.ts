@@ -12,6 +12,11 @@ export interface Bookmark {
   color: string;
   createdAt: string;
   videoTitle: string | null;
+  // Spaced-recall state. Written by the extension and synced verbatim into the
+  // bookmarks JSONB, so it may be absent on older rows — hence optional.
+  reviewSchedule?: number[];
+  lastReviewed?: string | null;
+  recallStreak?: number;
 }
 
 export interface Collection {
