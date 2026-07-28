@@ -1,7 +1,7 @@
 # Clipmark — dev commands
 # Usage: make <target>
 
-.PHONY: help dev build start migrate sync-tokens ext-dev ext-build ext-zip ext-open test test-report clean
+.PHONY: help dev build start db-migrate sync-tokens ext-dev ext-build ext-zip ext-open test test-report clean
 
 WEBAPP_DIR := webapp
 EXT_DIR    := extension
@@ -14,9 +14,9 @@ help:
 	@echo ""
 	@echo "  Webapp"
 	@echo "    make dev        — next dev (hot reload)"
-	@echo "    make build      — migrate + next build"
+	@echo "    make build      — next build (NO migrations)"
 	@echo "    make start      — next start (production)"
-	@echo "    make migrate    — run DB migrations"
+	@echo "    make db-migrate  — run DB migrations vs DATABASE_URL (deliberate; staging first)"
 	@echo ""
 	@echo "  Extension"
 	@echo "    make ext-dev    — extension dev server (CRXJS + auto reload workflow)"
@@ -43,8 +43,8 @@ build:
 start:
 	cd $(WEBAPP_DIR) && npm run start
 
-migrate:
-	cd $(WEBAPP_DIR) && npm run migrate
+db-migrate:
+	cd $(WEBAPP_DIR) && npm run db:migrate
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 test:
