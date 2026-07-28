@@ -64,6 +64,21 @@ describe('summariseRecallDue', () => {
     assert.deepEqual(s.videos.map(v => [v.videoId, v.due]), [['v2', 3], ['v1', 1]]);
   });
 
+  it('reports the due bookmark ids so the extension can filter its own copy', () => {
+    const s = summariseRecallDue([
+      { video_id: 'v1', video_title: 'One', bookmarks: [{ ...due, id: 11 }, { ...notDue, id: 12 }, { ...due, id: 13 }] },
+    ], NOW);
+    assert.deepEqual(s.videos[0].dueIds, [11, 13]);
+  });
+
+  it('drops entries without a numeric id rather than sending undefined', () => {
+    const s = summariseRecallDue([
+      { video_id: 'v1', video_title: 'One', bookmarks: [{ ...due, id: 11 }, { ...due }] },
+    ], NOW);
+    assert.equal(s.videos[0].due, 2);
+    assert.deepEqual(s.videos[0].dueIds, [11]);
+  });
+
   it('omits videos with nothing due', () => {
     const s = summariseRecallDue([{ video_id: 'v1', video_title: 'One', bookmarks: [notDue] }], NOW);
     assert.equal(s.total, 0);

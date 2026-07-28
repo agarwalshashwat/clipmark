@@ -8,6 +8,7 @@ import { deleteBookmark, bulkDeleteBookmarks, importBookmarks } from '../actions
 import { getTagColor } from '../_utils/tagColors';
 import { buildAnkiTsvFromCollections } from '../_utils/anki';
 import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
+import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
@@ -230,6 +231,29 @@ export default function DashboardContent({ collections, isPro, initialView, succ
   useEffect(() => {
     setRecallDue(summariseRecallDue(collections));
   }, [collections]);
+
+  // Can we hand a recall session straight to the extension? Client-only (needs
+  // window.chrome + the id learned during the OAuth handoff), so it starts false
+  // and flips after mount — which also keeps SSR markup stable.
+  const [bridgeReady, setBridgeReady] = useState(false);
+  const [startingVideoId, setStartingVideoId] = useState<string | null>(null);
+  useEffect(() => { setBridgeReady(isExtensionBridgeAvailable()); }, []);
+
+  const handleStartRecall = useCallback(async (videoId: string, dueIds: number[]) => {
+    setStartingVideoId(videoId);
+    const result = await startRecallInExtension(videoId, dueIds);
+    setStartingVideoId(null);
+    if (result.ok) {
+      setCopyToast(`Active Recall started — ${result.count} ${result.count === 1 ? 'moment' : 'moments'}`);
+    } else {
+      // Bridge failed (extension removed/updated since we cached its id) — send
+      // them to the video so the session can still be started from there.
+      setCopyToast('Could not reach the extension — opening the video instead');
+      window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener');
+      setBridgeReady(isExtensionBridgeAvailable());
+    }
+    setTimeout(() => setCopyToast(''), 3000);
+  }, []);
 
   // ── View toggle ─────────────────────────────────────────────────────────────
 
@@ -505,22 +529,40 @@ export default function DashboardContent({ collections, isPro, initialView, succ
               🧠 {recallDue.total} {recallDue.total === 1 ? 'moment' : 'moments'} due for recall
             </span>
             <span className={styles.recallDueHint}>
-              Open a video with the Clipmark extension to start Active Recall.
+              {bridgeReady
+                ? 'Click a video to start Active Recall in the extension.'
+                : 'Open a video with the Clipmark extension to start Active Recall.'}
             </span>
           </div>
           <div className={styles.recallDueChips}>
             {recallDue.videos.slice(0, 6).map(v => (
-              <a
-                key={v.videoId}
-                href={`https://www.youtube.com/watch?v=${v.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.recallDueChip}
-                title={`${v.due} due — open on YouTube`}
-              >
-                <span className={styles.recallDueChipTitle}>{v.title}</span>
-                <span className={styles.recallDueChipNum}>{v.due}</span>
-              </a>
+              bridgeReady ? (
+                <button
+                  key={v.videoId}
+                  type="button"
+                  className={styles.recallDueChip}
+                  onClick={() => handleStartRecall(v.videoId, v.dueIds)}
+                  disabled={startingVideoId === v.videoId}
+                  title={`Start Active Recall — ${v.due} due`}
+                >
+                  <span className={styles.recallDueChipTitle}>
+                    {startingVideoId === v.videoId ? 'Starting…' : v.title}
+                  </span>
+                  <span className={styles.recallDueChipNum}>{v.due}</span>
+                </button>
+              ) : (
+                <a
+                  key={v.videoId}
+                  href={`https://www.youtube.com/watch?v=${v.videoId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.recallDueChip}
+                  title={`${v.due} due — open on YouTube`}
+                >
+                  <span className={styles.recallDueChipTitle}>{v.title}</span>
+                  <span className={styles.recallDueChipNum}>{v.due}</span>
+                </a>
+              )
             ))}
             {recallDue.videos.length > 6 && (
               <span className={styles.recallDueMore}>+{recallDue.videos.length - 6} more</span>

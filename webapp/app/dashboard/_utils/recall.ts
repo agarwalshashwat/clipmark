@@ -15,6 +15,7 @@ const RECALL_DAY_MS = 86_400_000;
 
 /** Shape of the recall fields the extension writes into the bookmarks JSONB. */
 export interface RecallFields {
+  id?: number;
   createdAt?: string | null;
   reviewSchedule?: number[] | null;
   lastReviewed?: string | null;
@@ -39,7 +40,7 @@ export interface RecallDueSummary {
   /** Total bookmarks due across every video. */
   total: number;
   /** Per-video breakdown, busiest first. */
-  videos: { videoId: string; title: string; due: number }[];
+  videos: { videoId: string; title: string; due: number; dueIds: number[] }[];
 }
 
 /** Summarise what's due across the dashboard's per-video collections. */
@@ -51,10 +52,17 @@ export function summariseRecallDue(
   let total = 0;
 
   for (const c of collections) {
-    const due = (c.bookmarks ?? []).filter(b => isDueForRecall(b, nowMs)).length;
-    if (due > 0) {
-      total += due;
-      videos.push({ videoId: c.video_id, title: c.video_title || c.video_id, due });
+    const dueBookmarks = (c.bookmarks ?? []).filter(b => isDueForRecall(b, nowMs));
+    if (dueBookmarks.length > 0) {
+      total += dueBookmarks.length;
+      videos.push({
+        videoId: c.video_id,
+        title: c.video_title || c.video_id,
+        due: dueBookmarks.length,
+        // Passed to the extension as a filter over ITS bookmarks (see
+        // _utils/extension.ts) — ids only, never content.
+        dueIds: dueBookmarks.map(b => b.id).filter((id): id is number => typeof id === 'number'),
+      });
     }
   }
 
