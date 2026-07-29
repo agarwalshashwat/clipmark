@@ -156,6 +156,55 @@ a product feature. The server action guards on the same flag, so hiding the form
 isn't the only control. See the owner checklist §H for how to use it, and
 `webapp/scripts/simulate-plan.ts` for flipping an account between billing states.
 
+## 6c. Error monitoring (Sentry)
+
+Two projects under the `mithahara` org, deliberately **not** one:
+
+| Sentry project | Covers | DSN lives in |
+|---|---|---|
+| `clipmark-web` | webapp — server components, server actions, `/api/*` (incl. the Dodo webhook), browser bundle | `NEXT_PUBLIC_SENTRY_DSN` env var |
+| `clipmark-extension` | background worker, side panel, content script | committed in `extension/src/error-reporting.js` |
+
+They're split because the content script runs inside youtube.com and will always
+see some third-party noise; keeping it out of `clipmark-web` means the webapp's
+issue stream and alerts stay trustworthy. The free plan's 5k errors/month is
+org-wide, so a second project costs nothing.
+
+**What's deliberately off:** tracing (`tracesSampleRate: 0`), session replay,
+profiling, and logs. Replay especially — it would record the dashboard, meaning
+users' private bookmark titles. `sendDefaultPii: false` for the same reason;
+don't flip it without a real need.
+
+### Webapp env vars (Vercel)
+
+| Var | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SENTRY_DSN` | yes, to report at all | **Inlined at build time** — changing it needs a redeploy, not a restart |
+| `SENTRY_DSN` | no | Read at runtime, takes precedence server-side. Use to repoint the server without rebuilding |
+| `SENTRY_AUTH_TOKEN` | no, but wanted | Build-time secret. Without it, source maps aren't uploaded and production stack traces stay minified. Create under Sentry → Settings → Auth Tokens |
+| `NEXT_PUBLIC_SENTRY_DEV` | no | `1` reports from `next dev`. Off by default so local noise doesn't eat the quota |
+| `NEXT_PUBLIC_SENTRY_DEBUG` | no | `1` logs every envelope. Also disables Sentry's log tree-shaking so the logs actually appear |
+
+Environment tagging is automatic on Vercel via `NEXT_PUBLIC_VERCEL_ENV`, so
+preview deploys don't pollute production issues, and releases are tagged with the
+commit SHA.
+
+### Why the extension doesn't use `@sentry/browser`
+
+It posts to Sentry's envelope API directly (~100 lines in
+`extension/src/error-reporting.js`). The E2E suite loads the extension from **raw
+source**, and Chrome can't resolve a bare npm specifier like `@sentry/browser` in
+an unpacked load — bundling the SDK would work only in `dist/` and break every
+source-loaded test. The extension otherwise has zero runtime dependencies.
+
+Because the wire format is hand-built with no SDK validating it, a malformed
+envelope would be silently dropped by Sentry and we'd *believe* monitoring
+worked. `tests/unit/error-reporting.test.mjs` pins the format for that reason —
+don't delete it.
+
+Reporting is **off on unpacked/dev installs** (no `update_url` in the manifest).
+Set `globalThis.CLIPMARK_SENTRY_DEV = true` before init to test locally.
+
 ## 7. Quick reference
 
 ```bash

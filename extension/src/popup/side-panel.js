@@ -14,21 +14,16 @@ import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import './zen-garden.js';
+import { initErrorReporting } from '../error-reporting.js';
 
-// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
-// Init context 2 of 4: popup / side-panel pages (this file is the side-panel
-// entry; mirror the same block in any future popup page). Initialize the Sentry
-// SDK HERE, before installGlobalErrorLogging, using the SAME DSN/project as the
-// webapp, background, and content-script contexts.
-//   import * as Sentry from '@sentry/browser';
-//   Sentry.init({ dsn: SENTRY_DSN, release: chrome.runtime.getManifest().version,
-//                 environment: API_BASE.includes('localhost') ? 'dev' : 'prod' });
-//   Sentry.setTag('context', 'extension-side-panel');
-// Do NOT add the @sentry/* dependency yet — this is a placeholder only.
-// ──────────────────────────────────────────────────────────────────────────────
+// Before anything else in this module runs, so an error during setup is caught.
+// Mirror this in any future popup page with its own `context` tag.
+initErrorReporting('extension-side-panel');
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('SidePanel');
+// Logs to the console for local debugging; initErrorReporting above is what
+// forwards the same failures to Sentry in a packaged build.
 installGlobalErrorLogging('SidePanel');
 
 let currentTimeSyncInterval = null;

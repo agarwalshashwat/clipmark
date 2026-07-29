@@ -21,7 +21,8 @@ describe('assertContentGlobals', () => {
     const chunkA = exposing(['TAG_COLORS', 'parseTags', 'stringToColor', 'getTagColor', 'FONT_FAMILY_NATIVE', 'TRANSCRIPT_TRUNCATE_LENGTH']);
     const chunkB = exposing(['localSummarizeSnippet']);
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
-    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC]), true);
+    const chunkD = exposing(['clipmarkReportError']);
+    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD]), true);
   });
 
   it('passes on minified-style assignments (no spaces)', () => {
@@ -32,7 +33,12 @@ describe('assertContentGlobals', () => {
   it('throws and names the missing globals when a chunk is tree-shaken empty', () => {
     // Simulates the real bug: constants.js compiled to an empty IIFE.
     const emptyConstantsChunk = '(function(){\n})()';
-    const otherChunks = exposing(['localSummarizeSnippet', 'isDueForRecall', 'gradeRecall']);
+    const otherChunks = exposing([
+      'localSummarizeSnippet',
+      'isDueForRecall',
+      'gradeRecall',
+      'clipmarkReportError',
+    ]);
     assert.throws(
       () => assertContentGlobals([emptyConstantsChunk, otherChunks]),
       (err) => err.message.includes('TAG_COLORS') && err.message.includes('getTagColor'),

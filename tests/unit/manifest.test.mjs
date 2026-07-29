@@ -80,3 +80,26 @@ describe('manifest permission posture', () => {
     );
   });
 });
+
+describe('error-reporting wiring', () => {
+  it('declares the service worker as a module', () => {
+    // background.js imports ../error-reporting.js. Chrome cannot resolve an
+    // import in a CLASSIC worker, and the E2E suite loads extension/ from raw
+    // source (tests/fixtures.ts), so dropping this breaks the worker outright.
+    assert.equal(
+      manifest.background.type,
+      'module',
+      'background.js uses ES imports — the worker must be declared type: module',
+    );
+  });
+
+  it('injects the error bridge before the scripts that use it', () => {
+    const js = manifest.content_scripts[0].js;
+    const bridge = js.indexOf('src/error-report-bridge.js');
+    assert.notEqual(bridge, -1, 'src/error-report-bridge.js must be a content script');
+    // It registers globalThis.clipmarkReportError; content.js may call it during
+    // its own initialisation, so the bridge has to run first.
+    assert.equal(bridge, 0, 'the bridge must be the first content script');
+    assert.ok(bridge < js.indexOf('src/content/content.js'));
+  });
+});
