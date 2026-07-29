@@ -4,43 +4,41 @@ Applied in filename order by `scripts/migrate.ts` (tracked in `public.schema_mig
 Run them deliberately with `npm run db:migrate` (needs `DATABASE_URL`); the build no
 longer runs migrations. See `docs/DEPLOYMENTS.md` for the full flow.
 
-## `012_db_helpers.sql` is missing from the repo — and it is recoverable
+## ⚠️ `012` discrepancy the owner must reconcile
 
-Production's `schema_migrations` records `012_db_helpers.sql` (applied 2026-04-24), but the
-file isn't in this tree. **It does exist in git history** — an earlier version of this note
-wrongly said it existed in no branch:
+There are **two different "012" migrations** in play:
 
-```bash
-git show 7a5c0ed:webapp/migrations/012_db_helpers.sql > webapp/migrations/012_db_helpers.sql
-```
+- The **production database's `schema_migrations`** records **`012_db_helpers.sql`** as
+  applied — but that file exists in **neither this repo nor any branch**.
+- This repo's launch-hardening migration was originally numbered `012_rls_hardening.sql`
+  and has now been **renumbered to `013_rls_hardening.sql`** so it no longer clashes with
+  the `012_db_helpers.sql` slot that prod already used.
 
-It's on `origin/feature/affiliate-marketing`, 59 lines, and defines
-`decrement_referral_credit()` and `expire_gifted_pro()` — both of which exist in the live
-database, which is how we know it's the right file. So this is a straight recovery; **no DDL
-reconstruction and no placeholder file needed.**
+**What the owner still needs to do — recover `012_db_helpers.sql` into the repo** so the
+repo's history matches the database's:
 
-Committing it is safe: `schema_migrations` already lists the filename, so `migrate.ts` will
-not re-run it. The only effect is that the repo stops lying about its own history.
+1. Find the original file: `git log --all -- 'webapp/migrations/012*'`, check closed PRs,
+   or whoever added the DB helpers.
+2. If found, commit it verbatim as `webapp/migrations/012_db_helpers.sql`. Because
+   `schema_migrations` already lists it, `migrate.ts` will **not** re-run it — this only
+   makes the repo honest and keeps numbering gap-free.
+3. If it's truly lost, reconstruct it from the live schema: in the Supabase SQL editor,
+   dump whatever objects it created (helper functions/indexes not created by `001–011`)
+   and save that as `012_db_helpers.sql`. **Do not guess or ship an empty placeholder** —
+   export the actual DDL.
 
-### Ledger note: `012_rls_hardening.sql` is a phantom row
+> Until this is done, a fresh `db:migrate` on prod applies `013_rls_hardening.sql`
+> (its filename isn't in prod's `schema_migrations`, so it runs once) and prod ends up
+> with both `012_db_helpers.sql` and `013_rls_hardening.sql` recorded — functional, but
+> the repo is missing `012_db_helpers.sql` until step 2/3 above.
 
-The launch-hardening migration was originally numbered `012_rls_hardening.sql` and was
-renumbered to `013_rls_hardening.sql` to free the `012` slot. Prod ran **both** names — the
-same SQL, ~1.5h apart — so `schema_migrations` holds a `012_rls_hardening.sql` row that
-matches no file in any branch. Harmless (the migration is idempotent), but don't be confused
-by it, and don't try to "fix" it by re-adding a `012_rls_hardening.sql` file.
+## `013_rls_hardening.sql` — not yet applied to prod
 
-## `013_rls_hardening.sql` — applied to production 2026-07-28
-
-Adds `profiles.pro_payment_id` (needed for refund→revoke), restricts writes to the
-entitlement columns on `profiles` to the service role, tightens the `collections`
-insert/update policies, and enables RLS on `public.schema_migrations` (the CRITICAL Supabase
-advisor item).
-
-Verified against the live database: `pro_payment_id` present; RLS enabled on `profiles`,
-`collections`, and `schema_migrations`; `anon`/`authenticated` hold no UPDATE grant on the
-entitlement columns (only `avatar_url`, `cancel_at_period_end`, `username`); an anonymous
-read of `schema_migrations` returns `401 permission denied`.
+This migration closes the self-grant-Pro RLS hole, locks down `collections`
+insert/update, adds `profiles.pro_payment_id` (needed for refund→revoke), and enables
+RLS on `public.schema_migrations` (the CRITICAL Supabase advisor item). It has **not**
+been applied to the production database yet — apply it deliberately (local test →
+manual backup → prod) per `docs/DEPLOYMENTS.md`.
 
 ## Accepted assumption: migrations rely on hosted Supabase's default grants
 
