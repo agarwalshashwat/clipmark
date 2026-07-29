@@ -72,3 +72,6 @@ tests/visual/__snapshots__/
 # build guard in vite.config.mjs fails the build if API_BASE points at localhost.
 extension/dist/
 screenshots/
+
+# Local-only handoff notes (may reference unpatched prod issues — never commit)
+docs/*.local.md
