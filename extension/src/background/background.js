@@ -298,7 +298,68 @@ const TAG_COLORS = {
   });
 
 // ─── External message from webapp (auth token after OAuth) ────────────────────
-chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) => {
+// Only the Clipmark web app may talk to the extension. `externally_connectable`
+// in the manifest is the real gate (Chrome refuses to deliver from any other
+// origin); this is defence in depth, and it matters more now that an external
+// message can take an action (opening tabs) rather than just storing tokens.
+const APP_ORIGIN = 'https://clipmark.mithahara.com';
+
+function isTrustedExternalSender(sender) {
+  const origin = sender?.origin || sender?.url || '';
+  return origin === APP_ORIGIN || origin.startsWith(`${APP_ORIGIN}/`);
+}
+
+/**
+ * Start an Active Recall session for a video, driven from the web dashboard.
+ *
+ * The webapp sends only a videoId plus the ids it believes are due; the
+ * bookmarks themselves always come from the extension's own storage, so nothing
+ * the page sends is trusted as content. Falls back to every bookmark for the
+ * video when the ids don't match locally (e.g. not synced down yet).
+ */
+async function startRecallFromWebapp(videoId, bookmarkIds) {
+  const key = bmKey(videoId);
+  const stored = await chrome.storage.sync.get({ [key]: [] });
+  let bookmarks = stored[key] || [];
+
+  if (Array.isArray(bookmarkIds) && bookmarkIds.length) {
+    const wanted = new Set(bookmarkIds);
+    const selected = bookmarks.filter(b => wanted.has(b.id));
+    if (selected.length) bookmarks = selected;
+  }
+  if (!bookmarks.length) return { ok: false, error: 'no_bookmarks' };
+
+  bookmarks = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
+
+  // Reuse an already-open tab for this video (messaging the live content script
+  // avoids a reload); otherwise hand off via storage for the fresh page load.
+  const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/watch*' });
+  const existing = tabs.find(t => (t.url || '').includes(`v=${videoId}`));
+
+  if (existing?.id) {
+    await chrome.tabs.update(existing.id, { active: true });
+    try {
+      await chrome.tabs.sendMessage(existing.id, { action: 'startRevision', bookmarks, recall: true });
+      return { ok: true, count: bookmarks.length, reusedTab: true };
+    } catch {
+      // Content script not ready (e.g. tab still loading) — fall through to the
+      // storage handoff, which setupBookmarkMarkers picks up on player init.
+    }
+  }
+
+  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks, recall: true } });
+  if (existing?.id) await chrome.tabs.reload(existing.id);
+  else await chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${videoId}` });
+  return { ok: true, count: bookmarks.length, reusedTab: !!existing?.id };
+}
+
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  if (!isTrustedExternalSender(sender)) {
+    console.warn('[Clipmark] rejected external message from untrusted sender');
+    sendResponse({ ok: false, error: 'untrusted_sender' });
+    return false;
+  }
+
   if (message.type === 'AUTH_SUCCESS') {
     chrome.storage.sync.set({
       bmUser: {
@@ -312,6 +373,18 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
       sendResponse({ ok: true });
       scheduleReminderAlarms();
     });
+    return true; // async
+  }
+
+  if (message.type === 'START_RECALL') {
+    const videoId = String(message.videoId || '');
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      sendResponse({ ok: false, error: 'invalid_video_id' });
+      return false;
+    }
+    startRecallFromWebapp(videoId, message.bookmarkIds)
+      .then(sendResponse)
+      .catch(err => sendResponse({ ok: false, error: err?.message || 'failed' }));
     return true; // async
   }
 });

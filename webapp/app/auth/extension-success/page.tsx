@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { rememberExtensionId } from '@/app/dashboard/_utils/extension';
 
 function ExtensionSuccessInner() {
   const params    = useSearchParams();
@@ -17,6 +18,10 @@ function ExtensionSuccessInner() {
     const isPro        = params.get('is_pro') === 'true';
 
     if (!extensionId || !accessToken) { setStatus('error'); return; }
+
+    // This is the one moment Chrome tells the web app which extension it's
+    // talking to — remember it so the dashboard can start Active Recall later.
+    rememberExtensionId(extensionId);
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
