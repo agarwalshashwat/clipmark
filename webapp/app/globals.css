@@ -49,6 +49,11 @@
   .nav-login {
     display: none !important;
   }
+  /* Three CTAs don't fit next to the wordmark on a phone — the install button
+     stays, and Pro is still reachable from the pricing section and footer. */
+  .nav-gopro {
+    display: none !important;
+  }
   .desktop-text {
     display: none;
   }
