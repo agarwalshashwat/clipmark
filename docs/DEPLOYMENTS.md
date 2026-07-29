@@ -96,13 +96,13 @@ No automatic "down" migrations. To reverse:
 
 Full detail in `webapp/migrations/README.md`. Short version:
 
-- Your prod `schema_migrations` recorded a **`012_db_helpers.sql` that isn't in the
-  repo**. You still need to recover it into the repo (find it in history, or export
-  the DDL from the live DB) — **don't fabricate an empty file**. See the README.
-- The launch-hardening migration is **`013_rls_hardening.sql`** (renumbered from
-  012 to avoid the clash). It is **not applied to prod yet** — it closes the
-  self-grant-Pro hole, adds `profiles.pro_payment_id`, and enables RLS on
-  `schema_migrations` (the CRITICAL Supabase advisor item). Apply it via section 3.
+- **`013_rls_hardening.sql` is applied to production** (2026-07-28) and verified against
+  the live database. Nothing to do.
+- Prod's `schema_migrations` records a **`012_db_helpers.sql` that isn't in this tree**.
+  It's recoverable from git history — see the README for the one-line `git show`. Don't
+  fabricate a placeholder.
+- Prod also carries a **`012_rls_hardening.sql`** ledger row from before the renumber to
+  `013`. It matches no file in any branch. Harmless; leave it alone.
 
 ---
 
