@@ -122,14 +122,22 @@ repository secrets**. Nothing to do.
 
 ---
 
-## F. Applying the pending security migration to prod (when ready)
+## F. Applying a migration to prod
 
-`013_rls_hardening.sql` is in the repo but **not applied to prod yet**. To apply
-(this is the self-grant-Pro fix + the CRITICAL advisor item):
+`013_rls_hardening.sql` is **applied to production** (2026-07-28) and verified
+against the live database — the RLS hardening and the CRITICAL Supabase advisor
+item are both done. Nothing outstanding there.
+
+The same four steps apply to every future migration, and the build never runs
+them for you:
+
 1. Test locally (§A step 3 on a fresh `supabase db reset`).
-2. **Back up prod** (Supabase SQL editor export, or `pg_dump '<prod URI>'`).
+2. **Back up prod** (Supabase SQL editor export, or `pg_dump '<prod URI>'`) —
+   the free tier has no automatic backups.
 3. `cd webapp && DATABASE_URL='<prod URI>' npm run db:migrate`
-4. Also reconcile the missing `012_db_helpers.sql` per `webapp/migrations/README.md`.
+4. Confirm the new row in `public.schema_migrations`.
+
+See `webapp/migrations/README.md` for the `012` ledger notes before your next run.
 
 ## H. 🟢 Testing as a paid user (monthly / annual / lifetime)
 
