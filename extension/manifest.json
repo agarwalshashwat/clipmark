@@ -34,7 +34,8 @@
     }
   },
   "background": {
-    "service_worker": "src/background/background.js"
+    "service_worker": "src/background/background.js",
+    "type": "module"
   },
   "side_panel": {
     "default_path": "src/pages/side-panel.html"
@@ -43,6 +44,7 @@
     {
       "matches": ["*://*.youtube.com/*"],
       "js": [
+        "src/error-report-bridge.js",
         "src/constants.js",
         "src/ai/local-ai.js",
         "src/recall.js",

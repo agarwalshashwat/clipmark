@@ -1,15 +1,10 @@
-// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
-// Init context 1 of 4: extension background service worker.
-// When the Sentry dependency is added, initialize the SDK HERE, at the very top
-// of the service worker, before any listeners are registered, so early errors
-// are captured. Use the SAME DSN/project as the webapp, background, popup/side-
-// panel, and content-script contexts (distinguish them with a `context` tag).
-//   import * as Sentry from '@sentry/browser';
-//   Sentry.init({ dsn: SENTRY_DSN, release: chrome.runtime.getManifest().version,
-//                 environment: API_BASE.includes('localhost') ? 'dev' : 'prod' });
-//   Sentry.setTag('context', 'extension-background');
-// Do NOT add the @sentry/* dependency yet — this is a placeholder only.
-// ──────────────────────────────────────────────────────────────────────────────
+// Error reporting must be first: registering the global handlers before any
+// other top-level code runs means a failure during startup is still reported.
+// The background worker owns the extension's only Sentry sender — the content
+// script forwards to it (see src/error-report-bridge.js).
+import { initErrorReporting, isOwnScript } from '../error-reporting.js';
+
+const errorReporter = initErrorReporting('extension-background');
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const TAG_COLORS = {
@@ -387,6 +382,33 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
       .catch(err => sendResponse({ ok: false, error: err?.message || 'failed' }));
     return true; // async
   }
+});
+
+/**
+ * Receives errors forwarded from the content script (src/error-report-bridge.js).
+ *
+ * The bridge already drops anything without a chrome-extension:// origin; the
+ * check is repeated here because this listener is reachable from any injected
+ * script, and a YouTube-origin error must never reach Sentry.
+ */
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type !== 'CLIPMARK_REPORT_ERROR') return false;
+
+  const source = message.extra?.source;
+  if (source && !isOwnScript(source)) {
+    sendResponse({ ok: false, error: 'not_own_script' });
+    return false;
+  }
+
+  // Rebuild an Error so the stack survives the structured-clone boundary
+  // (Error objects don't cross chrome.runtime messaging intact).
+  const error = new Error(message.error?.message ?? 'Unknown error');
+  error.name = message.error?.name || 'Error';
+  if (message.error?.stack) error.stack = message.error.stack;
+
+  errorReporter.capture(error, { ...message.extra, context: 'extension-content' });
+  sendResponse({ ok: true });
+  return false;
 });
 
 // ─── Reminder Alarms ──────────────────────────────────────────────────────────

@@ -28,6 +28,8 @@ export const REQUIRED_CONTENT_GLOBALS = [
   // src/recall.js
   'isDueForRecall',
   'gradeRecall',
+  // src/error-report-bridge.js
+  'clipmarkReportError',
 ];
 
 /**

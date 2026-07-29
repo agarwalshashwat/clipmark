@@ -51,6 +51,10 @@ webapp/.env
 .env.test.local
 .env.production.local
 
+# Sentry — written by the build plugin / wizard, contains an auth token
+.env.sentry-build-plugin
+.sentryclirc
+
 # Vercel
 .vercel
 

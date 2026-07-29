@@ -67,6 +67,36 @@ it by hand when running `db:migrate`. Keep `SUPABASE_SERVICE_ROLE_KEY` + Dodo ke
 server-side only (they lack the `NEXT_PUBLIC_` prefix, so Vercel keeps them
 server-side).
 
+### C2. Sentry error monitoring — set the DSN *before* the Sentry deploy ⚠️
+
+Add these in the same place (**Production** scope; Preview inherits, which is
+correct — preview events self-tag as `preview`). Only the first is required.
+
+| # | Variable | Value / where to find it |
+|---|---|---|
+| 1 | `NEXT_PUBLIC_SENTRY_DSN` | Sentry → `clipmark-web` → **Settings → Client Keys (DSN)** → copy the DSN |
+| 2 | `SENTRY_AUTH_TOKEN` | Sentry → **Settings → Auth Tokens → Create New Token**, scope `project:releases` |
+
+**Order matters.** `NEXT_PUBLIC_*` values are baked into the JavaScript bundle at
+`next build` — server bundles too. Set #1 **before** merging the Sentry PR, because
+the merge triggers the production build immediately. Set it afterwards and you must
+**redeploy**; a restart won't pick it up, and in the meantime the browser bundle
+ships with no DSN and silently reports nothing at all.
+
+#2 is optional and non-blocking: without it the build still succeeds, it just
+uploads no source maps, so production stack traces stay minified. It's a **secret**
+— server/build-side only, never `NEXT_PUBLIC_`.
+
+Optional extras you almost certainly don't need in Vercel: `SENTRY_DSN` (same
+value, read at runtime, takes precedence server-side — for repointing without a
+rebuild), `NEXT_PUBLIC_SENTRY_ENV` (Vercel infers it), `NEXT_PUBLIC_SENTRY_DEV`,
+`NEXT_PUBLIC_SENTRY_DEBUG`. All six are documented in `webapp/.env.example`.
+
+There is **no `SENTRY_ORG` / `SENTRY_PROJECT`** — both are hardcoded in
+`webapp/next.config.mjs`. The Chrome extension uses a **separate** Sentry project
+whose DSN is committed in `extension/src/error-reporting.js`; nothing to add here
+for it.
+
 ---
 
 ## D. 🔵 Local `.env` for payments testing (Dodo TEST)

@@ -1,16 +1,10 @@
-// ─── TODO(sentry) [launch blocker #3, deferred] ───────────────────────────────
-// Init context 4 of 4: Next.js webapp (this is the root layout / app entry).
-// When the Sentry dependency is added, wire up the standard Next.js integration
-// using the SAME DSN/project as the three extension contexts (tag context
-// 'webapp'):
-//   • sentry.client.config.ts  — Sentry.init for the browser bundle
-//   • sentry.server.config.ts  — Sentry.init for Node runtime
-//   • sentry.edge.config.ts    — Sentry.init for the edge runtime
-//   • instrumentation.ts       — export register() that imports the above
-//     (requires experimental.instrumentationHook in next.config.mjs on Next 14)
-// Read DSN from process.env.NEXT_PUBLIC_SENTRY_DSN; set environment from
-// NODE_ENV. Do NOT add the @sentry/nextjs dependency yet — placeholder only.
-// ──────────────────────────────────────────────────────────────────────────────
+// Sentry is wired up outside this file — nothing to init in the layout:
+//   • instrumentation.ts        — Node + edge runtimes
+//   • instrumentation-client.ts — browser bundle
+//   • lib/sentry-config.ts      — options shared by all three
+//   • app/global-error.tsx      — root error boundary that reports crashes
+// The extension reports to a separate Sentry project (clipmark-extension) so
+// content-script noise from youtube.com can't drown out webapp issues.
 
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';

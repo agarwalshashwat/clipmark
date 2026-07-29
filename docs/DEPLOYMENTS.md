@@ -156,6 +156,70 @@ a product feature. The server action guards on the same flag, so hiding the form
 isn't the only control. See the owner checklist §H for how to use it, and
 `webapp/scripts/simulate-plan.ts` for flipping an account between billing states.
 
+## 6c. Error monitoring (Sentry)
+
+Two projects under the `mithahara` org, deliberately **not** one:
+
+| Sentry project | Covers | DSN lives in |
+|---|---|---|
+| `clipmark-web` | webapp — server components, server actions, `/api/*` (incl. the Dodo webhook), browser bundle | `NEXT_PUBLIC_SENTRY_DSN` env var |
+| `clipmark-extension` | background worker, side panel, content script | committed in `extension/src/error-reporting.js` |
+
+They're split because the content script runs inside youtube.com and will always
+see some third-party noise; keeping it out of `clipmark-web` means the webapp's
+issue stream and alerts stay trustworthy. The free plan's 5k errors/month is
+org-wide, so a second project costs nothing.
+
+**What's deliberately off:** tracing (`tracesSampleRate: 0`), session replay,
+profiling, and logs. Replay especially — it would record the dashboard, meaning
+users' private bookmark titles. `sendDefaultPii: false` for the same reason;
+don't flip it without a real need.
+
+### Webapp env vars (Vercel)
+
+These six are the **only** Sentry env vars the code reads. Scope everything to
+**Production** in Vercel (Preview inherits it, which is what you want — preview
+events self-tag as `preview` via `NEXT_PUBLIC_VERCEL_ENV`).
+
+| Var | Required | Exposure | Where to get it |
+|---|---|---|---|
+| `NEXT_PUBLIC_SENTRY_DSN` | **yes** — nothing reports without it | public, **build-time inlined** | `clipmark-web` → Settings → Client Keys (DSN) |
+| `SENTRY_AUTH_TOKEN` | no, but wanted | **secret**, server/build-only | Settings → Auth Tokens → Create New Token, scope `project:releases` |
+| `SENTRY_DSN` | no | secret-scoped, **runtime** | Same value as the public DSN. Takes precedence server-side; lets you repoint server errors without a rebuild |
+| `NEXT_PUBLIC_SENTRY_ENV` | no | public, build-time | Overrides the environment tag. Inferred from `NEXT_PUBLIC_VERCEL_ENV` on Vercel, so normally leave unset |
+| `NEXT_PUBLIC_SENTRY_DEV` | no | public, build-time | `1` reports from `next dev`. Off by default so local noise doesn't eat the quota |
+| `NEXT_PUBLIC_SENTRY_DEBUG` | no | public, build-time | `1` logs every envelope, and disables Sentry's log tree-shaking so the logs actually appear |
+
+> **`NEXT_PUBLIC_*` is inlined at `next build`, server bundles included.** Set
+> `NEXT_PUBLIC_SENTRY_DSN` in Vercel **before** the build that ships Sentry.
+> Setting it afterwards requires a **redeploy** — a restart won't pick it up, and
+> until then the client bundle ships with no DSN and silently reports nothing.
+
+There is **no `SENTRY_ORG` / `SENTRY_PROJECT`** to set: both are hardcoded in
+`webapp/next.config.mjs` (`org: 'mithahara'`, `project: 'clipmark-web'`). The
+extension's DSN is a committed constant in `extension/src/error-reporting.js` and
+needs no Vercel entry.
+
+Environment tagging is automatic on Vercel via `NEXT_PUBLIC_VERCEL_ENV`, so
+preview deploys don't pollute production issues, and releases are tagged with the
+commit SHA.
+
+### Why the extension doesn't use `@sentry/browser`
+
+It posts to Sentry's envelope API directly (~100 lines in
+`extension/src/error-reporting.js`). The E2E suite loads the extension from **raw
+source**, and Chrome can't resolve a bare npm specifier like `@sentry/browser` in
+an unpacked load — bundling the SDK would work only in `dist/` and break every
+source-loaded test. The extension otherwise has zero runtime dependencies.
+
+Because the wire format is hand-built with no SDK validating it, a malformed
+envelope would be silently dropped by Sentry and we'd *believe* monitoring
+worked. `tests/unit/error-reporting.test.mjs` pins the format for that reason —
+don't delete it.
+
+Reporting is **off on unpacked/dev installs** (no `update_url` in the manifest).
+Set `globalThis.CLIPMARK_SENTRY_DEV = true` before init to test locally.
+
 ## 7. Quick reference
 
 ```bash
