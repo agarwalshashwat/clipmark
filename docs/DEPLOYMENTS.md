@@ -177,13 +177,28 @@ don't flip it without a real need.
 
 ### Webapp env vars (Vercel)
 
-| Var | Required | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_SENTRY_DSN` | yes, to report at all | **Inlined at build time** — changing it needs a redeploy, not a restart |
-| `SENTRY_DSN` | no | Read at runtime, takes precedence server-side. Use to repoint the server without rebuilding |
-| `SENTRY_AUTH_TOKEN` | no, but wanted | Build-time secret. Without it, source maps aren't uploaded and production stack traces stay minified. Create under Sentry → Settings → Auth Tokens |
-| `NEXT_PUBLIC_SENTRY_DEV` | no | `1` reports from `next dev`. Off by default so local noise doesn't eat the quota |
-| `NEXT_PUBLIC_SENTRY_DEBUG` | no | `1` logs every envelope. Also disables Sentry's log tree-shaking so the logs actually appear |
+These six are the **only** Sentry env vars the code reads. Scope everything to
+**Production** in Vercel (Preview inherits it, which is what you want — preview
+events self-tag as `preview` via `NEXT_PUBLIC_VERCEL_ENV`).
+
+| Var | Required | Exposure | Where to get it |
+|---|---|---|---|
+| `NEXT_PUBLIC_SENTRY_DSN` | **yes** — nothing reports without it | public, **build-time inlined** | `clipmark-web` → Settings → Client Keys (DSN) |
+| `SENTRY_AUTH_TOKEN` | no, but wanted | **secret**, server/build-only | Settings → Auth Tokens → Create New Token, scope `project:releases` |
+| `SENTRY_DSN` | no | secret-scoped, **runtime** | Same value as the public DSN. Takes precedence server-side; lets you repoint server errors without a rebuild |
+| `NEXT_PUBLIC_SENTRY_ENV` | no | public, build-time | Overrides the environment tag. Inferred from `NEXT_PUBLIC_VERCEL_ENV` on Vercel, so normally leave unset |
+| `NEXT_PUBLIC_SENTRY_DEV` | no | public, build-time | `1` reports from `next dev`. Off by default so local noise doesn't eat the quota |
+| `NEXT_PUBLIC_SENTRY_DEBUG` | no | public, build-time | `1` logs every envelope, and disables Sentry's log tree-shaking so the logs actually appear |
+
+> **`NEXT_PUBLIC_*` is inlined at `next build`, server bundles included.** Set
+> `NEXT_PUBLIC_SENTRY_DSN` in Vercel **before** the build that ships Sentry.
+> Setting it afterwards requires a **redeploy** — a restart won't pick it up, and
+> until then the client bundle ships with no DSN and silently reports nothing.
+
+There is **no `SENTRY_ORG` / `SENTRY_PROJECT`** to set: both are hardcoded in
+`webapp/next.config.mjs` (`org: 'mithahara'`, `project: 'clipmark-web'`). The
+extension's DSN is a committed constant in `extension/src/error-reporting.js` and
+needs no Vercel entry.
 
 Environment tagging is automatic on Vercel via `NEXT_PUBLIC_VERCEL_ENV`, so
 preview deploys don't pollute production issues, and releases are tagged with the
