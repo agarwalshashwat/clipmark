@@ -1,12 +1,32 @@
 import { createServerSupabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
 
+/**
+ * Password sign-in is a TESTING affordance, not a product feature.
+ *
+ * Real users sign in with Google. But seeded test accounts (test-monthly@,
+ * test-annual@, test-lifetime@) are email/password users, and without a form
+ * there is no way to reach them through the browser — the OAuth callback only
+ * accepts `?code=`, and no client-side Supabase client runs on the page, so
+ * neither an admin magic link nor a console sign-in establishes the cookie
+ * session that the server components read.
+ *
+ * Off in production unless ENABLE_PASSWORD_LOGIN=true is set deliberately;
+ * on by default in dev. Keeping it off in prod avoids adding a
+ * credential-stuffing surface to an otherwise OAuth-only product.
+ */
+function isPasswordLoginEnabled(): boolean {
+  if (process.env.ENABLE_PASSWORD_LOGIN === 'true') return true;
+  return process.env.NODE_ENV !== 'production';
+}
+
 export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ extensionId?: string; error?: string }>;
 }) {
   const { extensionId, error } = await searchParams;
+  const passwordLoginEnabled = isPasswordLoginEnabled();
 
   async function signInWithGoogle() {
     'use server';
@@ -22,6 +42,25 @@ export default async function SignInPage({
     });
 
     if (data.url) redirect(data.url);
+  }
+
+  async function signInWithPassword(formData: FormData) {
+    'use server';
+    // Guard here as well as in the UI: a server action is reachable by URL even
+    // when its form isn't rendered, so hiding the form is not a control.
+    if (!isPasswordLoginEnabled()) redirect('/signin?error=disabled');
+
+    const email    = String(formData.get('email') ?? '').trim();
+    const password = String(formData.get('password') ?? '');
+    if (!email || !password) redirect('/signin?error=missing');
+
+    const supabase = await createServerSupabase();
+    // Writing cookies is allowed in a server action, so this establishes the
+    // same session the OAuth callback would.
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) redirect('/signin?error=bad_credentials');
+
+    redirect('/dashboard');
   }
 
   return (
@@ -106,6 +145,46 @@ export default async function SignInPage({
                 Continue with Google
               </button>
             </form>
+
+            {/* Test-only password sign-in (see isPasswordLoginEnabled) */}
+            {passwordLoginEnabled && (
+              <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed #e2e8f0' }}>
+                <p style={{
+                  fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  color: '#94a3b8', textAlign: 'center', marginBottom: 16,
+                }}>
+                  Testing only · email &amp; password
+                </p>
+                <form action={signInWithPassword} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <input
+                    type="email" name="email" required autoComplete="off"
+                    placeholder="test-monthly@clipmark.test"
+                    style={{
+                      width: '100%', padding: '12px 14px', borderRadius: 10,
+                      border: '1px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit',
+                    }}
+                  />
+                  <input
+                    type="password" name="password" required autoComplete="off"
+                    placeholder="Password"
+                    style={{
+                      width: '100%', padding: '12px 14px', borderRadius: 10,
+                      border: '1px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit',
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1',
+                      background: '#f8fafc', color: '#475569', fontSize: 14, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    Sign in with password
+                  </button>
+                </form>
+              </div>
+            )}
 
             {/* Trust signals */}
             <div style={{ textAlign: 'center', marginTop: 32 }}>

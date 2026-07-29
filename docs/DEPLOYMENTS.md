@@ -146,6 +146,16 @@ money-free checkout + webhook flow locally with Dodo **test** keys + a tunnel to
 
 ---
 
+## 6b. Env var: `ENABLE_PASSWORD_LOGIN`
+
+`/signin` is Google-only for real users. Setting `ENABLE_PASSWORD_LOGIN=true`
+adds a test-only email+password form (it's also on automatically in local dev,
+where `NODE_ENV !== 'production'`). **Leave it unset in Vercel Production** —
+it exists so the seeded test accounts can be reached through the browser, not as
+a product feature. The server action guards on the same flag, so hiding the form
+isn't the only control. See the owner checklist §H for how to use it, and
+`webapp/scripts/simulate-plan.ts` for flipping an account between billing states.
+
 ## 7. Quick reference
 
 ```bash

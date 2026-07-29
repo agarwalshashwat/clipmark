@@ -101,6 +101,45 @@ repository secrets**. Nothing to do.
 3. `cd webapp && DATABASE_URL='<prod URI>' npm run db:migrate`
 4. Also reconcile the missing `012_db_helpers.sql` per `webapp/migrations/README.md`.
 
+## H. 🟢 Testing as a paid user (monthly / annual / lifetime)
+
+Real sign-in is Google-only, so the seeded test accounts (email/password) need a
+door — and a Google account can't be split into three users. Two tools cover it:
+
+**1. Password sign-in (test only).** `/signin` shows an extra email+password form
+when `ENABLE_PASSWORD_LOGIN=true`, and automatically in local dev. It is **off in
+production** unless you set that variable, so it never adds a
+credential-stuffing surface for real users. Seeded accounts:
+
+| Account | Plan state |
+|---|---|
+| `test-monthly@clipmark.test` | active monthly subscription |
+| `test-annual@clipmark.test` | active annual subscription |
+| `test-lifetime@clipmark.test` | one-time lifetime purchase |
+
+Password for all three: `Clipmark-Test-123!` (change it in Supabase → Authentication → Users if you like).
+
+**2. Flip your own account between plan states** — no second login needed:
+
+```bash
+cd webapp
+npx tsx scripts/simulate-plan.ts you@example.com monthly        # dry run, prints the diff
+npx tsx scripts/simulate-plan.ts you@example.com monthly --yes  # apply
+npx tsx scripts/simulate-plan.ts you@example.com free --yes     # restore
+```
+
+States: `free`, `monthly`, `annual`, `lifetime`, `cancelling`, `refundable`.
+It is a **dry run unless you pass `--yes`**, because it writes to whichever
+project your `.env` points at (usually production).
+
+> Worth knowing: everything Pro-gated (Active Recall, Anki export, PRO badges)
+> branches on `is_pro` alone, so it looks the same on every paid plan. The only
+> plan-specific screen is `/upgrade` — and **monthly and annual render
+> identically there apart from the next-billing date**, because the page never
+> reads the plan type. `lifetime` is the visibly different one ("Lifetime
+> Access — your Pro benefits never expire"), and `cancelling` / `refundable`
+> show the cancel and refund variants.
+
 ## G. Cheat sheet
 
 | Value | From | Used for |
