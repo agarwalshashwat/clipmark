@@ -13,7 +13,7 @@ type UserResult = {
   gifted_by_note?: string | null;
   is_affiliate?: boolean;
   affiliate_code?: string | null;
-  affiliate_commission_rate?: number | null;
+  commission_rate?: number | null;
 };
 
 export default function AdminPanel() {
@@ -187,7 +187,7 @@ export default function AdminPanel() {
                     </td>
                     <td style={{ padding: '16px 12px' }}>
                       {u.is_affiliate ? (
-                        <span style={{ color: '#14B8A6', fontWeight: 700, fontSize: 13 }}>{u.affiliate_commission_rate}%</span>
+                        <span style={{ color: '#14B8A6', fontWeight: 700, fontSize: 13 }}>{Math.round((u.commission_rate ?? 0) * 100)}%</span>
                       ) : '—'}
                     </td>
                     <td style={{ padding: '16px 12px', fontFamily: 'monospace', color: '#64748b', fontWeight: 600 }}>{u.affiliate_code ?? '—'}</td>
