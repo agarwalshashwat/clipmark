@@ -22,7 +22,8 @@ describe('assertContentGlobals', () => {
     const chunkB = exposing(['localSummarizeSnippet']);
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
     const chunkD = exposing(['clipmarkReportError']);
-    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD]), true);
+    const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold']);
+    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE]), true);
   });
 
   it('passes on minified-style assignments (no spaces)', () => {
@@ -38,6 +39,11 @@ describe('assertContentGlobals', () => {
       'isDueForRecall',
       'gradeRecall',
       'clipmarkReportError',
+      'countEnrolledRecallSegments',
+      'isEnrollmentCapReached',
+      'isMonthlyReviewCapReached',
+      'normalizeMonthlyCounter',
+      'isMonthlyReviewWarnThreshold',
     ]);
     assert.throws(
       () => assertContentGlobals([emptyConstantsChunk, otherChunks]),
