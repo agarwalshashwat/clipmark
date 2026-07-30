@@ -162,6 +162,13 @@ export default async function UpgradePage({
           <h2 className={styles.compTitle}>Choose your experience</h2>
           <div className={styles.compTableWrapper}>
             <table className={styles.compTable}>
+              <thead>
+                <tr className={styles.compHeadRow}>
+                  <th className={`${styles.compCell} ${styles.compHeadCell}`}></th>
+                  <th className={`${styles.compCell} ${styles.compVal} ${styles.compHeadCell}`}>Free</th>
+                  <th className={`${styles.compCell} ${styles.compVal} ${styles.compValPro} ${styles.compHeadCell}`}>Pro</th>
+                </tr>
+              </thead>
               <tbody>
                 {FEATURES.map(f => (
                   <tr key={f.label} className={styles.compRow}>

@@ -210,6 +210,19 @@
   background: #f0fdfa;
 }
 
+.compHeadRow {
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.compHeadCell {
+  padding-top: 24px;
+  padding-bottom: 24px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .bannerSuccess {
   background: #14B8A6;
   color: white;
