@@ -15,8 +15,6 @@ interface Plan {
   name: string;
   priceKey: keyof ProductPrices;
   period: string;
-  /** Optional struck-through anchor price shown next to the current price. */
-  strikePrice?: string;
   badge?: { label: string; color?: string };
   pro?: boolean;
   features: React.ReactNode[];
@@ -58,8 +56,7 @@ const PLANS: Plan[] = [
     name: 'Lifetime',
     priceKey: 'lifetime',
     period: '',
-    strikePrice: '$79.99',
-    badge: { label: 'Launch Special', color: '#732EE4' },
+    badge: { label: 'Founding Price', color: '#732EE4' },
     features: [
       'Everything in Pro',
       'Own your data forever',
@@ -103,14 +100,13 @@ export default function PlanCards({
             <div className={styles.planName}>{plan.name}</div>
             <div className={styles.price}>
               <span className={styles.amount}>${prices[plan.priceKey]}</span>
-              {plan.strikePrice ? (
-                <span className={styles.period} style={{ textDecoration: 'line-through', marginLeft: 8 }}>
-                  {plan.strikePrice}
-                </span>
-              ) : (
-                <span className={styles.period}>{plan.period}</span>
-              )}
+              <span className={styles.period}>{plan.period}</span>
             </div>
+            {plan.id === 'lifetime' && (
+              <p className={styles.foundingNote}>
+                Founding price — lock in lifetime access at ${prices.lifetime} before it goes up.
+              </p>
+            )}
             <div className={styles.featureList}>
               {plan.features.map((f, i) => (
                 <div key={i} className={styles.featureItem}>
