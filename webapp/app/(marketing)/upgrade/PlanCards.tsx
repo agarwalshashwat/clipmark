@@ -10,6 +10,10 @@ function Check() {
   );
 }
 
+function ComingSoon() {
+  return <span className={styles.comingSoon}>Coming soon</span>;
+}
+
 interface Plan {
   id: 'monthly' | 'annual' | 'lifetime';
   name: string;
@@ -28,9 +32,9 @@ const PLANS: Plan[] = [
     priceKey: 'monthly',
     period: '/month',
     features: [
-      'Sync to Notion & Obsidian',
-      'Daily Review Dashboard',
-      'Deep Transcript Search',
+      'Export to Notion & Obsidian',
+      'Review Reminders',
+      <>Deep Transcript Search <ComingSoon /></>,
       'Unlimited Shared Pages',
       'Priority Support',
     ],
@@ -45,8 +49,8 @@ const PLANS: Plan[] = [
     features: [
       'Everything in Monthly',
       <><strong>Unlimited Active Recall & Anki exports</strong></>,
-      'Obsidian & Notion sync',
-      'Advanced Learning Stats',
+      'Export to Notion & Obsidian',
+      'Learning Stats',
       'Spaced Repetition Logic',
     ],
     cta: 'Go Pro Annual',
@@ -60,9 +64,9 @@ const PLANS: Plan[] = [
     features: [
       'Everything in Pro',
       'Own your data forever',
-      'Lifetime Cloud Archiving',
+      <>Lifetime Cloud Archiving <ComingSoon /></>,
       'No recurring fees',
-      'Early access to all labs',
+      <>Early access to all labs <ComingSoon /></>,
     ],
     cta: 'Get Lifetime Pro',
   },

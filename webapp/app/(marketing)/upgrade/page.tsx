@@ -15,7 +15,7 @@ const FEATURES = [
   { label: 'Active Recall flashcards',           free: '25 cards', pro: 'Unlimited' },
   { label: 'Active Recall reviews',              free: '30/month', pro: 'Unlimited' },
   { label: 'Anki export',                        free: '1/month',  pro: 'Unlimited' },
-  { label: 'Auto-sync to Notion & Obsidian',     free: false,      pro: true       },
+  { label: 'Export to Notion & Obsidian',        free: false,      pro: true       },
   { label: 'Permanent Transcript Archiving',     free: false,      pro: true       },
   { label: 'Deep Search (inside transcripts)',   free: false,      pro: true       },
   { label: 'Smart AI Synthesis (Local-only)',    free: true,       pro: true       },
