@@ -334,7 +334,7 @@ const TAG_COLORS = {
   });
 
 // ─── External message from webapp (auth token after OAuth) ────────────────────
-// Only the Clipmark web app may talk to the extension. `externally_connectable`
+// Only the ClipMark web app may talk to the extension. `externally_connectable`
 // in the manifest is the real gate (Chrome refuses to deliver from any other
 // origin); this is defence in depth, and it matters more now that an external
 // message can take an action (opening tabs) rather than just storing tokens.
@@ -391,7 +391,7 @@ async function startRecallFromWebapp(videoId, bookmarkIds) {
 
 chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
   if (!isTrustedExternalSender(sender)) {
-    console.warn('[Clipmark] rejected external message from untrusted sender');
+    console.warn('[ClipMark] rejected external message from untrusted sender');
     sendResponse({ ok: false, error: 'untrusted_sender' });
     return false;
   }

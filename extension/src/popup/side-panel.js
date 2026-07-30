@@ -572,7 +572,7 @@ async function summarizeBookmarks() {
         <div class="ai-unavailable">
           <span class="material-symbols-outlined" style="font-size:48px;color:#94a3b8;margin-bottom:12px;">robot_2</span>
           <h3>Local AI Required</h3>
-          <p>Clipmark now uses Chrome's built-in <strong>Gemini Nano</strong> for your privacy and to keep the service sustainable.</p>
+          <p>ClipMark now uses Chrome's built-in <strong>Gemini Nano</strong> for your privacy and to keep the service sustainable.</p>
           <p style="font-size:12px;color:#64748b;margin-top:12px;">Please ensure you are on Chrome 128+ and have "Enable Bypass for AI" flags set.</p>
           <a href="https://clipmark.mithahara.com/docs/ai" target="_blank" class="ai-help-link">How to enable →</a>
         </div>`;
