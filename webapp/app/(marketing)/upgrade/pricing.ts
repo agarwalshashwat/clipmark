@@ -5,7 +5,7 @@ export interface ProductPrices {
 }
 
 export const PRICE_DEFAULTS: ProductPrices = {
-    monthly: '1.99',
-    annual: '19.99',
-    lifetime: '39.99',
+    monthly: '7.99',
+    annual: '59.99',
+    lifetime: '99.99',
 };
