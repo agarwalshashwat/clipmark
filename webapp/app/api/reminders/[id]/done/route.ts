@@ -1,6 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, createServerSupabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/clients';
+
+// Mirrors the check in ../route.ts — reminders are a Pro-only feature.
+async function isProUser(userId: string): Promise<boolean> {
+  const { data } = await getSupabaseAdmin()
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', userId)
+    .single();
+  return data?.is_pro === true;
+}
 
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
@@ -43,6 +54,10 @@ export async function POST(
 ) {
   const auth = await getAuthenticatedUser(request);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!await isProUser(auth.user.id)) {
+    return NextResponse.json({ error: 'pro_required' }, { status: 403 });
+  }
 
   const { id } = await params;
   const { client } = auth;

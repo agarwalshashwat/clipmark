@@ -183,4 +183,120 @@ describe('Dodo webhook entitlements (#2, integration)', () => {
       assert.equal((referralRow as { status: string }).status, 'rewarded');
     });
   });
+
+  describe('referral reward reversal on refund (security PR — closes the pay-then-refund free-Pro loophole)', () => {
+    async function referralCodeFor(userId: string): Promise<string> {
+      const { data } = await admin.from('profiles').select('referral_code').eq('id', userId).single();
+      return (data as { referral_code: string }).referral_code;
+    }
+
+    async function referrerState(userId: string) {
+      const { data } = await admin
+        .from('profiles')
+        .select('is_pro, is_gifted_pro, gifted_pro_expires_at, referral_months_credit, subscription_id')
+        .eq('id', userId)
+        .single();
+      return data as {
+        is_pro: boolean; is_gifted_pro: boolean; gifted_pro_expires_at: string | null;
+        referral_months_credit: number; subscription_id: string | null;
+      };
+    }
+
+    it('claws back referral_months_credit and the gifted-Pro window when the referred purchase is refunded', async () => {
+      const referrer = await createTestUser('wh-ref-refund-referrer@example.test');
+      const referralCode = await referralCodeFor(referrer.id);
+
+      const payer = await createTestUser('wh-ref-refund-payer@example.test');
+      await deliver({
+        type: 'payment.succeeded',
+        data: { metadata: { user_id: payer.id, user_referral_code: referralCode }, payment_id: 'pay_ref_refund', total_amount: 0 },
+      });
+
+      const granted = await referrerState(referrer.id);
+      assert.equal(granted.referral_months_credit, 3, 'sanity: the reward was actually granted');
+      assert.equal(granted.is_gifted_pro, true);
+
+      const res = await deliver({ type: 'refund.succeeded', data: { payment_id: 'pay_ref_refund' } });
+      assert.equal(res.status, 200);
+
+      const rp = await referrerState(referrer.id);
+      assert.equal(rp.referral_months_credit, 0, 'the earned reward is clawed back');
+      assert.equal(rp.is_gifted_pro, false);
+      assert.equal(rp.gifted_pro_expires_at, null);
+      assert.equal(rp.is_pro, false, 'referrer had no other Pro of their own');
+
+      const { data: referralRow } = await admin
+        .from('referrals')
+        .select('status')
+        .eq('referred_user_id', payer.id)
+        .single();
+      assert.equal((referralRow as { status: string }).status, 'cancelled', 'the referral is marked cancelled, not left rewarded');
+    });
+
+    it('repeated pay-then-refund cycles net zero free Pro for the referrer (the loophole is closed)', async () => {
+      const referrer = await createTestUser('wh-ref-loop-referrer@example.test');
+      const referralCode = await referralCodeFor(referrer.id);
+
+      for (let i = 0; i < 3; i++) {
+        const payer = await createTestUser(`wh-ref-loop-payer-${i}@example.test`);
+        await deliver({
+          type: 'payment.succeeded',
+          data: { metadata: { user_id: payer.id, user_referral_code: referralCode }, payment_id: `pay_loop_${i}`, total_amount: 0 },
+        });
+        await deliver({ type: 'refund.succeeded', data: { payment_id: `pay_loop_${i}` } });
+      }
+
+      const rp = await referrerState(referrer.id);
+      assert.equal(rp.referral_months_credit, 0, 'no net credit survives repeated pay-then-refund cycles');
+      assert.equal(rp.is_gifted_pro, false);
+      assert.equal(rp.is_pro, false);
+    });
+
+    it('keeps is_pro true via the referrer\'s own subscription after their gift window is clawed back', async () => {
+      const referrer = await createTestUser('wh-ref-refund-ownsub@example.test');
+      await setProfileFlags(referrer.id, { is_pro: true, subscription_id: 'sub_own_active' });
+      const referralCode = await referralCodeFor(referrer.id);
+
+      const payer = await createTestUser('wh-ref-refund-ownsub-payer@example.test');
+      await deliver({
+        type: 'payment.succeeded',
+        data: { metadata: { user_id: payer.id, user_referral_code: referralCode }, payment_id: 'pay_ref_ownsub', total_amount: 0 },
+      });
+      await deliver({ type: 'refund.succeeded', data: { payment_id: 'pay_ref_ownsub' } });
+
+      const rp = await referrerState(referrer.id);
+      assert.equal(rp.is_gifted_pro, false, 'the referral-earned gift window is gone');
+      assert.equal(rp.is_pro, true, 'but Pro survives via their own real subscription');
+    });
+
+    it('does not touch a referrer\'s unrelated permanent (admin-seeded) gift when a referral is refunded', async () => {
+      const referrer = await createTestUser('wh-ref-refund-permanent@example.test');
+      await setProfileFlags(referrer.id, { is_pro: true, is_gifted_pro: true, gifted_pro_expires_at: null });
+      const referralCode = await referralCodeFor(referrer.id);
+
+      const payer = await createTestUser('wh-ref-refund-permanent-payer@example.test');
+      await deliver({
+        type: 'payment.succeeded',
+        data: { metadata: { user_id: payer.id, user_referral_code: referralCode }, payment_id: 'pay_ref_permanent', total_amount: 0 },
+      });
+      await deliver({ type: 'refund.succeeded', data: { payment_id: 'pay_ref_permanent' } });
+
+      const rp = await referrerState(referrer.id);
+      assert.equal(rp.is_gifted_pro, true, 'a permanent gift is never revoked by a referral refund');
+      assert.equal(rp.gifted_pro_expires_at, null);
+      assert.equal(rp.is_pro, true);
+      assert.equal(rp.referral_months_credit, 0, 'the audit counter is still reversed even though the gift itself is untouched');
+    });
+
+    it('does nothing when the refunded purchase was never referred', async () => {
+      const payer = await createTestUser('wh-ref-refund-unreferred@example.test');
+      await setProfileFlags(payer.id, { is_pro: true, pro_payment_id: 'pay_unreferred' });
+
+      const res = await deliver({ type: 'refund.succeeded', data: { payment_id: 'pay_unreferred' } });
+      assert.equal(res.status, 200);
+
+      const { data: p } = await admin.from('profiles').select('is_pro').eq('id', payer.id).single();
+      assert.equal((p as { is_pro: boolean }).is_pro, false, 'the refunded payer\'s own Pro is still revoked as before');
+    });
+  });
 });
