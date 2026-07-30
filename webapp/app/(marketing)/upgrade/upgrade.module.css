@@ -134,6 +134,19 @@
   margin-top: auto;
 }
 
+.comingSoon {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
 .ctaBtn {
   width: 100%;
   padding: 16px;
