@@ -23,6 +23,11 @@ export interface FakeCtx {
   count?: string;
 }
 
+export interface FakeRpcCtx {
+  fn: string;
+  args: Record<string, unknown>;
+}
+
 export interface FakeResult {
   data?: unknown;
   error?: { message?: string; code?: string } | null;
@@ -30,10 +35,16 @@ export interface FakeResult {
 }
 
 export type Responder = (ctx: FakeCtx) => FakeResult;
+export type RpcResponder = (ctx: FakeRpcCtx) => FakeResult;
 
-/** Build a fake Supabase client + a record of all finalized calls. */
-export function makeFakeSupabase(responder: Responder) {
+/**
+ * Build a fake Supabase client + a record of all finalized calls.
+ * `rpcResponder` defaults to always succeeding — most tests don't exercise
+ * `.rpc()` and shouldn't need to pass one just to avoid an unhandled call.
+ */
+export function makeFakeSupabase(responder: Responder, rpcResponder: RpcResponder = () => ({ error: null })) {
   const calls: FakeCtx[] = [];
+  const rpcCalls: FakeRpcCtx[] = [];
 
   function builder(table: string) {
     const ctx: FakeCtx = {
@@ -99,7 +110,16 @@ export function makeFakeSupabase(responder: Responder) {
     return chain;
   }
 
-  return { client: { from: (t: string) => builder(t) } as never, calls };
+  const client = {
+    from: (t: string) => builder(t),
+    rpc: (fn: string, args: Record<string, unknown> = {}) => {
+      const ctx: FakeRpcCtx = { fn, args };
+      rpcCalls.push(ctx);
+      return Promise.resolve(rpcResponder(ctx) ?? {});
+    },
+  };
+
+  return { client: client as never, calls, rpcCalls };
 }
 
 /** Fake Dodo client: unwrap returns `event` unless `throwOnUnwrap` is set. */

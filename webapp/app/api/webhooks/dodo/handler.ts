@@ -196,6 +196,82 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
     }
   }
 
+  /**
+   * reverseReferralReward — undoes the referrer's reward when the underlying
+   * referred purchase (identified by `referredUserId`, the refunded payer) is
+   * refunded. Closes the loophole where a colluding pair of accounts could
+   * self-refer, pay, and refund to accumulate unlimited free gifted-Pro time:
+   * previously `decrement_referral_credit()` (migrations/012_db_helpers.sql)
+   * was defined but never called anywhere.
+   *
+   * Reverses only the SPECIFIC referral tied to this refunded payer — never
+   * the referrer's own paid subscription/lifetime purchase, and never a
+   * permanent gift window (gifted_pro_expires_at === null), which predates or
+   * is independent of referral stacking (see the alreadyPermanentGift guard in
+   * recordReferralCredit, which never extends an existing permanent window).
+   *
+   * Mirrors recordReferralCredit's own error handling: writes are logged, not
+   * thrown, so a transient failure here doesn't turn the primary refund
+   * revoke (already asserted above) into a Dodo retry storm.
+   */
+  async function reverseReferralReward(referredUserId: string) {
+    const { data: referral, error: findReferralErr } = await admin
+      .from('referrals')
+      .select('id, referrer_id, reward_months')
+      .eq('referred_user_id', referredUserId)
+      .neq('status', 'cancelled')
+      .maybeSingle();
+    if (findReferralErr) {
+      log.error(`referral lookup failed for reversal referred=${referredUserId}`, findReferralErr.message);
+      return;
+    }
+    if (!referral) return; // this purchase wasn't referred — nothing to reverse
+
+    const rewardMonths = referral.reward_months ?? 3;
+
+    const { data: referrer, error: findReferrerErr } = await admin
+      .from('profiles')
+      .select('id, is_gifted_pro, gifted_pro_expires_at, subscription_id, pro_payment_id')
+      .eq('id', referral.referrer_id)
+      .maybeSingle();
+    if (findReferrerErr || !referrer) {
+      log.error(`referrer lookup failed for reversal referrer=${referral.referrer_id}`, findReferrerErr?.message);
+      return;
+    }
+
+    // Atomic decrement (clamped at 0 in SQL) — the lifetime-earned audit counter.
+    const { error: decErr } = await admin.rpc('decrement_referral_credit', {
+      p_user_id: referrer.id,
+      p_months: rewardMonths,
+    });
+    if (decErr) log.error(`referral credit decrement failed referrer=${referrer.id}`, decErr.message);
+
+    // Only rewind a finite gift window — a permanent gift is never touched.
+    if (referrer.is_gifted_pro && referrer.gifted_pro_expires_at) {
+      const rewoundExpiry = addMonths(new Date(referrer.gifted_pro_expires_at), -rewardMonths);
+      const stillActive = rewoundExpiry > new Date();
+      // Don't strip is_pro if the referrer has legitimate Pro of their own.
+      const hasOwnPaidPro = Boolean(referrer.subscription_id) || Boolean(referrer.pro_payment_id);
+
+      const profileUpdate = stillActive
+        ? { gifted_pro_expires_at: rewoundExpiry.toISOString() }
+        : { is_gifted_pro: false, gifted_pro_expires_at: null, is_pro: hasOwnPaidPro };
+
+      const { error: rewindErr } = await admin.from('profiles').update(profileUpdate).eq('id', referrer.id);
+      if (rewindErr) log.error(`gift window rewind failed referrer=${referrer.id}`, rewindErr.message);
+    }
+
+    // Cancel last so a redelivered/retried webhook can't double-reverse if an
+    // earlier write above failed and the referral row were already cancelled.
+    const { error: cancelErr } = await admin
+      .from('referrals')
+      .update({ status: 'cancelled' })
+      .eq('id', referral.id);
+    if (cancelErr) log.error(`referral cancel failed referral=${referral.id}`, cancelErr.message);
+
+    log.info(`reversed referral reward referrer=${referrer.id} referred=${referredUserId} months=${rewardMonths}`);
+  }
+
   try {
     if (type === 'payment.succeeded') {
       const payment = data as DodoPayments.WebhookPayload.Payment;
@@ -328,6 +404,11 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
             .eq('id', refundedProfile.id);
           assertWrite('revoke pro (refund)', revokeErr);
           log.info(`revoked pro user=${refundedProfile.id} reason=refund payment=${refund.payment_id} retained_via_gift=${retainedViaGift}`);
+
+          // If this refunded purchase had earned someone else a referral
+          // reward, reverse that reward too — otherwise a pay-then-refund
+          // cycle grants the referrer free Pro time at zero net cost.
+          await reverseReferralReward(refundedProfile.id);
         }
       }
     }

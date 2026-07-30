@@ -8,7 +8,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { handleDodoWebhook } from '../../app/api/webhooks/dodo/handler.js';
-import { makeFakeSupabase, fakeDodo, makeRequest, type FakeCtx } from './fixtures/fakes.js';
+import { makeFakeSupabase, fakeDodo, makeRequest, type FakeCtx, type FakeRpcCtx, type FakeResult } from './fixtures/fakes.js';
 
 const HEADERS = {
   'webhook-id': 'wh_1',
@@ -245,5 +245,169 @@ describe('gift-aware revocation (referral/gifted Pro survives an unrelated subsc
     assert.equal(res.status, 200);
     const update = calls.find((c) => c.table === 'profiles' && c.op === 'update');
     assert.equal((update!.payload as { is_pro?: boolean }).is_pro, true);
+  });
+});
+
+describe('referral reward reversal on refund (security PR — closes the pay-then-refund free-Pro loophole)', () => {
+  const REFERRAL_REFUND_EVENT = { type: 'refund.succeeded', data: { payment_id: 'pay_ref' } };
+
+  function hasFilter(ctx: FakeCtx, col: string, val: unknown) {
+    return ctx.filters.some((f) => f[1] === col && f[2] === val);
+  }
+
+  // Shared plumbing every case needs: cancel the pending affiliate conversion,
+  // find + revoke the refunded payer's own Pro. Cases override the referral
+  // lookup / referrer profile / referrer update branches.
+  function baseResponder(overrides: (ctx: FakeCtx) => FakeResult | undefined) {
+    return (ctx: FakeCtx) => {
+      if (ctx.table === 'affiliate_conversions') return { error: null };
+      if (ctx.table === 'profiles' && ctx.op === 'select' && hasFilter(ctx, 'pro_payment_id', 'pay_ref')) {
+        return { data: { id: 'payer1', is_gifted_pro: false, gifted_pro_expires_at: null } };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'update' && hasFilter(ctx, 'id', 'payer1')) {
+        return { error: null }; // revoke refunded payer's own Pro
+      }
+      return overrides(ctx) ?? { error: null };
+    };
+  }
+
+  function referrerUpdate(calls: FakeCtx[]) {
+    return calls.find((c) => c.table === 'profiles' && c.op === 'update' && hasFilter(c, 'id', 'referrer1'));
+  }
+
+  it('decrements the referrer credit, rewinds the gift window, and cancels the referral row', async () => {
+    // 6 calendar months out (two stacked 3-month rewards) so rewinding this
+    // one 3-month reward leaves an unambiguous ~3 months remaining — using a
+    // day-count approximation (e.g. 90 days) here is flaky since it isn't
+    // exactly 3 calendar months, and can land right on the active/expired
+    // boundary depending on which months elapse.
+    const futureExpiryDate = new Date();
+    futureExpiryDate.setMonth(futureExpiryDate.getMonth() + 6);
+    const futureExpiry = futureExpiryDate.toISOString();
+    const responder = baseResponder((ctx) => {
+      if (ctx.table === 'referrals' && ctx.op === 'select') {
+        return { data: { id: 'ref1', referrer_id: 'referrer1', reward_months: 3 } };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'select' && hasFilter(ctx, 'id', 'referrer1')) {
+        return {
+          data: {
+            id: 'referrer1', is_gifted_pro: true, gifted_pro_expires_at: futureExpiry,
+            subscription_id: null, pro_payment_id: null,
+          },
+        };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'update' && hasFilter(ctx, 'id', 'referrer1')) return { error: null };
+      if (ctx.table === 'referrals' && ctx.op === 'update') return { error: null };
+    });
+
+    let decrementArgs: Record<string, unknown> | undefined;
+    const { client, calls } = makeFakeSupabase(responder, (ctx: FakeRpcCtx) => {
+      decrementArgs = ctx.args;
+      return { error: null };
+    });
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: REFERRAL_REFUND_EVENT }), admin: client });
+    assert.equal(res.status, 200);
+
+    assert.deepEqual(decrementArgs, { p_user_id: 'referrer1', p_months: 3 });
+
+    const giftUpdate = referrerUpdate(calls);
+    assert.ok(giftUpdate, 'expected a profiles update for the referrer');
+    const payload = giftUpdate!.payload as Record<string, unknown>;
+    const expectedExpiry = new Date(futureExpiry);
+    expectedExpiry.setMonth(expectedExpiry.getMonth() - 3);
+    assert.equal(payload.gifted_pro_expires_at, expectedExpiry.toISOString());
+
+    const referralCancel = calls.find((c) => c.table === 'referrals' && c.op === 'update');
+    assert.ok(referralCancel, 'expected the referrals row to be cancelled');
+    assert.equal((referralCancel!.payload as { status?: string }).status, 'cancelled');
+  });
+
+  it('fully revokes is_gifted_pro (and is_pro) when rewinding empties the window and the referrer has no other Pro', async () => {
+    const nearExpiry = new Date(Date.now() + 5 * 86_400_000).toISOString(); // only 5 days left — rewinding 3mo goes negative
+    const responder = baseResponder((ctx) => {
+      if (ctx.table === 'referrals' && ctx.op === 'select') {
+        return { data: { id: 'ref1', referrer_id: 'referrer1', reward_months: 3 } };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'select' && hasFilter(ctx, 'id', 'referrer1')) {
+        return {
+          data: {
+            id: 'referrer1', is_gifted_pro: true, gifted_pro_expires_at: nearExpiry,
+            subscription_id: null, pro_payment_id: null,
+          },
+        };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'update' && hasFilter(ctx, 'id', 'referrer1')) return { error: null };
+      if (ctx.table === 'referrals' && ctx.op === 'update') return { error: null };
+    });
+    const { client, calls } = makeFakeSupabase(responder);
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: REFERRAL_REFUND_EVENT }), admin: client });
+    assert.equal(res.status, 200);
+
+    const payload = referrerUpdate(calls)!.payload as Record<string, unknown>;
+    assert.equal(payload.is_gifted_pro, false);
+    assert.equal(payload.gifted_pro_expires_at, null);
+    assert.equal(payload.is_pro, false, 'no subscription/own payment of their own — is_pro must be revoked');
+  });
+
+  it('keeps is_pro true if the referrer has their own active subscription once the gift window empties', async () => {
+    const nearExpiry = new Date(Date.now() + 5 * 86_400_000).toISOString();
+    const responder = baseResponder((ctx) => {
+      if (ctx.table === 'referrals' && ctx.op === 'select') {
+        return { data: { id: 'ref1', referrer_id: 'referrer1', reward_months: 3 } };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'select' && hasFilter(ctx, 'id', 'referrer1')) {
+        return {
+          data: {
+            id: 'referrer1', is_gifted_pro: true, gifted_pro_expires_at: nearExpiry,
+            subscription_id: 'sub_own', pro_payment_id: null,
+          },
+        };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'update' && hasFilter(ctx, 'id', 'referrer1')) return { error: null };
+      if (ctx.table === 'referrals' && ctx.op === 'update') return { error: null };
+    });
+    const { client, calls } = makeFakeSupabase(responder);
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: REFERRAL_REFUND_EVENT }), admin: client });
+    assert.equal(res.status, 200);
+
+    const payload = referrerUpdate(calls)!.payload as Record<string, unknown>;
+    assert.equal(payload.is_gifted_pro, false);
+    assert.equal(payload.is_pro, true, 'referrer keeps Pro via their own subscription');
+  });
+
+  it('never touches a permanent (non-expiring) gift window, but still decrements the audit counter', async () => {
+    const responder = baseResponder((ctx) => {
+      if (ctx.table === 'referrals' && ctx.op === 'select') {
+        return { data: { id: 'ref1', referrer_id: 'referrer1', reward_months: 3 } };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'select' && hasFilter(ctx, 'id', 'referrer1')) {
+        return {
+          data: {
+            id: 'referrer1', is_gifted_pro: true, gifted_pro_expires_at: null,
+            subscription_id: null, pro_payment_id: null,
+          },
+        };
+      }
+      if (ctx.table === 'referrals' && ctx.op === 'update') return { error: null };
+    });
+    let decremented = false;
+    const { client, calls } = makeFakeSupabase(responder, () => {
+      decremented = true;
+      return { error: null };
+    });
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: REFERRAL_REFUND_EVENT }), admin: client });
+    assert.equal(res.status, 200);
+    assert.ok(decremented, 'the lifetime-earned audit counter is still decremented');
+    assert.equal(referrerUpdate(calls), undefined, 'a permanent gift window must never be touched');
+  });
+
+  it('does nothing when the refunded purchase was never referred', async () => {
+    const responder = baseResponder((ctx) => {
+      if (ctx.table === 'referrals' && ctx.op === 'select') return { data: null }; // no referral found
+    });
+    const { client, calls } = makeFakeSupabase(responder);
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: REFERRAL_REFUND_EVENT }), admin: client });
+    assert.equal(res.status, 200);
+    assert.equal(calls.filter((c) => c.table === 'referrals' && c.op === 'update').length, 0);
   });
 });
