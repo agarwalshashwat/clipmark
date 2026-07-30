@@ -135,7 +135,7 @@ export function showUpgradeModal({ feature, benefit } = {}) {
   const overlay = ensureOverlay();
   overlay.querySelector('.cm-upgrade-title').textContent = `Unlock ${feature || 'this feature'} with Pro`;
   overlay.querySelector('.cm-upgrade-benefit').textContent =
-    benefit || 'Upgrade to Clipmark Pro to unlock this and every Pro feature.';
+    benefit || 'Upgrade to ClipMark Pro to unlock this and every Pro feature.';
   overlay.hidden = false;
 
   keyHandler = (e) => {

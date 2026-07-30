@@ -369,7 +369,7 @@ async function checkPro() {
 }
 
 function showUpgradePrompt(feature) {
-  showError(`✦ ${feature} is a Pro feature. Upgrade to Clipmark Pro to unlock AI-powered tools.`, 4000);
+  showError(`✦ ${feature} is a Pro feature. Upgrade to ClipMark Pro to unlock AI-powered tools.`, 4000);
 }
 
 // ─── Smart Tag Suggestions ────────────────────────────────────────────────────
@@ -477,7 +477,7 @@ async function summarizeBookmarks() {
         <div class="ai-unavailable">
           <span class="material-symbols-outlined" style="font-size:48px;color:#94a3b8;margin-bottom:12px;">robot_2</span>
           <h3>Local AI Required</h3>
-          <p>Clipmark now uses Chrome's built-in <strong>Gemini Nano</strong> for your privacy and to keep the service sustainable.</p>
+          <p>ClipMark now uses Chrome's built-in <strong>Gemini Nano</strong> for your privacy and to keep the service sustainable.</p>
           <p style="font-size:12px;color:#64748b;margin-top:12px;">Please ensure you are on Chrome 128+ and have "Enable Bypass for AI" flags set.</p>
           <a href="https://clipmark.mithahara.com/docs/ai" target="_blank" class="ai-help-link">How to enable →</a>
         </div>`;
@@ -795,7 +795,7 @@ async function loadSpacedRevision() {
     el.addEventListener('click', async () => {
       const isPro = await checkPro();
       if (!isPro) {
-        showError('▶ Revisit Mode is a Pro feature. Upgrade to Clipmark Pro.', 4000);
+        showError('▶ Revisit Mode is a Pro feature. Upgrade to ClipMark Pro.', 4000);
         chrome.tabs.create({ url: `${API_BASE}/upgrade` });
         return;
       }

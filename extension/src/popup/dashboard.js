@@ -952,7 +952,7 @@ function exportMarkdown() {
   allBookmarks.forEach(b => { videoTitles[b.videoId] = b.videoTitle || b.videoId; });
 
   const groups = groupByVideo(allBookmarks);
-  const lines  = ['# Clipmark Bookmarks\n'];
+  const lines  = ['# ClipMark Bookmarks\n'];
 
   for (const [videoId, bookmarks] of Object.entries(groups)) {
     const title = videoTitles[videoId] || videoId;
@@ -974,7 +974,7 @@ async function exportObsidian() {
   if (!isPro) { showUpgradeModal({ feature: 'Obsidian export', benefit: 'Export your clips straight to Obsidian and keep your second brain in sync. Available on Pro.' }); return; }
 
   const groups = groupByVideo(allBookmarks);
-  const lines  = ['# Clipmark Export — Obsidian\n'];
+  const lines  = ['# ClipMark Export — Obsidian\n'];
 
   for (const [videoId, bookmarks] of Object.entries(groups)) {
     const title = bookmarks[0].videoTitle || videoId;
@@ -1041,7 +1041,7 @@ async function exportReadingList() {
   if (!isPro) { showUpgradeModal({ feature: 'Reading List export', benefit: 'Export a clean reading list of everything you saved. Available on Pro.' }); return; }
 
   const groups = groupByVideo(allBookmarks);
-  const lines  = ['Clipmark — Reading List Export', '='.repeat(40), ''];
+  const lines  = ['ClipMark — Reading List Export', '='.repeat(40), ''];
 
   for (const [videoId, bookmarks] of Object.entries(groups)) {
     const title = bookmarks[0].videoTitle || videoId;
@@ -1533,7 +1533,7 @@ async function renderRevisitView(container, highlightTargetId = null) {
       <div class="empty-state">
         <div class="empty-state-icon">🔒</div>
         <h3>Sign in to view reminders</h3>
-        <p>Reminders sync with your Clipmark account.</p>
+        <p>Reminders sync with your ClipMark account.</p>
       </div>`;
     return;
   }
