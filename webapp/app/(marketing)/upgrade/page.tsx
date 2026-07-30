@@ -10,17 +10,18 @@ import { createClient } from '@supabase/supabase-js';
 import styles from './upgrade.module.css';
 
 const FEATURES = [
-  { label: 'Unlimited local bookmarks',          free: true,  pro: true  },
-  { label: 'Cloud Sync across devices',          free: false, pro: true  },
-  { label: 'Auto-sync to Notion & Obsidian',     free: false, pro: true  },
-  { label: 'Active Recall Mode (video flashcards)', free: false, pro: true },
-  { label: 'Permanent Transcript Archiving',     free: false, pro: true  },
-  { label: 'Deep Search (inside transcripts)',   free: false, pro: true  },
-  { label: 'Smart AI Synthesis (Local-only)',    free: false, pro: true  },
-  { label: 'Unlimited Shared Collections',       free: '5',   pro: '∞'   },
-  { label: 'Anki, Obsidian & Notion exports',     free: false, pro: true  },
-  { label: 'Spaced Repetition Reminders',        free: false, pro: true  },
-  { label: 'Priority Support',                   free: false, pro: true  },
+  { label: 'Unlimited local bookmarks',          free: true,       pro: true       },
+  { label: 'Cloud Sync across devices',          free: false,      pro: true       },
+  { label: 'Active Recall flashcards',           free: '25 cards', pro: 'Unlimited' },
+  { label: 'Active Recall reviews',              free: '30/month', pro: 'Unlimited' },
+  { label: 'Anki export',                        free: '1/month',  pro: 'Unlimited' },
+  { label: 'Auto-sync to Notion & Obsidian',     free: false,      pro: true       },
+  { label: 'Permanent Transcript Archiving',     free: false,      pro: true       },
+  { label: 'Deep Search (inside transcripts)',   free: false,      pro: true       },
+  { label: 'Smart AI Synthesis (Local-only)',    free: true,       pro: true       },
+  { label: 'Shared Collections',                 free: '10',       pro: '∞'        },
+  { label: 'Spaced Repetition Reminders',        free: false,      pro: true       },
+  { label: 'Priority Support',                   free: false,      pro: true       },
 ];
 
 function Check() {
