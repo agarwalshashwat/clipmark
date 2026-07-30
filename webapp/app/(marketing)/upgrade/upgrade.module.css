@@ -130,6 +130,10 @@
   color: #1f2937;
 }
 
+.ctaWrap {
+  margin-top: auto;
+}
+
 .ctaBtn {
   width: 100%;
   padding: 16px;
