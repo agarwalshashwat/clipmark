@@ -19,14 +19,16 @@ export default async function ReferralPage() {
   // Fetch profile including referral fields (service role to ensure we get all columns)
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('referral_code, referral_months_credit, is_pro')
+    .select('referral_code, referral_months_credit, is_pro, is_gifted_pro, gifted_pro_expires_at')
     .eq('id', user.id)
     .single();
 
-  const referralCode   = (profile?.referral_code as string | null) ?? '';
-  const creditMonths   = Number(profile?.referral_months_credit ?? 0);
-  const isPro          = profile?.is_pro === true;
-  const referralLink   = `${process.env.NEXT_PUBLIC_APP_URL}/ref/${referralCode}`;
+  const referralCode      = (profile?.referral_code as string | null) ?? '';
+  const creditMonths      = Number(profile?.referral_months_credit ?? 0);
+  const isPro             = profile?.is_pro === true;
+  const isGiftedPro       = profile?.is_gifted_pro === true;
+  const giftedProExpiresAt = (profile?.gifted_pro_expires_at as string | null) ?? null;
+  const referralLink      = `${process.env.NEXT_PUBLIC_APP_URL}/ref/${referralCode}`;
 
   // Fetch referral history
   const { data: referrals } = await supabaseAdmin
@@ -133,26 +135,15 @@ export default async function ReferralPage() {
                 fontWeight: 700, fontSize: 16, color: '#1A1C1D', marginBottom: 6,
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}>
-                You have <span style={{ color: '#006b5f' }}>{creditMonths} free month{creditMonths !== 1 ? 's' : ''}</span> of Pro credit
+                You&apos;ve earned <span style={{ color: '#006b5f' }}>{creditMonths} free month{creditMonths !== 1 ? 's' : ''}</span> of Pro from referrals
               </p>
-              {isPro ? (
-                <p style={{ fontSize: 14, color: '#545f6c', lineHeight: 1.6 }}>
-                  You&apos;re already on Pro. Email{' '}
-                  <a href="mailto:hello@clipmark.mithahara.com" style={{ color: '#14B8A6', textDecoration: 'none', fontWeight: 600 }}>
-                    hello@clipmark.mithahara.com
-                  </a>{' '}
-                  with the subject <strong>&quot;Referral credit — {user.email}&quot;</strong> and we&apos;ll
-                  extend your subscription by {creditMonths} month{creditMonths !== 1 ? 's' : ''} manually.
-                  We aim to apply credits within 24 hours.
-                </p>
-              ) : (
-                <p style={{ fontSize: 14, color: '#545f6c', lineHeight: 1.6 }}>
-                  Your credit is automatically applied when you upgrade.{' '}
-                  <a href="/upgrade" style={{ color: '#14B8A6', textDecoration: 'none', fontWeight: 600 }}>
-                    Upgrade to Pro →
-                  </a>
-                </p>
-              )}
+              <p style={{ fontSize: 14, color: '#545f6c', lineHeight: 1.6 }}>
+                {isGiftedPro && giftedProExpiresAt
+                  ? <>Applied automatically — your referral Pro access is active through{' '}
+                      <strong>{new Date(giftedProExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong>.
+                      {' '}It runs alongside any paid subscription, so cancelling one won&apos;t affect the other.</>
+                  : <>Applied automatically to your account as each referral converts — no redemption needed.</>}
+              </p>
             </div>
           </div>
         </div>

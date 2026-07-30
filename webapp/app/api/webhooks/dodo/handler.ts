@@ -29,6 +29,19 @@ function assertWrite(label: string, error: { message?: string } | null) {
   }
 }
 
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date.getTime());
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+/** True while a gifted-Pro window (creator seed OR referral reward) is still active. */
+function hasActiveGiftedPro(profile: { is_gifted_pro?: boolean | null; gifted_pro_expires_at?: string | null } | null | undefined) {
+  if (!profile?.is_gifted_pro) return false;
+  const expiresAt = profile.gifted_pro_expires_at ?? null;
+  return expiresAt === null || new Date(expiresAt) > new Date();
+}
+
 export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: WebhookDeps) {
   const body = await request.text();
   const webhookId = request.headers.get('webhook-id') ?? 'unknown';
@@ -103,8 +116,18 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
   }
 
   /**
-   * recordReferralCredit — awards free months to the referrer when a referred
-   * user makes their first Pro purchase via a /ref/[code] link.
+   * recordReferralCredit — grants the referrer free Pro time immediately when
+   * a referred user makes their first Pro purchase via a /ref/[code] link.
+   *
+   * Previously this only incremented a `referral_months_credit` counter with
+   * no code path that ever converted it into real entitlement (the referral
+   * dashboard's "automatically applied" copy was aspirational, not true). It
+   * now reuses the same is_gifted_pro/gifted_pro_expires_at mechanism as
+   * creator/partner Pro seeding: the reward stacks as a parallel gifted-Pro
+   * window alongside any paid subscription, so cancelling a subscription
+   * later doesn't strip reward time already earned (see the gift-aware guard
+   * on subscription.cancelled/expired below). referral_months_credit is kept
+   * as a lifetime-earned audit counter for the referral dashboard.
    *
    * Guards:
    *  - Code must map to a real profile
@@ -120,7 +143,7 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
 
     const { data: referrer } = await admin
       .from('profiles')
-      .select('id, referral_months_credit')
+      .select('id, referral_months_credit, is_pro, is_gifted_pro, gifted_pro_expires_at')
       .eq('referral_code', userReferralCode)
       .single();
 
@@ -137,24 +160,39 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
       .neq('status', 'cancelled');
     if ((existingCount ?? 0) > 0) return;
 
+    const now = new Date();
+    const alreadyPermanentGift = referrer.is_gifted_pro === true && referrer.gifted_pro_expires_at === null;
+
+    // Stack on top of any remaining gift window rather than resetting it.
+    const windowStart = (!alreadyPermanentGift && hasActiveGiftedPro(referrer))
+      ? new Date(referrer.gifted_pro_expires_at as string)
+      : now;
+
+    const profileUpdate: Record<string, unknown> = {
+      referral_months_credit: (Number(referrer.referral_months_credit) || 0) + rewardMonths,
+    };
+    if (!referrer.is_pro) profileUpdate.is_pro = true;
+    if (!alreadyPermanentGift) {
+      profileUpdate.is_gifted_pro = true;
+      profileUpdate.gifted_pro_expires_at = addMonths(windowStart, rewardMonths).toISOString();
+    }
+
     // Award the months and record the referral (attribution — log, don't 500).
     const [creditRes, insertRes] = await Promise.all([
-      admin.from('profiles')
-        .update({ referral_months_credit: (Number(referrer.referral_months_credit) || 0) + rewardMonths })
-        .eq('id', referrer.id),
+      admin.from('profiles').update(profileUpdate).eq('id', referrer.id),
       admin.from('referrals').insert({
         referrer_id:      referrer.id,
         referred_user_id: payingUserId,
         status:           'rewarded',
         reward_months:    rewardMonths,
-        reward_applied_at: new Date().toISOString(),
+        reward_applied_at: now.toISOString(),
       }),
     ]);
     if (creditRes.error || insertRes.error) {
       log.error(`referral credit failed referrer=${referrer.id} user=${payingUserId}`,
         creditRes.error?.message ?? insertRes.error?.message);
     } else {
-      log.info(`referral credit awarded referrer=${referrer.id} months=${rewardMonths}`);
+      log.info(`referral credit awarded referrer=${referrer.id} months=${rewardMonths} gifted_pro_expires_at=${profileUpdate.gifted_pro_expires_at ?? 'permanent'}`);
     }
   }
 
@@ -239,14 +277,24 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
       const sub = data as DodoPayments.WebhookPayload.Subscription;
       const userId = sub.metadata?.user_id;
       if (userId) {
+        // A cancelled/expired subscription shouldn't strip an active gifted-Pro
+        // window (creator seed or referral reward) running alongside it —
+        // those are earned/granted independently of the subscription.
+        const { data: existingProfile } = await admin
+          .from('profiles')
+          .select('is_gifted_pro, gifted_pro_expires_at')
+          .eq('id', userId)
+          .single();
+        const retainedViaGift = hasActiveGiftedPro(existingProfile);
+
         const { error } = await admin.from('profiles').update({
-          is_pro: false,
+          is_pro: retainedViaGift,
           subscription_id: null,
           subscription_period_end: null,
           cancel_at_period_end: false,
         }).eq('id', userId);
         assertWrite(`revoke pro (${type})`, error);
-        log.info(`revoked pro user=${userId} reason=${type}`);
+        log.info(`revoked pro user=${userId} reason=${type} retained_via_gift=${retainedViaGift}`);
       }
     }
 
@@ -262,21 +310,24 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
         if (convErr) log.error(`cancel affiliate conversion failed payment=${refund.payment_id}`, convErr.message);
 
         // Revoke Pro for a refunded one-time (lifetime) purchase. Subscription
-        // refunds are handled by subscription.cancelled/expired.
+        // refunds are handled by subscription.cancelled/expired. A refund of
+        // the lifetime purchase shouldn't strip an unrelated active gifted-Pro
+        // window (creator seed or referral reward) on the same profile.
         const { data: refundedProfile, error: findErr } = await admin
           .from('profiles')
-          .select('id')
+          .select('id, is_gifted_pro, gifted_pro_expires_at')
           .eq('pro_payment_id', refund.payment_id)
           .maybeSingle();
         if (findErr) log.error(`lookup refunded profile failed payment=${refund.payment_id}`, findErr.message);
 
         if (refundedProfile) {
+          const retainedViaGift = hasActiveGiftedPro(refundedProfile);
           const { error: revokeErr } = await admin
             .from('profiles')
-            .update({ is_pro: false, pro_payment_id: null })
+            .update({ is_pro: retainedViaGift, pro_payment_id: null })
             .eq('id', refundedProfile.id);
           assertWrite('revoke pro (refund)', revokeErr);
-          log.info(`revoked pro user=${refundedProfile.id} reason=refund payment=${refund.payment_id}`);
+          log.info(`revoked pro user=${refundedProfile.id} reason=refund payment=${refund.payment_id} retained_via_gift=${retainedViaGift}`);
         }
       }
     }

@@ -80,6 +80,22 @@ describe('Dodo webhook entitlements (#2, integration)', () => {
     assert.equal((await getProfile(u.id)).is_pro, false);
   });
 
+  it('subscription.cancelled does NOT revoke Pro while an active gifted-Pro window is running', async () => {
+    const u = await createTestUser('wh-cancel-gift@example.test');
+    await setProfileFlags(u.id, {
+      is_pro: true,
+      subscription_id: 'sub_gift',
+      is_gifted_pro: true,
+      gifted_pro_expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    });
+    const res = await deliver({
+      type: 'subscription.cancelled',
+      data: { metadata: { user_id: u.id }, subscription_id: 'sub_gift' },
+    });
+    assert.equal(res.status, 200);
+    assert.equal((await getProfile(u.id)).is_pro, true, 'gift keeps them Pro after the paid subscription ends');
+  });
+
   describe('affiliate conversion recording + duplicate guard', () => {
     let affiliate: TestUser;
     before(async () => {
@@ -120,6 +136,51 @@ describe('Dodo webhook entitlements (#2, integration)', () => {
         data: { metadata: { user_id: referred.id, affiliate_code: 'aff_rec' }, payment_id: 'pay_dup', total_amount: 1000 },
       });
       assert.equal(await convCount(referred.id), 0, 'no conversion for an already-Pro buyer');
+    });
+  });
+
+  describe('referral credit grants gifted Pro immediately', () => {
+    it('flips the referrer to Pro with an active gifted-Pro window on a referred first purchase', async () => {
+      const referrer = await createTestUser('wh-ref-referrer@example.test');
+      const { data: refProfile } = await admin
+        .from('profiles')
+        .select('referral_code')
+        .eq('id', referrer.id)
+        .single();
+      const referralCode = (refProfile as { referral_code: string }).referral_code;
+      assert.ok(referralCode, 'every profile gets an auto-generated referral_code (migration 010)');
+
+      const payer = await createTestUser('wh-ref-payer@example.test');
+      const res = await deliver({
+        type: 'payment.succeeded',
+        data: {
+          metadata: { user_id: payer.id, user_referral_code: referralCode },
+          payment_id: 'pay_ref',
+          total_amount: 0,
+        },
+      });
+      assert.equal(res.status, 200);
+
+      const { data: referrerProfile } = await admin
+        .from('profiles')
+        .select('is_pro, is_gifted_pro, gifted_pro_expires_at, referral_months_credit')
+        .eq('id', referrer.id)
+        .single();
+      const rp = referrerProfile as {
+        is_pro: boolean; is_gifted_pro: boolean;
+        gifted_pro_expires_at: string | null; referral_months_credit: number;
+      };
+      assert.equal(rp.is_pro, true, 'referrer is granted Pro immediately, no manual redemption');
+      assert.equal(rp.is_gifted_pro, true);
+      assert.ok(rp.gifted_pro_expires_at && new Date(rp.gifted_pro_expires_at) > new Date(), 'gift window is in the future');
+      assert.equal(rp.referral_months_credit, 3);
+
+      const { data: referralRow } = await admin
+        .from('referrals')
+        .select('status')
+        .eq('referred_user_id', payer.id)
+        .single();
+      assert.equal((referralRow as { status: string }).status, 'rewarded');
     });
   });
 });
