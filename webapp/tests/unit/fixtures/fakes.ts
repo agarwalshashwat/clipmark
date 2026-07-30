@@ -114,6 +114,17 @@ export function fakeDodo(opts: { event?: unknown; throwOnUnwrap?: boolean }) {
   } as never;
 }
 
+/** Fake Dodo discounts client: create() returns a preset discount_id (no real Dodo API calls). */
+export function fakeDodoDiscounts(discountId = 'discount_test') {
+  return {
+    discounts: {
+      create() {
+        return Promise.resolve({ discount_id: discountId });
+      },
+    },
+  } as never;
+}
+
 /** Build a NextRequest for a handler under test. */
 export function makeRequest(opts: {
   url?: string;
