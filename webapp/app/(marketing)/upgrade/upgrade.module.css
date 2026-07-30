@@ -108,6 +108,13 @@
   color: #4b5563;
 }
 
+.foundingNote {
+  font-size: 13px;
+  color: #6b21a8;
+  line-height: 1.4;
+  margin: -24px 0 32px;
+}
+
 .featureList {
   display: flex;
   flex-direction: column;
@@ -201,6 +208,19 @@
   color: #14B8A6;
   font-weight: 700;
   background: #f0fdfa;
+}
+
+.compHeadRow {
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.compHeadCell {
+  padding-top: 24px;
+  padding-bottom: 24px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .bannerSuccess {
