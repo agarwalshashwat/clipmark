@@ -84,6 +84,37 @@ let cachedTranscriptVideoId = null;
 
 function bmKey(videoId) { return `bm_${videoId}`; }
 
+// ─── Free-tier Active Recall enrollment cap ──────────────────────────────────
+// countEnrolledRecallSegments/isEnrollmentCapReached are defined in usage-caps.js
+async function isProUser() {
+  const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
+  return bmUser?.isPro === true;
+}
+
+async function countAllEnrolledRecallSegments() {
+  const all = await new Promise((resolve, reject) => {
+    chrome.storage.sync.get(null, result => {
+      if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+      resolve(result);
+    });
+  });
+  const bookmarks = [];
+  for (const [key, val] of Object.entries(all)) {
+    if (key.startsWith('bm_') && Array.isArray(val)) bookmarks.push(...val);
+  }
+  return typeof countEnrolledRecallSegments === 'function' ? countEnrolledRecallSegments(bookmarks) : bookmarks.filter(b => b?.reviewSchedule?.length > 0).length;
+}
+
+// Decides the reviewSchedule for a brand-new bookmark: a free user past the
+// standing 25-segment cap doesn't get auto-enrolled (the bookmark still saves
+// with every other field intact), Pro users are always enrolled.
+async function resolveNewBookmarkReviewSchedule() {
+  if (await isProUser()) return { reviewSchedule: [1, 3, 7], capped: false };
+  const enrolled = await countAllEnrolledRecallSegments();
+  const capped = typeof isEnrollmentCapReached === 'function' ? isEnrollmentCapReached(enrolled) : enrolled >= 25;
+  return capped ? { reviewSchedule: [], capped: true } : { reviewSchedule: [1, 3, 7], capped: false };
+}
+
 function getCurrentVideoIdFromLocation() {
   return new URLSearchParams(window.location.search).get('v');
 }
@@ -548,6 +579,8 @@ async function silentSaveBookmark() {
       return;
     }
 
+    const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
+
     bookmarks.push({
       id: Date.now(),
       videoId,
@@ -557,7 +590,7 @@ async function silentSaveBookmark() {
       color,
       createdAt:      new Date().toISOString(),
       videoTitle:     videoTitles[videoId] || null,
-      reviewSchedule: [1, 3, 7],
+      reviewSchedule,
       lastReviewed:   null,
     });
 
@@ -572,7 +605,11 @@ async function silentSaveBookmark() {
 
     updateBookmarkMarkers();
     showSaveFlash();
-    showSilentSaveIndicator(description);
+    if (capped) {
+      showSilentSaveIndicator(`Saved. You've used all ${globalThis.FREE_RECALL_ENROLLED_CAP || 25} free Active Recall cards — upgrade for more, or remove one to make room.`);
+    } else {
+      showSilentSaveIndicator(description);
+    }
     const playerBtn = document.querySelector('.yt-bookmark-player-btn');
     if (playerBtn) { playerBtn.classList.add('saving'); setTimeout(() => playerBtn.classList.remove('saving'), 400); }
     debugLog('Silent', 'Saved silent bookmark', { timestamp, description });
@@ -1649,7 +1686,32 @@ function handleRecallGrade(bookmark, grade) {
   if (!revisionState) return;
   removeRecallPanels();
   gradeAndPersistBookmark(bookmark, grade);
+  incrementRecallReviewCounter().catch(() => {});
   advanceToNextOrFinish();
+}
+
+// ─── Free-tier reviews-this-month counter ────────────────────────────────────
+// Stored in chrome.storage.local (not sync — no cross-device consistency
+// needed, and it keeps this out of sync's tight quota). Pro users are
+// unlimited and aren't tracked. normalizeMonthlyCounter/isMonthlyReviewWarnThreshold
+// are defined in usage-caps.js.
+async function incrementRecallReviewCounter() {
+  if (await isProUser()) return;
+  const { recallReviewUsage } = await new Promise(resolve =>
+    chrome.storage.local.get({ recallReviewUsage: null }, resolve)
+  );
+  const now = Date.now();
+  const normalized = normalizeMonthlyCounter(recallReviewUsage, now);
+  const updated = { periodStart: normalized.periodStart, count: normalized.count + 1 };
+  await new Promise((resolve, reject) =>
+    chrome.storage.local.set({ recallReviewUsage: updated }, () => {
+      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+      else resolve();
+    })
+  );
+  if (isMonthlyReviewWarnThreshold(updated, now)) {
+    showSilentSaveIndicator(`${updated.count} of ${FREE_RECALL_REVIEWS_PER_MONTH} free reviews used this month`);
+  }
 }
 
 // Read-modify-write on bm_<videoId>: grade the FRESH stored copy (not the

@@ -3,6 +3,7 @@
 // The background worker owns the extension's only Sentry sender — the content
 // script forwards to it (see src/error-report-bridge.js).
 import { initErrorReporting, isOwnScript } from '../error-reporting.js';
+import { countEnrolledRecallSegments, isEnrollmentCapReached, FREE_RECALL_ENROLLED_CAP } from '../usage-caps.module.js';
 
 const errorReporter = initErrorReporting('extension-background');
 
@@ -42,6 +43,32 @@ const TAG_COLORS = {
   }
   
   function bmKey(videoId) { return `bm_${videoId}`; }
+
+  // ─── Free-tier Active Recall enrollment cap ────────────────────────────────
+  async function countAllEnrolledRecallSegments() {
+    const all = await new Promise((resolve, reject) => {
+      chrome.storage.sync.get(null, result => {
+        if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+        resolve(result);
+      });
+    });
+    const bookmarks = [];
+    for (const [key, val] of Object.entries(all)) {
+      if (key.startsWith('bm_') && Array.isArray(val)) bookmarks.push(...val);
+    }
+    return countEnrolledRecallSegments(bookmarks);
+  }
+
+  // Decides the reviewSchedule for a brand-new bookmark: a free user past the
+  // standing 25-segment cap doesn't get auto-enrolled (the bookmark still
+  // saves with every other field intact), Pro users are always enrolled.
+  async function resolveNewBookmarkReviewSchedule() {
+    const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
+    if (bmUser?.isPro === true) return { reviewSchedule: [1, 3, 7], capped: false };
+    const enrolled = await countAllEnrolledRecallSegments();
+    if (isEnrollmentCapReached(enrolled)) return { reviewSchedule: [], capped: true };
+    return { reviewSchedule: [1, 3, 7], capped: false };
+  }
 
   // ─── Service Worker Keep-Alive (MV3) ─────────────────────────────────────────
   // MV3 service workers shut down after ~5 min of inactivity.
@@ -168,6 +195,7 @@ const TAG_COLORS = {
     } catch {}
 
     // Create new bookmark
+    const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
     const newBookmark = {
       id: Date.now(),
       videoId,
@@ -177,7 +205,7 @@ const TAG_COLORS = {
       color,
       createdAt: new Date().toISOString(),
       videoTitle: videoTitles[videoId] || null,
-      reviewSchedule: [1, 3, 7],
+      reviewSchedule,
       lastReviewed: null,
     };
 
@@ -196,6 +224,19 @@ const TAG_COLORS = {
       await chrome.tabs.sendMessage(tabId, { action: 'bookmarkUpdated' });
     } catch {
       // Content script may not be ready, that's OK
+    }
+
+    if (capped) {
+      try {
+        chrome.notifications.create(`recall_cap_${videoId}_${newBookmark.id}`, {
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icons/icon-48.png'),
+          title: 'Bookmark saved',
+          message: `You've used all ${FREE_RECALL_ENROLLED_CAP} free Active Recall cards — upgrade for more, or remove one to make room.`,
+        });
+      } catch {
+        // Notifications may be unavailable/blocked — not fatal, save already succeeded.
+      }
     }
 
     console.log('[ContextMenu] Bookmark saved successfully');

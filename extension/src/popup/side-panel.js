@@ -13,6 +13,13 @@ import {
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
+import {
+  countEnrolledRecallSegments,
+  isEnrollmentCapReached,
+  isMonthlyReviewCapReached,
+  FREE_RECALL_ENROLLED_CAP,
+  FREE_RECALL_REVIEWS_PER_MONTH,
+} from '../usage-caps.module.js';
 import './zen-garden.js';
 import { initErrorReporting } from '../error-reporting.js';
 
@@ -64,6 +71,26 @@ function startCurrentTimeSync(tabId) {
 async function checkPro() {
   const { bmUser } = await syncGet({ bmUser: null });
   return bmUser?.isPro === true;
+}
+
+// ─── Free-tier Active Recall enrollment cap ──────────────────────────────────
+async function countAllEnrolledRecallSegments() {
+  const all = await syncGet(null);
+  const bookmarks = [];
+  for (const [key, val] of Object.entries(all)) {
+    if (key.startsWith('bm_') && Array.isArray(val)) bookmarks.push(...val);
+  }
+  return countEnrolledRecallSegments(bookmarks);
+}
+
+// Decides the reviewSchedule for a brand-new bookmark: a free user past the
+// standing 25-segment cap doesn't get auto-enrolled (the bookmark still saves
+// with every other field intact), Pro users are always enrolled.
+async function resolveNewBookmarkReviewSchedule() {
+  if (await checkPro()) return { reviewSchedule: [1, 3, 7], capped: false };
+  const enrolled = await countAllEnrolledRecallSegments();
+  if (isEnrollmentCapReached(enrolled)) return { reviewSchedule: [], capped: true };
+  return { reviewSchedule: [1, 3, 7], capped: false };
 }
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
@@ -324,6 +351,7 @@ async function saveBookmark(bookmark) {
 
     const tags = parseTags(description);
     const color = getTagColor(tags);
+    const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
 
     bookmarks.push({
       ...bookmark,
@@ -333,7 +361,7 @@ async function saveBookmark(bookmark) {
       id: Date.now(),
       createdAt: new Date().toISOString(),
       videoTitle: videoTitles[bookmark.videoId] || null,
-      reviewSchedule: [1, 3, 7],
+      reviewSchedule,
       lastReviewed: null,
     });
 
@@ -349,7 +377,11 @@ async function saveBookmark(bookmark) {
     sendMessageToTab(tab.id, { action: 'showSaveFlash' }).catch(() => {});
     document.getElementById('description').value = '';
     document.getElementById('tag-suggestions').style.display = 'none';
-    showStatus('Bookmark saved ✓');
+    if (capped) {
+      showStatus(`Saved. You've used all ${FREE_RECALL_ENROLLED_CAP} free Active Recall cards — upgrade for more, or remove one to make room.`, 4000);
+    } else {
+      showStatus('Bookmark saved ✓');
+    }
 
     loadBookmarks();
     sendMessageToTab(tab.id, { action: 'bookmarkUpdated' }).catch(() => {});
@@ -515,12 +547,10 @@ async function summarizeBookmarks() {
     const videoTitle = videoTitles[videoId] || '';
 
     const availability = await localAiAvailability();
-    const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
-    const isPro = bmUser?.isPro === true;
     let result = null;
 
     if (availability === 'available') {
-      // Local AI — works for everyone, no cost
+      // Local AI (Gemini Nano) — free for everyone, on-device, zero cost to us.
       btn.textContent = '…';
       btn.disabled = true;
       try {
@@ -1317,11 +1347,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const isPro = await checkPro();
       if (!isPro) {
-        showUpgradeModal({
-          feature: 'Active Recall Mode',
-          benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
-        });
-        return;
+        const { recallReviewUsage } = await new Promise(resolve =>
+          chrome.storage.local.get({ recallReviewUsage: null }, resolve)
+        );
+        if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
+          showUpgradeModal({
+            feature: 'More reviews this month',
+            benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+          });
+          return;
+        }
       }
       const tab = await getCurrentTab();
       if (!(tab.url || '').includes('youtube.com/watch')) {
