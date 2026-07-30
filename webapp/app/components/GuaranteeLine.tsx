@@ -29,8 +29,8 @@ export function GuaranteeLine({
       <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#14B8A6' }}>
         verified_user
       </span>
-      {refundDays ? `${refundDays}-day money-back guarantee` : 'Money-back guarantee'} · cancel
-      anytime — your clips stay yours.
+      {refundDays ? `${refundDays}-day money-back guarantee` : 'Money-back guarantee'} · taxes
+      included · no hidden fees · cancel anytime — your clips stay yours.
     </p>
   );
 }
