@@ -50,8 +50,8 @@ This is the one place everything discussed across security hardening, pricing, d
 
 | # | What | Branch | Status |
 |---|---|---|---|
-| **#56** | Bottom-align pricing card CTA buttons across cards | `fix/pricing-cta-alignment` | **OPEN** — this is the branch we're currently on |
-| — | **"Coming soon" relabel of unbuilt pricing claims** (Deep Transcript Search, real Notion/Obsidian Sync, Advanced Learning Stats, Daily Review Dashboard, Lifetime/Permanent Archiving, Early access to labs — per [ClipMark-Claims-Buildout-Plan.md](ClipMark-Claims-Buildout-Plan.md) interim section) | not yet opened | **Next action, not started** — this is the mechanism that makes launching without the full feature build-out honest |
+| **#56** | Bottom-align pricing card CTA buttons across cards | `fix/pricing-cta-alignment` | **OPEN** |
+| — | **"Coming soon" relabel of unbuilt pricing claims** — uncommitted work-in-progress on `fix/pricing-claims-honesty` (no PR yet): adds a `ComingSoon` badge to Deep Transcript Search, Lifetime Cloud Archiving, and Early access to all labs in `PlanCards.tsx`; softens "Sync to Notion & Obsidian" → "Export to Notion & Obsidian" (matches the actual one-off export capability) and "Daily Review Dashboard" → "Review Reminders" / "Advanced Learning Stats" → "Learning Stats" (matches what's actually shipped, no overpromise). **Not yet done**: the comparison-table rows in `page.tsx` ("Permanent Transcript Archiving", "Deep Search (inside transcripts)") still need the same `ComingSoon` treatment, and the "Spaced Repetition Logic" copy fix (§A above — reframe as "unlimited," not Pro-exclusive) hasn't been touched yet. Per [ClipMark-Claims-Buildout-Plan.md](ClipMark-Claims-Buildout-Plan.md) interim section for the full target list. |
 | — | `/dashboard/queue` Pro-gating bypass fix (free users currently get the Reminders queue for free — the page queries the DB directly instead of going through the Pro-gated `/api/reminders`) | not yet opened | **Flagged, not started** — spun off as a background-task suggestion during the claims build-plan pass; independent of the relabel work and can land anytime |
 
 ---
