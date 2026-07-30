@@ -1,6 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, createServerSupabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/clients';
+
+// Spaced-repetition reminders are a Pro-only feature (see the marketing
+// upgrade page); re-check server-side so a free/spoofed client calling this
+// route directly can't get the feature just by skipping the extension's UI gate.
+async function isProUser(userId: string): Promise<boolean> {
+  const { data } = await getSupabaseAdmin()
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', userId)
+    .single();
+  return data?.is_pro === true;
+}
 
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
@@ -29,6 +42,10 @@ export async function OPTIONS() {
 export async function GET(request: NextRequest) {
   const auth = await getAuthenticatedUser(request);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!await isProUser(auth.user.id)) {
+    return NextResponse.json({ error: 'pro_required' }, { status: 403 });
+  }
 
   const { client } = auth;
   const now = new Date().toISOString();
@@ -79,6 +96,10 @@ export async function POST(request: NextRequest) {
   const auth = await getAuthenticatedUser(request);
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  if (!await isProUser(auth.user.id)) {
+    return NextResponse.json({ error: 'pro_required' }, { status: 403 });
+  }
+
   const { client } = auth;
   let body: { target_type?: string; target_id?: string; frequency?: string; next_due_at?: string; label?: string };
   try {
@@ -98,6 +119,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await client
     .from('revisit_reminders')
     .insert({
+      user_id: auth.user.id,
       target_type,
       target_id,
       frequency,
