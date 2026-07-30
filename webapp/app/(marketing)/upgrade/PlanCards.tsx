@@ -46,8 +46,8 @@ const PLANS: Plan[] = [
     pro: true,
     features: [
       'Everything in Monthly',
-      <><strong>Pro: Local AI Optimization</strong></>,
-      'Anki, Obsidian & Notion exports',
+      <><strong>Unlimited Active Recall & Anki exports</strong></>,
+      'Obsidian & Notion sync',
       'Advanced Learning Stats',
       'Spaced Repetition Logic',
     ],

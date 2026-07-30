@@ -10,7 +10,7 @@ import { adminClient } from './fixtures/supabase.js';
 import { createTestUser, setProfileFlags } from './fixtures/seed.js';
 
 const admin = adminClient();
-const FREE_LIMIT = 5;
+const FREE_LIMIT = 10;
 
 async function seedCollections(userId: string, n: number) {
   for (let i = 0; i < n; i++) {

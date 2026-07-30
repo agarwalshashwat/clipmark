@@ -116,3 +116,134 @@ describe('Dodo webhook handler (#2)', () => {
     assert.equal((convInsert!.payload as { plan?: string }).plan, 'annual');
   });
 });
+
+describe('referral credit grants gifted Pro immediately (fixes the dead ledger-balance bug)', () => {
+  const referralEvent = {
+    type: 'payment.succeeded',
+    data: { metadata: { user_id: 'payer1', user_referral_code: 'ref123' }, payment_id: 'pay_1', total_amount: 0 },
+  };
+
+  function referrerLookup(referrer: Record<string, unknown>) {
+    return (ctx: FakeCtx): { data?: unknown; error?: null; count?: number } => {
+      if (ctx.table === 'profiles' && ctx.filters.some((f) => f[1] === 'referral_code')) {
+        return { data: referrer };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'select') return { data: { is_pro: false } }; // payer's pre-update read
+      if (ctx.table === 'referrals' && ctx.op === 'select') return { count: 0 };
+      return { error: null };
+    };
+  }
+
+  function referrerUpdateCall(calls: FakeCtx[], referrerId: string) {
+    return calls.find(
+      (c) => c.table === 'profiles' && c.op === 'update' && c.filters.some((f) => f[2] === referrerId),
+    );
+  }
+
+  it('grants the referrer is_pro + a gifted-Pro window on a referred first purchase', async () => {
+    const referrer = {
+      id: 'referrer1', referral_months_credit: 0,
+      is_pro: false, is_gifted_pro: false, gifted_pro_expires_at: null,
+    };
+    const { client, calls } = makeFakeSupabase(referrerLookup(referrer));
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: referralEvent }), admin: client });
+    assert.equal(res.status, 200);
+
+    const update = referrerUpdateCall(calls, 'referrer1');
+    assert.ok(update, 'expected a profiles UPDATE for the referrer');
+    const payload = update!.payload as Record<string, unknown>;
+    assert.equal(payload.is_pro, true);
+    assert.equal(payload.is_gifted_pro, true);
+    assert.equal(payload.referral_months_credit, 3);
+    assert.equal(typeof payload.gifted_pro_expires_at, 'string');
+
+    const referralInsert = calls.find((c) => c.table === 'referrals' && c.op === 'insert');
+    assert.ok(referralInsert, 'expected a referrals insert');
+    assert.equal((referralInsert!.payload as { status?: string }).status, 'rewarded');
+  });
+
+  it('stacks the reward on top of an existing active gift window instead of resetting it', async () => {
+    const futureExpiry = new Date(Date.now() + 10 * 86_400_000).toISOString(); // 10 days out
+    const referrer = {
+      id: 'referrer1', referral_months_credit: 3,
+      is_pro: true, is_gifted_pro: true, gifted_pro_expires_at: futureExpiry,
+    };
+    const { client, calls } = makeFakeSupabase(referrerLookup(referrer));
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: referralEvent }), admin: client });
+    assert.equal(res.status, 200);
+
+    const payload = referrerUpdateCall(calls, 'referrer1')!.payload as Record<string, unknown>;
+    assert.equal(payload.referral_months_credit, 6);
+    const expected = new Date(futureExpiry);
+    expected.setMonth(expected.getMonth() + 3);
+    assert.equal(payload.gifted_pro_expires_at, expected.toISOString());
+    assert.ok(!('is_pro' in payload), 'already Pro — is_pro need not be rewritten');
+  });
+
+  it('leaves a permanent (non-expiring) gift untouched', async () => {
+    const referrer = {
+      id: 'referrer1', referral_months_credit: 3,
+      is_pro: true, is_gifted_pro: true, gifted_pro_expires_at: null,
+    };
+    const { client, calls } = makeFakeSupabase(referrerLookup(referrer));
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event: referralEvent }), admin: client });
+    assert.equal(res.status, 200);
+
+    const payload = referrerUpdateCall(calls, 'referrer1')!.payload as Record<string, unknown>;
+    assert.equal(payload.referral_months_credit, 6, 'audit counter still increments');
+    assert.ok(!('gifted_pro_expires_at' in payload), 'a permanent gift is never given an expiry');
+    assert.ok(!('is_gifted_pro' in payload));
+    assert.ok(!('is_pro' in payload));
+  });
+});
+
+describe('gift-aware revocation (referral/gifted Pro survives an unrelated subscription cancel or refund)', () => {
+  it('subscription.cancelled keeps is_pro true when an active gift window is still running', async () => {
+    const event = { type: 'subscription.cancelled', data: { metadata: { user_id: 'u1' }, subscription_id: 'sub_1' } };
+    const futureExpiry = new Date(Date.now() + 5 * 86_400_000).toISOString();
+    const responder = (ctx: FakeCtx) => {
+      if (ctx.table === 'profiles' && ctx.op === 'select') {
+        return { data: { is_gifted_pro: true, gifted_pro_expires_at: futureExpiry } };
+      }
+      return { error: null };
+    };
+    const { client, calls } = makeFakeSupabase(responder);
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(res.status, 200);
+    const update = calls.find((c) => c.table === 'profiles' && c.op === 'update');
+    assert.equal((update!.payload as { is_pro?: boolean }).is_pro, true, 'gift keeps them Pro after subscription cancel');
+  });
+
+  it('subscription.cancelled revokes Pro when a gift has already expired', async () => {
+    const event = { type: 'subscription.cancelled', data: { metadata: { user_id: 'u1' }, subscription_id: 'sub_1' } };
+    const pastExpiry = new Date(Date.now() - 86_400_000).toISOString();
+    const responder = (ctx: FakeCtx) => {
+      if (ctx.table === 'profiles' && ctx.op === 'select') {
+        return { data: { is_gifted_pro: true, gifted_pro_expires_at: pastExpiry } };
+      }
+      return { error: null };
+    };
+    const { client, calls } = makeFakeSupabase(responder);
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(res.status, 200);
+    const update = calls.find((c) => c.table === 'profiles' && c.op === 'update');
+    assert.equal((update!.payload as { is_pro?: boolean }).is_pro, false);
+  });
+
+  it('refund.succeeded keeps is_pro true when an unrelated active gift window is still running', async () => {
+    const event = { type: 'refund.succeeded', data: { payment_id: 'pay_1' } };
+    const futureExpiry = new Date(Date.now() + 5 * 86_400_000).toISOString();
+    const responder = (ctx: FakeCtx) => {
+      if (ctx.table === 'affiliate_conversions') return { error: null };
+      if (ctx.table === 'profiles' && ctx.op === 'select') {
+        return { data: { id: 'u1', is_gifted_pro: true, gifted_pro_expires_at: futureExpiry } };
+      }
+      return { error: null };
+    };
+    const { client, calls } = makeFakeSupabase(responder);
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(res.status, 200);
+    const update = calls.find((c) => c.table === 'profiles' && c.op === 'update');
+    assert.equal((update!.payload as { is_pro?: boolean }).is_pro, true);
+  });
+});

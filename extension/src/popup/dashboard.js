@@ -10,6 +10,13 @@ import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import { isDueForRecall } from '../recall.module.js';
+import {
+  isMonthlyReviewCapReached,
+  isMonthlyAnkiExportCapReached,
+  normalizeMonthlyCounter,
+  FREE_RECALL_REVIEWS_PER_MONTH,
+  FREE_ANKI_EXPORTS_PER_MONTH,
+} from '../usage-caps.module.js';
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('Dashboard');
@@ -435,7 +442,7 @@ async function renderBookmarks() {
             </div>
           </div>
           <div class="vc-card-btns">
-            <button class="vc-revisit-btn cm-pro-gated" data-video-id="${videoId}" title="Start Active Recall">
+            <button class="vc-revisit-btn" data-video-id="${videoId}" title="Start Active Recall">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_circle</span> Recall
             </button>
             <button class="vc-group-btn" data-video-id="${videoId}">
@@ -1007,10 +1014,26 @@ async function exportNotionCSV() {
 
 async function exportAnki() {
   const isPro = await checkPro();
-  if (!isPro) { showUpgradeModal({ feature: 'Anki export', benefit: 'Turn your clips into Anki cards — with a link back to the exact video moment. Available on Pro.' }); return; }
+  if (!isPro) {
+    const { ankiExportUsage } = await chrome.storage.local.get({ ankiExportUsage: null });
+    if (isMonthlyAnkiExportCapReached(ankiExportUsage, Date.now())) {
+      showUpgradeModal({
+        feature: 'More Anki exports this month',
+        benefit: `You've used your ${FREE_ANKI_EXPORTS_PER_MONTH} free Anki export this month. Upgrade to Pro for unlimited exports.`,
+      });
+      return;
+    }
+  }
 
   const videoTitles = await getVideoTitles();
   downloadFile(buildAnkiTsv(allBookmarks, videoTitles), `${APP_EXPORT_PREFIX}-anki.txt`, 'text/plain');
+
+  if (!isPro) {
+    const now = Date.now();
+    const { ankiExportUsage } = await chrome.storage.local.get({ ankiExportUsage: null });
+    const normalized = normalizeMonthlyCounter(ankiExportUsage, now);
+    await chrome.storage.local.set({ ankiExportUsage: { periodStart: normalized.periodStart, count: normalized.count + 1 } });
+  }
 }
 
 async function exportReadingList() {
@@ -1423,11 +1446,14 @@ async function updateRevisitBadge() {
 async function startRecallForVideo(videoId) {
   const isPro = await checkPro();
   if (!isPro) {
-    showUpgradeModal({
-      feature: 'Active Recall Mode',
-      benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
-    });
-    return;
+    const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
+    if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
+      showUpgradeModal({
+        feature: 'More reviews this month',
+        benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+      });
+      return;
+    }
   }
   const now = Date.now();
   const dueOnes = allBookmarks
@@ -1467,7 +1493,7 @@ async function renderRecallDueStrip() {
           <div class="recall-due-chip">
             <span class="recall-due-chip-title" title="${title}">${title}</span>
             <span class="recall-due-chip-count">${bms.length} due</span>
-            <button class="recall-due-start-btn cm-pro-gated" data-video-id="${videoId}">Start Active Recall</button>
+            <button class="recall-due-start-btn" data-video-id="${videoId}">Start Active Recall</button>
           </div>`;
       }).join('')}
     </div>`;
