@@ -404,7 +404,7 @@ async function renderBookmarks() {
       .slice()
       .sort((a, b) => (b.createdAt ? new Date(b.createdAt).getTime() : b.id) - (a.createdAt ? new Date(a.createdAt).getTime() : a.id))
       .map(b => b.videoTitle)
-      .find(t => t) || videoTitles[videoId] || `Video: ${videoId}`;
+      .find(t => t) || videoTitles[videoId] || 'Unknown video';
     const ytUrl  = ytWatchUrl(videoId);
     const thumb  = ytThumbnailUrl(videoId);
     const count  = bookmarks.length;
@@ -1997,7 +1997,7 @@ async function renderVideosView(container) {
 
   videoIds.forEach(videoId => {
     const bookmarks = grouped[videoId];
-    const title     = bookmarks[0].videoTitle || videoTitles[videoId] || `Video: ${videoId}`;
+    const title     = bookmarks[0].videoTitle || videoTitles[videoId] || 'Unknown video';
     const thumb     = ytThumbnailUrl(videoId);
     const count     = bookmarks.length;
     const lastSaved = Math.max(...bookmarks.map(b => b.id));

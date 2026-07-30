@@ -187,12 +187,17 @@ const TAG_COLORS = {
     const tags = parseTags(description);
     const color = getTagColor(tags);
 
-    // Try to get video duration from content script
+    // Try to get video duration and a live-resolved title from content script
     let duration = 0;
+    let liveTitle = null;
     try {
       const durRes = await chrome.tabs.sendMessage(tabId, { action: 'getBookmarkData' });
       if (durRes?.duration) duration = durRes.duration;
+      liveTitle = durRes?.title || null;
     } catch {}
+
+    const videoTitle = videoTitles[videoId] || liveTitle || null;
+    if (!videoTitles[videoId] && liveTitle) videoTitles[videoId] = liveTitle;
 
     // Create new bookmark
     const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
@@ -204,7 +209,7 @@ const TAG_COLORS = {
       tags,
       color,
       createdAt: new Date().toISOString(),
-      videoTitle: videoTitles[videoId] || null,
+      videoTitle,
       reviewSchedule,
       lastReviewed: null,
     };
@@ -213,7 +218,7 @@ const TAG_COLORS = {
     bookmarks.push(newBookmark);
     if (duration && !isNaN(duration)) videoDurations[videoId] = duration;
     await new Promise((resolve, reject) => {
-      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations }, () => {
+      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations, videoTitles }, () => {
         if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
         else resolve();
       });

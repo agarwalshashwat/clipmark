@@ -353,6 +353,21 @@ async function saveBookmark(bookmark) {
     const color = getTagColor(tags);
     const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
 
+    // The videoTitles cache is filled async by the content script, so it can
+    // be empty for a freshly-opened video — resolve live instead of falling
+    // back straight to the raw ID.
+    let videoTitle = videoTitles[bookmark.videoId] || null;
+    if (!videoTitle) {
+      try {
+        const titleRes = await sendMessageToTab(tab.id, { action: 'getVideoTitle' });
+        if (titleRes?.title) videoTitle = titleRes.title;
+      } catch {}
+      if (videoTitle) {
+        videoTitles[bookmark.videoId] = videoTitle;
+        await syncSet({ videoTitles });
+      }
+    }
+
     bookmarks.push({
       ...bookmark,
       description,
@@ -360,7 +375,7 @@ async function saveBookmark(bookmark) {
       color,
       id: Date.now(),
       createdAt: new Date().toISOString(),
-      videoTitle: videoTitles[bookmark.videoId] || null,
+      videoTitle,
       reviewSchedule,
       lastReviewed: null,
     });
