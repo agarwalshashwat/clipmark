@@ -16,8 +16,8 @@ const FEATURES = [
   { label: 'Active Recall reviews',              free: '30/month', pro: 'Unlimited' },
   { label: 'Anki export',                        free: '1/month',  pro: 'Unlimited' },
   { label: 'Export to Notion & Obsidian',        free: false,      pro: true       },
-  { label: 'Permanent Transcript Archiving',     free: false,      pro: true       },
-  { label: 'Deep Search (inside transcripts)',   free: false,      pro: true       },
+  { label: 'Permanent Transcript Archiving',     free: false,      pro: 'coming-soon' as const },
+  { label: 'Deep Search (inside transcripts)',   free: false,      pro: 'coming-soon' as const },
   { label: 'Smart AI Synthesis (Local-only)',    free: true,       pro: true       },
   { label: 'Shared Collections',                 free: '10',       pro: '∞'        },
   { label: 'Spaced Repetition Reminders',        free: false,      pro: true       },
@@ -177,7 +177,9 @@ export default async function UpgradePage({
                       {typeof f.free === 'boolean' ? (f.free ? <Check /> : <Cross />) : f.free}
                     </td>
                     <td className={`${styles.compCell} ${styles.compVal} ${styles.compValPro}`}>
-                      {typeof f.pro === 'boolean' ? (f.pro ? <Check /> : <Cross />) : f.pro}
+                      {f.pro === 'coming-soon' ? (
+                        <span className={styles.comingSoon}>Coming soon</span>
+                      ) : typeof f.pro === 'boolean' ? (f.pro ? <Check /> : <Cross />) : f.pro}
                     </td>
                   </tr>
                 ))}
