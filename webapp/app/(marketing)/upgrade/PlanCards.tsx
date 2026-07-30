@@ -119,7 +119,7 @@ export default function PlanCards({
               ))}
             </div>
             {variant === 'full' ? (
-              <form action={createCheckoutSession}>
+              <form action={createCheckoutSession} className={styles.ctaWrap}>
                 <input type="hidden" name="plan" value={plan.id} />
                 <button
                   type="submit"
@@ -131,7 +131,7 @@ export default function PlanCards({
             ) : (
               <a
                 href="/upgrade"
-                className={`${styles.ctaBtn} ${plan.pro ? styles.ctaBtnPro : ''}`}
+                className={`${styles.ctaBtn} ${styles.ctaWrap} ${plan.pro ? styles.ctaBtnPro : ''}`}
                 style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
               >
                 {plan.cta}

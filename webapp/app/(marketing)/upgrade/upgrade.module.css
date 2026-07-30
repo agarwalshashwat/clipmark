@@ -130,6 +130,10 @@
   color: #1f2937;
 }
 
+.ctaWrap {
+  margin-top: auto;
+}
+
 .comingSoon {
   display: inline-block;
   padding: 2px 8px;
