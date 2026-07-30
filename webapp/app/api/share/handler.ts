@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase, createServerSupabase, type Bookmark } from '@/lib/supabase';
 
-const FREE_SHARE_LIMIT = 5;
+const FREE_SHARE_LIMIT = 10;
 
 // Injectable dependencies so the handler can be unit-tested with fakes.
 export interface ShareDeps {
