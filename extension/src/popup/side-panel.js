@@ -21,7 +21,7 @@ import {
   FREE_RECALL_ENROLLED_CAP,
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
-import './zen-garden.js';
+import { isDueForRecall } from '../recall.module.js';
 import { initErrorReporting } from '../error-reporting.js';
 
 // Before anything else in this module runs, so an error during setup is caught.
@@ -934,9 +934,7 @@ function sanitizeCommentHtml(html) {
 }
 
 // ─── Module-level state ───────────────────────────────────────────────────────
-let hasLoadedVideo = false;
 let lastCommentVideoId = null;
-let _spZenGardenApi = null;
 let loadBookmarksInFlight = null;
 let loadBookmarksQueued = false;
 let loadBookmarksRetryTimer = null;
@@ -952,13 +950,77 @@ function scheduleBookmarksReload(delayMs = 150) {
 }
 
 // ─── Load Bookmarks ───────────────────────────────────────────────────────────
-function showUnsupportedScreen() {
+
+// Gathers bookmarks across every saved video (not just the active tab) so the
+// idle screen has something useful to show while the user isn't on YouTube.
+async function getIdleScreenSummary(limit = 4) {
+  const all = await syncGet(null);
+  const videoTitles = all.videoTitles || {};
+  const bookmarks = [];
+  for (const [key, val] of Object.entries(all)) {
+    if (key.startsWith('bm_') && Array.isArray(val)) {
+      const videoId = key.slice(3);
+      val.forEach(b => bookmarks.push({ ...b, videoId }));
+    }
+  }
+  bookmarks.sort((a, b) => {
+    const at = a.createdAt ? new Date(a.createdAt).getTime() : (a.id || 0);
+    const bt = b.createdAt ? new Date(b.createdAt).getTime() : (b.id || 0);
+    return bt - at;
+  });
+
+  const now = Date.now();
+  const dueCount = bookmarks.filter(b => isDueForRecall(b, now)).length;
+  const recent = bookmarks.slice(0, limit).map(b => ({
+    videoId: b.videoId,
+    timestamp: b.timestamp,
+    description: b.description || b.videoTitle || videoTitles[b.videoId] || 'Bookmark',
+  }));
+
+  return { recent, dueCount };
+}
+
+async function renderIdleScreen() {
+  const { recent, dueCount } = await getIdleScreenSummary();
+
+  const dueBanner = document.getElementById('sp-idle-due-banner');
+  if (dueBanner) {
+    if (dueCount > 0) {
+      dueBanner.style.display = 'flex';
+      dueBanner.querySelector('.sp-idle-due-text').textContent =
+        `${dueCount} card${dueCount === 1 ? '' : 's'} due for Active Recall review`;
+    } else {
+      dueBanner.style.display = 'none';
+    }
+  }
+
+  const list = document.getElementById('sp-idle-recent-list');
+  if (!list) return;
+  if (!recent.length) {
+    list.innerHTML = '<div class="sp-idle-recent-empty">Your bookmarks will show up here.</div>';
+    return;
+  }
+  list.innerHTML = recent.map(b => `
+    <button class="sp-idle-recent-item" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}">
+      <span class="sp-idle-recent-time">${formatTimestamp(b.timestamp)}</span>
+      <span class="sp-idle-recent-desc">${escapeHtml(b.description)}</span>
+    </button>
+  `).join('');
+  list.querySelectorAll('.sp-idle-recent-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = ytWatchUrl(el.dataset.videoId, parseFloat(el.dataset.timestamp));
+      chrome.tabs.create({ url });
+    });
+  });
+}
+
+async function showUnsupportedScreen() {
   const screen = document.getElementById('sp-unsupported-screen');
   if (screen) screen.style.display = 'flex';
-  // Initialise zen garden once
-  if (!_spZenGardenApi && typeof window.initZenGarden === 'function') {
-    const canvas = document.getElementById('sp-zg-canvas');
-    if (canvas) _spZenGardenApi = window.initZenGarden(canvas);
+  try {
+    await renderIdleScreen();
+  } catch {
+    // Best-effort — the CTA buttons still work even if the summary fails to load
   }
 }
 
@@ -978,13 +1040,12 @@ async function loadBookmarks() {
     const tab = await getCurrentTab();
     logger.info('loadBookmarks called', { url: tab?.url });
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
-      if (hasLoadedVideo) return;
       stopCurrentTimeSync();
-      showUnsupportedScreen();
+      stopCommentSync();
+      await showUnsupportedScreen();
       return;
     }
     hideUnsupportedScreen();
-    hasLoadedVideo = true;
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -1191,15 +1252,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.visibilityState === 'visible') refreshEntitlement();
   });
 
-  // Unsupported screen / Zen Garden button handlers
+  // Idle screen button handlers
   document.getElementById('sp-go-youtube-btn')?.addEventListener('click', () => {
     chrome.tabs.create({ url: 'https://www.youtube.com' });
   });
   document.getElementById('sp-open-dashboard-btn')?.addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/dashboard.html') });
-  });
-  document.getElementById('sp-zg-reset-btn')?.addEventListener('click', () => {
-    if (_spZenGardenApi) _spZenGardenApi.reset();
   });
 
   // Re-check when the active tab navigates (e.g. user goes to YouTube)

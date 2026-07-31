@@ -158,22 +158,34 @@
 
   <div id="error-message" class="error-message"></div>
 
-  <!-- Zen Garden Screen — shown when not on a YouTube video -->
+  <!-- Idle Screen — shown when the active tab is not a YouTube video -->
   <div id="sp-unsupported-screen" style="display:none;">
-    <div class="sp-zg-header">
-      <div class="sp-zg-title-row">
-        <span class="sp-zg-label">ZEN GARDEN</span>
-        <span class="sp-zg-hint">drag to rake the sand</span>
+    <div class="sp-idle-scroll">
+      <div class="sp-idle-brand">
+        <div class="sp-idle-mark" aria-hidden="true">
+          <span class="sp-idle-mark-pulse"></span>
+          <img src="../../assets/icons/icon-48.png" class="sp-idle-mark-icon" alt="">
+        </div>
+        <h2 class="sp-idle-title">Not watching right now</h2>
+        <p class="sp-idle-subtitle">Open a YouTube video to start clipping moments.</p>
+        <div class="sp-idle-cta-row">
+          <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
+            <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
+            Open YouTube
+          </button>
+          <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
+        </div>
       </div>
-      <button id="sp-zg-reset-btn" class="sp-zg-reset-btn" title="Reset garden">Reset</button>
-    </div>
-    <canvas id="sp-zg-canvas" class="sp-zg-canvas"></canvas>
-    <div class="sp-zg-footer">
-      <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
-        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
-        Go to YouTube
-      </button>
-      <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
+
+      <div id="sp-idle-due-banner" class="sp-idle-due-banner" style="display:none;">
+        <span class="material-symbols-outlined sp-idle-due-icon">psychology</span>
+        <span class="sp-idle-due-text"></span>
+      </div>
+
+      <div class="sp-idle-recent">
+        <span class="sp-idle-recent-label">Recent bookmarks</span>
+        <div id="sp-idle-recent-list" class="sp-idle-recent-list"></div>
+      </div>
     </div>
   </div>
 
