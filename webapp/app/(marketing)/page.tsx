@@ -6,6 +6,7 @@ import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
+import { ScrollReveal } from './ScrollReveal';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Turn YouTube Into Video Flashcards You Remember',
@@ -658,28 +659,30 @@ export default async function Home({
       {/* ── How It Works ────────────────────────────────────────────────── */}
       <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 80 }}>
-            <span className="cm-section-label">How It Works</span>
-            <h2 style={{ 
-              fontSize: 'clamp(32px, 5vw, 48px)', 
-              fontWeight: 800, 
-              marginBottom: 24, 
-              fontFamily: "var(--font-display)", 
-              letterSpacing: '-0.5px', 
-              color: '#1A1C1D' 
-            }}>
-              The Curator&apos;s Journey
-            </h2>
-            <p style={{ 
-              fontSize: 18, 
-              color: '#545f6c', 
-              lineHeight: 1.6, 
-              maxWidth: 600, 
-              margin: '0 auto'
-            }}>
-              Three steps to turn passive watching into active, searchable knowledge.
-            </p>
-          </div>
+          <ScrollReveal>
+            <div style={{ textAlign: 'center', marginBottom: 80 }}>
+              <span className="cm-section-label">How It Works</span>
+              <h2 style={{
+                fontSize: 'clamp(32px, 5vw, 48px)',
+                fontWeight: 800,
+                marginBottom: 24,
+                fontFamily: "var(--font-display)",
+                letterSpacing: '-0.5px',
+                color: '#1A1C1D'
+              }}>
+                The Curator&apos;s Journey
+              </h2>
+              <p style={{
+                fontSize: 18,
+                color: '#545f6c',
+                lineHeight: 1.6,
+                maxWidth: 600,
+                margin: '0 auto'
+              }}>
+                Three steps to turn passive watching into active, searchable knowledge.
+              </p>
+            </div>
+          </ScrollReveal>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32, position: 'relative' }}>
             {/* Timeline connector (decorative, desktop only) */}
@@ -704,41 +707,43 @@ export default async function Home({
                 desc: 'Active Recall brings saved moments back on a spaced schedule and quizzes you before replaying the clip.',
                 icon: 'psychology_alt'
               },
-            ].map(({ num, title, desc, icon }) => (
-              <div key={num} className="cm-card">
-                <div className="cm-icon-badge">
-                  <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
+            ].map(({ num, title, desc, icon }, i) => (
+              <ScrollReveal key={num} delayMs={i * 150}>
+                <div className="cm-card">
+                  <div className="cm-icon-badge">
+                    <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
+                  </div>
+                  <span className="cm-step-tag">Step {num}</span>
+                  <h4 style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    marginBottom: 16,
+                    fontFamily: "var(--font-display)",
+                    color: '#1A1C1D'
+                  }}>
+                    {title}
+                  </h4>
+                  <p style={{ color: '#545f6c', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
+
+                  <a
+                    href="#faq"
+                    aria-label={`Learn more: ${title}`}
+                    style={{
+                    marginTop: 'auto',
+                    paddingTop: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: '#14B8A6',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    textDecoration: 'none'
+                  }}
+                  >
+                    Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                  </a>
                 </div>
-                <span className="cm-step-tag">Step {num}</span>
-                <h4 style={{ 
-                  fontSize: 22, 
-                  fontWeight: 800, 
-                  marginBottom: 16, 
-                  fontFamily: "var(--font-display)", 
-                  color: '#1A1C1D' 
-                }}>
-                  {title}
-                </h4>
-                <p style={{ color: '#545f6c', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
-                
-                <a
-                  href="#faq"
-                  aria-label={`Learn more: ${title}`}
-                  style={{ 
-                  marginTop: 'auto', 
-                  paddingTop: 32, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 8, 
-                  color: '#14B8A6', 
-                  fontWeight: 700, 
-                  fontSize: 14,
-                  textDecoration: 'none'
-                }}
-                >
-                  Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
-                </a>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
