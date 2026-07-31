@@ -4,6 +4,7 @@ import {
   ytWatchUrl,
   ytThumbnailUrl,
   APP_EXPORT_PREFIX,
+  isExtensionContextValid,
 } from '../constants.module.js';
 import { buildAnkiTsv } from '../export-anki.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
@@ -17,9 +18,16 @@ import {
   FREE_RECALL_REVIEWS_PER_MONTH,
   FREE_ANKI_EXPORTS_PER_MONTH,
 } from '../usage-caps.module.js';
+import { initErrorReporting } from '../error-reporting.js';
+
+// Before anything else in this module runs, so an error during setup is caught.
+// Mirror this in any future popup page with its own `context` tag.
+initErrorReporting('extension-dashboard');
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('Dashboard');
+// Logs to the console for local debugging; initErrorReporting above is what
+// forwards the same failures to Sentry in a packaged build.
 installGlobalErrorLogging('Dashboard');
 
 // Returns a fresh access token, auto-refreshing via /api/refresh if expired.
@@ -91,13 +99,15 @@ async function checkPro() {
 
 // Re-checks Pro status against the server and updates the cached bmUser.isPro
 // flag on a mismatch, so upgrading via the web dashboard unlocks gated
-// features here without a full re-auth. popup.js already does this on every
-// open; the dashboard (and side panel) never did, and with no wired
-// default_popup there was no surface left that refreshed entitlement at all.
-// Throttled — called on load and on window focus, not polled.
+// features here without a full re-auth. Throttled — called on load and on
+// window focus, not polled.
 let lastEntitlementRefresh = 0;
 const ENTITLEMENT_REFRESH_MIN_INTERVAL_MS = 60_000;
 async function refreshEntitlement() {
+  // Triggered by window focus / visibilitychange, i.e. long after the
+  // dashboard's own initial (valid) load — the same staleness window the
+  // re-check below (after the fetch) also guards against.
+  if (!isExtensionContextValid()) return;
   const now = Date.now();
   if (now - lastEntitlementRefresh < ENTITLEMENT_REFRESH_MIN_INTERVAL_MS) return;
   lastEntitlementRefresh = now;
@@ -116,6 +126,9 @@ async function refreshEntitlement() {
       }
     }
   } catch { /* non-critical, ignore */ }
+  // Re-check: the fetch above can take real wall-clock time, long enough for
+  // an extension reload/update to invalidate this context mid-flight.
+  if (!isExtensionContextValid()) return;
   applyProGating(await checkPro());
 }
 

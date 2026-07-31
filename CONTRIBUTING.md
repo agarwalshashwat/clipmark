@@ -12,13 +12,12 @@ youtube-vid-bookmarker/
 │   ├── src/
 │   │   ├── background/background.js   # Service worker: auth token storage, messaging
 │   │   ├── content/content.js         # YouTube page: markers, keyboard shortcuts, revisit mode
-│   │   ├── pages/                     # popup.html, dashboard.html, side-panel.html
+│   │   ├── pages/                     # dashboard.html, side-panel.html
 │   │   └── popup/
-│   │       ├── popup.js               # Bookmark CRUD, AI features, auth, reminders
+│   │       ├── side-panel.js          # Bookmark CRUD, AI features, auth, reminders
 │   │       ├── dashboard.js           # Dashboard: cards, timeline, groups, export/import
-│   │       ├── side-panel.js
 │   │       └── theme-loader.js
-│   └── styles/                        # popup.css, dashboard.css, side-panel.css, design-tokens.css
+│   └── styles/                        # dashboard.css, side-panel.css, design-tokens.css
 │
 ├── packages/design-system/            # Shared CSS design tokens (extension + webapp)
 │
@@ -104,6 +103,6 @@ DODO_LIFETIME_PRODUCT_ID=
 
 ## Local Dev Tips
 
-- Set `API_BASE` at the top of `extension/src/popup/popup.js` to `http://localhost:3000` when running the webapp locally.
+- Set `API_BASE` in `extension/src/config.js` to `http://localhost:3000` when running the webapp locally.
 - Run `npm run sync-tokens` from the root to sync design tokens from `packages/design-system` into the extension and webapp.
 - Tests: `npx playwright install chromium` (first time), then `npm run test:yt`.
