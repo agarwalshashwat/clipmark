@@ -544,7 +544,7 @@ describe('getTextAtTimestamp', () => {
 });
 
 // ─── extractVideoId ───────────────────────────────────────────────────────────
-// Inlined from extension/src/popup/popup.js
+// Inlined from extension/src/popup/side-panel.js
 
 function extractVideoId(url) {
   return new URLSearchParams(new URL(url).search).get('v');
@@ -586,7 +586,8 @@ describe('extractVideoId', () => {
 });
 
 // ─── remKey ──────────────────────────────────────────────────────────────────
-// Inlined from extension/src/popup/popup.js
+// Legacy video-revisit-reminder logic, formerly inlined from the now-deleted
+// extension/src/popup/popup.js (unreachable dead code — no default_popup wiring).
 
 function remKey(videoId) { return `rem_${videoId}`; }
 
@@ -647,7 +648,9 @@ describe('frequencyLabel', () => {
 });
 
 // ─── isDueForReview ───────────────────────────────────────────────────────────
-// Inlined from extension/src/popup/popup.js
+// Legacy bookmark-level spaced-revisit logic, formerly inlined from the
+// now-deleted extension/src/popup/popup.js (unreachable dead code — no
+// default_popup wiring; superseded by recall.module.js's isDueForRecall).
 
 function isDueForReview(bookmark) {
   if (!bookmark.reviewSchedule?.length || !bookmark.createdAt) return false;
