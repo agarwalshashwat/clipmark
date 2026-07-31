@@ -132,6 +132,10 @@ async function getValidToken() {
 let lastEntitlementRefresh = 0;
 const ENTITLEMENT_REFRESH_MIN_INTERVAL_MS = 60_000;
 async function refreshEntitlement() {
+  // Triggered by window focus / visibilitychange, i.e. long after the side
+  // panel's own initial (valid) load — the same staleness window the other
+  // reactive listeners in this file guard against (see isExtensionContextValid).
+  if (!isExtensionContextValid()) return;
   const now = Date.now();
   if (now - lastEntitlementRefresh < ENTITLEMENT_REFRESH_MIN_INTERVAL_MS) return;
   lastEntitlementRefresh = now;
@@ -150,6 +154,9 @@ async function refreshEntitlement() {
       }
     }
   } catch { /* non-critical, ignore */ }
+  // Re-check: the fetch above can take real wall-clock time, long enough for
+  // an extension reload/update to invalidate this context mid-flight.
+  if (!isExtensionContextValid()) return;
   applyProGating(await checkPro());
 }
 
