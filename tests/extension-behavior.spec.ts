@@ -2,7 +2,7 @@
  * Extension Behavior Tests
  *
  * These tests verify that the extension's core functionality works end-to-end:
- * - Alt+S keyboard shortcut saves a bookmark (toast + marker)
+ * - Alt+B keyboard shortcut saves a bookmark (toast + marker)
  * - Bookmark button click triggers the saving animation
  * - SPA navigation: extension re-injects correctly on a new video
  * - SPA navigation: no duplicate elements after navigating between videos
@@ -28,7 +28,7 @@ function extractVideoId(url: string): string {
 }
 
 test.describe('Extension behavior', () => {
-  test('Alt+S shows a toast notification (.yt-bookmark-toast)', async ({ context }) => {
+  test('Alt+B shows a toast notification (.yt-bookmark-toast)', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     // Wait for extension to fully initialize before sending keyboard event
@@ -36,18 +36,18 @@ test.describe('Extension behavior', () => {
     // Click player to give it focus — required for keyboard events to reach content script
     await page.locator('video').click({ force: true });
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await expect(page.locator('.yt-bookmark-toast')).toBeAttached({ timeout: 5_000 });
   });
 
-  test('Alt+S adds a marker to the progress bar', async ({ context }) => {
+  test('Alt+B adds a marker to the progress bar', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
     const before = await page.locator('.yt-bookmark-marker').count();
     await page.locator('video').click({ force: true });
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     // Allow storage write + updateBookmarkMarkers() re-render
     await page.waitForTimeout(1_500);
     const after = await page.locator('.yt-bookmark-marker').count();
@@ -147,7 +147,7 @@ test.describe('Extension behavior', () => {
     expect(stored).toBe(normalizeYouTubeTitle(expectedTitle));
   });
 
-  test('Alt+S is suppressed when a text input has focus (keyboard input guard)', async ({ context }) => {
+  test('Alt+B is suppressed when a text input has focus (keyboard input guard)', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -156,8 +156,8 @@ test.describe('Extension behavior', () => {
     await page.locator('input[name="search_query"]').click({ force: true });
     await page.waitForTimeout(300);
 
-    // Press Alt+S — handleKeyboardShortcut ignores events from <input> targets
-    await page.keyboard.press('Alt+s');
+    // Press Alt+B — handleKeyboardShortcut ignores events from <input> targets
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(2_000);
 
     // No toast should appear because the shortcut was suppressed
