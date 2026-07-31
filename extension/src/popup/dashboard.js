@@ -89,6 +89,36 @@ async function checkPro() {
   );
 }
 
+// Re-checks Pro status against the server and updates the cached bmUser.isPro
+// flag on a mismatch, so upgrading via the web dashboard unlocks gated
+// features here without a full re-auth. popup.js already does this on every
+// open; the dashboard (and side panel) never did, and with no wired
+// default_popup there was no surface left that refreshed entitlement at all.
+// Throttled — called on load and on window focus, not polled.
+let lastEntitlementRefresh = 0;
+const ENTITLEMENT_REFRESH_MIN_INTERVAL_MS = 60_000;
+async function refreshEntitlement() {
+  const now = Date.now();
+  if (now - lastEntitlementRefresh < ENTITLEMENT_REFRESH_MIN_INTERVAL_MS) return;
+  lastEntitlementRefresh = now;
+
+  const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
+  if (!bmUser) return;
+  const token = await getValidToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/me`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) {
+      const { isPro } = await res.json();
+      if (isPro !== bmUser.isPro) {
+        await new Promise(resolve => chrome.storage.sync.set({ bmUser: { ...bmUser, isPro } }, resolve));
+      }
+    }
+  } catch { /* non-critical, ignore */ }
+  applyProGating(await checkPro());
+}
+
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 async function getAllBookmarks() {
   return new Promise((resolve, reject) => {
@@ -2278,6 +2308,11 @@ async function syncAllWithCloud() {
 document.addEventListener('DOMContentLoaded', () => {
   logger.info('Dashboard initialized', { devLoggingEnabled: logger.enabled });
   checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
+  refreshEntitlement();
+  window.addEventListener('focus', refreshEntitlement);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshEntitlement();
+  });
   // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
   // function initTheme() {
   //   chrome.storage.local.get(['theme'], (result) => {

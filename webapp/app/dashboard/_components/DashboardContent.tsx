@@ -7,6 +7,12 @@ import toolbarStyles from './toolbar.module.css';
 import { deleteBookmark, bulkDeleteBookmarks, importBookmarks } from '../actions';
 import { getTagColor } from '../_utils/tagColors';
 import { buildAnkiTsvFromCollections } from '../_utils/anki';
+import {
+  FREE_ANKI_EXPORTS_PER_MONTH,
+  getAnkiExportUsage,
+  isMonthlyAnkiExportCapReached,
+  recordAnkiExport,
+} from '../_utils/usage-caps';
 import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
 import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
@@ -446,16 +452,23 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   <button className={toolbarStyles.exportBtn} onClick={() => { exportMarkdown(collections); setExportOpen(false); }}>↓ Markdown</button>
                   <hr className={toolbarStyles.exportDivider} />
                   <p className={toolbarStyles.exportSection}>Pro</p>
-                  {/* Anki export mirrors the extension's Pro exporter. Free users
-                      get the upgrade page instead of a file. */}
+                  {/* Anki export mirrors the extension's Pro exporter: free
+                      users get FREE_ANKI_EXPORTS_PER_MONTH exports/month
+                      (tracked client-side, same as the extension), then the
+                      upgrade page. */}
                   <button
                     className={toolbarStyles.exportBtn}
                     onClick={() => {
                       setExportOpen(false);
-                      if (!isPro) { window.location.href = '/upgrade'; return; }
+                      if (!isPro && isMonthlyAnkiExportCapReached(getAnkiExportUsage(), Date.now())) {
+                        setCopyToast(`You've used your ${FREE_ANKI_EXPORTS_PER_MONTH} free Anki export this month — upgrade for unlimited exports.`);
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
                       exportAnki(collections);
+                      if (!isPro) recordAnkiExport();
                     }}
-                    title={isPro ? 'Export as an Anki-importable TSV' : 'Anki export is a Pro feature'}
+                    title={isPro ? 'Export as an Anki-importable TSV' : `Anki export — ${FREE_ANKI_EXPORTS_PER_MONTH} free per month, unlimited on Pro`}
                   >
                     ↓ Anki{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
                   </button>
