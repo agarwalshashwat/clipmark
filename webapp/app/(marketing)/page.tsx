@@ -6,6 +6,7 @@ import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
+import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Turn YouTube Into Video Flashcards You Remember',
@@ -267,17 +268,7 @@ export default async function Home({
               borderRadius: 40, filter: 'blur(80px)', zIndex: 0,
             }} />
             <div style={{ position: 'relative', zIndex: 1, background: '#111111', borderRadius: 36, padding: 16, boxShadow: '0 32px 100px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <video
-                src="https://clipmark-media.mithahara.com/promo/clipmark-demo.mp4"
-                poster="https://clipmark-media.mithahara.com/promo/clipmark-demo-poster.jpg"
-                controls
-                preload="none"
-                playsInline
-                muted
-                style={{ display: 'block', width: '100%', aspectRatio: '16/9', background: '#050505', borderRadius: 24 }}
-              >
-                Sorry, your browser doesn&apos;t support embedded video.
-              </video>
+              <HeroDemoVideo />
             </div>
           </div>
         </div>
