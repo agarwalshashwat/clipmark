@@ -87,11 +87,13 @@ function bmKey(videoId) { return `bm_${videoId}`; }
 // ─── Free-tier Active Recall enrollment cap ──────────────────────────────────
 // countEnrolledRecallSegments/isEnrollmentCapReached are defined in usage-caps.js
 async function isProUser() {
+  if (!isContextValid()) return false;
   const { bmUser } = await new Promise(resolve => chrome.storage.sync.get({ bmUser: null }, resolve));
   return bmUser?.isPro === true;
 }
 
 async function countAllEnrolledRecallSegments() {
+  if (!isContextValid()) return 0;
   const all = await new Promise((resolve, reject) => {
     chrome.storage.sync.get(null, result => {
       if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
@@ -565,6 +567,11 @@ async function silentSaveBookmark() {
     }
   }
 
+  // Re-check: the transcript fetch and AI summary above can take real wall-clock
+  // time, long enough for an extension reload/update to invalidate this context
+  // without unloading the running script.
+  if (!isContextValid()) return;
+
   try {
     const result = await new Promise(resolve =>
       chrome.storage.sync.get({ [bmKey(videoId)]: [], videoTitles: {}, videoDurations: {} }, resolve)
@@ -708,6 +715,14 @@ function handleKeyboardShortcut(event) {
 
 // ─── Message listener ─────────────────────────────────────────────────────────
 function initializeMessageListener() {
+  // A content-script reinjection racing an extension reload can start running
+  // with an already-invalidated context — chrome.runtime itself is undefined
+  // then, not just its methods, so this must be checked before the .onMessage
+  // property access, not inside the listener body.
+  if (!isContextValid()) {
+    debugLog('Messaging', 'Skipping listener setup — extension context invalid');
+    return;
+  }
   debugLog('Messaging', 'Setting up message listener');
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (!isContextValid()) return;
@@ -911,6 +926,10 @@ async function saveVideoTitle(expectedVideoId = null) {
 
   // Skip write if we already saved this exact title
   if (savedTitlesCache[videoId] === title) return;
+
+  // Re-check: the extension can be reloaded/updated during the awaits above,
+  // which invalidates this context without unloading the running script.
+  if (!isContextValid()) return;
 
   debugLog('Title', 'Saving', { videoId, title });
   const result = await new Promise(resolve => chrome.storage.sync.get({ videoTitles: {} }, resolve));
