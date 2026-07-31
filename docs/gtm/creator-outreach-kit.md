@@ -42,13 +42,21 @@
 
 | Term | Value | Source |
 |---|---|---|
-| Commission | **30% for life**, recurring on every upgrade (monthly/annual/lifetime), calculated on the post-discount sale amount | `profiles.commission_rate DECIMAL(4,2) DEFAULT 0.30` (migration 007); confirmed live in `affiliate/page.tsx`'s `COMMISSION_RATE = 0.30` |
+| Commission | **30%**, calculated on the post-discount sale amount, **one-time per referred user** — whichever plan (monthly/annual/lifetime) they convert on triggers a single commission; renewals on that same subscription do NOT generate another one | `profiles.commission_rate DECIMAL(4,2) DEFAULT 0.30` (migration 007); confirmed live in `affiliate/page.tsx`'s `COMMISSION_RATE = 0.30`. **Verified against `webapp/app/api/webhooks/dodo/handler.ts:91-97`** — an explicit "duplicate conversion guard: one commission per referred user lifetime" blocks a second `affiliate_conversions` row for the same `referred_user_id`; the marketing FAQ confirms this in plain language ("Renewals on existing subscriptions do not generate additional commissions") |
 | Referred-user discount | **10% off** at checkout, automatically applied via a real Dodo discount code | `profiles.affiliate_discount_pct SMALLINT DEFAULT 10` (migration 009); `REFERRAL_DISCOUNT = 0.10` in `affiliate/page.tsx` |
 | Cookie / attribution window | **30 days** from click | Stated in `affiliate/page.tsx` FAQ and `affiliate/terms/page.tsx`; matches the distribution plan's own summary |
 | Payout threshold | **$25** minimum pending balance | `affiliate/terms/page.tsx` line 135; matches `affiliate/page.tsx` stat tile |
 | Payout hold | **30 days** post-conversion (refund-window buffer) | `affiliate/export/route.ts` computes `payoutDate = created_at + 30 days`; `dashboard/affiliate/page.tsx` shows the same |
 | Refund handling | Commission is cancelled and removed from pending balance if the referred purchase is refunded | `affiliate/terms/page.tsx` line 146 |
 | Self-serve eligibility gate | Active Pro subscriber, account ≥30 days old | `affiliate/apply/route.ts`, `affiliate/page.tsx` eligibility section |
+
+**Get the commission timing right in every pitch — it's the detail most likely to disappoint a creator if it's left ambiguous.** "Earn 30% for life" in the marketing headline refers to the *affiliate relationship* being ongoing (every new person you refer earns 30%, for as long as you keep referring people) — not a recurring monthly cut of one referred user's subscription. At current pricing ($7.99/mo, $59.99/yr, $99.99 founding lifetime), a single one-time commission looks like:
+
+- Monthly-plan referral: **~$2.16** (30% of $7.19 net-of-discount) — one payment, ever, for that referred user.
+- Annual-plan referral: **~$16.20** (30% of $53.99 net-of-discount) — meaningfully larger; lead with this.
+- Lifetime/founding referral: **~$27.00** (30% of $89.99 net-of-discount) — the largest single payout; the number to headline in a founding-partner pitch.
+
+**Practical implication:** steer creators toward promoting the annual or founding-lifetime plan specifically — a one-time-per-referral structure only produces a payout worth a creator's time if the underlying sale is sized for it.
 
 **Important honesty note for outreach — payout is not actually automated.** The marketing page's FAQ says commissions are "paid out monthly," but there is no automated payout job anywhere in the codebase (no scheduled job, no Dodo/Wise/PayPal payout API call — `affiliate/export/route.ts` only *exports* a CSV-style payout report for the founder to act on manually). In practice: the founder personally reviews the export and manually sends payment via Wise or PayPal once a creator clears $25 and the 30-day hold. **Don't promise "automatic" payouts in outreach** — say commissions are tracked automatically and paid out by hand each month, which is both true and still a completely normal creator-affiliate process. This mirrors the same gap the Distribution Plan already flagged (§0.2) as needing a copy fix before real creator money is riding on it — treat this kit's own language as part of that fix, not a repeat of the overpromise.
 
