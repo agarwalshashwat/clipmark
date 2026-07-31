@@ -123,6 +123,43 @@ async function getValidToken() {
   }
 }
 
+// Re-checks Pro status against the server and updates the cached bmUser.isPro
+// flag on a mismatch, so upgrading via the web dashboard unlocks gated
+// features here without a full re-auth. popup.js already does this on every
+// open; the side panel (and dashboard) never did, and with no wired
+// default_popup there was no surface left that refreshed entitlement at all.
+// Throttled — called on load and on window focus, not polled.
+let lastEntitlementRefresh = 0;
+const ENTITLEMENT_REFRESH_MIN_INTERVAL_MS = 60_000;
+async function refreshEntitlement() {
+  // Triggered by window focus / visibilitychange, i.e. long after the side
+  // panel's own initial (valid) load — the same staleness window the other
+  // reactive listeners in this file guard against (see isExtensionContextValid).
+  if (!isExtensionContextValid()) return;
+  const now = Date.now();
+  if (now - lastEntitlementRefresh < ENTITLEMENT_REFRESH_MIN_INTERVAL_MS) return;
+  lastEntitlementRefresh = now;
+
+  const { bmUser } = await syncGet({ bmUser: null });
+  if (!bmUser) return;
+  const token = await getValidToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/me`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) {
+      const { isPro } = await res.json();
+      if (isPro !== bmUser.isPro) {
+        await syncSet({ bmUser: { ...bmUser, isPro } });
+      }
+    }
+  } catch { /* non-critical, ignore */ }
+  // Re-check: the fetch above can take real wall-clock time, long enough for
+  // an extension reload/update to invalidate this context mid-flight.
+  if (!isExtensionContextValid()) return;
+  applyProGating(await checkPro());
+}
+
 function formatTimestamp(seconds) {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
@@ -1148,6 +1185,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   scheduleBookmarksReload(0);
   loadAuthState();
   checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
+  refreshEntitlement();
+  window.addEventListener('focus', refreshEntitlement);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshEntitlement();
+  });
 
   // Unsupported screen / Zen Garden button handlers
   document.getElementById('sp-go-youtube-btn')?.addEventListener('click', () => {
