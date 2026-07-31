@@ -4,6 +4,7 @@ import {
   ytWatchUrl,
   MAX_RECONNECT_ATTEMPTS,
   RECONNECT_DELAY,
+  isExtensionContextValid,
 } from '../constants.module.js';
 import {
   localAiAvailability,
@@ -1417,6 +1418,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Watch for storage changes (real-time sync from dashboard)
   chrome.storage.onChanged.addListener((changes, area) => {
+    // The side panel can stay open across an extension reload/update, which
+    // revokes chrome.storage/chrome.runtime from this already-running page —
+    // this listener keeps firing (Chrome delivers the event first), so it must
+    // check before touching either API again.
+    if (!isExtensionContextValid()) return;
     if (area === 'sync') {
       const changedKeys = Object.keys(changes);
       const hasRelevantChange =
@@ -1434,6 +1440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Reload bookmarks when tab changes
   chrome.tabs.onActivated.addListener(() => {
+    if (!isExtensionContextValid()) return;
     debugLog('Tabs', 'Tab activated, reloading bookmarks');
     scheduleBookmarksReload(0);
   });
@@ -1441,6 +1448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Auto-refresh when YouTube SPA navigates to a new video
 chrome.runtime.onMessage.addListener((msg) => {
+  if (!isExtensionContextValid()) return;
   if (msg.action === 'ytVideoChanged') {
     debugLog('Nav', 'YouTube video changed, reloading', { videoId: msg.videoId });
     scheduleBookmarksReload(0);

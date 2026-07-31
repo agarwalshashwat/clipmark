@@ -35,3 +35,16 @@ export function ytThumbnailUrl(videoId, quality = 'mqdefault') {
 export const APP_EXPORT_PREFIX = 'clipmark';
 export const MAX_RECONNECT_ATTEMPTS = 3;
 export const RECONNECT_DELAY = 1000;
+
+// An extension page (side panel, dashboard) can stay open across an extension
+// reload/update — Chrome then revokes its chrome.runtime/chrome.storage
+// bindings without unloading the already-running page, so a subsequent API
+// call throws instead of the page simply going away. Mirrors content.js's own
+// isContextValid(), which classic scripts can't import.
+export function isExtensionContextValid() {
+  try {
+    return !!chrome.runtime?.id;
+  } catch {
+    return false;
+  }
+}
