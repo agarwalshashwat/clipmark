@@ -581,6 +581,15 @@ async function silentSaveBookmark() {
 
     const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
 
+    // The videoTitles cache is filled async (scheduleTitleRefresh), so an
+    // instant Alt+S save can race ahead of it — resolve live from the DOM
+    // instead of trusting a cache entry that may not exist yet.
+    let videoTitle = videoTitles[videoId] || null;
+    if (!videoTitle) {
+      videoTitle = await getVideoTitle().catch(() => null);
+      if (videoTitle) videoTitles[videoId] = videoTitle;
+    }
+
     bookmarks.push({
       id: Date.now(),
       videoId,
@@ -589,7 +598,7 @@ async function silentSaveBookmark() {
       tags,
       color,
       createdAt:      new Date().toISOString(),
-      videoTitle:     videoTitles[videoId] || null,
+      videoTitle,
       reviewSchedule,
       lastReviewed:   null,
     });
@@ -597,7 +606,7 @@ async function silentSaveBookmark() {
     if (video.duration && !isNaN(video.duration)) videoDurations[videoId] = video.duration;
 
     await new Promise((resolve, reject) =>
-      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations }, () => {
+      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations, videoTitles }, () => {
         if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
         else resolve();
       })

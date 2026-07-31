@@ -110,6 +110,27 @@ test.describe('Bookmark lifecycle', () => {
     expect(stored.length).toBeGreaterThan(0);
   });
 
+  // ── Alt+S captures the real video title, not just the ID ─────────────────
+  test('Alt+S resolves videoTitle live even before the title cache is warm', async ({ context }) => {
+    const page = await context.newPage();
+    await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
+    await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
+
+    await page.locator('video').click({ force: true });
+    await page.waitForTimeout(1_500);
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
+
+    // Save immediately — before scheduleTitleRefresh's own delayed attempts
+    // (0/250/700/1500/3000ms) would otherwise have populated the videoTitles
+    // cache, so this only passes if the save path resolves the title live.
+    await page.keyboard.press('Alt+s');
+    await page.waitForTimeout(2_000);
+
+    const [stored] = await getStoredBookmarks(context, VIDEO_ID);
+    expect(stored?.videoTitle).toBeTruthy();
+    expect(stored?.videoTitle).not.toBe(VIDEO_ID);
+  });
+
   // ── Bookmark button click also saves and persists ─────────────────────────
   test('Player button click saves a bookmark that persists after reload', async ({ context }) => {
     const page = await context.newPage();
