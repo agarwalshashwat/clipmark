@@ -1,5 +1,5 @@
 // local-ai.js — Chrome built-in LanguageModel (Gemini Nano) helpers
-// Loaded before popup.js and side-panel.js via <script> tag in HTML pages.
+// Loaded before side-panel.js via <script> tag in HTML pages.
 // All functions are globals; no module syntax (no build step).
 
 // Internal: format seconds → MM:SS

@@ -125,10 +125,8 @@ async function getValidToken() {
 
 // Re-checks Pro status against the server and updates the cached bmUser.isPro
 // flag on a mismatch, so upgrading via the web dashboard unlocks gated
-// features here without a full re-auth. popup.js already does this on every
-// open; the side panel (and dashboard) never did, and with no wired
-// default_popup there was no surface left that refreshed entitlement at all.
-// Throttled — called on load and on window focus, not polled.
+// features here without a full re-auth. Throttled — called on load and on
+// window focus, not polled.
 let lastEntitlementRefresh = 0;
 const ENTITLEMENT_REFRESH_MIN_INTERVAL_MS = 60_000;
 async function refreshEntitlement() {
