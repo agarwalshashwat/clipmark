@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { addCollectionToGroup } from '../groups/actions';
+import { addCollectionToGroup, createGroup } from '../groups/actions';
 
 interface Group { id: string; name: string; }
 
@@ -12,9 +12,17 @@ interface Props {
   onClose: () => void;
 }
 
-export default function GroupPickerModal({ videoId, videoTitle, groups, onClose }: Props) {
+export default function GroupPickerModal({ videoId, videoTitle, groups: initialGroups, onClose }: Props) {
+  // Local copy so a group created inline (below) appears immediately without
+  // waiting on the parent page to re-fetch — mirrors the extension's
+  // floating group picker (dashboard.js's showGroupPicker), which lets you
+  // create a group and pick it in one flow instead of leaving to
+  // /dashboard/groups first.
+  const [groups, setGroups] = useState(initialGroups);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [newGroupName, setNewGroupName] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [isCreating, startCreating] = useTransition();
   const [done, setDone] = useState(false);
 
   const handleAdd = () => {
@@ -23,6 +31,22 @@ export default function GroupPickerModal({ videoId, videoTitle, groups, onClose 
       await addCollectionToGroup(selectedGroupId, videoId);
       setDone(true);
       setTimeout(onClose, 800);
+    });
+  };
+
+  const handleCreateAndSelect = () => {
+    const name = newGroupName.trim();
+    if (!name) return;
+    startCreating(async () => {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('type', 'custom');
+      const { id } = await createGroup(formData);
+      if (id) {
+        setGroups(prev => [...prev, { id, name }]);
+        setSelectedGroupId(id);
+      }
+      setNewGroupName('');
     });
   };
 
@@ -56,12 +80,11 @@ export default function GroupPickerModal({ videoId, videoTitle, groups, onClose 
         )}
 
         {groups.length === 0 ? (
-          <p style={{ fontSize: 14, color: '#6c7a77', textAlign: 'center', padding: '16px 0' }}>
-            No custom groups yet.{' '}
-            <a href="/dashboard/groups" style={{ color: '#006b5f', fontWeight: 600 }}>Create one →</a>
+          <p style={{ fontSize: 14, color: '#6c7a77', textAlign: 'center', padding: '8px 0 16px' }}>
+            No custom groups yet — create one below.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
             {groups.map(g => (
               <button
                 key={g.id}
@@ -84,6 +107,35 @@ export default function GroupPickerModal({ videoId, videoTitle, groups, onClose 
             ))}
           </div>
         )}
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <input
+            type="text"
+            value={newGroupName}
+            onChange={e => setNewGroupName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateAndSelect(); } }}
+            placeholder="New group…"
+            maxLength={40}
+            style={{
+              flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid #e0e0e0',
+              fontSize: 13, fontFamily: 'inherit', outline: 'none', color: '#1a2421',
+            }}
+          />
+          <button
+            onClick={handleCreateAndSelect}
+            disabled={!newGroupName.trim() || isCreating}
+            title="Create group"
+            style={{
+              padding: '0 14px', borderRadius: 10, border: 'none',
+              background: newGroupName.trim() ? '#1a2421' : '#e0e0e0',
+              color: newGroupName.trim() ? '#fff' : '#9ca3af',
+              fontSize: 16, fontWeight: 700, cursor: newGroupName.trim() ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
+            }}
+          >
+            +
+          </button>
+        </div>
 
         {done ? (
           <p style={{ textAlign: 'center', color: '#006b5f', fontWeight: 700, fontSize: 15 }}>Added ✓</p>

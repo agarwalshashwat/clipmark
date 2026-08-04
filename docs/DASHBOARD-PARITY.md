@@ -100,11 +100,11 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Capability | Extension | Web | Status |
 |---|---|---|---|
 | Manual named groups (create/add video/remove video/delete) | ✅ | ✅ | ✅ |
-| Rename group | ✅ inline contentEditable | ❌ not present | ❌ gap |
-| Reorder groups (move up/down, persisted) | ✅ | ❌ not present | ❌ gap |
+| Rename group | ✅ inline contentEditable | ✅ added in Iteration 8 (prompt-based) | ✅ |
+| Reorder groups (move up/down, persisted) | ✅ | ✅ added in Iteration 8 (new `groups.position` column, migration not yet applied — see Iteration Log) | ✅ |
 | Auto Groups (read-only, derived from all tags incl. "untagged") | ✅ | ✅ ("All Tags" section, "Untagged" label) | ✅ |
 | "Smart (Tag Based)" persisted group type, bound to one tag, listed under "My Groups" | ❌ not present — extension's only tag-based view is the read-only Auto Groups section | ➕ present (`groups.type = 'tag'`) | ➕ extra, **entangled with the core (shared component, shared DB table, shared actions) — not cleanly relocatable to the hold branch without a schema/behavior change to already-existing user data.** Judgment call: documented here rather than removed; see Iteration Log. |
-| Floating group-picker w/ inline "+ new group" creation | ✅ | ❌ (`GroupPickerModal` only lists existing groups; must visit `/dashboard/groups` to create one) | ❌ gap |
+| Floating group-picker w/ inline "+ new group" creation | ✅ | ✅ added in Iteration 8 | 🟡 create works; no membership checkboxes/toggle yet (see Iteration Log) |
 
 ## 8. Shared collections
 
@@ -424,3 +424,60 @@ not committed) completed successfully end to end — confirms `/dashboard`,
 `/dashboard/referral`/`/dashboard/affiliate` are correctly gone from the
 route list. Still not visually verified in a running browser session
 (would need a seeded local Supabase project for real auth).
+
+### Iteration 8 — Groups: rename, reorder, and inline group creation
+Three Groups gaps closed, one genuine schema change required (written, not
+applied — see below):
+
+- **New migration** `webapp/migrations/015_groups_position.sql`: adds
+  `groups.position INTEGER NOT NULL DEFAULT 0` (idempotent
+  `ADD COLUMN IF NOT EXISTS`), backfills existing rows into a stable order
+  matching what the UI already showed (newest-first by `created_at`), and
+  adds a supporting index. The extension's Groups view persists a
+  reorderable array (`vgroups` in `chrome.storage.sync`); the web `groups`
+  table had no equivalent column, only implicit `created_at` ordering — so
+  reordering wasn't just a missing button, it needed a place to store the
+  order. **Not applied to any database** — written per the constraint
+  against touching prod or any DB but a local one; the owner applies it via
+  `make db-migrate` after review.
+- `groups/actions.ts`: added `renameGroup` (prompt-based, mirroring the
+  extension's inline contentEditable rename with a simpler but equally
+  capable UI — same pattern already accepted for target-type tabs vs
+  select in Reminders) and `reorderGroup(groupId, 'up'|'down')` (swaps
+  `position` with the adjacent group, mirroring the extension's array-swap
+  move-up/move-down). `createGroup` now assigns new groups the next
+  position (end of the list, matching the extension's array-push
+  behavior) and returns the new row's `id`.
+- `groups/GroupsContent.tsx`: added move-up/move-down/rename buttons per
+  group row (disabled at list boundaries), wired to the new actions.
+- `groups/page.tsx`: orders by `position` then `created_at` instead of
+  `created_at` alone.
+- `_components/GroupPickerModal.tsx`: added an inline "New group…" input +
+  create button, mirroring the extension's floating group picker
+  (`dashboard.js`'s `showGroupPicker`), which lets you create a group and
+  immediately add the current video to it without leaving to
+  `/dashboard/groups` first. `createGroup` now also revalidates
+  `/dashboard` (previously only `/dashboard/groups`) so this shows up
+  without a hard reload.
+- **Still not done** (lower priority, deferred): the extension's picker
+  also shows checkboxes indicating which groups a video is *already* in
+  and lets you toggle membership (add/remove) for several groups in one
+  sitting. The web picker only ever adds to one group per open (removal
+  already exists, just on the `/dashboard/groups` page instead) — the
+  picker would need the parent page to compute per-video group membership
+  and pass it down, which touches `dashboard/page.tsx`'s data-fetching;
+  left as a known remaining gap rather than expanding this iteration's
+  diff further.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
+passing, `npx next build` (placeholder env) succeeds. The migration's DDL
+and backfill were also smoke-tested against a real, disposable Postgres
+container (a minimal stand-in for `public.groups`, seeded with 4 rows at
+different `created_at` values) — confirmed the `ADD COLUMN`/backfill/index
+run cleanly, the backfill orders newest-first as intended, and re-running
+the whole migration a second time is a true no-op (same resulting
+positions, per the repo's idempotency convention). That test database was
+never anything but a scratch container — the migration was **not** applied
+to any project's real Supabase instance, local or otherwise, per the task's
+constraints; the owner should run `make db-migrate` against their own local
+DB first, per the repo's own migration policy, before this ships.

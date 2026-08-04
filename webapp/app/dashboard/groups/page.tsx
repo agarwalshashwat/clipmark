@@ -31,6 +31,7 @@ export default async function GroupsPage() {
     .from('groups')
     .select('*, group_collections(collection_id)')
     .eq('user_id', user.id)
+    .order('position', { ascending: true })
     .order('created_at', { ascending: false });
 
   const collectionMap = new Map(collections.map(c => [c.id, c]));
