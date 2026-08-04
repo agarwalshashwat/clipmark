@@ -16,6 +16,7 @@ import {
 import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
 import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
+import BookmarkNotes from './BookmarkNotes';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -116,7 +117,7 @@ function exportJSON(collections: Collection[]) {
 }
 
 function exportCSV(collections: Collection[]) {
-  const rows = ['Video ID,Video Title,Timestamp,Description,Tags,Created At'];
+  const rows = ['Video ID,Video Title,Timestamp,Description,Tags,Notes,Created At'];
   for (const c of collections) {
     for (const b of (c.bookmarks ?? [])) {
       const row = [
@@ -125,6 +126,7 @@ function exportCSV(collections: Collection[]) {
         formatTimestamp(b.timestamp),
         `"${(b.description ?? '').replace(/"/g, '""')}"`,
         `"${(b.tags ?? []).join(', ')}"`,
+        `"${(b.notes ?? '').replace(/"/g, '""')}"`,
         b.createdAt,
       ];
       rows.push(row.join(','));
@@ -142,6 +144,7 @@ function exportMarkdown(collections: Collection[]) {
       const ts = formatTimestamp(b.timestamp);
       const tags = (b.tags ?? []).map((t: string) => `#${t}`).join(' ');
       lines.push(`- **[${ts}](${youtubeTimestampUrl(c.video_id, b.timestamp)})** — ${b.description || 'No note'} ${tags}`);
+      if (b.notes && b.notes.trim()) lines.push(`  > ${b.notes.replace(/\n/g, '\n  > ')}`);
     }
     lines.push('');
   }
@@ -164,6 +167,7 @@ function exportObsidian(collections: Collection[]) {
       const url = youtubeTimestampUrl(c.video_id, b.timestamp);
       const tagStr = (b.tags ?? []).length ? ` ${(b.tags ?? []).map((t: string) => `#${t}`).join(' ')}` : '';
       lines.push(`> - [${formatTimestamp(b.timestamp)}](${url}) — ${b.description || 'No note'}${tagStr}`);
+      if (b.notes?.trim()) lines.push(`>   > ${b.notes.replace(/\n/g, '\n>   > ')}`);
     }
     lines.push('');
   }
@@ -181,7 +185,7 @@ function exportNotionCSV(collections: Collection[]) {
         (c.video_title || '').replace(/"/g, '""'),
         url,
         (b.tags ?? []).join(', '),
-        '',
+        (b.notes ?? '').replace(/"/g, '""'),
         b.createdAt ? new Date(b.createdAt).toISOString().split('T')[0] : '',
       ].map(v => `"${v}"`).join(',');
     })
@@ -197,6 +201,7 @@ function exportReadingList(collections: Collection[]) {
     lines.push(`▶ ${title}`, `   https://www.youtube.com/watch?v=${c.video_id}`, '');
     for (const b of [...(c.bookmarks ?? [])].sort((a, b) => a.timestamp - b.timestamp)) {
       lines.push(`   ${formatTimestamp(b.timestamp)}  ${b.description || 'No note'}`);
+      if (b.notes?.trim()) lines.push(`   Note: ${b.notes}`);
     }
     lines.push('');
   }
@@ -376,6 +381,13 @@ export default function DashboardContent({ collections, isPro, initialView, succ
       setTimeout(() => setCopyToast(''), 2000);
     }
   };
+
+  // ── Extended Notes upgrade prompt (Pro) ─────────────────────────────────────
+
+  const handleNotesUpgradeNeeded = useCallback(() => {
+    setCopyToast('Extended Notes is available on Pro.');
+    setTimeout(() => setCopyToast(''), 3000);
+  }, []);
 
   // ── Import ───────────────────────────────────────────────────────────────────
 
@@ -812,6 +824,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               >
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                               </button>
+                              <BookmarkNotes videoId={c.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                             </div>
                           </div>
                           <p className={styles.threadNote}>{b.description || 'No note added.'}</p>
@@ -867,6 +880,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                                         <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
                                           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                                         </button>
+                                        <BookmarkNotes videoId={c.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                                       </div>
                                     </div>
                                     <p className={styles.threadNote}>{b.description || 'No note added.'}</p>
@@ -991,6 +1005,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                               </button>
+                              <BookmarkNotes videoId={group.collection.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                             </div>
                           </div>
                         );

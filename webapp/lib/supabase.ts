@@ -17,6 +17,9 @@ export interface Bookmark {
   reviewSchedule?: number[];
   lastReviewed?: string | null;
   recallStreak?: number;
+  // Extended Notes (Pro). Written by either surface, synced verbatim into
+  // the bookmarks JSONB — absent unless the user has added notes.
+  notes?: string;
 }
 
 export interface Collection {

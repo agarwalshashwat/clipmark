@@ -39,7 +39,7 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Per-bookmark: copy link | ✅ | ✅ | ✅ |
 | Per-bookmark: jump/open at timestamp | ✅ | ✅ | ✅ |
 | Per-bookmark: delete | ✅ | ✅ | ✅ |
-| Per-bookmark: **Extended Notes (Pro)** — textarea, autosave, saved indicator | ✅ | ❌ not present | ❌ gap |
+| Per-bookmark: **Extended Notes (Pro)** — textarea, autosave, saved indicator | ✅ | ✅ added in Iteration 5 (`BookmarkNotes.tsx`) | ✅ |
 | Bulk-select checkboxes + bulk delete | ✅ | ✅ | ✅ |
 | Collapse/expand after N bookmarks | ✅ (3) | ✅ (4) | ✅ (threshold differs, not a capability gap) |
 | Pill row of all timestamps | ✅ | ✅ | ✅ |
@@ -81,9 +81,9 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | CSV | ✅ free | ✅ free | ✅ |
 | Markdown | ✅ free | ✅ free | ✅ |
 | Anki (.txt TSV) | ✅ free-cap (1/mo) then Pro | ✅ free-cap (1/mo) then Pro — `_utils/usage-caps.ts` twin | ✅ |
-| Obsidian (.md) | ✅ Pro | ✅ added in Iteration 4 (notes column empty — no Extended Notes on web yet) | 🟡 |
-| Notion CSV | ✅ Pro | ✅ added in Iteration 4 (notes column empty — no Extended Notes on web yet) | 🟡 |
-| Reading List (.txt) | ✅ Pro | ✅ added in Iteration 4 (notes omitted — no Extended Notes on web yet) | 🟡 |
+| Obsidian (.md) | ✅ Pro | ✅ added in Iteration 4, notes included as of Iteration 5 | ✅ |
+| Notion CSV | ✅ Pro | ✅ added in Iteration 4, notes included as of Iteration 5 | ✅ |
+| Reading List (.txt) | ✅ Pro | ✅ added in Iteration 4, notes included as of Iteration 5 | ✅ |
 | Import JSON | ✅ | ✅ | ✅ |
 
 ## 6. Analytics
@@ -289,6 +289,53 @@ The web side has no Extended Notes feature yet (see Iteration 5), so these
 three new exporters currently emit an empty Notes column / omit the notes
 blockquote. Once Extended Notes lands on web, these three functions need a
 follow-up pass to include it — noted here so it isn't forgotten.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
+Not visually verified in a browser (same auth-gating caveat).
+
+### Iteration 5 — add Extended Notes (Pro)
+The extension's per-bookmark Extended Notes (`.vc-notes-btn`/`.vc-notes-panel`
+in `dashboard.js`) had no web equivalent at all. No schema change was
+needed — bookmarks are stored as JSONB, so `notes` is just a new optional
+key.
+
+- Added `notes?: string` to the `Bookmark` interface in `lib/supabase.ts`.
+- Added `updateBookmarkNotes(videoId, bookmarkId, notes)` to
+  `dashboard/actions.ts`. The extension only gates notes client-side
+  (chrome.storage.sync has no server round-trip to enforce against); since
+  the webapp's version does go through a server action, it also re-checks
+  `profiles.is_pro` server-side — consistent with how this codebase already
+  treats other server-callable Pro features (e.g.
+  `queue/data.ts::loadRemindersQueue`), so a free user can't bypass the
+  UI gate by calling the action directly.
+- New `_components/BookmarkNotes.tsx`: a small client component (button +
+  collapsible textarea, 800ms debounced autosave, save-on-blur/Ctrl+Enter,
+  Esc to close) reused across all three bookmark-row render sites in
+  `DashboardContent.tsx` (library view's visible + collapsed/overflow
+  rows, and the timeline view's clip rows) instead of tripling the logic.
+  New `.notesBtn`/`.notesPanel`/`.notesTextarea`/`.notesHint` classes added
+  to `toolbar.module.css`.
+- Free users get the same upgrade-toast pattern already used for the
+  Anki-cap and new Pro exports ("Extended Notes is available on Pro.")
+  instead of the panel opening.
+- Closed the gap flagged in Iteration 4: `exportCSV`, `exportMarkdown`,
+  `exportObsidian`, `exportNotionCSV`, and `exportReadingList` now all
+  include the notes text/column, matching the extension's exporters
+  exactly (`b.notes` was previously only ever an empty placeholder in the
+  three new Pro exporters, and entirely absent from CSV/Markdown).
+
+**Found in passing, not fixed here (flagged as a separate background
+task)**: `DashboardContent.tsx` references several `toolbarStyles.*` classes
+(`actionBtn`, `actionBtnDanger`, `bookmarkActions`, `threadItemHover`,
+`checkbox`, `bulkBar`, `copyToast`, etc.) that don't exist anywhere in
+`toolbar.module.css` or any other stylesheet — confirmed via
+`grep -rn "\.actionBtn\b" webapp/app/dashboard`, zero matches. CSS modules
+silently resolve unknown keys to `undefined`, so these buttons/rows/toasts
+render with no class at all in production today. This predates this sync
+effort and is a styling bug, not a feature-parity gap, so it's out of scope
+here — spawned as its own background task rather than folded into this PR.
+The new `BookmarkNotes` component intentionally uses its own, properly
+defined classes rather than the broken ones.
 
 Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
 Not visually verified in a browser (same auth-gating caveat).
