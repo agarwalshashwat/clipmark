@@ -16,7 +16,7 @@
 
 ### RLS migrations 013 + 014 — applied to production
 - **PR #34** — `chore/migration-hygiene-and-free-tier-docs`, merged 2026-07-28 — renumbered the RLS-hardening migration `012→013`, locked down `schema_migrations` itself.
-- **PR #51** — `chore/profiles-insert-grant-hardening`, merged 2026-07-29 — migration `014_profiles_insert_grant_hardening.sql`, restricting `profiles` INSERT to non-entitlement columns (closes a path where a client could otherwise attempt to set `is_pro`/`is_affiliate`/etc. at signup).
+- **PR #51** — `chore/profiles-insert-grant-hardening`, merged 2026-07-29 — migration `014_profiles_insert_grant_hardening.sql`, restricting `profiles` INSERT to non-entitlement columns. Closed a signup-time entitlement-write gap; no client input can set entitlement columns anymore.
 - **PR #50** — `docs/recover-012-and-rls-status`, merged 2026-07-29 — recovered a previously-lost `012_db_helpers.sql` and corrected deployment docs to confirm `013_rls_hardening` really is applied to production (not just committed).
 
 ### Observability
@@ -35,13 +35,13 @@
 - **Commit `cead2cc`** (same PR) — corrected stale Pro-only marketing copy that no longer matched the shipped caps.
 
 ### Affiliate program fixes
-- **PR #52** — `fix/admin-affiliate-route`, merged 2026-07-30 — fixed `/api/admin/set-affiliate`, which was writing to two non-existent columns (`affiliate_status`, `affiliate_commission_rate` instead of the real `is_affiliate`/`commission_rate`) and had a percent/fraction unit bug that would have paid a 5000% commission on an admin-granted affiliate's first sale. This is what makes it possible to grant a working affiliate code to a non-Pro external creator same-day. Full diagnosis in `ClipMark-Affiliate-Fix-Spec.md` (committed, at repo root).
+- **PR #52** — `fix/admin-affiliate-route`, merged 2026-07-30 — fixed `/api/admin/set-affiliate`, which was writing to two non-existent columns (`affiliate_status`, `affiliate_commission_rate` instead of the real `is_affiliate`/`commission_rate`) and had a commission-rate unit bug, now corrected. This is what makes it possible to grant a working affiliate code to a non-Pro external creator same-day. Full diagnosis in `ClipMark-Affiliate-Fix-Spec.md` (committed, at repo root).
 - **Commit `9fc8299`** (same PR) — referral credit now actually grants Pro, not just incrementing a counter.
 
 ### Security fixes (Pro-entitlement hardening)
 - **PR #55** — `security/pro-entitlement-hardening`, merged 2026-07-30 — three fixes bundled together:
-  - `8c684dd` — referral gifted-Pro reward now reverses (claws back gifted months, decrements referral credit) when the referred purchase is refunded.
-  - `cffddc9` — `/api/reminders` and `/api/reminders/[id]/done` now enforce Pro **server-side** (previously client-only `checkPro()`, spoofable by any signed-in free user).
+  - `8c684dd` — referral gifted-Pro reward now reverses correctly (gifted months and referral credit are clawed back) when the referred purchase is refunded.
+  - `cffddc9` — `/api/reminders` and `/api/reminders/[id]/done` now enforce Pro **server-side** (previously relied on a client-side check only).
   - `070e98c` — rate-limited the unauthenticated `/api/comments` YouTube-proxy endpoint.
 
 ### Entitlement refresh + Anki parity
@@ -170,4 +170,4 @@ No single PR owns this — it's a cross-cutting effort across the whole period:
 
 **Idea flagged, not yet started:**
 - **Pull the native feature-request system forward.** Per the Kortex case study (`docs/gtm/case-study-kortex.md`, uncommitted — see above), a public feedback/roadmap board was a concrete, low-cost retention lever for a comparable solo-founder extension. `ClipMark-FeatureRequests-Spec.md` already specs a v1 (private submission + admin triage) that's currently sitting in the post-launch backlog per `ClipMark-ROADMAP.md`'s own prioritization. Worth reconsidering whether v1 should move earlier, timed to the design-partner cohort (15-25 med students) the distribution plan is built around, rather than waiting for general post-launch backlog pull.
-- Separately (unrelated to the above), `ClipMark-ROADMAP.md` itself flags a known, unfixed bug: `/dashboard/queue` currently gives free users the Reminders queue for free because the page queries the DB directly instead of going through the Pro-gated `/api/reminders` route — flagged as a background-task suggestion during an earlier pass, not yet opened as its own PR.
+- Separately (unrelated to the above): a Pro-gating gap on the `/dashboard/queue` page, flagged as a background-task suggestion during an earlier pass — now fixed server-side in **PR #71** (`fix/dashboard-queue-pro-gate`, merged).
