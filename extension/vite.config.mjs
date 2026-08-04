@@ -71,5 +71,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      // dashboard.html is only reachable via web_accessible_resources, so crxjs
+      // copies it verbatim instead of treating it as an HTML entry — leaving its
+      // <script src="./dashboard.entry.js"> pointing at a file that was never
+      // built (broken dashboard + Anki export in the packaged zip). Declaring it
+      // as an explicit input makes Vite bundle it like the manifest-referenced
+      // side-panel.html. crxjs merges this with its own manifest-derived inputs.
+      input: {
+        dashboard: fileURLToPath(new URL('./src/pages/dashboard.html', import.meta.url)),
+      },
+    },
   },
 });
