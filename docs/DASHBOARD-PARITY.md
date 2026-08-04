@@ -24,7 +24,7 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Affiliate program | ❌ not present | ➕ `/dashboard/affiliate` | ➕ extra |
 | Sidebar collapse (persisted) | ✅ | ✅ | ✅ |
 | Mobile bottom nav (Bookmarks/Reminders/Groups/Pro) | ✅ | ✅ | ✅ |
-| Header search box | ✅ synced w/ toolbar search, filters live | ❌ `DashboardChrome` renders an `<input>` with no `value`/`onChange` — does nothing | ❌ dead UI |
+| Header search box | ✅ synced w/ toolbar search, filters live | 🟡 fixed in Iteration 7 — submits on Enter to `/dashboard?q=...` rather than live-syncing (see Iteration Log for why) | 🟡 functional, not live-synced |
 | Sign-in / sign-out / user chip / avatar | ✅ | ✅ (webapp uses real Supabase auth instead of extension OAuth handoff — expected difference) | ✅ |
 | Upgrade CTA (header + sidebar) | ✅ | ✅ | ✅ |
 
@@ -44,7 +44,7 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Collapse/expand after N bookmarks | ✅ (3) | ✅ (4) | ✅ (threshold differs, not a capability gap) |
 | Pill row of all timestamps | ✅ | ✅ | ✅ |
 | "Group" button (add to group) | ✅ floating picker w/ multi-checkbox + inline create-new-group | 🟡 modal, single-select add only, no create-new-group inline, no remove/checkbox-toggle | 🟡 gap |
-| "Recall" button (start Active Recall for this video, any time) | ✅ always visible on every card, Pro-gated w/ free-review-cap check | ❌ only surfaced for videos that are *already due*, in the due-strip banner — no always-available per-card trigger | ❌ gap |
+| "Recall" button (start Active Recall for this video, any time) | ✅ always visible on every card, Pro-gated w/ free-review-cap check | ✅ added in Iteration 7 (no free-review-cap — see §3 asymmetry note) | 🟡 present, cap asymmetry documented |
 | Featured-card highlighting | ✅ (most-bookmarked video) | ❌ not present | 🟡 cosmetic, low priority |
 | Card size toggle (L/M/S) | ✅ | ✅ | ✅ |
 
@@ -54,7 +54,7 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 |---|---|---|---|
 | Due-strip banner (count + per-video chips + start button) | ✅ | ✅ | ✅ |
 | Start recall for a *due* video | ✅ opens YT tab w/ pendingRevision | ✅ via extension bridge (`_utils/extension.ts`) when available, else opens the video | ✅ |
-| Start recall for *any* video (not just due) | ✅ per-card "Recall" button | ❌ | ❌ gap (see §2) |
+| Start recall for *any* video (not just due) | ✅ per-card "Recall" button | ✅ added in Iteration 7 (see §2) | ✅ |
 | Free-tier monthly review cap enforcement | ✅ enforced in `dashboard.js` before starting | ⚠️ **architectural gap, not fixable from web alone**: the bridge message handler `START_RECALL` in `extension/src/background/background.js` (frozen) does not check the cap at all, so a web-triggered recall session bypasses it entirely. Documented, not fixed — would require an extension-side change, which is out of scope. | ❌ noted asymmetry, out of scope |
 | Recall grading / quiz UI | Extension only (by design — needs the YouTube player) | N/A (web correctly does not attempt this) | ✅ by design |
 
@@ -168,7 +168,7 @@ cleanup, not a parity concern).
 | Capability | Extension | Web | Status |
 |---|---|---|---|
 | Live text search over description/title/tags | ✅ (header + toolbar inputs, kept in sync) | ✅ (toolbar input) | ✅ |
-| Header search box | ✅ synced w/ toolbar | ❌ inert, see §1 | ❌ gap (unresolved — see Iteration Log) |
+| Header search box | ✅ synced w/ toolbar | 🟡 fixed in Iteration 7, see §1 | 🟡 functional, not live-synced |
 | Sort (newest/oldest/by timestamp) | ✅ | ✅ | ✅ |
 | Saved Searches / filters (Pro) — save current query+sort as a named, reusable pill | ✅ | ✅ added in Iteration 6 | ✅ |
 
@@ -377,3 +377,50 @@ usage-caps.ts`.
 
 Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
 Not visually verified in a browser (same auth-gating caveat).
+
+### Iteration 7 — persistent per-card Recall button + fix the dead header search
+Two independent fixes this round:
+
+**Persistent "Recall" button.** The extension's video card always shows a
+"Recall" button (Pro-gated, starts Active Recall over every bookmark on that
+video, any time) — the web dashboard only ever surfaced recall for videos
+already *due*, via the due-strip banner. Added a third button to each video
+card's action row (alongside the existing Watch/Group buttons) that reuses
+the existing `handleStartRecall`/`_utils/extension.ts` bridge plumbing the
+due-strip already had, passing every bookmark id for that video (sorted by
+timestamp) instead of just the due ones — matching
+`dashboard.js`'s `.vc-revisit-btn` handler exactly. Free users get the same
+upgrade-toast pattern as Extended Notes/Saved Searches.
+**Deliberately not added**: a client-side free-tier review-count cap. The
+extension's own cap only works because the review session *and* the
+counter live in the same place (the extension); a web-side counter would
+gate the button click but not the session itself, since
+`background.js`'s `START_RECALL` handler (frozen, external-message path)
+never checks any cap — already documented in §3 as an out-of-scope
+asymmetry. Adding a cosmetic-only counter that doesn't actually limit
+anything seemed worse than the status quo, so it was left out; noted here
+for visibility rather than silently skipped.
+
+**Header search.** `DashboardChrome`'s header search box rendered a bare
+`<input>` with no `value`/`onChange` — inert, confirmed in Iteration 0.
+True live sync with the toolbar search (like the extension's two synced
+inputs) isn't feasible without either lifting `query` into the URL (which
+would trigger a full server refetch of `collections` from Supabase on every
+keystroke — the toolbar search is deliberately local React state to avoid
+exactly that) or introducing a cross-tree client store, which would be an
+unrelated architecture change. Instead: the header search is now a
+real, working "jump to All Bookmarks filtered by this query" affordance —
+controlled input, submits on Enter (`router.push('/dashboard?q=...')`),
+picked up by `DashboardContent` as its initial query via a new
+`initialQuery` prop threaded through `dashboard/page.tsx`'s `searchParams`.
+No per-keystroke navigation, so no server round-trip cost.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
+passing, and a full `cd webapp && npx next build` (with placeholder env
+vars matching `tests/unit/fixtures/env-setup.mjs`, gitignored `.env.local`,
+not committed) completed successfully end to end — confirms `/dashboard`,
+`/dashboard/queue`, `/dashboard/groups`, `/dashboard/analytics`,
+`/dashboard/videos`, `/dashboard/shared` all still build, and
+`/dashboard/referral`/`/dashboard/affiliate` are correctly gone from the
+route list. Still not visually verified in a running browser session
+(would need a seeded local Supabase project for real auth).

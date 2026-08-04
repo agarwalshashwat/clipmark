@@ -217,18 +217,24 @@ interface Props {
   collections: Collection[];
   isPro: boolean;
   initialView: string;
+  initialQuery?: string;
   successBanner?: React.ReactNode;
   groups?: Group[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function DashboardContent({ collections, isPro, initialView, successBanner, groups = [] }: Props) {
+export default function DashboardContent({ collections, isPro, initialView, initialQuery = '', successBanner, groups = [] }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
+  // The header search (DashboardChrome) navigates here with a `q` param on
+  // submit rather than sharing live state (see that component for why) —
+  // pick up a new value if it changes without a full remount (e.g. searching
+  // again from the header while already on this page).
+  useEffect(() => { if (initialQuery) setQuery(initialQuery); }, [initialQuery]);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'timestamp'>('newest');
   const [viewMode, setViewMode] = useState<'library' | 'timeline'>(
     initialView === 'timeline' ? 'timeline' : 'library'
@@ -830,6 +836,22 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>folder</span>
                     Group
+                  </button>
+                  {/* Start Active Recall for this video at any time (not just
+                      when due) — mirrors the extension's always-visible
+                      .vc-revisit-btn (dashboard.js), which the web dashboard
+                      previously only surfaced for videos already due. */}
+                  <button
+                    className={`${styles.videoActionBtn} ${styles.videoActionBtnSecondary}`}
+                    onClick={() => {
+                      if (!isPro) { showProToast('Active Recall is available on Pro.'); return; }
+                      handleStartRecall(c.video_id, sortedBookmarks.map(b => b.id));
+                    }}
+                    disabled={startingVideoId === c.video_id}
+                    title={bridgeReady ? 'Start Active Recall in the extension' : 'Open the video to start Active Recall in the extension'}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>psychology</span>
+                    {startingVideoId === c.video_id ? 'Starting…' : 'Recall'}
                   </button>
                 </div>
               </div>
