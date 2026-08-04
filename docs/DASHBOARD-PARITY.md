@@ -18,7 +18,7 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Videos view | ✅ plain clickable grid → filters into cards view | 🟡 `/dashboard/videos`, richer (see §9) | 🟡 |
 | Reminders (revisit queue) | ✅ `#subnav-revisit` | ✅ `/dashboard/queue` | 🟡 create form is broken, see §4 |
 | Groups | ✅ `#subnav-groups-side` | ✅ `/dashboard/groups` | 🟡 missing rename/reorder, extra "smart tag" group type, see §7 |
-| Analytics | ✅ Pro-gated | 🟡 `/dashboard/analytics` — **not Pro-gated**, free for everyone | ❌ gap |
+| Analytics | ✅ Pro-gated | ✅ `/dashboard/analytics` — Pro-gated as of Iteration 3 | ✅ |
 | Shared (read-only list) | ✅ `#subnav-shared-side`, list only | ✅ `/dashboard/shared` | ✅ |
 | Referral ("Refer & Earn") | ❌ not present | ➕ `/dashboard/referral` | ➕ extra |
 | Affiliate program | ❌ not present | ➕ `/dashboard/affiliate` | ➕ extra |
@@ -90,9 +90,9 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 
 | Capability | Extension | Web | Status |
 |---|---|---|---|
-| Pro gating | ✅ shows upgrade CTA for free users | ❌ **no gating at all — page is free for every signed-in user** | ❌ gap (also a monetization-integrity issue) |
+| Pro gating | ✅ shows upgrade CTA for free users | ✅ fixed in Iteration 3 | ✅ |
 | 14-day activity heatmap | ✅ | ✅ | ✅ |
-| Tag breakdown (count + bar) | ✅ + video count per tag | 🟡 count + bar, no per-tag video count | 🟡 minor gap |
+| Tag breakdown (count + bar) | ✅ + video count per tag | ✅ fixed in Iteration 3 | ✅ |
 | Empty state | ✅ | ✅ | ✅ |
 
 ## 7. Groups
@@ -252,3 +252,21 @@ Verified: `cd webapp && npx tsc --noEmit` clean, `npm run test:unit:webapp`
 auth-gated (redirects to `/signin` without a real Supabase session) and no
 local Supabase project is configured in this environment; reasoned from
 source and the schema/migration file instead.
+
+### Iteration 3 — Pro-gate Analytics + per-tag video count
+`webapp/app/dashboard/analytics/page.tsx` had no Pro check at all, unlike
+`dashboard.js::renderAnalyticsView` which shows an upgrade CTA in place of the
+view for free users — a real monetization-parity gap, not just cosmetic.
+
+- Added a server-side `profiles.is_pro` check; free users now see an
+  "Analytics — Pro Feature" card with an Upgrade to Pro CTA, matching the
+  extension's copy and behavior, instead of the full analytics view.
+- Added the per-tag video count the extension shows
+  (`${vids} video${vids !== 1 ? 's' : ''}`) — `AnalyticsContent.tsx`'s tag
+  rows previously showed only the bookmark count and a bar, no video count.
+  Computed via a `Set<videoId>` per tag in `page.tsx`, threaded through a new
+  `videoCount` field on `TagStat`, rendered via a new `.tagVideoCount` class
+  in `page.module.css`.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
+Not visually verified in a browser (same auth-gating caveat as Iteration 2).
