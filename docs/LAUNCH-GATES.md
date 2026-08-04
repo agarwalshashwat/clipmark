@@ -56,9 +56,9 @@ no production database or webhook config was touched.
    only. To prove the entitlement side, do one real **live** low-value
    purchase (or a test-mode purchase locally, which already works per
    `docs/OWNER_SETUP_CHECKLIST.md` §D).
-3. **The extension's manifest/package version has never been bumped past
-   `1.0.0`/`1.0`** across the entire git history — separately relevant to
-   Gate 2 below, flagged here because both gates are in this doc.
+3. ~~The extension's manifest/package version has never been bumped past
+   `1.0.0`/`1.0`~~ — **fixed**: bumped to `1.0.1` and merged to `main` (see
+   Gate 2 below). Flagged here because both gates are in this doc.
 
 ### Owner checklist
 
@@ -138,21 +138,18 @@ Built fresh from `main` @ `68b86e4` via `make ext-zip`:
 - **Result:** a valid, loadable MV3 build. `extension/scripts/api-base-guard.mjs`
   and `content-globals-guard.mjs` both ran as part of the build and didn't fail it.
 
-### ⚠️ Found while verifying — will block the upload if not fixed
+### ⚠️ Found while verifying — one fixed, one still open
 
-- **Version number.** `extension/manifest.json` and `extension/package.json`
-  both still say `"1.0.0"` — and grepping the full git history shows the
-  manifest version has **never been bumped**, through the Sentry wiring, the
-  usage-caps/paywall work, the brand casing fix, and the new guided tour.
-  The Chrome Web Store **rejects an upload whose version isn't strictly
-  higher than the currently published one**. Since a beta listing is already
-  live to testers (per `docs/gtm/chrome-web-store-listing-FIELDS.md`), it is
-  almost certainly already published at `1.0.0` or higher. **Before
-  uploading:** open the Developer Dashboard, check the currently published
-  version, bump `extension/manifest.json` + `extension/package.json` to
-  something strictly higher (e.g. `1.0.1`), and rebuild the zip. I didn't
-  bump it myself since I can't see the dashboard's current published version
-  from here and guessing wrong just fails the same way.
+- **Version number — fixed.** `extension/manifest.json` and
+  `extension/package.json` both said `"1.0.0"` and had never been bumped
+  across the entire git history, through the Sentry wiring, the
+  usage-caps/paywall work, the brand casing fix, and the guided tour. Owner
+  confirmed the published beta is at `1.0.0`, so both files are now bumped to
+  **`1.0.1`** and that bump is merged to `main` — the zip below already
+  reflects it. (If a future re-upload also gets rejected for the same
+  reason, it means something was uploaded at `1.0.1` outside this repo's
+  history — check the dashboard's current published version before bumping
+  again.)
 - **No permission-justification / single-purpose text exists anywhere in the
   repo.** The CWS dashboard requires a written justification for
   `host_permissions` and a one-line "single purpose" description before it
@@ -169,15 +166,14 @@ Built fresh from `main` @ `68b86e4` via `make ext-zip`:
 
 ### Owner checklist
 
-1. **Check the currently published version** in the Web Store Developer
-   Dashboard (item `iboippnihpcnnglgboaiedaiimbiolgg`) and bump
-   `extension/manifest.json` + `extension/package.json` past it. Commit that
-   bump, then rebuild:
+1. **Build the submission zip** from current `main` (already at version
+   `1.0.1`):
    ```bash
    make ext-zip
    ```
-2. **Download the zip** prepared in this session (see below) or your own
-   freshly-built one, and upload it as a new package version.
+   Produces `clipmark-extension.zip` at the repo root (~128 KB).
+2. **Upload it** in the Web Store Developer Dashboard (item
+   `iboippnihpcnnglgboaiedaiimbiolgg`) as a new package version.
 3. **Fix the dashboard listing Title casing** — it currently reads `Clipmark`
    (lowercase "m"); replace with `ClipMark — Study Smarter with YouTube
    Flashcards` (see `docs/gtm/chrome-web-store-listing-FIELDS.md`, which is
@@ -193,18 +189,17 @@ Built fresh from `main` @ `68b86e4` via `make ext-zip`:
    something this session can capture — needs the real product UI).
 7. Submit for review.
 
-### Download
+### Package built this session
 
-The rebuilt zip from this session (pre-version-bump, `1.0.0` — **do not
-upload as-is**, see the version blocker above; rebuild after bumping):
+`make ext-zip` from `main` post-bump — manifest reads `"name": "ClipMark"`,
+`"version": "1.0.1"`:
 
-- **URL:** `https://vast-hairs-smash.loca.lt/clipmark-extension.zip`
 - **Size:** 130,970 bytes (128 KB)
-- **SHA-256:** `23b34a3e808a32f1bc6af8f56ab5da1de3fed2441f94f38c453923091a848bba`
+- **SHA-256:** `0e217ee3c20d073854deffab56ee6b0c20ed253fbac98f312e448b9bb801a5bd`
 
-This is a `localtunnel` tunnel to a local static file server started for this
-session only — it stops working once the session/worktree is torn down.
-Download it promptly, or just run `make ext-zip` yourself locally.
+Handed off directly for this submission; going forward, `make ext-zip` from
+`main` reproduces it (version bumps for future releases still need a manual
+`extension/manifest.json` + `extension/package.json` edit first).
 
 ---
 
