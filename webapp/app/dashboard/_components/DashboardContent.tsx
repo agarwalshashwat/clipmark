@@ -154,6 +154,55 @@ function exportAnki(collections: Collection[]) {
   downloadFile(buildAnkiTsvFromCollections(collections), 'clipmark-anki.txt', 'text/plain');
 }
 
+// Pro. Mirrors extension/src/popup/dashboard.js::exportObsidian.
+function exportObsidian(collections: Collection[]) {
+  const lines: string[] = ['# Clipmark Export — Obsidian\n'];
+  for (const c of collections) {
+    const title = c.video_title ?? c.video_id;
+    lines.push(`> [!note] [${title}](https://www.youtube.com/watch?v=${c.video_id})\n`);
+    for (const b of [...(c.bookmarks ?? [])].sort((a, b) => a.timestamp - b.timestamp)) {
+      const url = youtubeTimestampUrl(c.video_id, b.timestamp);
+      const tagStr = (b.tags ?? []).length ? ` ${(b.tags ?? []).map((t: string) => `#${t}`).join(' ')}` : '';
+      lines.push(`> - [${formatTimestamp(b.timestamp)}](${url}) — ${b.description || 'No note'}${tagStr}`);
+    }
+    lines.push('');
+  }
+  downloadFile(lines.join('\n'), 'clipmark-obsidian.md', 'text/markdown');
+}
+
+// Pro. Mirrors extension/src/popup/dashboard.js::exportNotionCSV.
+function exportNotionCSV(collections: Collection[]) {
+  const header = 'Name,Video,URL,Tags,Notes,Date\n';
+  const rows = collections.flatMap(c =>
+    (c.bookmarks ?? []).map((b: Bookmark) => {
+      const url = youtubeTimestampUrl(c.video_id, b.timestamp);
+      return [
+        `${formatTimestamp(b.timestamp)} — ${(b.description || '').replace(/"/g, '""')}`,
+        (c.video_title || '').replace(/"/g, '""'),
+        url,
+        (b.tags ?? []).join(', '),
+        '',
+        b.createdAt ? new Date(b.createdAt).toISOString().split('T')[0] : '',
+      ].map(v => `"${v}"`).join(',');
+    })
+  ).join('\n');
+  downloadFile(header + rows, 'clipmark-notion.csv', 'text/csv');
+}
+
+// Pro. Mirrors extension/src/popup/dashboard.js::exportReadingList.
+function exportReadingList(collections: Collection[]) {
+  const lines: string[] = ['Clipmark — Reading List Export', '='.repeat(40), ''];
+  for (const c of collections) {
+    const title = c.video_title ?? c.video_id;
+    lines.push(`▶ ${title}`, `   https://www.youtube.com/watch?v=${c.video_id}`, '');
+    for (const b of [...(c.bookmarks ?? [])].sort((a, b) => a.timestamp - b.timestamp)) {
+      lines.push(`   ${formatTimestamp(b.timestamp)}  ${b.description || 'No note'}`);
+    }
+    lines.push('');
+  }
+  downloadFile(lines.join('\n'), 'clipmark-reading-list.txt', 'text/plain');
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Group { id: string; name: string; }
@@ -471,6 +520,55 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                     title={isPro ? 'Export as an Anki-importable TSV' : `Anki export — ${FREE_ANKI_EXPORTS_PER_MONTH} free per month, unlimited on Pro`}
                   >
                     ↓ Anki{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
+                  {/* Obsidian / Notion / Reading List — Pro-only, no free
+                      allowance (mirrors extension/src/popup/dashboard.js
+                      exportObsidian / exportNotionCSV / exportReadingList,
+                      which gate on checkPro() with no usage cap). */}
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) {
+                        setCopyToast('Obsidian export is available on Pro.');
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
+                      exportObsidian(collections);
+                    }}
+                    title={isPro ? 'Export as an Obsidian-ready Markdown file' : 'Obsidian export — available on Pro'}
+                  >
+                    ↓ Obsidian{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) {
+                        setCopyToast('Notion CSV export is available on Pro.');
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
+                      exportNotionCSV(collections);
+                    }}
+                    title={isPro ? 'Export as a Notion-ready CSV' : 'Notion CSV export — available on Pro'}
+                  >
+                    ↓ Notion CSV{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) {
+                        setCopyToast('Reading List export is available on Pro.');
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
+                      exportReadingList(collections);
+                    }}
+                    title={isPro ? 'Export a plain-text reading list' : 'Reading List export — available on Pro'}
+                  >
+                    ↓ Reading List{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
                   </button>
                   <hr className={toolbarStyles.exportDivider} />
                   <button className={toolbarStyles.exportBtn} onClick={() => { importInputRef.current?.click(); setExportOpen(false); }}>↑ Import JSON</button>

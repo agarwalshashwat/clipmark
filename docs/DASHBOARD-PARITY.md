@@ -81,9 +81,9 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | CSV | ✅ free | ✅ free | ✅ |
 | Markdown | ✅ free | ✅ free | ✅ |
 | Anki (.txt TSV) | ✅ free-cap (1/mo) then Pro | ✅ free-cap (1/mo) then Pro — `_utils/usage-caps.ts` twin | ✅ |
-| Obsidian (.md) | ✅ Pro | ❌ not present | ❌ gap |
-| Notion CSV | ✅ Pro | ❌ not present | ❌ gap |
-| Reading List (.txt) | ✅ Pro | ❌ not present | ❌ gap |
+| Obsidian (.md) | ✅ Pro | ✅ added in Iteration 4 (notes column empty — no Extended Notes on web yet) | 🟡 |
+| Notion CSV | ✅ Pro | ✅ added in Iteration 4 (notes column empty — no Extended Notes on web yet) | 🟡 |
+| Reading List (.txt) | ✅ Pro | ✅ added in Iteration 4 (notes omitted — no Extended Notes on web yet) | 🟡 |
 | Import JSON | ✅ | ✅ | ✅ |
 
 ## 6. Analytics
@@ -270,3 +270,25 @@ view for free users — a real monetization-parity gap, not just cosmetic.
 
 Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
 Not visually verified in a browser (same auth-gating caveat as Iteration 2).
+
+### Iteration 4 — add missing Pro export formats
+Added `exportObsidian`, `exportNotionCSV`, `exportReadingList` to
+`DashboardContent.tsx`, porting the extension's exporters
+(`dashboard.js::exportObsidian/exportNotionCSV/exportReadingList`) line for
+line, adapted to operate on the web's `Collection[]` shape instead of the
+extension's flat `allBookmarks` + `videoTitles` map. Wired three new buttons
+into the export popover's existing "Pro" section, reusing the same
+`exportBtn`/`exportProTag` classes the Anki button already uses. Unlike
+Anki (1 free export/month), these three are Pro-only with no free
+allowance, matching the extension's `checkPro()` gate with no usage cap —
+free users get a toast ("... is available on Pro.") instead of a download.
+
+**Known gap carried forward**: the extension's exporters also include each
+bookmark's Extended Notes text (`b.notes`) in the Obsidian/Notion output.
+The web side has no Extended Notes feature yet (see Iteration 5), so these
+three new exporters currently emit an empty Notes column / omit the notes
+blockquote. Once Extended Notes lands on web, these three functions need a
+follow-up pass to include it — noted here so it isn't forgotten.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
+Not visually verified in a browser (same auth-gating caveat).
