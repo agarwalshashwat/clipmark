@@ -16,8 +16,8 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | All Bookmarks (cards view) | ✅ `#subnav-all` | ✅ `/dashboard` | ✅ |
 | Timeline view | ✅ alternating left/right entries, month headers | 🟡 single-column entries, month headers | 🟡 cosmetic layout difference only, same capability |
 | Videos view | ✅ plain clickable grid → filters into cards view | 🟡 `/dashboard/videos`, richer (see §9) | 🟡 |
-| Reminders (revisit queue) | ✅ `#subnav-revisit` | ✅ `/dashboard/queue` | 🟡 create form is broken, see §4 |
-| Groups | ✅ `#subnav-groups-side` | ✅ `/dashboard/groups` | 🟡 missing rename/reorder, extra "smart tag" group type, see §7 |
+| Reminders (revisit queue) | ✅ `#subnav-revisit` | ✅ `/dashboard/queue` | ✅ create form fixed in Iteration 2, content-preview panel still missing (see §4) |
+| Groups | ✅ `#subnav-groups-side` | ✅ `/dashboard/groups` | ✅ rename/reorder added in Iteration 8; extra "smart tag" group type kept & documented, see §7 |
 | Analytics | ✅ Pro-gated | ✅ `/dashboard/analytics` — Pro-gated as of Iteration 3 | ✅ |
 | Shared (read-only list) | ✅ `#subnav-shared-side`, list only | ✅ `/dashboard/shared` | ✅ |
 | Referral ("Refer & Earn") | ❌ not present | ➕ `/dashboard/referral` | ➕ extra |
@@ -43,9 +43,9 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Bulk-select checkboxes + bulk delete | ✅ | ✅ | ✅ |
 | Collapse/expand after N bookmarks | ✅ (3) | ✅ (4) | ✅ (threshold differs, not a capability gap) |
 | Pill row of all timestamps | ✅ | ✅ | ✅ |
-| "Group" button (add to group) | ✅ floating picker w/ multi-checkbox + inline create-new-group | 🟡 modal, single-select add only, no create-new-group inline, no remove/checkbox-toggle | 🟡 gap |
+| "Group" button (add to group) | ✅ floating picker w/ multi-checkbox + inline create-new-group | 🟡 modal, single-select add + inline create (added Iteration 8); still no multi-checkbox membership toggle | 🟡 mostly closed, see §7 |
 | "Recall" button (start Active Recall for this video, any time) | ✅ always visible on every card, Pro-gated w/ free-review-cap check | ✅ added in Iteration 7 (no free-review-cap — see §3 asymmetry note) | 🟡 present, cap asymmetry documented |
-| Featured-card highlighting | ✅ (most-bookmarked video) | ❌ not present | 🟡 cosmetic, low priority |
+| Featured-card highlighting | ✅ (most-bookmarked video) | ✅ added in Iteration 9 | ✅ |
 | Card size toggle (L/M/S) | ✅ | ✅ | ✅ |
 
 ## 3. Active Recall / due queue
@@ -64,12 +64,12 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 |---|---|---|---|
 | List due + upcoming reminders | ✅ | ✅ | ✅ |
 | Target type: specific video vs group | ✅ tabs | 🟡 single `<select>` w/ optgroups instead of tabs — acceptable UI variant | ✅ |
-| Frequency: once/daily/weekly/biweekly/monthly | ✅ matches `revisit_reminders.frequency` enum | ❌ **`RemindersContent.tsx` sends a numeric `frequency_days` (1/3/7/30) that the server action never reads, and never sends `next_due_at`, which is `NOT NULL` in the schema** — submitting the form throws `Invalid fields`/`Missing required fields` in `queue/actions.ts::createReminder`. **The web "Schedule Reminder" button is currently non-functional.** | ❌ **P0 bug** |
-| Start date picker | ✅ | ❌ (not present; see above) | ❌ gap |
-| Optional label | ✅ | ❌ not present in create form (schema/API support it) | ❌ gap |
-| Content preview panel (thumbnail/title/tags) | ✅ | ❌ not present | ❌ gap |
-| Edit existing reminder in place | ✅ | ❌ only delete, no edit | ❌ gap |
-| Mark due reminder "Done" (advances/deletes) | ✅ | ❌ not present (only delete) | ❌ gap |
+| Frequency: once/daily/weekly/biweekly/monthly | ✅ matches `revisit_reminders.frequency` enum | ✅ **fixed in Iteration 2** — was previously sending a numeric `frequency_days` the server never read and no `next_due_at`, so every submit threw. Now sends the correct enum + ISO date. | ✅ |
+| Start date picker | ✅ | ✅ added in Iteration 2 | ✅ |
+| Optional label | ✅ | ✅ added in Iteration 2 | ✅ |
+| Content preview panel (thumbnail/title/tags) | ✅ | ❌ still not present — left as-is, see Iteration 2's log entry | ❌ gap |
+| Edit existing reminder in place | ✅ | ✅ added in Iteration 2 (delete + recreate, same as the extension's own edit flow) | ✅ |
+| Mark due reminder "Done" (advances/deletes) | ✅ | ✅ added in Iteration 2 (action already existed, had no caller) | ✅ |
 | Pro-gating | Enforced server-side only (`/api/reminders`); dashboard UI itself has no client-side Pro check | ✅ `loadRemindersQueue` blocks non-Pro server-side, redirects to `/upgrade` | ✅ (web is arguably stricter/better UX here) |
 | Due-count badge in nav | ✅ | ✅ | ✅ |
 
@@ -481,3 +481,29 @@ never anything but a scratch container — the migration was **not** applied
 to any project's real Supabase instance, local or otherwise, per the task's
 constraints; the owner should run `make db-migrate` against their own local
 DB first, per the repo's own migration policy, before this ships.
+
+### Iteration 9 — featured-card highlight + full matrix re-audit
+Small cosmetic fix plus an honesty pass over the whole matrix before
+wrapping up:
+
+- Added the featured-card highlight (the video with the most bookmarks
+  gets a highlighted border, only when there's more than one video) —
+  mirrors the extension's `.vc-card--featured`. New `.videoCardFeatured`
+  class in `page.module.css`, computed the same way as `dashboard.js`'s
+  `featuredKey`.
+- **Re-read every row of the matrix against the current code** rather than
+  trusting earlier per-iteration notes, and found several rows were stale
+  — they still said ❌/gap for things Iterations 2 and 8 had already
+  fixed (Reminders' frequency/date/label/edit/mark-done fields all said
+  ❌ even though Iteration 2 added them; the Groups "Group" button row and
+  the top-level §1 summary rows for Reminders/Groups hadn't been updated
+  after Iterations 2 and 8 either). Corrected all of them. This is
+  exactly the kind of drift the task warned about ("don't paper over a
+  gap by narrowing the matrix's definition") — in this case the error ran
+  the other way, under-crediting fixes already made, but the same
+  discipline applies: the matrix has to reflect the code, not a
+  once-true snapshot.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
+passing, `npx next build` (placeholder env) succeeds. Not visually
+verified in a browser (same auth-gating caveat as every prior iteration).

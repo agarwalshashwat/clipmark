@@ -785,12 +785,22 @@ export default function DashboardContent({ collections, isPro, initialView, init
       )}
 
       {/* ── Library view ── */}
-      {viewMode === 'library' && filteredCollections.length > 0 && (
+      {viewMode === 'library' && filteredCollections.length > 0 && (() => {
+        // Highlight the video with the most bookmarks, but only when there's
+        // more than one — mirrors the extension's featuredKey computation in
+        // dashboard.js's renderBookmarks.
+        const featuredId = filteredCollections.length > 1
+          ? filteredCollections.reduce(
+              (best, c) => (c.bookmarks?.length ?? 0) > (best.bookmarks?.length ?? 0) ? c : best,
+              filteredCollections[0]
+            ).id
+          : null;
+        return (
         <div className={`${styles.videoGrid}${cardSize === 'medium' ? ' ' + styles.videoGridMedium : cardSize === 'small' ? ' ' + styles.videoGridSmall : ''}`}>
           {filteredCollections.map(c => {
             const sortedBookmarks = [...(c.bookmarks ?? [])].sort((a: Bookmark, b: Bookmark) => a.timestamp - b.timestamp);
             return (
-            <div key={c.id} className={styles.videoCard}>
+            <div key={c.id} className={`${styles.videoCard}${c.id === featuredId ? ' ' + styles.videoCardFeatured : ''}`}>
               <div className={styles.videoLeft}>
                 <a href={`https://www.youtube.com/watch?v=${c.video_id}`} className={styles.videoThumbWrap}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1024,7 +1034,8 @@ export default function DashboardContent({ collections, isPro, initialView, init
             {!isPro && <a href="/upgrade" className={styles.suggestionCta}>Explore Pro</a>}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Timeline view ── */}
       {viewMode === 'timeline' && allBookmarks.length > 0 && (
