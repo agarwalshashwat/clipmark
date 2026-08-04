@@ -28,8 +28,7 @@
 
 - [x] One-click bookmark — description optional; auto-fills from transcript → chapter → "Bookmark at M:SS"
 - [x] Inline edit — click any description in the popup to edit in-place
-- [x] **Alt+S** silent save — instant bookmark with toast confirmation
-- [x] **Alt+B** — opens popup (manifest `commands`)
+- [x] **Alt+B** silent save — instant bookmark with toast confirmation
 - [x] Tag parsing — `#important`, `#review`, `#todo` etc. auto-extracted from descriptions
 - [x] Named tag colors — important → red, review → orange, note → blue, question → green, todo → purple, key → pink
 - [x] Custom tag colors — unknown tags get a deterministic hash-based color
@@ -80,7 +79,7 @@
 
 - [x] **✦ Auto** — pre-fills description from live transcript at current timestamp (Claude Haiku)
 - [x] Transcript cached per-video; invalidates on SPA navigation
-- [x] Auto-transcript on all empty saves — same chain used for Alt+S silent save
+- [x] Auto-transcript on all empty saves — same chain used for Alt+B silent save
 - [x] **✦ Summary** — AI overview, key topics, and action items for current video's bookmarks
 - [x] Smart tag suggestions — after Auto fill, AI suggests relevant tags as clickable chips
 - [x] Pro paywall — `is_pro` flag on profiles; Summary, Tags, Social gated behind Pro
@@ -156,7 +155,7 @@
 > High-impact, low-effort improvements before major new phases.
 
 - [x] **Onboarding tour** — 3-step overlay on first install
-- [x] Keyboard shortcut hints — tooltip on Save Moment button showing Alt+S shortcut
+- [x] Keyboard shortcut hints — tooltip on Save Moment button showing Alt+B shortcut
 - [x] **Dashboard "Editorial Collection" redesign** — full bookmarks page overhaul matching design system reference
 - [x] **Watermark on share pages** — "Made with Clipmark" footer CTA with link to Chrome extension
 - [x] Soft paywall — show AI summary preview (blurred), "Upgrade to reveal"

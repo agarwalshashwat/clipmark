@@ -18,7 +18,7 @@ import { getStoredBookmarks, getServiceWorker } from './helpers';
 const VIDEO_ID = 'dQw4w9WgXcQ';
 
 test.describe('Storage schema', () => {
-  // Helper: save one bookmark via Alt+S and return the stored data
+  // Helper: save one bookmark via Alt+B and return the stored data
   async function saveAndRead(context: import('@playwright/test').BrowserContext) {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
@@ -32,7 +32,7 @@ test.describe('Storage schema', () => {
     await page.waitForTimeout(500);
 
     await page.locator('video').click({ force: true }); // ensure keyboard focus
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(2_000); // allow storage write
 
     return getStoredBookmarks(context, VIDEO_ID);
@@ -150,7 +150,7 @@ test.describe('Storage schema', () => {
 
   // ── Tagged bookmark schema ─────────────────────────────────────────────────
   test('Tags parsed from description are stored in the tags array', async ({ context }) => {
-    // We cannot type a description via Alt+S (silent save), so we test the
+    // We cannot type a description via Alt+B (silent save), so we test the
     // tag parsing contract via direct storage seeding + schema verification.
     // The actual parseTags logic is covered in the unit tests.
     //
@@ -168,7 +168,7 @@ test.describe('Storage schema', () => {
   });
 
   // ── Multiple bookmarks accumulate in the same array ───────────────────────
-  test('A second Alt+S adds to the existing array rather than replacing it', async ({ context }) => {
+  test('A second Alt+B adds to the existing array rather than replacing it', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -180,7 +180,7 @@ test.describe('Storage schema', () => {
     });
     await page.waitForTimeout(500);
     await page.locator('video').click({ force: true });
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(1_500);
 
     // Second bookmark at t=20
@@ -188,7 +188,7 @@ test.describe('Storage schema', () => {
       v.currentTime = 20;
     });
     await page.waitForTimeout(500);
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(1_500);
 
     const stored = await getStoredBookmarks(context, VIDEO_ID);
@@ -208,7 +208,7 @@ test.describe('Storage schema', () => {
       }, t);
       await page.waitForTimeout(400);
       await page.locator('video').click({ force: true });
-      await page.keyboard.press('Alt+s');
+      await page.keyboard.press('Alt+b');
       await page.waitForTimeout(1_200);
     }
 
@@ -224,7 +224,7 @@ test.describe('Storage schema', () => {
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
 
     // Wait until the YouTube title heading is populated AND stable.
-    // The content script reads this element synchronously on Alt+S, so we must
+    // The content script reads this element synchronously on Alt+B, so we must
     // ensure it has non-empty text before the keystroke, plus a settle buffer.
     const titleLocator = page.locator('h1.ytd-video-primary-info-renderer').first();
     await expect(titleLocator).not.toHaveText('', { timeout: 10_000 });
@@ -235,14 +235,14 @@ test.describe('Storage schema', () => {
     // the same non-empty text that Playwright just observed
     await page.waitForTimeout(1_000);
 
-    // Pause at a stable timestamp, then save via Alt+S
+    // Pause at a stable timestamp, then save via Alt+B
     await page.locator('video').evaluate((v: HTMLVideoElement) => {
       v.currentTime = 20;
       v.pause();
     });
     await page.waitForTimeout(400);
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
 
     // Poll storage until videoTitle is a non-null string — it may take a moment
     // for the background service worker to write the bookmark.
