@@ -251,7 +251,7 @@ function setupPlayerBookmarkButton() {
 
   const btn = document.createElement('button');
   btn.className  = 'ytp-button yt-bookmark-player-btn';
-  btn.title      = 'Bookmark this moment (Alt+S)';
+  btn.title      = 'Bookmark this moment (Alt+B)';
   btn.innerHTML  = `<svg viewBox="0 0 24 24" width="24" height="24" focusable="false">
     <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" fill="currentColor"/>
   </svg>`;
@@ -532,7 +532,7 @@ function getCurrentChapter() {
   return el ? el.textContent.trim() || null : null;
 }
 
-// ─── Silent save (Alt+S) ──────────────────────────────────────────────────────
+// ─── Silent save (Alt+B) ──────────────────────────────────────────────────────
 async function silentSaveBookmark() {
   if (!isContextValid()) return;
   video = document.querySelector('video') || video;
@@ -589,7 +589,7 @@ async function silentSaveBookmark() {
     const { reviewSchedule, capped } = await resolveNewBookmarkReviewSchedule();
 
     // The videoTitles cache is filled async (scheduleTitleRefresh), so an
-    // instant Alt+S save can race ahead of it — resolve live from the DOM
+    // instant Alt+B save can race ahead of it — resolve live from the DOM
     // instead of trusting a cache entry that may not exist yet.
     let videoTitle = videoTitles[videoId] || null;
     if (!videoTitle) {
@@ -697,14 +697,9 @@ function handleKeyboardShortcut(event) {
   const tag = event.target?.tagName?.toLowerCase();
   if (tag === 'input' || tag === 'textarea' || event.target?.isContentEditable) return;
 
-  // Alt+B / Alt+S global shortcuts
-  if (event.altKey) {
-    if (event.key.toLowerCase() === 'b') {
-      silentSaveBookmark();
-    }
-    if (event.key.toLowerCase() === 's') {
-      try { chrome.runtime.sendMessage({ action: 'openPopup' }); } catch { }
-    }
+  // Alt+B — global silent-save shortcut
+  if (event.altKey && event.key.toLowerCase() === 'b') {
+    silentSaveBookmark();
   }
 
   // Revisit mode navigation — only when a session is active

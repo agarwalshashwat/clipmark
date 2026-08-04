@@ -7,6 +7,7 @@ import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 import { ScrollReveal } from './ScrollReveal';
+import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Turn YouTube Into Video Flashcards You Remember',
@@ -268,42 +269,7 @@ export default async function Home({
               borderRadius: 40, filter: 'blur(80px)', zIndex: 0,
             }} />
             <div style={{ position: 'relative', zIndex: 1, background: '#111111', borderRadius: 36, padding: 16, boxShadow: '0 32px 100px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ aspectRatio: '16/9', background: '#050505', borderRadius: 24, position: 'relative', overflow: 'hidden' }}>
-                {/* Ambient gradient instead of external image */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a, #050505, #1e1b4b)', opacity: 0.95 }} />
-                {/* Progress bar */}
-                <div style={{ position: 'absolute', bottom: 48, left: 32, right: 32, height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 9999 }}>
-                  <div style={{ position: 'absolute', left: '15%', height: '100%', width: '24%', background: 'var(--accent)', borderRadius: 9999, boxShadow: '0 0 12px rgba(20,184,166,0.3)' }} />
-                  <div style={{ position: 'absolute', left: '45%', height: '100%', width: '12%', background: 'var(--secondary)', borderRadius: 9999, boxShadow: '0 0 12px rgba(139,92,246,0.3)' }} />
-                  <div style={{ position: 'absolute', left: '70%', height: '100%', width: '20%', background: 'var(--accent)', borderRadius: 9999, boxShadow: '0 0 12px rgba(20,184,166,0.3)' }} />
-                </div>
-                {/* Glass side panel */}
-                <div style={{
-                  position: 'absolute', top: 20, right: 20, bottom: 20, width: 260,
-                  background: 'rgba(20, 20, 25, 0.7)', backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20,
-                  padding: 24, display: 'flex', flexDirection: 'column', gap: 20
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 9999, background: '#ef4444' }} />
-                    <div style={{ height: 10, width: 80, background: 'rgba(255,255,255,0.2)', borderRadius: 5 }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {[1, 2, 3].map(i => (
-                      <div key={i} style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ height: 8, width: i === 2 ? '85%' : '60%', background: 'rgba(255,255,255,0.15)', borderRadius: 4, marginBottom: 8 }} />
-                        <div style={{ height: 6, width: '40%', background: 'var(--accent)', opacity: 0.6, borderRadius: 3 }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Play icon */}
-                <div style={{ position: 'absolute', top: '50%', left: '40%', transform: 'translate(-50%, -50%)' }}>
-                  <div style={{ width: 84, height: 84, borderRadius: 9999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 48, color: 'white', marginLeft: 4 }}>play_arrow</span>
-                  </div>
-                </div>
-              </div>
+              <HeroDemoVideo />
             </div>
           </div>
         </div>

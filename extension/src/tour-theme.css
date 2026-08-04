@@ -1,0 +1,83 @@
+/*
+ * Shared Driver.js theme override for ClipMark's guided tours.
+ * Colors are literal hex values copied from packages/design-system/tokens.css
+ * rather than CSS custom properties — content.js follows the same convention
+ * for its own injected styles, since the host page (youtube.com) has no
+ * guarantee our :root tokens are defined.
+ */
+
+.driver-popover.clipmark-tour-popover {
+  background: #f9fafb;
+  color: #111827;
+  border-radius: 10px;
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  padding: 20px;
+  max-width: 340px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.clipmark-tour-popover .driver-popover-title {
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.clipmark-tour-popover .driver-popover-description {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.clipmark-tour-popover .driver-popover-footer {
+  margin-top: 16px;
+}
+
+.clipmark-tour-popover .driver-popover-progress-text {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.clipmark-tour-popover button.driver-popover-next-btn,
+.clipmark-tour-popover button.driver-popover-done-btn {
+  background: #14b8a6;
+  color: #fff;
+  border: none;
+  text-shadow: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+}
+
+.clipmark-tour-popover button.driver-popover-next-btn:hover,
+.clipmark-tour-popover button.driver-popover-done-btn:hover {
+  background: #0d9488;
+}
+
+.clipmark-tour-popover button.driver-popover-prev-btn {
+  background: transparent;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 14px;
+}
+
+.clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #f9fafb;
+}
+.clipmark-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #f9fafb;
+}
+.clipmark-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #f9fafb;
+}
+.clipmark-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #f9fafb;
+}
+
+/* Sit above the extension's own top-of-stack UI (toast, revision overlay use 999999). */
+.driver-overlay,
+#driver-popover-content {
+  z-index: 1000010 !important;
+}
