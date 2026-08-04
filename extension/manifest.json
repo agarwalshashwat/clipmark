@@ -3,7 +3,7 @@
   "name": "ClipMark",
   "short_name": "ClipMark",
   "version": "1.0.1",
-  "description": "Smart YouTube bookmarks with timestamps, AI notes, and tags. Cloud sync, share public collections, and save moments for study or development.",
+  "description": "Capture YouTube timestamps, quiz yourself with spaced-repetition Active Recall, and export straight to Anki.",
   "permissions": [
     "storage",
     "activeTab",
