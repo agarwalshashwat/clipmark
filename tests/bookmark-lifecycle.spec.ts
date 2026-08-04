@@ -3,7 +3,7 @@
  *
  * Verifies the full create → persist → reload lifecycle of bookmarks:
  *
- * 1. A bookmark saved via Alt+S is persisted in chrome.storage.sync
+ * 1. A bookmark saved via Alt+B is persisted in chrome.storage.sync
  *    and its marker still appears after a hard page reload.
  * 2. Bookmarks pre-seeded directly into storage appear as markers
  *    immediately when the page loads.
@@ -22,8 +22,8 @@ import {
 const VIDEO_ID = 'dQw4w9WgXcQ'; // extracted from TEST_VIDEO_URL
 
 test.describe('Bookmark lifecycle', () => {
-  // ── Alt+S → storage → reload ──────────────────────────────────────────────
-  test('Alt+S bookmark persists across a hard page reload', async ({ context }) => {
+  // ── Alt+B → storage → reload ──────────────────────────────────────────────
+  test('Alt+B bookmark persists across a hard page reload', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
 
@@ -35,8 +35,8 @@ test.describe('Bookmark lifecycle', () => {
     await page.waitForTimeout(1_500);
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
-    // Save via Alt+S
-    await page.keyboard.press('Alt+s');
+    // Save via Alt+B
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(1_500); // allow storage write + re-render
 
     // Verify at least one marker is visible before reload
@@ -93,8 +93,8 @@ test.describe('Bookmark lifecycle', () => {
     expect(count).toBe(3);
   });
 
-  // ── Storage is written after Alt+S ───────────────────────────────────────
-  test('Alt+S writes bookmark data to chrome.storage.sync', async ({ context }) => {
+  // ── Storage is written after Alt+B ───────────────────────────────────────
+  test('Alt+B writes bookmark data to chrome.storage.sync', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -103,15 +103,15 @@ test.describe('Bookmark lifecycle', () => {
     await page.waitForTimeout(1_500);
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(2_000);
 
     const stored = await getStoredBookmarks(context, VIDEO_ID);
     expect(stored.length).toBeGreaterThan(0);
   });
 
-  // ── Alt+S captures the real video title, not just the ID ─────────────────
-  test('Alt+S resolves videoTitle live even before the title cache is warm', async ({ context }) => {
+  // ── Alt+B captures the real video title, not just the ID ─────────────────
+  test('Alt+B resolves videoTitle live even before the title cache is warm', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -123,7 +123,7 @@ test.describe('Bookmark lifecycle', () => {
     // Save immediately — before scheduleTitleRefresh's own delayed attempts
     // (0/250/700/1500/3000ms) would otherwise have populated the videoTitles
     // cache, so this only passes if the save path resolves the title live.
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(2_000);
 
     const [stored] = await getStoredBookmarks(context, VIDEO_ID);

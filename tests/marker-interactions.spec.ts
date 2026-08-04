@@ -9,7 +9,7 @@
  * 3. Leaving the marker hides the tooltip.
  * 4. Attempting to save a duplicate timestamp (same floor second) is
  *    rejected and shows an error toast rather than creating a second marker.
- * 5. The save-flash overlay (.yt-save-flash) appears briefly after Alt+S.
+ * 5. The save-flash overlay (.yt-save-flash) appears briefly after Alt+B.
  * 6. The silent-save indicator (.yt-bookmark-toast) carries the description
  *    from the saved bookmark.
  *
@@ -134,8 +134,8 @@ test.describe('Marker interactions', () => {
     expect(tagText?.toLowerCase()).toContain('important');
   });
 
-  // ── Duplicate rejection via Alt+S ─────────────────────────────────────────
-  test('Pressing Alt+S twice at the same second does not create a duplicate marker', async ({ context }) => {
+  // ── Duplicate rejection via Alt+B ─────────────────────────────────────────
+  test('Pressing Alt+B twice at the same second does not create a duplicate marker', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -146,14 +146,14 @@ test.describe('Marker interactions', () => {
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
     // First save
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(1_500);
     const afterFirst = await page.locator('.yt-bookmark-marker').count();
     expect(afterFirst).toBeGreaterThan(0);
 
     // Second save at the same time
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
     await page.waitForTimeout(1_500);
     const afterSecond = await page.locator('.yt-bookmark-marker').count();
 
@@ -162,7 +162,7 @@ test.describe('Marker interactions', () => {
   });
 
   // ── Save flash overlay ─────────────────────────────────────────────────────
-  test('Alt+S triggers the sparkle save-flash overlay (.yt-save-flash)', async ({ context }) => {
+  test('Alt+B triggers the sparkle save-flash overlay (.yt-save-flash)', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -171,14 +171,14 @@ test.describe('Marker interactions', () => {
     await page.waitForTimeout(500);
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
 
     // The flash overlay is ephemeral (~750ms); catch it within a short window
     await expect(page.locator('.yt-save-flash')).toBeAttached({ timeout: 1_500 });
   });
 
   // ── Silent-save indicator carries description ─────────────────────────────
-  test('Silent-save indicator (.yt-bookmark-toast) appears after Alt+S', async ({ context }) => {
+  test('Silent-save indicator (.yt-bookmark-toast) appears after Alt+B', async ({ context }) => {
     const page = await context.newPage();
     await page.goto(TEST_VIDEO_URL, { waitUntil: 'networkidle' });
     await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 15_000 });
@@ -187,7 +187,7 @@ test.describe('Marker interactions', () => {
     await page.waitForTimeout(500);
     await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur?.(); });
 
-    await page.keyboard.press('Alt+s');
+    await page.keyboard.press('Alt+b');
 
     await expect(page.locator('.yt-bookmark-toast')).toBeAttached({ timeout: 3_000 });
   });
