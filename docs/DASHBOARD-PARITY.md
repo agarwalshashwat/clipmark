@@ -163,6 +163,15 @@ cleanup, not a parity concern).
 | No shared collections yet | ✅ | ✅ | ✅ |
 | No analytics data yet | ✅ | ✅ | ✅ |
 
+## 13. Filters / Search
+
+| Capability | Extension | Web | Status |
+|---|---|---|---|
+| Live text search over description/title/tags | ✅ (header + toolbar inputs, kept in sync) | ✅ (toolbar input) | ✅ |
+| Header search box | ✅ synced w/ toolbar | ❌ inert, see §1 | ❌ gap (unresolved — see Iteration Log) |
+| Sort (newest/oldest/by timestamp) | ✅ | ✅ | ✅ |
+| Saved Searches / filters (Pro) — save current query+sort as a named, reusable pill | ✅ | ✅ added in Iteration 6 | ✅ |
+
 ---
 
 ## Iteration Log
@@ -336,6 +345,35 @@ effort and is a styling bug, not a feature-parity gap, so it's out of scope
 here — spawned as its own background task rather than folded into this PR.
 The new `BookmarkNotes` component intentionally uses its own, properly
 defined classes rather than the broken ones.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
+Not visually verified in a browser (same auth-gating caveat).
+
+### Iteration 6 — add Saved Searches / filters (Pro)
+Ported the extension's Saved Searches (`dashboard.js`'s
+`getSavedSearches`/`saveSavedSearch`/`deleteSavedSearch`/
+`renderSavedFilterPills`, backed by `chrome.storage.sync`) to the web
+dashboard. The webapp has no per-user `chrome.storage.sync` equivalent for
+this kind of lightweight, device-local UI preference, so it uses
+`localStorage` — the same trade-off already made for `dash_cardSize` in
+`DashboardContent.tsx` and for the Anki export usage cap in `_utils/
+usage-caps.ts`.
+
+- New `_utils/savedSearches.ts`: `getSavedSearches`/`saveSavedSearch`/
+  `deleteSavedSearch`, `localStorage`-backed, same shape as the extension's
+  (`{ id, name, query, sort }`).
+- `DashboardContent.tsx`: a "⊕ Save" button appears next to the search box
+  whenever there's a query (matching the extension's
+  `updateSaveFilterBtn`), Pro-gated via the same upgrade-toast pattern used
+  for Extended Notes. Saved filters render as removable pills below the
+  toolbar; clicking a pill restores its query + sort order, matching the
+  extension's `renderSavedFilterPills` click handler exactly.
+- Refactored the ad hoc "Extended Notes is available on Pro" toast from
+  Iteration 5 into a small shared `showProToast(message)` helper, reused by
+  both Extended Notes and Saved Searches instead of duplicating the
+  set-then-timeout pattern a second time.
+- New `.savedFiltersRow`/`.savedFilterPill`/`.savedFilterPillName`/
+  `.savedFilterPillDel` classes in `toolbar.module.css`.
 
 Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
 Not visually verified in a browser (same auth-gating caveat).

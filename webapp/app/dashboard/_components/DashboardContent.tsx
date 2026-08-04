@@ -17,6 +17,7 @@ import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
 import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
 import BookmarkNotes from './BookmarkNotes';
+import { getSavedSearches, saveSavedSearch, deleteSavedSearch, type SavedSearch } from '../_utils/savedSearches';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -244,6 +245,38 @@ export default function DashboardContent({ collections, isPro, initialView, succ
   const [groupingVideo, setGroupingVideo] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Pro upgrade toast (shared by Extended Notes, Saved Searches, ...) ───────
+  const showProToast = useCallback((message: string) => {
+    setCopyToast(message);
+    setTimeout(() => setCopyToast(''), 3000);
+  }, []);
+  const handleNotesUpgradeNeeded = useCallback(
+    () => showProToast('Extended Notes is available on Pro.'),
+    [showProToast]
+  );
+
+  // ── Saved Searches (Pro) ─────────────────────────────────────────────────────
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  useEffect(() => { setSavedSearches(getSavedSearches()); }, []);
+
+  const handleSaveFilter = () => {
+    if (!isPro) { showProToast('Saved Filters is available on Pro.'); return; }
+    const name = window.prompt('Name this filter:', query);
+    if (!name || !name.trim()) return;
+    setSavedSearches(saveSavedSearch(name.trim(), query, sortOrder));
+    setCopyToast('Filter saved!');
+    setTimeout(() => setCopyToast(''), 2000);
+  };
+
+  const handleApplySavedFilter = (s: SavedSearch) => {
+    setQuery(s.query);
+    setSortOrder(s.sort);
+  };
+
+  const handleDeleteSavedFilter = (id: number) => {
+    setSavedSearches(deleteSavedSearch(id));
+  };
+
   // ── Filtering ───────────────────────────────────────────────────────────────
 
   const filteredCollections = (() => {
@@ -382,13 +415,6 @@ export default function DashboardContent({ collections, isPro, initialView, succ
     }
   };
 
-  // ── Extended Notes upgrade prompt (Pro) ─────────────────────────────────────
-
-  const handleNotesUpgradeNeeded = useCallback(() => {
-    setCopyToast('Extended Notes is available on Pro.');
-    setTimeout(() => setCopyToast(''), 3000);
-  }, []);
-
   // ── Import ───────────────────────────────────────────────────────────────────
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -452,6 +478,16 @@ export default function DashboardContent({ collections, isPro, initialView, succ
               </button>
             )}
           </div>
+          {query && (
+            <button
+              className={toolbarStyles.toolbarBtn}
+              onClick={handleSaveFilter}
+              title="Save this search as a filter"
+              style={{ fontSize: 13, fontWeight: 700, padding: '10px 14px' }}
+            >
+              ⊕ Save{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+            </button>
+          )}
           <select
             className={toolbarStyles.sortSelect}
             value={sortOrder}
@@ -592,6 +628,31 @@ export default function DashboardContent({ collections, isPro, initialView, succ
           <input ref={importInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
         </div>
       </div>
+
+      {/* ── Saved filter pills (Pro) ── */}
+      {savedSearches.length > 0 && (
+        <div className={toolbarStyles.savedFiltersRow}>
+          {savedSearches.map(s => (
+            <div key={s.id} className={toolbarStyles.savedFilterPill}>
+              <button
+                className={toolbarStyles.savedFilterPillName}
+                onClick={() => handleApplySavedFilter(s)}
+                title={`Apply saved filter "${s.name}"`}
+              >
+                {s.name}
+              </button>
+              <button
+                className={toolbarStyles.savedFilterPillDel}
+                onClick={() => handleDeleteSavedFilter(s.id)}
+                title="Remove"
+                aria-label={`Remove saved filter ${s.name}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Bulk delete bar ── */}
       {selectedIds.size > 0 && (

@@ -213,6 +213,47 @@
   vertical-align: middle;
 }
 
+/* ── Saved filter pills (Pro) ─────────────────────────────────────────────── */
+.savedFiltersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 16px;
+}
+
+.savedFilterPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(20, 184, 166, 0.08);
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  border-radius: 9999px;
+  padding: 4px 6px 4px 12px;
+}
+
+.savedFilterPillName {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: #006b5f;
+  font-family: inherit;
+  padding: 0;
+}
+
+.savedFilterPillDel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+.savedFilterPillDel:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
 /* ── Extended Notes (Pro) ─────────────────────────────────────────────────── */
 .notesBtn {
   background: none;
