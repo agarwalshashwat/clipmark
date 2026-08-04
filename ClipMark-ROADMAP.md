@@ -12,11 +12,12 @@ This is the one place everything discussed across security hardening, pricing, d
 ### Security / entitlement hardening
 - **RLS hardening on `profiles`** — column-level `REVOKE`/`GRANT` so only service-role can write entitlement columns (`is_pro`, `is_affiliate`, `commission_rate`, etc.). Migration `013_rls_hardening.sql` (PR #34/earlier) + `014_profiles_insert_grant_hardening.sql` (PR #51, `8e77727`).
 - **Referral gifted-Pro reward now reverses on refund** — `reverseReferralReward()` claws back gifted-Pro months and decrements referral credit when a referred purchase is refunded. Commit `8c684dd`, PR #55.
-- **`/api/reminders` and `/api/reminders/[id]/done` now enforce Pro server-side** — previously client-only (`checkPro()`), spoofable. Commit `cffddc9`, PR #55.
+- **`/api/reminders` and `/api/reminders/[id]/done` now enforce Pro server-side** — previously relied on a client-side check only. Commit `cffddc9`, PR #55.
 - **`/api/comments` (unauthenticated YouTube proxy) now rate-limited** — commit `070e98c`, PR #55.
-- **Admin affiliate bypass fixed** (`/api/admin/set-affiliate`) — was writing two non-existent columns (`affiliate_status`, `affiliate_commission_rate`) and had a percent/fraction unit bug that would have paid out 5000% commission on the first admin-granted affiliate's first sale. Commit `1370a68`, PR #52. Full diagnosis: [ClipMark-Affiliate-Fix-Spec.md](ClipMark-Affiliate-Fix-Spec.md).
+- **Admin affiliate route fixed** (`/api/admin/set-affiliate`) — was writing two non-existent columns (`affiliate_status`, `affiliate_commission_rate`) and had a commission-rate unit bug, now corrected. Commit `1370a68`, PR #52. Full diagnosis: [ClipMark-Affiliate-Fix-Spec.md](ClipMark-Affiliate-Fix-Spec.md).
 - **`profiles` INSERT hardening** — restricted to non-entitlement columns. PR #51 (`chore/profiles-insert-grant-hardening`).
 - **Referral credit now actually grants Pro**, not just a counter — commit `9fc8299`.
+- **`/dashboard/queue` now enforces Pro entitlement server-side** — the page previously queried reminder data directly without the same `is_pro` check `/api/reminders` enforces. PR #71 (`fix/dashboard-queue-pro-gate`).
 
 ### Pricing
 - **New tax-inclusive pricing: $7.99/mo, $59.99/yr, $99.99 founding lifetime** — `PRICE_DEFAULTS` in `webapp/app/(marketing)/upgrade/pricing.ts`. PR #54 (`fix/pricing-update-799-5999-9999`): `36caa67` (price update), `4201100` (removed stale lifetime strikethrough, reframed as founding price), `fffcd0f` (tax-inclusive microcopy on the guarantee line), `2201c1d` (labeled Free vs Pro columns in the comparison table).
@@ -52,7 +53,6 @@ This is the one place everything discussed across security hardening, pricing, d
 |---|---|---|---|
 | **#56** | Bottom-align pricing card CTA buttons across cards | `fix/pricing-cta-alignment` | **OPEN** |
 | — | **"Coming soon" relabel of unbuilt pricing claims** — uncommitted work-in-progress on `fix/pricing-claims-honesty` (no PR yet): adds a `ComingSoon` badge to Deep Transcript Search, Lifetime Cloud Archiving, and Early access to all labs in `PlanCards.tsx`; softens "Sync to Notion & Obsidian" → "Export to Notion & Obsidian" (matches the actual one-off export capability) and "Daily Review Dashboard" → "Review Reminders" / "Advanced Learning Stats" → "Learning Stats" (matches what's actually shipped, no overpromise). **Not yet done**: the comparison-table rows in `page.tsx` ("Permanent Transcript Archiving", "Deep Search (inside transcripts)") still need the same `ComingSoon` treatment, and the "Spaced Repetition Logic" copy fix (§A above — reframe as "unlimited," not Pro-exclusive) hasn't been touched yet. Per [ClipMark-Claims-Buildout-Plan.md](ClipMark-Claims-Buildout-Plan.md) interim section for the full target list. |
-| — | `/dashboard/queue` Pro-gating bypass fix (free users currently get the Reminders queue for free — the page queries the DB directly instead of going through the Pro-gated `/api/reminders`) | not yet opened | **Flagged, not started** — spun off as a background-task suggestion during the claims build-plan pass; independent of the relabel work and can land anytime |
 
 ---
 
