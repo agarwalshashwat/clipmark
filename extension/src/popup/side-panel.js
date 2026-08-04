@@ -23,6 +23,13 @@ import {
 } from '../usage-caps.module.js';
 import { isDueForRecall } from '../recall.module.js';
 import { initErrorReporting } from '../error-reporting.js';
+// The `?sp` query keeps these distinct module ids from the imports in
+// content/tour.js, so Rollup inlines a separate copy into each bundle
+// instead of hoisting a shared chunk — content_scripts entries must stay a
+// single static file; they can't load a lazily-imported shared chunk.
+import { driver } from 'driver.js?sp';
+import 'driver.js/dist/driver.css?sp';
+import '../tour-theme.css?sp';
 
 // Before anything else in this module runs, so an error during setup is caught.
 // Mirror this in any future popup page with its own `context` tag.
@@ -262,6 +269,60 @@ async function pullFromCloud(videoId) {
   } catch {
     // Pull is best-effort — don't block the user
   }
+}
+
+// ─── Guided onboarding tour — Sub-tour B (Active Recall) ───────────────────
+// Auto-launches the first time the side panel opens, whether that's a
+// handoff from Sub-tour A on the YouTube page or the user's first-ever open.
+// See docs/guided-tour-spec.md.
+const TOUR_POPOVER_CLASS = 'clipmark-tour-popover';
+
+async function getTourState() {
+  const r = await syncGet({ tourState: {} });
+  return r.tourState || {};
+}
+
+async function setTourState(partial) {
+  const current = await getTourState();
+  await syncSet({ tourState: { ...current, ...partial } });
+}
+
+async function runSidePanelTour() {
+  if ((await getTourState()).sidePanelTour) return;
+
+  const tab = await getCurrentTab();
+  const videoId = tab?.url ? extractVideoId(tab.url) : null;
+  const bookmarks = videoId ? await getVideoBookmarksLocal(videoId) : [];
+
+  const steps = bookmarks.length
+    ? [{
+        element: '#revisit-mode-btn',
+        popover: {
+          title: 'Active Recall',
+          description:
+            "Once you've saved a few moments, Active Recall quizzes you before each clip plays — real retention, not just a replay.",
+          side: 'top',
+          align: 'center',
+          popoverClass: TOUR_POPOVER_CLASS,
+          doneBtnText: 'Got it',
+        },
+      }]
+    : [{
+        popover: {
+          title: 'Active Recall',
+          description: "Come back here once you've saved a moment or two — Active Recall will quiz you on them before each clip plays.",
+          popoverClass: TOUR_POPOVER_CLASS,
+          doneBtnText: 'Got it',
+        },
+      }];
+
+  driver({
+    showButtons: ['next', 'close'],
+    allowClose: true,
+    waitForElement: 3000,
+    onDestroyed: () => setTourState({ sidePanelTour: true }),
+    steps,
+  }).drive();
 }
 
 async function getVideoTitles() {
@@ -1245,6 +1306,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadAuthState();
   checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
   refreshEntitlement();
+  runSidePanelTour();
+  document.getElementById('replay-tour-btn')?.addEventListener('click', async () => {
+    await setTourState({ youtubeTour: false, sidePanelTour: false });
+    runSidePanelTour();
+  });
   window.addEventListener('focus', refreshEntitlement);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refreshEntitlement();
