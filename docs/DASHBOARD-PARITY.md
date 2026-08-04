@@ -219,3 +219,36 @@ affiliate are genuinely web-only with zero extension equivalent.
   an unrelated-file edit.
 - Verified: `cd webapp && npx tsc --noEmit` clean, `npm run test:unit:webapp`
   96/96 passing (no test referenced the removed pages).
+
+### Iteration 2 — fix the broken Reminders create/edit form (P0)
+Rewrote `webapp/app/dashboard/queue/RemindersContent.tsx`:
+
+- Fixed the field mismatch: the form now submits `frequency` (the
+  `once|daily|weekly|biweekly|monthly` enum the schema/API actually expect,
+  replacing the old numeric `frequency_days` that was silently dropped) and
+  `next_due_at` (previously never sent at all, despite being `NOT NULL`).
+  This is what made "Schedule Reminder" throw on every submit before this
+  change.
+- Added the two fields the extension's create form has and web's didn't:
+  a Start Date picker and an optional Label input (both already
+  supported by `queue/actions.ts::createReminder` and the
+  `revisit_reminders` schema — only the UI was missing them).
+- Added Edit-in-place (populates the form from an existing reminder;
+  submitting deletes the old row and creates the new one, mirroring the
+  extension's own edit flow in `dashboard.js`, since there's no dedicated
+  update action) and wired up `markReminderDone` — it already existed in
+  `queue/actions.ts` but had no caller anywhere in the UI.
+- Fixed the reminder-card CSS classes to the ones actually defined in
+  `page.module.css` (`cardTitle`/`cardMeta`/`freqText` — the old code
+  referenced `targetName`/`meta`/`freq`, which don't exist in that module and
+  silently rendered unstyled).
+- Not done (still a gap vs. extension, lower priority): the extension's
+  tabbed Target Type UI and the live content-preview panel that updates as
+  the target-type tab changes. Kept the existing select+optgroup approach,
+  which already correctly encodes target type per option.
+
+Verified: `cd webapp && npx tsc --noEmit` clean, `npm run test:unit:webapp`
+96/96 passing. Not visually verified in a browser — the dashboard is
+auth-gated (redirects to `/signin` without a real Supabase session) and no
+local Supabase project is configured in this environment; reasoned from
+source and the schema/migration file instead.
