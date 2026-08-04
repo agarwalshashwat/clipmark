@@ -317,6 +317,33 @@
   }
 }
 
+/* Scroll-reveal (see (marketing)/ScrollReveal.tsx). Visible by default —
+   only hidden once .cm-js-reveal confirms the client script actually ran,
+   so a no-JS visitor or a failed script load never loses the content. */
+.cm-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+html.cm-js-reveal .cm-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.cm-js-reveal .cm-reveal--visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.cm-js-reveal .cm-reveal {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .switch-link {
   background: transparent;
   border: none;

@@ -11,5 +11,8 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.1.0-beta.29",
     "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "driver.js": "^1.8.0"
   }
 }

@@ -6,6 +6,8 @@ import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
+import { ScrollReveal } from './ScrollReveal';
+import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
 
 export const metadata: Metadata = {
   title: 'Clipmark — Turn YouTube Into Video Flashcards You Remember',
@@ -267,42 +269,7 @@ export default async function Home({
               borderRadius: 40, filter: 'blur(80px)', zIndex: 0,
             }} />
             <div style={{ position: 'relative', zIndex: 1, background: '#111111', borderRadius: 36, padding: 16, boxShadow: '0 32px 100px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ aspectRatio: '16/9', background: '#050505', borderRadius: 24, position: 'relative', overflow: 'hidden' }}>
-                {/* Ambient gradient instead of external image */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a, #050505, #1e1b4b)', opacity: 0.95 }} />
-                {/* Progress bar */}
-                <div style={{ position: 'absolute', bottom: 48, left: 32, right: 32, height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 9999 }}>
-                  <div style={{ position: 'absolute', left: '15%', height: '100%', width: '24%', background: 'var(--accent)', borderRadius: 9999, boxShadow: '0 0 12px rgba(20,184,166,0.3)' }} />
-                  <div style={{ position: 'absolute', left: '45%', height: '100%', width: '12%', background: 'var(--secondary)', borderRadius: 9999, boxShadow: '0 0 12px rgba(139,92,246,0.3)' }} />
-                  <div style={{ position: 'absolute', left: '70%', height: '100%', width: '20%', background: 'var(--accent)', borderRadius: 9999, boxShadow: '0 0 12px rgba(20,184,166,0.3)' }} />
-                </div>
-                {/* Glass side panel */}
-                <div style={{
-                  position: 'absolute', top: 20, right: 20, bottom: 20, width: 260,
-                  background: 'rgba(20, 20, 25, 0.7)', backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20,
-                  padding: 24, display: 'flex', flexDirection: 'column', gap: 20
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 9999, background: '#ef4444' }} />
-                    <div style={{ height: 10, width: 80, background: 'rgba(255,255,255,0.2)', borderRadius: 5 }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {[1, 2, 3].map(i => (
-                      <div key={i} style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ height: 8, width: i === 2 ? '85%' : '60%', background: 'rgba(255,255,255,0.15)', borderRadius: 4, marginBottom: 8 }} />
-                        <div style={{ height: 6, width: '40%', background: 'var(--accent)', opacity: 0.6, borderRadius: 3 }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Play icon */}
-                <div style={{ position: 'absolute', top: '50%', left: '40%', transform: 'translate(-50%, -50%)' }}>
-                  <div style={{ width: 84, height: 84, borderRadius: 9999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 48, color: 'white', marginLeft: 4 }}>play_arrow</span>
-                  </div>
-                </div>
-              </div>
+              <HeroDemoVideo />
             </div>
           </div>
         </div>
@@ -658,28 +625,30 @@ export default async function Home({
       {/* ── How It Works ────────────────────────────────────────────────── */}
       <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 80 }}>
-            <span className="cm-section-label">How It Works</span>
-            <h2 style={{ 
-              fontSize: 'clamp(32px, 5vw, 48px)', 
-              fontWeight: 800, 
-              marginBottom: 24, 
-              fontFamily: "var(--font-display)", 
-              letterSpacing: '-0.5px', 
-              color: '#1A1C1D' 
-            }}>
-              The Curator&apos;s Journey
-            </h2>
-            <p style={{ 
-              fontSize: 18, 
-              color: '#545f6c', 
-              lineHeight: 1.6, 
-              maxWidth: 600, 
-              margin: '0 auto'
-            }}>
-              Three steps to turn passive watching into active, searchable knowledge.
-            </p>
-          </div>
+          <ScrollReveal>
+            <div style={{ textAlign: 'center', marginBottom: 80 }}>
+              <span className="cm-section-label">How It Works</span>
+              <h2 style={{
+                fontSize: 'clamp(32px, 5vw, 48px)',
+                fontWeight: 800,
+                marginBottom: 24,
+                fontFamily: "var(--font-display)",
+                letterSpacing: '-0.5px',
+                color: '#1A1C1D'
+              }}>
+                The Curator&apos;s Journey
+              </h2>
+              <p style={{
+                fontSize: 18,
+                color: '#545f6c',
+                lineHeight: 1.6,
+                maxWidth: 600,
+                margin: '0 auto'
+              }}>
+                Three steps to turn passive watching into active, searchable knowledge.
+              </p>
+            </div>
+          </ScrollReveal>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32, position: 'relative' }}>
             {/* Timeline connector (decorative, desktop only) */}
@@ -704,41 +673,43 @@ export default async function Home({
                 desc: 'Active Recall brings saved moments back on a spaced schedule and quizzes you before replaying the clip.',
                 icon: 'psychology_alt'
               },
-            ].map(({ num, title, desc, icon }) => (
-              <div key={num} className="cm-card">
-                <div className="cm-icon-badge">
-                  <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
+            ].map(({ num, title, desc, icon }, i) => (
+              <ScrollReveal key={num} delayMs={i * 150}>
+                <div className="cm-card">
+                  <div className="cm-icon-badge">
+                    <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
+                  </div>
+                  <span className="cm-step-tag">Step {num}</span>
+                  <h4 style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    marginBottom: 16,
+                    fontFamily: "var(--font-display)",
+                    color: '#1A1C1D'
+                  }}>
+                    {title}
+                  </h4>
+                  <p style={{ color: '#545f6c', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
+
+                  <a
+                    href="#faq"
+                    aria-label={`Learn more: ${title}`}
+                    style={{
+                    marginTop: 'auto',
+                    paddingTop: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: '#14B8A6',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    textDecoration: 'none'
+                  }}
+                  >
+                    Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                  </a>
                 </div>
-                <span className="cm-step-tag">Step {num}</span>
-                <h4 style={{ 
-                  fontSize: 22, 
-                  fontWeight: 800, 
-                  marginBottom: 16, 
-                  fontFamily: "var(--font-display)", 
-                  color: '#1A1C1D' 
-                }}>
-                  {title}
-                </h4>
-                <p style={{ color: '#545f6c', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
-                
-                <a
-                  href="#faq"
-                  aria-label={`Learn more: ${title}`}
-                  style={{ 
-                  marginTop: 'auto', 
-                  paddingTop: 32, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 8, 
-                  color: '#14B8A6', 
-                  fontWeight: 700, 
-                  fontSize: 14,
-                  textDecoration: 'none'
-                }}
-                >
-                  Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
-                </a>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
