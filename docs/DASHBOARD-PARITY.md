@@ -194,3 +194,28 @@ severity:
     relocate safely — documented instead of removed (see §8/§9).
 
 No code changes yet in this iteration beyond this document.
+
+### Iteration 1 — relocate referral/affiliate extras
+Confirmed (via `DashboardChrome.tsx`, the extension's `dashboard.html` Account
+section, and both features' dedicated DB tables/API routes) that referral and
+affiliate are genuinely web-only with zero extension equivalent.
+
+- Branched `feature/dashboard-extras-hold` off `main`, copied
+  `webapp/app/dashboard/referral/` and `webapp/app/dashboard/affiliate/`
+  there unchanged (content was still identical to `main` at that point),
+  and added `docs/DASHBOARD-EXTRAS-HOLD.md` documenting what's held and how
+  to restore it.
+- On `sync/dashboard-parity`: deleted `webapp/app/dashboard/referral/` and
+  `webapp/app/dashboard/affiliate/`, removed their sidebar entries from
+  `DashboardChrome.tsx`, and dropped the now-unused `isAffiliate` prop from
+  `DashboardChrome`/`layout.tsx` (including the `profiles.is_affiliate`
+  column from the layout's query) since it had no remaining consumer.
+- **Known follow-up, intentionally not fixed here**: the public marketing
+  page `app/(marketing)/affiliate/page.tsx` links to `/dashboard/affiliate`
+  in two CTAs. That page is outside `webapp/app/dashboard/**` (out of this
+  sync's scope) and still exists on `main`; once this branch merges those
+  links 404 until the affiliate program is reintroduced from the hold
+  branch. Flagged in the PR description rather than patched here to avoid
+  an unrelated-file edit.
+- Verified: `cd webapp && npx tsc --noEmit` clean, `npm run test:unit:webapp`
+  96/96 passing (no test referenced the removed pages).

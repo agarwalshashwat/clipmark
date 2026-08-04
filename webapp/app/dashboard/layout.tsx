@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const [{ data: profileData }, { count: dueCount }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('username, avatar_url, is_pro, is_affiliate')
+      .select('username, avatar_url, is_pro')
       .eq('id', user.id)
       .single(),
     supabase
@@ -25,12 +25,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const avatarUrl = (profileData?.avatar_url as string | null) ?? null;
   const avatarInitial = username[0].toUpperCase();
   const isPro = (profileData?.is_pro as boolean | null) ?? false;
-  const isAffiliate = (profileData?.is_affiliate as boolean | null) ?? false;
   const dueReminderCount = dueCount ?? 0;
 
   return (
     <Suspense>
-      <DashboardChrome username={username} avatarInitial={avatarInitial} avatarUrl={avatarUrl} isPro={isPro} isAffiliate={isAffiliate} dueReminderCount={dueReminderCount}>
+      <DashboardChrome username={username} avatarInitial={avatarInitial} avatarUrl={avatarUrl} isPro={isPro} dueReminderCount={dueReminderCount}>
         {children}
       </DashboardChrome>
     </Suspense>

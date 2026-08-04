@@ -9,12 +9,11 @@ interface Props {
   avatarInitial: string;
   avatarUrl: string | null;
   isPro: boolean;
-  isAffiliate: boolean;
   dueReminderCount: number;
   children: React.ReactNode;
 }
 
-export default function DashboardChrome({ username, avatarInitial, avatarUrl, isPro, isAffiliate, dueReminderCount, children }: Props) {
+export default function DashboardChrome({ username, avatarInitial, avatarUrl, isPro, dueReminderCount, children }: Props) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -130,21 +129,6 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             <span className={styles.sideNavItemLabel}>Shared</span>
           </a>
           <p className={styles.sideNavSection}>Account</p>
-          {isAffiliate ? (
-            <a href="/dashboard/affiliate" className={`${styles.sideNavItem} ${isActive('/dashboard/affiliate') ? styles.sideNavItemActive : ''}`}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>campaign</span>
-              <span className={styles.sideNavItemLabel}>Affiliate</span>
-            </a>
-          ) : (
-            <a href="/affiliate" className={styles.sideNavItem}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>attach_money</span>
-              <span className={styles.sideNavItemLabel}>Earn with Clipmark</span>
-            </a>
-          )}
-          <a href="/dashboard/referral" className={`${styles.sideNavItem} ${isActive('/dashboard/referral') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>redeem</span>
-            <span className={styles.sideNavItemLabel}>Refer &amp; Earn</span>
-          </a>
           {!isPro ? (
             <a href="/upgrade" className={`${styles.sideNavItem} ${styles.sideNavUpgrade}`}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>auto_awesome</span>
