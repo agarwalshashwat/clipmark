@@ -432,6 +432,12 @@
 }
 @media (min-width: 1024px) { .videoCard { flex-direction: row; } }
 
+/* The video with the most bookmarks, when there's more than one video --
+   mirrors the extension's .vc-card--featured (dashboard.js). */
+.videoCardFeatured {
+  box-shadow: 0 4px 24px rgba(26, 28, 29, 0.06), 0 0 0 2px rgba(20, 184, 166, 0.35);
+}
+
 .videoLeft {
   padding: 24px;
   display: flex;

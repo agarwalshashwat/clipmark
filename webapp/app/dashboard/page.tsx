@@ -8,9 +8,9 @@ export const metadata = { title: 'Dashboard — Clipmark' };
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; success?: string }>;
+  searchParams: Promise<{ view?: string; success?: string; q?: string }>;
 }) {
-  const { view = 'library', success } = await searchParams;
+  const { view = 'library', success, q } = await searchParams;
 
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
@@ -67,6 +67,7 @@ export default async function DashboardPage({
         collections={collections}
         isPro={isPro}
         initialView={view}
+        initialQuery={q ?? ''}
         successBanner={successBanner}
         groups={(groupsData ?? []).map(g => ({ id: g.id as string, name: g.name as string }))}
       />

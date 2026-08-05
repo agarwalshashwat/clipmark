@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import styles from './page.module.css';
-import { createGroup, deleteGroup, addCollectionToGroup, removeCollectionFromGroup } from './actions';
+import { createGroup, deleteGroup, addCollectionToGroup, removeCollectionFromGroup, renameGroup, reorderGroup } from './actions';
 import type { Collection } from '@/lib/supabase';
 import Link from 'next/link';
 
@@ -55,6 +55,19 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
   const handleDelete = (groupId: string) => {
     if (!confirm('Delete this group? The bookmarks inside are not affected.')) return;
     startTransition(() => deleteGroup(groupId));
+  };
+
+  // Mirrors extension/src/popup/dashboard.js's renameGroup (inline
+  // contentEditable there); prompt() is simpler here and gives the same
+  // capability.
+  const handleRename = (groupId: string, currentName: string) => {
+    const name = window.prompt('Rename group:', currentName);
+    if (!name || !name.trim() || name.trim() === currentName) return;
+    startTransition(() => renameGroup(groupId, name.trim()));
+  };
+
+  const handleReorder = (groupId: string, direction: 'up' | 'down') => {
+    startTransition(() => reorderGroup(groupId, direction));
   };
 
   return (
@@ -116,7 +129,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
       )}
 
       <div className={styles.groups}>
-        {userGroups.map(group => (
+        {userGroups.map((group, groupIdx) => (
           <div key={group.id} className={styles.group}>
             <div className={styles.groupHeader}>
               <h3 className={styles.groupTag}>{group.name}</h3>
@@ -124,8 +137,34 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                 {group.type === 'tag' ? `Tag: #${group.tag_name}` : 'Manual'} · {group.collections.length} videos
               </span>
               <div style={{ flex: 1 }} />
-              <button 
-                className={styles.removeBtn} 
+              <button
+                className={styles.removeBtn}
+                onClick={() => handleReorder(group.id, 'up')}
+                disabled={groupIdx === 0 || isPending}
+                style={{ position: 'static', opacity: groupIdx === 0 ? 0.3 : 1 }}
+                title="Move up"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_upward</span>
+              </button>
+              <button
+                className={styles.removeBtn}
+                onClick={() => handleReorder(group.id, 'down')}
+                disabled={groupIdx === userGroups.length - 1 || isPending}
+                style={{ position: 'static', opacity: groupIdx === userGroups.length - 1 ? 0.3 : 1 }}
+                title="Move down"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_downward</span>
+              </button>
+              <button
+                className={styles.removeBtn}
+                onClick={() => handleRename(group.id, group.name)}
+                style={{ position: 'static', opacity: 1 }}
+                title="Rename group"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit</span>
+              </button>
+              <button
+                className={styles.removeBtn}
                 onClick={() => handleDelete(group.id)}
                 style={{ position: 'static', opacity: 1 }}
                 title="Delete group"

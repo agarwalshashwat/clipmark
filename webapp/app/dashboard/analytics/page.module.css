@@ -147,6 +147,15 @@
   text-align: right;
 }
 
+.tagVideoCount {
+  width: 70px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* ── Generic Empty State ──────────────────────────────────────────────────── */
 .empty {
   display: flex;

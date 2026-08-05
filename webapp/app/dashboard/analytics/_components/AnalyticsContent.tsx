@@ -11,6 +11,7 @@ interface TagStat {
   name: string;
   count: number;
   color: string;
+  videoCount: number;
 }
 
 interface Props {
@@ -88,6 +89,7 @@ export default function AnalyticsContent({ heatmap, tags }: Props) {
                   />
                 </div>
                 <span className={styles.tagCount}>{tag.count}</span>
+                <span className={styles.tagVideoCount}>{tag.videoCount} video{tag.videoCount !== 1 ? 's' : ''}</span>
               </div>
             ))}
           </div>

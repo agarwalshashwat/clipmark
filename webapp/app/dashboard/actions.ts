@@ -38,6 +38,46 @@ export async function deleteBookmark(videoId: string, bookmarkId: number) {
   revalidatePath('/dashboard');
 }
 
+// ─── Update a bookmark's Extended Notes (Pro) ─────────────────────────────────
+// Mirrors extension/src/popup/dashboard.js::updateBookmark's notes path. The
+// extension only gates this client-side (chrome.storage.sync has no server
+// round-trip to enforce against); the webapp does have one, so — matching how
+// the rest of this codebase treats server-callable Pro features (see
+// queue/data.ts::loadRemindersQueue) — Pro is re-checked here too, not just
+// in the UI, so a free user can't bypass the client gate by calling the
+// action directly.
+export async function updateBookmarkNotes(videoId: string, bookmarkId: number, notes: string) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', user.id)
+    .single();
+  if (profile?.is_pro !== true) throw new Error('Extended Notes is a Pro feature');
+
+  const { data: row } = await supabase
+    .from('user_bookmarks')
+    .select('bookmarks')
+    .eq('user_id', user.id)
+    .eq('video_id', videoId)
+    .single();
+
+  if (!row) return;
+
+  const updated = (row.bookmarks as Bookmark[]).map(b => b.id === bookmarkId ? { ...b, notes } : b);
+
+  await supabase
+    .from('user_bookmarks')
+    .update({ bookmarks: updated, updated_at: new Date().toISOString() })
+    .eq('user_id', user.id)
+    .eq('video_id', videoId);
+
+  revalidatePath('/dashboard');
+}
+
 // ─── Bulk delete bookmarks ────────────────────────────────────────────────────
 export async function bulkDeleteBookmarks(pairs: { videoId: string; bookmarkId: number }[]) {
   const supabase = await createServerSupabase();

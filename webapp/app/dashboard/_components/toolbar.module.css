@@ -212,3 +212,87 @@
   letter-spacing: 0.05em;
   vertical-align: middle;
 }
+
+/* ── Saved filter pills (Pro) ─────────────────────────────────────────────── */
+.savedFiltersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 16px;
+}
+
+.savedFilterPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(20, 184, 166, 0.08);
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  border-radius: 9999px;
+  padding: 4px 6px 4px 12px;
+}
+
+.savedFilterPillName {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: #006b5f;
+  font-family: inherit;
+  padding: 0;
+}
+
+.savedFilterPillDel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+.savedFilterPillDel:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+/* ── Extended Notes (Pro) ─────────────────────────────────────────────────── */
+.notesBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.notesBtn:hover { color: #14B8A6; background: rgba(20, 184, 166, 0.08); }
+
+.notesPanel {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.notesTextarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  resize: vertical;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+  outline: none;
+  line-height: 1.5;
+  min-height: 40px;
+}
+.notesTextarea::placeholder { color: #94a3b8; }
+
+.notesHint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}

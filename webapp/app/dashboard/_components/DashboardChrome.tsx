@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import styles from '../shell.module.css';
 
 interface Props {
@@ -9,17 +9,35 @@ interface Props {
   avatarInitial: string;
   avatarUrl: string | null;
   isPro: boolean;
-  isAffiliate: boolean;
   dueReminderCount: number;
   children: React.ReactNode;
 }
 
-export default function DashboardChrome({ username, avatarInitial, avatarUrl, isPro, isAffiliate, dueReminderCount, children }: Props) {
+export default function DashboardChrome({ username, avatarInitial, avatarUrl, isPro, dueReminderCount, children }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
     return pathname.startsWith(href);
+  };
+
+  // Header search — mirrors the extension's header search input (kept in
+  // sync with the toolbar search in dashboard.js). The web dashboard's
+  // toolbar search is deliberately local React state, not URL-driven, to
+  // avoid a server round-trip on every keystroke — so true live two-way
+  // sync isn't possible without that trade-off. Instead this is a "jump to
+  // All Bookmarks filtered by this query" entry point: it only navigates
+  // on submit, not per keystroke, and DashboardContent picks up `q` as its
+  // initial query (see dashboard/page.tsx).
+  const [headerQuery, setHeaderQuery] = useState(() => searchParams.get('q') ?? '');
+  useEffect(() => { setHeaderQuery(searchParams.get('q') ?? ''); }, [searchParams]);
+
+  const handleHeaderSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = headerQuery.trim();
+    router.push(q ? `/dashboard?q=${encodeURIComponent(q)}` : '/dashboard');
   };
 
   // Hydration-safe: always start expanded, read localStorage after mount
@@ -56,10 +74,17 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           </nav>
         </div>
         <div className={styles.topBarRight}>
-          <div className={styles.searchBox}>
+          <form className={styles.searchBox} onSubmit={handleHeaderSearch} role="search">
             <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6c7a77' }}>search</span>
-            <input type="text" placeholder="Search your bookmarks..." className={styles.searchInput} />
-          </div>
+            <input
+              type="text"
+              placeholder="Search your bookmarks..."
+              className={styles.searchInput}
+              value={headerQuery}
+              onChange={e => setHeaderQuery(e.target.value)}
+              title="Press Enter to search all bookmarks"
+            />
+          </form>
           {!isPro
             ? <a href="/upgrade" className={styles.upgradeCta}>✦ Upgrade</a>
             : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: '#006b5f', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
@@ -130,21 +155,6 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             <span className={styles.sideNavItemLabel}>Shared</span>
           </a>
           <p className={styles.sideNavSection}>Account</p>
-          {isAffiliate ? (
-            <a href="/dashboard/affiliate" className={`${styles.sideNavItem} ${isActive('/dashboard/affiliate') ? styles.sideNavItemActive : ''}`}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>campaign</span>
-              <span className={styles.sideNavItemLabel}>Affiliate</span>
-            </a>
-          ) : (
-            <a href="/affiliate" className={styles.sideNavItem}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>attach_money</span>
-              <span className={styles.sideNavItemLabel}>Earn with Clipmark</span>
-            </a>
-          )}
-          <a href="/dashboard/referral" className={`${styles.sideNavItem} ${isActive('/dashboard/referral') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>redeem</span>
-            <span className={styles.sideNavItemLabel}>Refer &amp; Earn</span>
-          </a>
           {!isPro ? (
             <a href="/upgrade" className={`${styles.sideNavItem} ${styles.sideNavUpgrade}`}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>auto_awesome</span>

@@ -27,11 +27,29 @@ export default async function GroupsPage() {
   }));
 
   // ── User-created groups ──────────────────────────────────────────────────
-  const { data: groupsData } = await supabase
+  // Ordering by `position` needs migrations/015_groups_position.sql applied.
+  // On any environment where it hasn't run yet, ordering by a column that
+  // doesn't exist fails the *entire* query (PostgREST/Postgres error, not a
+  // thrown exception — supabase-js returns { data: null, error }), which
+  // would otherwise render "My Groups" as empty even though the rows still
+  // exist. Fall back to the pre-Iteration-8 ordering (created_at only) so
+  // the page keeps working, just without the persisted custom order, until
+  // the migration is applied.
+  let { data: groupsData, error: groupsError } = await supabase
     .from('groups')
     .select('*, group_collections(collection_id)')
     .eq('user_id', user.id)
+    .order('position', { ascending: true })
     .order('created_at', { ascending: false });
+
+  if (groupsError) {
+    console.warn('[groups] position-ordered query failed (migration 015 not applied yet?) — falling back to created_at ordering:', groupsError.message);
+    ({ data: groupsData } = await supabase
+      .from('groups')
+      .select('*, group_collections(collection_id)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }));
+  }
 
   const collectionMap = new Map(collections.map(c => [c.id, c]));
 

@@ -16,6 +16,8 @@ import {
 import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
 import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
+import BookmarkNotes from './BookmarkNotes';
+import { getSavedSearches, saveSavedSearch, deleteSavedSearch, type SavedSearch } from '../_utils/savedSearches';
 import type { Collection, Bookmark } from '@/lib/supabase';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -116,7 +118,7 @@ function exportJSON(collections: Collection[]) {
 }
 
 function exportCSV(collections: Collection[]) {
-  const rows = ['Video ID,Video Title,Timestamp,Description,Tags,Created At'];
+  const rows = ['Video ID,Video Title,Timestamp,Description,Tags,Notes,Created At'];
   for (const c of collections) {
     for (const b of (c.bookmarks ?? [])) {
       const row = [
@@ -125,6 +127,7 @@ function exportCSV(collections: Collection[]) {
         formatTimestamp(b.timestamp),
         `"${(b.description ?? '').replace(/"/g, '""')}"`,
         `"${(b.tags ?? []).join(', ')}"`,
+        `"${(b.notes ?? '').replace(/"/g, '""')}"`,
         b.createdAt,
       ];
       rows.push(row.join(','));
@@ -142,6 +145,7 @@ function exportMarkdown(collections: Collection[]) {
       const ts = formatTimestamp(b.timestamp);
       const tags = (b.tags ?? []).map((t: string) => `#${t}`).join(' ');
       lines.push(`- **[${ts}](${youtubeTimestampUrl(c.video_id, b.timestamp)})** — ${b.description || 'No note'} ${tags}`);
+      if (b.notes && b.notes.trim()) lines.push(`  > ${b.notes.replace(/\n/g, '\n  > ')}`);
     }
     lines.push('');
   }
@@ -154,6 +158,57 @@ function exportAnki(collections: Collection[]) {
   downloadFile(buildAnkiTsvFromCollections(collections), 'clipmark-anki.txt', 'text/plain');
 }
 
+// Pro. Mirrors extension/src/popup/dashboard.js::exportObsidian.
+function exportObsidian(collections: Collection[]) {
+  const lines: string[] = ['# Clipmark Export — Obsidian\n'];
+  for (const c of collections) {
+    const title = c.video_title ?? c.video_id;
+    lines.push(`> [!note] [${title}](https://www.youtube.com/watch?v=${c.video_id})\n`);
+    for (const b of [...(c.bookmarks ?? [])].sort((a, b) => a.timestamp - b.timestamp)) {
+      const url = youtubeTimestampUrl(c.video_id, b.timestamp);
+      const tagStr = (b.tags ?? []).length ? ` ${(b.tags ?? []).map((t: string) => `#${t}`).join(' ')}` : '';
+      lines.push(`> - [${formatTimestamp(b.timestamp)}](${url}) — ${b.description || 'No note'}${tagStr}`);
+      if (b.notes?.trim()) lines.push(`>   > ${b.notes.replace(/\n/g, '\n>   > ')}`);
+    }
+    lines.push('');
+  }
+  downloadFile(lines.join('\n'), 'clipmark-obsidian.md', 'text/markdown');
+}
+
+// Pro. Mirrors extension/src/popup/dashboard.js::exportNotionCSV.
+function exportNotionCSV(collections: Collection[]) {
+  const header = 'Name,Video,URL,Tags,Notes,Date\n';
+  const rows = collections.flatMap(c =>
+    (c.bookmarks ?? []).map((b: Bookmark) => {
+      const url = youtubeTimestampUrl(c.video_id, b.timestamp);
+      return [
+        `${formatTimestamp(b.timestamp)} — ${(b.description || '').replace(/"/g, '""')}`,
+        (c.video_title || '').replace(/"/g, '""'),
+        url,
+        (b.tags ?? []).join(', '),
+        (b.notes ?? '').replace(/"/g, '""'),
+        b.createdAt ? new Date(b.createdAt).toISOString().split('T')[0] : '',
+      ].map(v => `"${v}"`).join(',');
+    })
+  ).join('\n');
+  downloadFile(header + rows, 'clipmark-notion.csv', 'text/csv');
+}
+
+// Pro. Mirrors extension/src/popup/dashboard.js::exportReadingList.
+function exportReadingList(collections: Collection[]) {
+  const lines: string[] = ['Clipmark — Reading List Export', '='.repeat(40), ''];
+  for (const c of collections) {
+    const title = c.video_title ?? c.video_id;
+    lines.push(`▶ ${title}`, `   https://www.youtube.com/watch?v=${c.video_id}`, '');
+    for (const b of [...(c.bookmarks ?? [])].sort((a, b) => a.timestamp - b.timestamp)) {
+      lines.push(`   ${formatTimestamp(b.timestamp)}  ${b.description || 'No note'}`);
+      if (b.notes?.trim()) lines.push(`   Note: ${b.notes}`);
+    }
+    lines.push('');
+  }
+  downloadFile(lines.join('\n'), 'clipmark-reading-list.txt', 'text/plain');
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Group { id: string; name: string; }
@@ -162,18 +217,24 @@ interface Props {
   collections: Collection[];
   isPro: boolean;
   initialView: string;
+  initialQuery?: string;
   successBanner?: React.ReactNode;
   groups?: Group[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function DashboardContent({ collections, isPro, initialView, successBanner, groups = [] }: Props) {
+export default function DashboardContent({ collections, isPro, initialView, initialQuery = '', successBanner, groups = [] }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
+  // The header search (DashboardChrome) navigates here with a `q` param on
+  // submit rather than sharing live state (see that component for why) —
+  // pick up a new value if it changes without a full remount (e.g. searching
+  // again from the header while already on this page).
+  useEffect(() => { if (initialQuery) setQuery(initialQuery); }, [initialQuery]);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'timestamp'>('newest');
   const [viewMode, setViewMode] = useState<'library' | 'timeline'>(
     initialView === 'timeline' ? 'timeline' : 'library'
@@ -189,6 +250,38 @@ export default function DashboardContent({ collections, isPro, initialView, succ
   const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
   const [groupingVideo, setGroupingVideo] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Pro upgrade toast (shared by Extended Notes, Saved Searches, ...) ───────
+  const showProToast = useCallback((message: string) => {
+    setCopyToast(message);
+    setTimeout(() => setCopyToast(''), 3000);
+  }, []);
+  const handleNotesUpgradeNeeded = useCallback(
+    () => showProToast('Extended Notes is available on Pro.'),
+    [showProToast]
+  );
+
+  // ── Saved Searches (Pro) ─────────────────────────────────────────────────────
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  useEffect(() => { setSavedSearches(getSavedSearches()); }, []);
+
+  const handleSaveFilter = () => {
+    if (!isPro) { showProToast('Saved Filters is available on Pro.'); return; }
+    const name = window.prompt('Name this filter:', query);
+    if (!name || !name.trim()) return;
+    setSavedSearches(saveSavedSearch(name.trim(), query, sortOrder));
+    setCopyToast('Filter saved!');
+    setTimeout(() => setCopyToast(''), 2000);
+  };
+
+  const handleApplySavedFilter = (s: SavedSearch) => {
+    setQuery(s.query);
+    setSortOrder(s.sort);
+  };
+
+  const handleDeleteSavedFilter = (id: number) => {
+    setSavedSearches(deleteSavedSearch(id));
+  };
 
   // ── Filtering ───────────────────────────────────────────────────────────────
 
@@ -391,6 +484,16 @@ export default function DashboardContent({ collections, isPro, initialView, succ
               </button>
             )}
           </div>
+          {query && (
+            <button
+              className={toolbarStyles.toolbarBtn}
+              onClick={handleSaveFilter}
+              title="Save this search as a filter"
+              style={{ fontSize: 13, fontWeight: 700, padding: '10px 14px' }}
+            >
+              ⊕ Save{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+            </button>
+          )}
           <select
             className={toolbarStyles.sortSelect}
             value={sortOrder}
@@ -472,6 +575,55 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   >
                     ↓ Anki{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
                   </button>
+                  {/* Obsidian / Notion / Reading List — Pro-only, no free
+                      allowance (mirrors extension/src/popup/dashboard.js
+                      exportObsidian / exportNotionCSV / exportReadingList,
+                      which gate on checkPro() with no usage cap). */}
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) {
+                        setCopyToast('Obsidian export is available on Pro.');
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
+                      exportObsidian(collections);
+                    }}
+                    title={isPro ? 'Export as an Obsidian-ready Markdown file' : 'Obsidian export — available on Pro'}
+                  >
+                    ↓ Obsidian{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) {
+                        setCopyToast('Notion CSV export is available on Pro.');
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
+                      exportNotionCSV(collections);
+                    }}
+                    title={isPro ? 'Export as a Notion-ready CSV' : 'Notion CSV export — available on Pro'}
+                  >
+                    ↓ Notion CSV{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
+                  <button
+                    className={toolbarStyles.exportBtn}
+                    onClick={() => {
+                      setExportOpen(false);
+                      if (!isPro) {
+                        setCopyToast('Reading List export is available on Pro.');
+                        setTimeout(() => setCopyToast(''), 3000);
+                        return;
+                      }
+                      exportReadingList(collections);
+                    }}
+                    title={isPro ? 'Export a plain-text reading list' : 'Reading List export — available on Pro'}
+                  >
+                    ↓ Reading List{!isPro && <span className={toolbarStyles.exportProTag}>PRO</span>}
+                  </button>
                   <hr className={toolbarStyles.exportDivider} />
                   <button className={toolbarStyles.exportBtn} onClick={() => { importInputRef.current?.click(); setExportOpen(false); }}>↑ Import JSON</button>
                 </div>
@@ -482,6 +634,31 @@ export default function DashboardContent({ collections, isPro, initialView, succ
           <input ref={importInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
         </div>
       </div>
+
+      {/* ── Saved filter pills (Pro) ── */}
+      {savedSearches.length > 0 && (
+        <div className={toolbarStyles.savedFiltersRow}>
+          {savedSearches.map(s => (
+            <div key={s.id} className={toolbarStyles.savedFilterPill}>
+              <button
+                className={toolbarStyles.savedFilterPillName}
+                onClick={() => handleApplySavedFilter(s)}
+                title={`Apply saved filter "${s.name}"`}
+              >
+                {s.name}
+              </button>
+              <button
+                className={toolbarStyles.savedFilterPillDel}
+                onClick={() => handleDeleteSavedFilter(s.id)}
+                title="Remove"
+                aria-label={`Remove saved filter ${s.name}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Bulk delete bar ── */}
       {selectedIds.size > 0 && (
@@ -608,12 +785,22 @@ export default function DashboardContent({ collections, isPro, initialView, succ
       )}
 
       {/* ── Library view ── */}
-      {viewMode === 'library' && filteredCollections.length > 0 && (
+      {viewMode === 'library' && filteredCollections.length > 0 && (() => {
+        // Highlight the video with the most bookmarks, but only when there's
+        // more than one — mirrors the extension's featuredKey computation in
+        // dashboard.js's renderBookmarks.
+        const featuredId = filteredCollections.length > 1
+          ? filteredCollections.reduce(
+              (best, c) => (c.bookmarks?.length ?? 0) > (best.bookmarks?.length ?? 0) ? c : best,
+              filteredCollections[0]
+            ).id
+          : null;
+        return (
         <div className={`${styles.videoGrid}${cardSize === 'medium' ? ' ' + styles.videoGridMedium : cardSize === 'small' ? ' ' + styles.videoGridSmall : ''}`}>
           {filteredCollections.map(c => {
             const sortedBookmarks = [...(c.bookmarks ?? [])].sort((a: Bookmark, b: Bookmark) => a.timestamp - b.timestamp);
             return (
-            <div key={c.id} className={styles.videoCard}>
+            <div key={c.id} className={`${styles.videoCard}${c.id === featuredId ? ' ' + styles.videoCardFeatured : ''}`}>
               <div className={styles.videoLeft}>
                 <a href={`https://www.youtube.com/watch?v=${c.video_id}`} className={styles.videoThumbWrap}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -659,6 +846,22 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>folder</span>
                     Group
+                  </button>
+                  {/* Start Active Recall for this video at any time (not just
+                      when due) — mirrors the extension's always-visible
+                      .vc-revisit-btn (dashboard.js), which the web dashboard
+                      previously only surfaced for videos already due. */}
+                  <button
+                    className={`${styles.videoActionBtn} ${styles.videoActionBtnSecondary}`}
+                    onClick={() => {
+                      if (!isPro) { showProToast('Active Recall is available on Pro.'); return; }
+                      handleStartRecall(c.video_id, sortedBookmarks.map(b => b.id));
+                    }}
+                    disabled={startingVideoId === c.video_id}
+                    title={bridgeReady ? 'Start Active Recall in the extension' : 'Open the video to start Active Recall in the extension'}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>psychology</span>
+                    {startingVideoId === c.video_id ? 'Starting…' : 'Recall'}
                   </button>
                 </div>
               </div>
@@ -714,6 +917,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               >
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                               </button>
+                              <BookmarkNotes videoId={c.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                             </div>
                           </div>
                           <p className={styles.threadNote}>{b.description || 'No note added.'}</p>
@@ -769,6 +973,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                                         <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
                                           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                                         </button>
+                                        <BookmarkNotes videoId={c.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                                       </div>
                                     </div>
                                     <p className={styles.threadNote}>{b.description || 'No note added.'}</p>
@@ -829,7 +1034,8 @@ export default function DashboardContent({ collections, isPro, initialView, succ
             {!isPro && <a href="/upgrade" className={styles.suggestionCta}>Explore Pro</a>}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Timeline view ── */}
       {viewMode === 'timeline' && allBookmarks.length > 0 && (
@@ -893,6 +1099,7 @@ export default function DashboardContent({ collections, isPro, initialView, succ
                               <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
                               </button>
+                              <BookmarkNotes videoId={group.collection.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                             </div>
                           </div>
                         );
