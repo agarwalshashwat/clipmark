@@ -74,6 +74,34 @@ describe('Dodo webhook handler (#2)', () => {
     assert.equal((update!.payload as { is_pro?: boolean }).is_pro, false);
   });
 
+  it('revokes Pro on subscription.expired', async () => {
+    const event = { type: 'subscription.expired', data: { metadata: { user_id: 'u1' }, subscription_id: 'sub_1' } };
+    const { client, calls } = makeFakeSupabase(() => ({ error: null }));
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(res.status, 200);
+    const update = calls.find((c) => c.table === 'profiles' && c.op === 'update');
+    assert.equal((update!.payload as { is_pro?: boolean }).is_pro, false);
+    assert.equal((update!.payload as { subscription_id?: null }).subscription_id, null);
+  });
+
+  it('extends the billing period on subscription.renewed without touching conversion tracking', async () => {
+    const event = {
+      type: 'subscription.renewed',
+      data: { metadata: { user_id: 'u1' }, subscription_id: 'sub_1', next_billing_date: '2026-09-01' },
+    };
+    const { client, calls } = makeFakeSupabase(() => ({ error: null }));
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(res.status, 200);
+    const update = calls.find((c) => c.table === 'profiles' && c.op === 'update');
+    assert.ok(update, 'expected a profiles UPDATE');
+    const payload = update!.payload as Record<string, unknown>;
+    assert.equal(payload.is_pro, true);
+    assert.equal(payload.subscription_period_end, '2026-09-01');
+    assert.equal(payload.cancel_at_period_end, false);
+    assert.equal(calls.filter((c) => c.table === 'affiliate_conversions' || c.table === 'referrals').length, 0,
+      'renewal is not a new conversion — no affiliate/referral bookkeeping');
+  });
+
   it('returns 500 when the refund revoke write fails', async () => {
     const event = { type: 'refund.succeeded', data: { payment_id: 'pay_1' } };
     const responder = (ctx: FakeCtx) => {
@@ -114,6 +142,60 @@ describe('Dodo webhook handler (#2)', () => {
     const convInsert = calls.find((c) => c.table === 'affiliate_conversions' && c.op === 'insert');
     assert.ok(convInsert, 'expected an affiliate_conversions insert');
     assert.equal((convInsert!.payload as { plan?: string }).plan, 'annual');
+  });
+});
+
+describe('Dodo may redeliver the same event — handler must not double-apply it', () => {
+  // Mutable state shared across both deliveries within a single test, so the
+  // second call sees exactly what the first call actually wrote — the same
+  // condition a real Dodo redelivery of the same webhook-id produces.
+  it('redelivering payment.succeeded grants Pro once and records exactly one affiliate conversion', async () => {
+    const event = {
+      type: 'payment.succeeded',
+      data: { metadata: { user_id: 'u1', affiliate_code: 'aff1' }, payment_id: 'pay_1', total_amount: 1000 },
+    };
+    const state = { isPro: false, conversions: 0 };
+    const responder = (ctx: FakeCtx) => {
+      if (ctx.table === 'profiles' && ctx.filters.some((f) => f[1] === 'affiliate_code')) {
+        return { data: { id: 'aff_owner', commission_rate: 0.3 } };
+      }
+      if (ctx.table === 'profiles' && ctx.op === 'select') return { data: { is_pro: state.isPro } };
+      if (ctx.table === 'profiles' && ctx.op === 'update') {
+        state.isPro = true;
+        return { error: null };
+      }
+      if (ctx.table === 'affiliate_conversions' && ctx.op === 'select') return { count: state.conversions };
+      if (ctx.table === 'affiliate_conversions' && ctx.op === 'insert') {
+        state.conversions += 1;
+        return { error: null };
+      }
+      return { error: null };
+    };
+    const { client, calls } = makeFakeSupabase(responder);
+
+    const first = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(first.status, 200);
+    const second = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(second.status, 200);
+
+    assert.equal(state.conversions, 1, 'redelivery must not double-record the affiliate conversion');
+    const grantUpdates = calls.filter((c) => c.table === 'profiles' && c.op === 'update');
+    assert.equal(grantUpdates.length, 2, 'both deliveries write, but idempotently — same is_pro:true both times');
+    for (const u of grantUpdates) assert.equal((u.payload as { is_pro?: boolean }).is_pro, true);
+  });
+
+  it('redelivering subscription.cancelled revokes Pro both times without erroring', async () => {
+    const event = { type: 'subscription.cancelled', data: { metadata: { user_id: 'u1' }, subscription_id: 'sub_1' } };
+    const { client, calls } = makeFakeSupabase(() => ({ error: null }));
+
+    const first = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    const second = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(first.status, 200);
+    assert.equal(second.status, 200);
+
+    const updates = calls.filter((c) => c.table === 'profiles' && c.op === 'update');
+    assert.equal(updates.length, 2);
+    for (const u of updates) assert.equal((u.payload as { is_pro?: boolean }).is_pro, false);
   });
 });
 
