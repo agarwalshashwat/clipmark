@@ -64,8 +64,8 @@ const FAQ_ITEMS = [
 const STEPS = [
   {
     number: '01',
-    title: 'Apply in your dashboard',
-    body: 'Pro subscribers with a 30-day-old account can apply in under a minute. Eligible applications are auto-approved — no waiting.',
+    title: 'Apply by email',
+    body: 'Pro subscribers with a 30-day-old account are eligible. Email us and we’ll set up your affiliate link.',
     icon: 'how_to_reg',
   },
   {
@@ -139,7 +139,11 @@ export default async function AffiliatePage() {
           </p>
 
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/dashboard/affiliate" className="cm-card" style={{
+            {/* In-app application (webapp/app/dashboard/affiliate) is
+                temporarily on hold (see feature/dashboard-extras-hold) —
+                route applications through email in the meantime rather
+                than link to a page that doesn't exist on this branch. */}
+            <a href="mailto:affiliates@clipmark.mithahara.com?subject=Affiliate%20Program%20Application" className="cm-card" style={{
               padding: '16px 32px',
               background: '#0f172a',
               color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
@@ -147,7 +151,7 @@ export default async function AffiliatePage() {
               boxShadow: '0 10px 30px rgba(15, 23, 42, 0.15)',
               transition: 'all 0.2s'
             }}>
-              Join Program <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+              Apply via Email <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
             <a href="/affiliate/terms" className="cm-card" style={{
               padding: '16px 32px',
@@ -365,14 +369,16 @@ export default async function AffiliatePage() {
             Join hundreds of creators already monetizing their curations with Clipmark.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
-            <a href="/dashboard/affiliate" className="cm-card" style={{
+            {/* See the hero CTA above for why this points to email instead
+                of /dashboard/affiliate. */}
+            <a href="mailto:affiliates@clipmark.mithahara.com?subject=Affiliate%20Program%20Application" className="cm-card" style={{
               padding: '16px 32px',
               background: '#14B8A6',
               color: 'white', borderRadius: 14, fontSize: 16, fontWeight: 800,
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 12,
               transition: 'all 0.2s', border: 'none'
             }}>
-              Join Program <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+              Apply via Email <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
             <a href="/affiliate/terms" className="cm-card" style={{
               padding: '16px 32px',
