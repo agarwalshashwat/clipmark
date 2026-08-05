@@ -464,7 +464,8 @@ absent if a future page introduces third-party scripts.
 ### 4.3 Upgrade / migration testing
 
 **Current state:** migrations are numbered, idempotent SQL files under `webapp/migrations/`
-(currently `001`–`014`), applied by `webapp/scripts/migrate.ts` and tracked in
+(currently `001`–`015`, with `015_groups_position.sql` adding the `groups.position` column
+already live in prod), applied by `webapp/scripts/migrate.ts` and tracked in
 `public.schema_migrations`; per `CLAUDE.md`, a migration already applied anywhere is never edited
 — a new higher-numbered file is written instead. `ci-integration` already applies every migration
 in sequence against a fresh local Supabase stack on every PR (`Apply migrations` step in
