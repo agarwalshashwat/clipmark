@@ -2,8 +2,9 @@
 
 Owner-only steps (Dodo dashboard + Vercel logins) to turn on real payments.
 Everything that could be done in code has already been done in
-[PR TBD](#) on branch `feat/dodo-live-webhook-gate` — see "What changed in
-code" below. This doc covers only what's left, which only Ash can do.
+[PR #80](https://github.com/agarwalshashwat/clipmark/pull/80) on branch
+`feat/dodo-live-webhook-gate` — see "What changed in code" below. This doc
+covers only what's left, which only Ash can do.
 
 **Do not run any step here against production until the code PR has merged.**
 
