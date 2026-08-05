@@ -20,6 +20,9 @@ export async function createGroup(formData: FormData) {
 
   // New groups go to the end of the user's ordered list, matching the
   // extension's array-push-to-end behavior (dashboard.js's createGroup).
+  // If migrations/015_groups_position.sql hasn't been applied yet, this
+  // select errors (position column doesn't exist) — data comes back null,
+  // which maxRow?.position already handles fine via optional chaining.
   const { data: maxRow } = await supabase
     .from('groups')
     .select('position')
@@ -29,11 +32,28 @@ export async function createGroup(formData: FormData) {
     .maybeSingle();
   const nextPosition = (maxRow?.position ?? -1) + 1;
 
-  const { data: created } = await supabase
+  let { data: created, error: insertError } = await supabase
     .from('groups')
     .insert({ user_id: user.id, name, type, tag_name: tagName, position: nextPosition })
     .select('id')
     .single();
+
+  if (insertError) {
+    // Pre-migration environment: inserting a value for a column that
+    // doesn't exist fails the whole insert (nothing gets created), silently
+    // as far as the caller is concerned — supabase-js returns { error }
+    // rather than throwing. Retry without `position` so group creation
+    // still works (just without persisted ordering) until the migration
+    // runs, instead of quietly doing nothing.
+    console.warn('[groups] insert with position failed (migration 015 not applied yet?) — retrying without it:', insertError.message);
+    ({ data: created, error: insertError } = await supabase
+      .from('groups')
+      .insert({ user_id: user.id, name, type, tag_name: tagName })
+      .select('id')
+      .single());
+  }
+
+  if (insertError) throw new Error(insertError.message);
 
   // Also revalidate '/dashboard' — GroupPickerModal (rendered there) can
   // create a group inline and needs the new group to show up without a
@@ -71,13 +91,19 @@ export async function reorderGroup(groupId: string, direction: 'up' | 'down') {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: groups } = await supabase
+  const { data: groups, error } = await supabase
     .from('groups')
     .select('id, position')
     .eq('user_id', user.id)
     .order('position', { ascending: true })
     .order('created_at', { ascending: false });
 
+  // Pre-migration environment (position column doesn't exist yet): the
+  // query above errors and `groups` comes back null. No-op rather than
+  // throw — reordering just isn't available until migrations/
+  // 015_groups_position.sql is applied; the rest of the Groups page
+  // still works via page.tsx's own fallback to created_at ordering.
+  if (error) console.warn('[groups] reorder query failed (migration 015 not applied yet?) — reorder is a no-op:', error.message);
   if (!groups) return;
   const idx = groups.findIndex(g => g.id === groupId);
   if (idx === -1) return;

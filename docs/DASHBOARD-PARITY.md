@@ -507,3 +507,57 @@ wrapping up:
 Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
 passing, `npx next build` (placeholder env) succeeds. Not visually
 verified in a browser (same auth-gating caveat as every prior iteration).
+
+### Post-PR follow-ups (requested during review of #76)
+
+Two fixes requested after the PR was opened, landed as separate commits on
+this same branch:
+
+1. **Dead affiliate link.** `webapp/app/(marketing)/affiliate/page.tsx`'s
+   two "Join Program" CTAs pointed at `/dashboard/affiliate`, which 404s on
+   this branch (moved to `feature/dashboard-extras-hold`). Repointed both
+   to `mailto:affiliates@clipmark.mithahara.com` (an entry point that page
+   already used elsewhere), relabeled "Apply via Email", and fixed the
+   "Apply in your dashboard" workflow step's copy to match. Verified by
+   grepping the compiled `next build` output for the marketing page: zero
+   remaining `dashboard/affiliate` references, one `Apply via Email`.
+
+2. **De-risked migration 015 + added a pre-migration fallback.** Re-verified
+   `migrations/015_groups_position.sql` against a fresh scratch Postgres
+   container (not any project database): confirmed it's idempotent
+   (identical positions after running it twice, no row duplication) and
+   non-destructive (all pre-existing columns/rows untouched, only `position`
+   added and backfilled). Also empirically confirmed, against that same
+   scratch container, *why* a pre-migration environment needed a code
+   fallback: `SELECT ... ORDER BY position` and `INSERT ... position` both
+   fail outright with `column "position" does not exist` when the column
+   isn't there yet. supabase-js/PostgREST doesn't throw on this — it
+   returns `{ data: null, error }` — so none of `groups/actions.ts` or
+   `groups/page.tsx` would literally crash, but two of the three call sites
+   were silently swallowing that error in a *worse* way than a crash:
+   - `groups/page.tsx`'s "My Groups" query ordered by `position` first;
+     with no `position` column the whole query fails and `groupsData`
+     becomes `null` → the page would render **zero** user-created groups,
+     even though the underlying rows are untouched. Added a fallback: on
+     error, re-query ordered by `created_at` only (the pre-Iteration-8
+     behavior), so groups still show up, just unordered by any custom
+     position, until the migration runs.
+   - `createGroup`'s insert included `position`; pre-migration that insert
+     fails entirely (no row created at all), but the action didn't check
+     for the error, so callers (`GroupsContent`, `GroupPickerModal`) would
+     think the group was created when nothing happened. Added a fallback:
+     on insert error, retry without `position`, and only throw if that
+     retry also fails.
+   - `reorderGroup` already effectively no-op'd on this error via an
+     existing `if (!groups) return` guard — left that behavior as the
+     intentional fallback (reorder is unavailable pre-migration, not
+     broken) and added an explicit error check + warning log for clarity/
+     consistency with the other two fixes.
+
+   The migration itself was **not applied to any database** — the
+   verification container was scratch/disposable only, discarded
+   immediately after (`docker rm -f`), and no `make db-migrate` was run
+   against any local or hosted Supabase project.
+
+Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
+passing, `npx next build` succeeds.
