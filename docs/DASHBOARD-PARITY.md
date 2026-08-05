@@ -55,7 +55,7 @@ Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missin
 | Due-strip banner (count + per-video chips + start button) | ✅ | ✅ | ✅ |
 | Start recall for a *due* video | ✅ opens YT tab w/ pendingRevision | ✅ via extension bridge (`_utils/extension.ts`) when available, else opens the video | ✅ |
 | Start recall for *any* video (not just due) | ✅ per-card "Recall" button | ✅ added in Iteration 7 (see §2) | ✅ |
-| Free-tier monthly review cap enforcement | ✅ enforced in `dashboard.js` before starting | ⚠️ **architectural gap, not fixable from web alone**: the bridge message handler `START_RECALL` in `extension/src/background/background.js` (frozen) does not check the cap at all, so a web-triggered recall session bypasses it entirely. Documented, not fixed — would require an extension-side change, which is out of scope. | ❌ noted asymmetry, out of scope |
+| Free-tier monthly review cap enforcement | ✅ enforced in `dashboard.js` before starting | ⚠️ **architectural gap, not fixable from web alone**: the free-tier cap is only checked in the extension's own UI, not wherever a recall session actually starts, so a session started via the web dashboard isn't capped the same way. This is an extension-side enforcement gap (frozen for this effort) — tracked as a follow-up issue rather than fixed here. | ❌ noted asymmetry, tracked separately (see Iteration Log) |
 | Recall grading / quiz UI | Extension only (by design — needs the YouTube player) | N/A (web correctly does not attempt this) | ✅ by design |
 
 ## 4. Reminders / Revisit
@@ -394,12 +394,12 @@ upgrade-toast pattern as Extended Notes/Saved Searches.
 **Deliberately not added**: a client-side free-tier review-count cap. The
 extension's own cap only works because the review session *and* the
 counter live in the same place (the extension); a web-side counter would
-gate the button click but not the session itself, since
-`background.js`'s `START_RECALL` handler (frozen, external-message path)
-never checks any cap — already documented in §3 as an out-of-scope
-asymmetry. Adding a cosmetic-only counter that doesn't actually limit
-anything seemed worse than the status quo, so it was left out; noted here
-for visibility rather than silently skipped.
+gate the button click but not the session itself, since the extension-side
+entry point a web-triggered session goes through (frozen for this effort)
+doesn't check any cap — already documented in §3 as an out-of-scope
+asymmetry and filed as a follow-up issue. Adding a cosmetic-only counter
+that doesn't actually limit anything seemed worse than the status quo, so
+it was left out; noted here for visibility rather than silently skipped.
 
 **Header search.** `DashboardChrome`'s header search box rendered a bare
 `<input>` with no `value`/`onChange` — inert, confirmed in Iteration 0.
