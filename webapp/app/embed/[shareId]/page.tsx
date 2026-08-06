@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
+import { APP_URL } from '@/app/lib/constants';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -24,6 +25,21 @@ export async function generateMetadata(
   return {
     alternates: {
       canonical: `/embed/${shareId}`,
+    },
+    // Without its own `url`, the root layout's openGraph (which points at the
+    // homepage) is inherited wholesale and og:url disagrees with the canonical.
+    openGraph: {
+      type: 'website',
+      url: `/embed/${shareId}`,
+      siteName: 'Clipmark',
+      images: [
+        {
+          url: `${APP_URL}/clipmark-logo.png`,
+          width: 512,
+          height: 512,
+          alt: 'Clipmark — YouTube Bookmark Extension',
+        },
+      ],
     },
   };
 }

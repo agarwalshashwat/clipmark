@@ -1,10 +1,31 @@
-import { SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
+import { APP_URL, SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
 
 export const metadata = {
   title: 'Terms of Service — Clipmark',
   description: 'Terms and conditions for using Clipmark.',
   alternates: {
     canonical: '/terms',
+  },
+  openGraph: {
+    title: 'Terms of Service — Clipmark',
+    description: 'Terms and conditions for using Clipmark.',
+    type: 'website',
+    url: '/terms',
+    siteName: 'Clipmark',
+    images: [
+      {
+        url: `${APP_URL}/clipmark-logo.png`,
+        width: 512,
+        height: 512,
+        alt: 'Clipmark — YouTube Bookmark Extension',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service — Clipmark',
+    description: 'Terms and conditions for using Clipmark.',
+    images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
 
