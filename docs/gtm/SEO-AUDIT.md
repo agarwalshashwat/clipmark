@@ -4,14 +4,16 @@
 **Scope:** `webapp/` (Next.js 14 App Router marketing site + app) at `clipmark.mithahara.com`, grounded in repo source (`webapp/app/**`) cross-checked against the live site.
 **Status:** Audit and recommendations only — no site code, metadata, or content was changed as part of this task.
 
+> **✅ Update (2026-08-06):** two of the issues below have since been fixed and deployed to production in [PR #82](https://github.com/agarwalshashwat/clipmark/pull/82) — the **per-page canonical bug** (§1.1) and the **fabricated `aggregateRating`** (§1.4). Both are verified fixed on the live site and are annotated inline below. **Everything else in this audit still stands as written**, including §1.2 (missing titles/descriptions) and the `og:url` half of §1.1, which #82 did not address. Findings are otherwise preserved as originally written for the record.
+
 ## Executive summary
 
 The technical foundation is better than it looks at a glance — there's a real sitemap, robots.txt, per-page metadata on most pages, and genuinely good `HowTo` + `FAQPage` JSON-LD on the homepage with copy that matches what's visibly on the page. That's not the norm for a pre-launch product and it's worth preserving.
 
-But three concrete bugs are actively suppressing indexation and one is a real risk:
+But three concrete bugs are actively suppressing indexation and one is a real risk (**items 1 and 2 have since been fixed by PR #82** — see the update note above; item 3 remains open):
 
-1. **Every non-homepage page's canonical tag points at the homepage** (confirmed live on `/signin`, `/upgrade`, `/affiliate`, `/privacy`, `/terms`), telling Google those pages are duplicates and to index the homepage instead. The affiliate program page — the one most likely to earn outside backlinks — is currently invisible to search as a result.
-2. **The homepage ships a hardcoded `aggregateRating` of 4.9★ / 1,250 reviews** in its `SoftwareApplication` structured data on every single page, with no visible review count anywhere on the site and, per project context, no launched review base yet. Google's structured-data policy for review snippets requires this to be genuine and visible — as shipped, this is a sitewide risk, not a one-page cosmetic issue.
+1. ~~**Every non-homepage page's canonical tag points at the homepage**~~ — **✅ Resolved by PR #82 (merged, deployed).** As originally found: confirmed live on `/signin`, `/upgrade`, `/affiliate`, `/privacy`, `/terms`, telling Google those pages were duplicates and to index the homepage instead, leaving the affiliate program page effectively invisible to search. Each page now sets its own canonical; see §1.1. (The related `og:url` inheritance on `/affiliate`, also described in §1.1, is **still open**.)
+2. ~~**The homepage ships a hardcoded `aggregateRating` of 4.9★ / 1,250 reviews**~~ — **✅ Resolved by PR #82 (merged, deployed).** As originally found: shipped in the `SoftwareApplication` structured data on every single page, with no visible review count anywhere on the site and no launched review base yet — a sitewide structured-data risk, not a one-page cosmetic issue. The `aggregateRating` object has been removed outright; see §1.4.
 3. **Zero content anywhere on the site targets the USMLE/IMG "revise & remember" wedge** that Clipmark's own go-to-market docs (`docs/gtm/chrome-web-store-listing.md`) name as the beachhead. Meanwhile at least three direct competitors (RemNote, FlashRecall, StudyCards AI) are actively running blog/landing-page content against exactly those search terms today.
 
 Overall assessment: **needs work, not broken** — the fixes in priority 1–2 are small, targeted, and would very plausibly move the needle by themselves before any content investment.
@@ -27,16 +29,20 @@ Overall assessment: **needs work, not broken** — the fixes in priority 1–2 a
 | `robots.txt` | ✅ present, generated | [webapp/app/robots.ts](../../webapp/app/robots.ts) |
 | `sitemap.xml` | ✅ present, dynamic (DB-backed) | [webapp/app/sitemap.ts](../../webapp/app/sitemap.ts) |
 | Per-page `<title>`/description | ⚠️ partial — 3 of 7 public pages have none | see §1.2 |
-| Canonical tags | ❌ broken on 5 of 6 non-homepage pages | see §1.1 |
+| Canonical tags | ✅ **fixed by PR #82** (was: ❌ broken on 5 of 6 non-homepage pages) | see §1.1 |
 | Open Graph / Twitter cards | ⚠️ present but stale/generic on homepage | see §1.3 |
-| JSON-LD structured data | ⚠️ `HowTo` + `FAQPage` are strong; `SoftwareApplication` rating is a risk | see §1.4 |
+| JSON-LD structured data | ✅ `HowTo` + `FAQPage` are strong; `SoftwareApplication` rating risk **fixed by PR #82** | see §1.4 |
 | Heading hierarchy | ✅ single H1 → H2 → H3 on homepage | [webapp/app/(marketing)/page.tsx](../../webapp/app/(marketing)/page.tsx) |
 | Image alt text | ✅ present and descriptive on the two product screenshots | page.tsx:401 |
 | HTTPS / security headers | ✅ HSTS, X-Content-Type-Options, Referrer-Policy, X-Frame-Options | [webapp/next.config.mjs](../../webapp/next.config.mjs) |
 | Google Search Console verification | ✅ `google-site-verification` meta present and live | webapp/app/layout.tsx:44 |
 | CSP | ❌ none on main routes (see §1.5) | next.config.mjs |
 
-### 1.1 Canonical tags point every page at the homepage (Critical)
+### 1.1 Canonical tags point every page at the homepage (Critical) — ✅ Resolved by PR #82
+
+> **✅ Resolved by [PR #82](https://github.com/agarwalshashwat/clipmark/pull/82) (merged, deployed).** Each affected page now sets its own `alternates.canonical`, and the root layout's blanket `canonical: '/'` was removed. Verified live: `/signin`, `/upgrade`, `/affiliate`, `/privacy`, and `/terms` each return their own self-referential canonical. `/affiliate/terms` and `/embed/[shareId]` were fixed in the same PR.
+>
+> **⚠️ Still open from this section:** the `og:url` inheritance described below. `/affiliate` continues to emit `og:url` = the homepage, because #82 added `alternates.canonical` but no `openGraph` override. The original finding below is preserved as written.
 
 `webapp/app/layout.tsx:40-42` sets:
 
@@ -97,9 +103,11 @@ Anyone who shares the homepage link on Twitter, Slack, or LinkedIn sees the gene
 - `FAQPage` JSON-LD ([page.tsx:118-129](<../../webapp/app/(marketing)/page.tsx>), data at [page.tsx:22-51](<../../webapp/app/(marketing)/page.tsx>)) — 7 real, substantive FAQs, including "Does Clipmark replace Anki?" which is exactly the disambiguating question a med-student searcher has. This is a legitimate asset.
 - `/v/[shareId]` collection pages have their own dynamic per-page metadata, canonical, and a real dynamic OG image via [webapp/app/api/og/route.tsx](../../webapp/app/api/og/route.tsx) — this is well built and a good pattern to reuse.
 
-**Risk — `aggregateRating` in the sitewide `SoftwareApplication` schema:**
+**Risk — `aggregateRating` in the sitewide `SoftwareApplication` schema — ✅ Resolved by PR #82:**
 
-[webapp/app/layout.tsx:78-94](../../webapp/app/layout.tsx) ships this on **every page** of the site:
+> **✅ Resolved by [PR #82](https://github.com/agarwalshashwat/clipmark/pull/82) (merged, deployed).** The entire `aggregateRating` object was removed from the `SoftwareApplication` JSON-LD in `webapp/app/layout.tsx`. Verified live: the homepage no longer emits `aggregateRating` in any form. The `HowTo` and `FAQPage` JSON-LD were left intact, as recommended. The original finding is preserved below for the record.
+
+[webapp/app/layout.tsx:78-94](../../webapp/app/layout.tsx) shipped this on **every page** of the site (since removed):
 
 ```json
 {
@@ -135,7 +143,7 @@ Not urgent while traffic is near zero pre-launch, but this is worth doing before
 | Page | Title tag | Meta description | H1 | Assessment |
 |---|---|---|---|---|
 | `/` (homepage) | "Clipmark — Turn YouTube Into Video Flashcards You Remember" | Active Recall / spaced review / Anki export, on-wedge | "Stop Forgetting What You Watch — Your YouTube Second Brain." | Good page-level copy, but H1 pivots to generic "second brain" framing that doesn't reinforce the title's "flashcards"/"Active Recall" keywords — see below. |
-| `/affiliate` | "Affiliate Program — Clipmark" | Clear, has a real hook (30% revenue share) | present | Solid page, undermined by the canonical bug (§1.1) suppressing it from search entirely. |
+| `/affiliate` | "Affiliate Program — Clipmark" | Clear, has a real hook (30% revenue share) | present | Solid page, was undermined by the canonical bug (§1.1) suppressing it from search entirely — ✅ that bug is fixed by PR #82. |
 | `/privacy`, `/terms` | Present, correct, low-priority by design | — | present | Fine as-is; these don't need SEO investment. |
 | `/signin` | **Inherited/duplicate** (§1.2) | **Inherited/duplicate** | present | No SEO value expected here regardless — low priority to fix beyond the shared root-cause fix. |
 | `/upgrade` | **Inherited/duplicate** (§1.2) | **Inherited/duplicate** | present | The one page where this actually matters — it's the pricing page and currently has zero unique targeting, on top of being `robots.txt`-disallowed. |
@@ -149,7 +157,7 @@ This matters because `docs/gtm/chrome-web-store-listing.md` explicitly names "Re
 ### What's genuinely working
 - The FAQ content ([page.tsx:22-51](<../../webapp/app/(marketing)/page.tsx>)) is specific and well-written, especially "Does Clipmark replace Anki?" — directly answers the #1 objection a spaced-repetition-literate searcher would have, and it's marked up as `FAQPage` schema so it's eligible for a rich result.
 - The two product screenshots have genuinely descriptive, keyword-relevant alt text (page.tsx:401) — not generic "screenshot.png" alt text, which is a common failure mode this site avoids.
-- Internal linking from `Navigation.tsx` and `Footer.tsx` is clean and consistent (`/upgrade`, `/affiliate`, `/privacy`, `/terms` all linked from both) — the crawl graph itself is fine; it's the canonical tags undermining it.
+- Internal linking from `Navigation.tsx` and `Footer.tsx` is clean and consistent (`/upgrade`, `/affiliate`, `/privacy`, `/terms` all linked from both) — the crawl graph itself is fine; it was the canonical tags undermining it (✅ fixed by PR #82).
 
 ### Adjacent, non-SEO issue worth flagging since it touches organic conversion
 Every "Get the extension" CTA — [Navigation.tsx:54](../../webapp/app/components/Navigation.tsx), homepage ([page.tsx:204](<../../webapp/app/(marketing)/page.tsx>), [:819](<../../webapp/app/(marketing)/page.tsx>)), and the shared-collection page ([v/[shareId]/page.tsx:310](<../../webapp/app/(marketing)/v/[shareId]/page.tsx>)) — link to the generic `https://chrome.google.com/webstore`, not a real listing (there isn't one yet — the extension isn't published on the Chrome Web Store per `docs/gtm/chrome-web-store-listing.md`). Once the listing goes live, all five of these need the real `chromewebstore.google.com/detail/...` URL — otherwise every visitor who clicks "Get the extension," including anyone arriving from organic search, lands on an unrelated generic search page. **Owner action once the CWS listing is approved**, not a code issue today.
@@ -199,8 +207,8 @@ Three real, currently-operating competitors were found running content specifica
 
 | # | Action | File(s) / route(s) | Impact | Effort |
 |---|---|---|---|---|
-| 1 | Add `alternates: { canonical: '/<path>' }` to the `metadata` export of `privacy`, `terms`, `signin`, `upgrade`, `affiliate` pages | `app/(marketing)/{privacy,terms,signin,upgrade,affiliate}/page.tsx` | High — fixes active de-indexation of 5 pages | Low |
-| 2 | Remove or replace the hardcoded `aggregateRating` in the sitewide `SoftwareApplication` JSON-LD until there's a real, visible review count to back it | `webapp/app/layout.tsx:78-94` | High — removes a sitewide structured-data policy risk | Low |
+| 1 | ✅ **DONE — PR #82** ~~Add `alternates: { canonical: '/<path>' }` to the `metadata` export of `privacy`, `terms`, `signin`, `upgrade`, `affiliate` pages~~ | `app/(marketing)/{privacy,terms,signin,upgrade,affiliate}/page.tsx` | High — fixes active de-indexation of 5 pages | Low |
+| 2 | ✅ **DONE — PR #82** ~~Remove or replace the hardcoded `aggregateRating` in the sitewide `SoftwareApplication` JSON-LD until there's a real, visible review count to back it~~ | `webapp/app/layout.tsx:78-94` | High — removes a sitewide structured-data policy risk | Low |
 | 3 | Give `/signin` and `/upgrade` their own `metadata` export (unique title + description) | `app/(marketing)/signin/page.tsx`, `app/(marketing)/upgrade/page.tsx` | Medium | Low |
 | 4 | Add `openGraph`/`twitter` blocks to the homepage's own metadata so social shares match the `<title>`/description instead of the generic root fallback | `app/(marketing)/page.tsx` metadata export | Medium | Low |
 | 5 | Add `/affiliate` as a static entry in `sitemap.ts` | `webapp/app/sitemap.ts` | Medium | Low |
