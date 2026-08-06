@@ -1,5 +1,12 @@
 import { createServerSupabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/signin',
+  },
+};
 
 /**
  * Password sign-in is a TESTING affordance, not a product feature.
