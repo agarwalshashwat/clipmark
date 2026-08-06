@@ -1541,8 +1541,10 @@ body {
   .sp-social-title { font-size: 12px; }
 }
 
-/* ── Idle Screen (shown when the active tab is not a YouTube video) ─────────── */
-#sp-unsupported-screen {
+/* ── Idle Screen (active tab is not a YouTube video) and Inactive Screen
+      (it is, but its content script is unreachable until the tab reloads) ───── */
+#sp-unsupported-screen,
+#sp-inactive-screen {
   position: absolute;
   inset: 0;
   background: #faf6ec;

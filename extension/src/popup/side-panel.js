@@ -23,6 +23,17 @@ import {
 } from '../usage-caps.module.js';
 import { isDueForRecall } from '../recall.module.js';
 import { initErrorReporting } from '../error-reporting.js';
+// `?sp` for the same reason as the driver.js imports below: content/tour.js
+// imports this too, and without the distinct module id Rollup hoists it into a
+// chunk shared with the content script. That happens to work (crxjs makes the
+// chunk web-accessible), but it puts the content script's code behind a
+// runtime chrome.runtime.getURL resolution for no benefit — inlining a copy
+// into each bundle keeps the shipped content script self-contained.
+import {
+  didYoutubeTourComplete,
+  shouldAutoRunSidePanelTour,
+  shouldMarkTourSeen,
+} from '../tour-state.js?sp';
 // The `?sp` query keeps these distinct module ids from the imports in
 // content/tour.js, so Rollup inlines a separate copy into each bundle
 // instead of hoisting a shared chunk — content_scripts entries must stay a
@@ -287,10 +298,12 @@ async function setTourState(partial) {
   await syncSet({ tourState: { ...current, ...partial } });
 }
 
-async function runSidePanelTour() {
-  if ((await getTourState()).sidePanelTour) return;
-
+async function runSidePanelTour({ force = false } = {}) {
   const tab = await getCurrentTab();
+  if (!force && !shouldAutoRunSidePanelTour({ tourState: await getTourState(), activeTabUrl: tab?.url })) {
+    return;
+  }
+
   const videoId = tab?.url ? extractVideoId(tab.url) : null;
   const bookmarks = videoId ? await getVideoBookmarksLocal(videoId) : [];
 
@@ -316,11 +329,18 @@ async function runSidePanelTour() {
         },
       }];
 
+  // Same one-shot-flag trap as Sub-tour A: driver.js fires onDestroyed even when
+  // it gave up waiting for #revisit-mode-btn, which would mark the coach-mark
+  // seen without ever rendering it. Only a step that actually highlighted counts.
+  let stepShown = false;
   driver({
     showButtons: ['next', 'close'],
     allowClose: true,
     waitForElement: 3000,
-    onDestroyed: () => setTourState({ sidePanelTour: true }),
+    onHighlighted: () => { stepShown = true; },
+    onDestroyed: () => {
+      if (shouldMarkTourSeen({ stepShown })) setTourState({ sidePanelTour: true });
+    },
     steps,
   }).drive();
 }
@@ -387,6 +407,17 @@ async function waitForContentScript(tabId, maxRetries = MAX_RECONNECT_ATTEMPTS, 
 
 // ─── UI Helpers ────────────────────────────────────────────────────────────
 function showError(message, duration = 3000) {
+  // Every waitForContentScript caller funnels its failure through here. That
+  // message is not an error the user can act on as written — it means the tab
+  // predates the install and needs one reload — so route it to the screen that
+  // says exactly that, rather than flashing the internal string in a red toast.
+  if (isContentScriptUnavailable({ message })) {
+    getCurrentTab()
+      .then((tab) => showContentInactiveScreen(tab?.id))
+      .catch(() => {});
+    return;
+  }
+
   const el = document.getElementById('error-message');
   el.textContent = message;
   el.style.display = 'block';
@@ -1088,6 +1119,33 @@ function hideUnsupportedScreen() {
   if (screen) screen.style.display = 'none';
 }
 
+// ─── Content script unreachable ────────────────────────────────────────────
+// The tab *is* a YouTube video, we just can't talk to its content script.
+// In practice that means the tab was already open when the extension was
+// installed or updated: Chrome only injects declared content_scripts on
+// navigation. The background worker backfills those tabs on onInstalled
+// (src/background/install-injection.js), but that can't reach every tab —
+// tabs discarded at the time, or hosts outside host_permissions — so the
+// panel still needs an answer better than "Failed to load bookmarks:
+// Content script not available."
+let inactiveScreenTabId = null;
+
+function showContentInactiveScreen(tabId) {
+  inactiveScreenTabId = tabId ?? null;
+  const screen = document.getElementById('sp-inactive-screen');
+  if (screen) screen.style.display = 'flex';
+}
+
+function hideContentInactiveScreen() {
+  inactiveScreenTabId = null;
+  const screen = document.getElementById('sp-inactive-screen');
+  if (screen) screen.style.display = 'none';
+}
+
+function isContentScriptUnavailable(error) {
+  return /Content script not available/i.test(error?.message || '');
+}
+
 async function loadBookmarks() {
   if (loadBookmarksInFlight) {
     loadBookmarksQueued = true;
@@ -1101,10 +1159,12 @@ async function loadBookmarks() {
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
       stopCurrentTimeSync();
       stopCommentSync();
+      hideContentInactiveScreen();
       await showUnsupportedScreen();
       return;
     }
     hideUnsupportedScreen();
+    if (inactiveScreenTabId !== null && inactiveScreenTabId !== tab.id) hideContentInactiveScreen();
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -1132,9 +1192,18 @@ async function loadBookmarks() {
     try {
       await waitForContentScript(tab.id, MAX_RECONNECT_ATTEMPTS + 2, RECONNECT_DELAY);
       contentScriptRetryCount = 0;
+      hideContentInactiveScreen();
       await refreshTitleFromContentScript(tab.id, videoId);
     } catch (error) {
-      const isScriptUnavailable = /Content script not available/i.test(error?.message || '');
+      const isScriptUnavailable = isContentScriptUnavailable(error);
+      if (isScriptUnavailable && contentScriptRetryCount >= MAX_SIDE_PANEL_CONTENT_RETRIES) {
+        // Out of retries: the script isn't coming without a reload. Say so
+        // plainly and offer the reload, instead of retrying forever behind a
+        // spinner (v1.0.1) or surfacing the raw error string.
+        stopCurrentTimeSync();
+        showContentInactiveScreen(tab.id);
+        return;
+      }
       if (isScriptUnavailable && contentScriptRetryCount < MAX_SIDE_PANEL_CONTENT_RETRIES) {
         contentScriptRetryCount += 1;
         debugLog('Init', 'Content script not ready yet, retrying', {
@@ -1251,7 +1320,7 @@ async function loadBookmarks() {
     });
 
     // On startup races, avoid flashing hard errors while we keep retrying.
-    if (/Content script not available/i.test(error?.message || '')) {
+    if (isContentScriptUnavailable(error)) {
       scheduleBookmarksReload(1200);
       return;
     }
@@ -1309,7 +1378,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   runSidePanelTour();
   document.getElementById('replay-tour-btn')?.addEventListener('click', async () => {
     await setTourState({ youtubeTour: false, sidePanelTour: false });
-    runSidePanelTour();
+    runSidePanelTour({ force: true });
+  });
+
+  // Sub-tour A → Sub-tour B handoff. If A was still pending when the panel
+  // opened, runSidePanelTour() above deliberately deferred; pick it up the
+  // moment A finishes so a panel left open still gets the coach-mark.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'sync' || !changes.tourState) return;
+    if (didYoutubeTourComplete(changes.tourState)) runSidePanelTour();
+  });
+
+  document.getElementById('sp-reload-tab-btn')?.addEventListener('click', async () => {
+    const tab = await getCurrentTab();
+    if (!tab?.id) return;
+    // Reloading re-runs Chrome's own declarative injection, which is the whole
+    // fix from the user's side; the panel picks the content script up on the
+    // tabs.onUpdated 'complete' below.
+    contentScriptRetryCount = 0;
+    hideContentInactiveScreen();
+    chrome.tabs.reload(tab.id);
   });
   window.addEventListener('focus', refreshEntitlement);
   document.addEventListener('visibilitychange', () => {
@@ -1328,7 +1416,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo) => {
     if (changeInfo.status === 'complete') {
       const active = await getCurrentTab();
-      if (active?.id === _tabId) scheduleBookmarksReload(0);
+      if (active?.id === _tabId) {
+        // A completed load means Chrome injected the content script itself, so
+        // give the reconnect budget back before retrying.
+        contentScriptRetryCount = 0;
+        hideContentInactiveScreen();
+        scheduleBookmarksReload(0);
+      }
     }
   });
 

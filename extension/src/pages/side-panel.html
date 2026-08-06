@@ -189,6 +189,31 @@
     </div>
   </div>
 
+  <!-- Inactive Screen — the tab is a YouTube video, but its content script is
+       unreachable (a tab that was already open when the extension installed or
+       updated). Friendlier than the raw "Content script not available" error. -->
+  <div id="sp-inactive-screen" style="display:none;">
+    <div class="sp-idle-scroll">
+      <div class="sp-idle-brand">
+        <div class="sp-idle-mark" aria-hidden="true">
+          <span class="sp-idle-mark-pulse"></span>
+          <img src="../../assets/icons/icon-48.png" class="sp-idle-mark-icon" alt="">
+        </div>
+        <h2 class="sp-idle-title">Almost there</h2>
+        <p class="sp-idle-subtitle">
+          Refresh this YouTube tab to activate ClipMark. Tabs opened before ClipMark
+          was installed need one reload.
+        </p>
+        <div class="sp-idle-cta-row">
+          <button id="sp-reload-tab-btn" class="sp-unsupported-primary">
+            <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">refresh</span>
+            Refresh tab
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Summary Panel Overlay -->
   <div id="summary-panel" class="summary-panel-overlay" style="display:none;">
     <div class="summary-panel-content">
