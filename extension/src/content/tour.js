@@ -12,8 +12,15 @@
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import '../tour-theme.css';
+import { shouldMarkTourSeen, shouldStartYoutubeTour } from '../tour-state.js';
 
 const TOUR_POPOVER_CLASS = 'clipmark-tour-popover';
+
+// Every step spotlights the player bookmark button, which content.js only
+// creates once YouTube's own `.ytp-right-controls` exists. Wait for it rather
+// than letting driver.js's waitForElement time out — see startYoutubeTour.
+const TOUR_ANCHOR_SELECTOR = '.yt-bookmark-player-btn';
+const TOUR_ANCHOR_TIMEOUT_MS = 30000;
 
 function currentVideoId() {
   return new URLSearchParams(window.location.search).get('v');
@@ -118,51 +125,117 @@ function buildSteps(hasBookmark) {
   return steps;
 }
 
+/**
+ * Resolve once `selector` is in the DOM, or false if it never turns up.
+ *
+ * YouTube builds its player controls asynchronously and content.js only injects
+ * the bookmark button afterwards, so on a cold load the anchor can be seconds
+ * away — longer still on a slow connection.
+ */
+function waitForElement(selector, timeoutMs) {
+  return new Promise((resolve) => {
+    if (document.querySelector(selector)) {
+      resolve(true);
+      return;
+    }
+    let settled = false;
+    const finish = (found) => {
+      if (settled) return;
+      settled = true;
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve(found);
+    };
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(selector)) finish(true);
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    const timer = setTimeout(() => finish(false), timeoutMs);
+  });
+}
+
 let tourInstance = null;
-let bootstrapped = false;
+let starting = false;
+// Bumped on every SPA navigation so an in-flight start attempt can tell that the
+// page it was waiting for is gone and bail out instead of driving on the new one.
+let navigationEpoch = 0;
+// Per-run outcome, read by onDestroyed to decide whether the tour counts as seen.
+let stepShown = false;
+let abandonedForNavigation = false;
 
 async function startYoutubeTour() {
-  if (bootstrapped) return;
+  if (starting || tourInstance) return;
   if (!isWatchPage()) return;
+  if (!shouldStartYoutubeTour(await getTourState())) return;
 
-  const tourState = await getTourState();
-  if (tourState.youtubeTour) {
-    bootstrapped = true;
-    return;
+  starting = true;
+  const epoch = navigationEpoch;
+  try {
+    // v1.0.1 drove the tour immediately and leaned on driver.js's own
+    // `waitForElement` for the anchor. That does not fail loudly: on timeout
+    // driver.js falls back to its centred `driver-dummy-element`, so step one
+    // rendered "Click this button on the player controls" pointing at nothing —
+    // and then marked the tour seen, for good. Wait for the real anchor here,
+    // and if it never arrives leave the flag untouched so the next watch page
+    // gets another go. (driver.js keeps its own 6s waitForElement below as a
+    // backstop for the later `.yt-bookmark-markers` step.)
+    const anchored = await waitForElement(TOUR_ANCHOR_SELECTOR, TOUR_ANCHOR_TIMEOUT_MS);
+    if (!anchored) return;
+
+    // Re-check everything the awaits above could have invalidated: the user may
+    // have navigated away, or replayed/completed the tour from the side panel.
+    if (epoch !== navigationEpoch || !isWatchPage()) return;
+    if (!shouldStartYoutubeTour(await getTourState())) return;
+    if (epoch !== navigationEpoch) return;
+
+    const bookmarkCount = await getBookmarkCount(currentVideoId());
+
+    stepShown = false;
+    abandonedForNavigation = false;
+
+    tourInstance = driver({
+      showProgress: true,
+      progressText: '{{current}} of {{total}}',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      allowClose: true,
+      waitForElement: 6000,
+      overlayClickBehavior: (_el, _step, opts) => {
+        // Don't let an accidental first click kill the tour before it says anything.
+        if (opts.index === 0) return;
+        tourInstance?.destroy();
+      },
+      // Fires per rendered step — the only proof the user was actually shown
+      // something. "Seen" is gated on it (see shouldMarkTourSeen).
+      onHighlighted: () => {
+        stepShown = true;
+      },
+      onDestroyed: () => {
+        tourInstance = null;
+        if (shouldMarkTourSeen({ stepShown, abandonedForNavigation })) markYoutubeTourSeen();
+      },
+      steps: buildSteps(bookmarkCount > 0),
+    });
+
+    tourInstance.drive();
+  } finally {
+    starting = false;
+    // A navigation that landed while this attempt was awaiting the anchor was
+    // swallowed by the `starting` guard at the top. Pick it back up, or the
+    // tour would sit out the very video the user just opened.
+    if (epoch !== navigationEpoch && !tourInstance) startYoutubeTour();
   }
-
-  bootstrapped = true;
-
-  const videoId = currentVideoId();
-  const bookmarkCount = await getBookmarkCount(videoId);
-
-  tourInstance = driver({
-    showProgress: true,
-    progressText: '{{current}} of {{total}}',
-    nextBtnText: 'Next',
-    prevBtnText: 'Back',
-    allowClose: true,
-    waitForElement: 6000,
-    overlayClickBehavior: (_el, _step, opts) => {
-      // Don't let an accidental first click kill the tour before it says anything.
-      if (opts.index === 0) return;
-      tourInstance?.destroy();
-    },
-    onDestroyed: () => {
-      markYoutubeTourSeen();
-    },
-    steps: buildSteps(bookmarkCount > 0),
-  });
-
-  tourInstance.drive();
 }
 
 // SPA navigation risk: YouTube never fully reloads between videos, and a
 // tour mid-step should dismiss rather than try to survive a torn-down DOM.
+// Dismissing this way is not the user declining the tour, so it does not count
+// as seen — the tour picks up again on the video they navigated to.
 document.addEventListener('yt-navigate-finish', () => {
+  navigationEpoch += 1;
   if (tourInstance?.isActive()) {
+    abandonedForNavigation = true;
     tourInstance.destroy();
-    return;
   }
   startYoutubeTour();
 });

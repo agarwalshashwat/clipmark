@@ -15,6 +15,25 @@
 (function () {
   const MESSAGE_TYPE = 'CLIPMARK_REPORT_ERROR';
 
+  /**
+   * Injection marker — read by the background worker's install-time backfill
+   * (src/background/install-injection.js) to avoid injecting a second copy of
+   * the content scripts into a tab that already has a live one.
+   *
+   * Stamped here because this file is the *first* content script in the
+   * manifest, so the marker is set whichever route injected us: Chrome's own
+   * declarative injection on navigation, or chrome.scripting on install.
+   *
+   * The value is the version that injected it, not a boolean: after an update
+   * the previous version's scripts are still in the page with an invalidated
+   * chrome.runtime, and those must read as stale rather than "already fine".
+   */
+  try {
+    globalThis.clipmarkContentScriptVersion = chrome.runtime.getManifest().version;
+  } catch {
+    globalThis.clipmarkContentScriptVersion = 'unknown';
+  }
+
   function serialiseError(error) {
     return {
       name: error?.name || 'Error',

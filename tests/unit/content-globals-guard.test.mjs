@@ -21,7 +21,7 @@ describe('assertContentGlobals', () => {
     const chunkA = exposing(['TAG_COLORS', 'parseTags', 'stringToColor', 'getTagColor', 'FONT_FAMILY_NATIVE', 'TRANSCRIPT_TRUNCATE_LENGTH']);
     const chunkB = exposing(['localSummarizeSnippet']);
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
-    const chunkD = exposing(['clipmarkReportError']);
+    const chunkD = exposing(['clipmarkReportError', 'clipmarkContentScriptVersion']);
     const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold']);
     assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE]), true);
   });
