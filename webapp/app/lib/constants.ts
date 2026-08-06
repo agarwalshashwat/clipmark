@@ -1,4 +1,4 @@
-export const APP_NAME      = 'Clipmark';
+export const APP_NAME      = 'ClipMark';
 export const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com';
 
 // Canonical Chrome Web Store listing. The item id is permanent — it survives

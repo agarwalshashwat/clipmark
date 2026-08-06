@@ -33,19 +33,19 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { username } = await params;
   const profile = await getProfile(username);
-  if (!profile) return { title: 'User not found — Clipmark' };
+  if (!profile) return { title: 'User not found — ClipMark' };
 
   const baseUrl = APP_URL;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`;
 
   return {
-    title: `@${username} — Clipmark`,
-    description: `Browse ${username}'s public YouTube bookmark collections on Clipmark.`,
+    title: `@${username} — ClipMark`,
+    description: `Browse ${username}'s public YouTube bookmark collections on ClipMark.`,
     alternates: {
       canonical: `/u/${username}`,
     },
     openGraph: {
-      title: `@${username} — Clipmark`,
+      title: `@${username} — ClipMark`,
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       type: 'profile',
       username: username,
@@ -59,7 +59,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title: `@${username} — Clipmark`,
+      title: `@${username} — ClipMark`,
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       images: [ogUrl],
     },

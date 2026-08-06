@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
 
 export const metadata: Metadata = {
-  title: 'Affiliate Program — Clipmark',
-  description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the Clipmark affiliate program and monetize your audience.',
+  title: 'Affiliate Program — ClipMark',
+  description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the ClipMark affiliate program and monetize your audience.',
   alternates: {
     canonical: '/affiliate',
   },
@@ -40,7 +40,7 @@ const SECTION = {
 const FAQ_ITEMS = [
   {
     q: 'Who can join the affiliate program?',
-    a: 'Any active Clipmark Pro subscriber whose account is at least 30 days old. There is no minimum audience size requirement — just a genuine audience interested in productivity, YouTube, or learning.',
+    a: 'Any active ClipMark Pro subscriber whose account is at least 30 days old. There is no minimum audience size requirement — just a genuine audience interested in productivity, YouTube, or learning.',
   },
   {
     q: 'How do I get paid?',
@@ -56,7 +56,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What promotional methods are not allowed?',
-    a: 'Paid search ads bidding on "Clipmark" keywords, misleading claims, coupon sites that falsely claim exclusive discounts, and spam are strictly prohibited. See the full Affiliate Terms for details.',
+    a: 'Paid search ads bidding on "ClipMark" keywords, misleading claims, coupon sites that falsely claim exclusive discounts, and spam are strictly prohibited. See the full Affiliate Terms for details.',
   },
   {
     q: 'What happens if a referred user requests a refund?',
@@ -129,7 +129,7 @@ export default async function AffiliatePage() {
             color: '#0f172a', marginBottom: 24, marginTop: 0,
             lineHeight: 1,
           }}>
-            Share Clipmark.<br />
+            Share ClipMark.<br />
             <span style={{ color: '#14B8A6' }}>Earn 30% for life.</span>
           </h1>
 
@@ -287,8 +287,8 @@ export default async function AffiliatePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 24 }}>
             {[
-              { icon: 'workspace_premium', title: 'Active Pro subscriber', body: 'You must have an active Clipmark Pro subscription (monthly, annual, or lifetime) to apply.' },
-              { icon: 'calendar_today', title: 'Account maturity', body: 'Your Clipmark account must be at least 30 days old at the time of your application.' },
+              { icon: 'workspace_premium', title: 'Active Pro subscriber', body: 'You must have an active ClipMark Pro subscription (monthly, annual, or lifetime) to apply.' },
+              { icon: 'calendar_today', title: 'Account maturity', body: 'Your ClipMark account must be at least 30 days old at the time of your application.' },
               { icon: 'check_circle', title: 'Good standing', body: 'Your account must have no violations of our main Terms of Service or Affiliate guidelines.' },
               { icon: 'campaign', title: 'Genuine audience', body: 'You should have a real audience — YouTube subscribers, newsletter readers, or a community.' },
             ].map((item) => (
@@ -369,7 +369,7 @@ export default async function AffiliatePage() {
 
           <h2 style={{ ...H2, fontSize: 40, color: 'white', marginBottom: 16, position: 'relative' }}>Ready to start earning?</h2>
           <p style={{ ...P, marginBottom: 48, fontSize: 18, color: '#94a3b8', maxWidth: 500, margin: '0 auto 48px', position: 'relative' }}>
-            Join hundreds of creators already monetizing their curations with Clipmark.
+            Join hundreds of creators already monetizing their curations with ClipMark.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
             {/* See the hero CTA above for why this points to email instead

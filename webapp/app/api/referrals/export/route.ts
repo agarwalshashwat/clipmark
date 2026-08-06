@@ -37,7 +37,7 @@ export async function GET() {
   if (error) return new NextResponse('Internal Server Error', { status: 500 });
 
   const rows = referrals ?? [];
-  const headers = ['Date (UTC)', 'Status', 'Months Awarded', 'Reward Applied At', 'Clipmark Referral ID'];
+  const headers = ['Date (UTC)', 'Status', 'Months Awarded', 'Reward Applied At', 'ClipMark Referral ID'];
 
   const csvRows = rows.map((r) => {
     const statusLabel = r.status === 'cancelled' ? 'refunded' : r.status;

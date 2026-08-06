@@ -59,7 +59,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
       {/* ── Top App Bar ── */}
       <header className={styles.topBar}>
         <div className={styles.topBarLeft}>
-          <a href="/" className={styles.logo}>Clipmark</a>
+          <a href="/" className={styles.logo}>ClipMark</a>
           <nav className={styles.topNav}>
             <a href="/dashboard" className={`${styles.topNavLink} ${isActive('/dashboard') ? styles.topNavLinkActive : ''}`}>
               All Bookmarks

@@ -1,8 +1,8 @@
 import { PRIVACY_EMAIL } from '@/app/lib/constants';
 
 export const metadata = {
-  title: 'Privacy Policy — Clipmark',
-  description: 'How Clipmark collects, uses, and protects your data.',
+  title: 'Privacy Policy — ClipMark',
+  description: 'How ClipMark collects, uses, and protects your data.',
   alternates: {
     canonical: '/privacy',
   },
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>info</span>
           </div>
           <p style={P_STYLE}>
-            Clipmark (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is a YouTube bookmark manager. This policy explains
+            ClipMark (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is a YouTube bookmark manager. This policy explains
             what data we collect, how we use it, and your rights regarding that data.
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>database</span>
           </div>
           <h2 style={H2_STYLE}>1. Data We Collect</h2>
-          <p style={P_STYLE}>When you use Clipmark, we may collect the following:</p>
+          <p style={P_STYLE}>When you use ClipMark, we may collect the following:</p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Bookmarks</strong> — timestamps, descriptions, and tags you create for YouTube videos.</li>
             <li style={LI_STYLE}><strong>Video metadata</strong> — video IDs and titles for videos you bookmark.</li>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>hub</span>
           </div>
           <h2 style={H2_STYLE}>3. Third-Party Services</h2>
-          <p style={P_STYLE}>Clipmark uses the following third-party services:</p>
+          <p style={P_STYLE}>ClipMark uses the following third-party services:</p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Google OAuth</strong> — for sign-in. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Google&apos;s Privacy Policy</a>.</li>
             <li style={LI_STYLE}><strong>Supabase</strong> — our database provider. Data is stored in the United States. See <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Supabase&apos;s Privacy Policy</a>.</li>
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Access</strong> — request a copy of the data we hold about you.</li>
             <li style={LI_STYLE}><strong>Delete</strong> — delete your account and all associated data. You can do this from the dashboard settings, or by contacting us.</li>
-            <li style={LI_STYLE}><strong>Export</strong> — export all your bookmarks at any time from the Clipmark dashboard (JSON, CSV, or Markdown).</li>
+            <li style={LI_STYLE}><strong>Export</strong> — export all your bookmarks at any time from the ClipMark dashboard (JSON, CSV, or Markdown).</li>
             <li style={LI_STYLE}><strong>Correction</strong> — request correction of inaccurate data.</li>
           </ul>
           <p style={P_STYLE}>
@@ -165,7 +165,7 @@ export default function PrivacyPage() {
           </div>
           <h2 style={H2_STYLE}>7. Children&apos;s Privacy</h2>
           <p style={P_STYLE}>
-            Clipmark is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such data, please contact us immediately.
+            ClipMark is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such data, please contact us immediately.
           </p>
         </div>
 
@@ -175,7 +175,7 @@ export default function PrivacyPage() {
           </div>
           <h2 style={H2_STYLE}>8. Changes to This Policy</h2>
           <p style={P_STYLE}>
-            We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the date at the top of this page. Your continued use of Clipmark after any changes constitutes acceptance of the updated policy.
+            We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the date at the top of this page. Your continued use of ClipMark after any changes constitutes acceptance of the updated policy.
           </p>
         </div>
 

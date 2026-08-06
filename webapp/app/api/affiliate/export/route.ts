@@ -52,7 +52,7 @@ export async function GET() {
     'Commission Rate',
     'Status',
     'Dodo Reference ID',
-    'Clipmark Conversion ID',
+    'ClipMark Conversion ID',
     'Payout Eligible After',
   ];
 

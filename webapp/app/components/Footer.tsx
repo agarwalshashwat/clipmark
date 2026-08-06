@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-brand">
-          <div className="footer-logo">Clipmark</div>
+          <div className="footer-logo">ClipMark</div>
           <div className="footer-desc">Building the ultimate digital second brain for YouTube learners and curators.</div>
         </div>
         <div className="footer-links-grid">
@@ -29,7 +29,7 @@ export function Footer() {
       </div>
       <div className="footer-bottom">
         <div className="footer-bottom-content">
-          © {new Date().getFullYear()} Clipmark. Built with ❤️ for curators.
+          © {new Date().getFullYear()} ClipMark. Built with ❤️ for curators.
         </div>
       </div>
     </footer>
