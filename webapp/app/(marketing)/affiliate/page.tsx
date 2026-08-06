@@ -4,6 +4,9 @@ import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
 export const metadata: Metadata = {
   title: 'Affiliate Program — Clipmark',
   description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the Clipmark affiliate program and monetize your audience.',
+  alternates: {
+    canonical: '/affiliate',
+  },
 };
 
 const H2 = {

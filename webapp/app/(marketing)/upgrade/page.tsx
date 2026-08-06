@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { createServerSupabase } from '@/lib/supabase';
 import { fetchProductPrices } from './actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './pricing';
@@ -8,6 +9,12 @@ import { SocialProof } from '@/app/components/SocialProof';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import styles from './upgrade.module.css';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/upgrade',
+  },
+};
 
 const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,       pro: true       },
