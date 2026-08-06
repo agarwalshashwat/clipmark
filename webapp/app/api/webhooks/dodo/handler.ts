@@ -1,6 +1,7 @@
 import type DodoPayments from 'dodopayments';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 
 // Injectable dependencies so the handler can be unit-tested with fakes.
 // Production supplies the real memoized clients (see POST wrapper at the bottom).
@@ -55,12 +56,24 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
         'webhook-timestamp': request.headers.get('webhook-timestamp') ?? '',
       },
     }) as DodoPayments.WebhookPayload;
-  } catch {
+  } catch (err) {
     log.error(`signature verification failed webhook-id=${webhookId}`);
+    // Genuine failure Ash needs visibility into (e.g. a mismatched live/test
+    // secret would fail every delivery) — never includes the raw body/signature.
+    Sentry.captureException(err, {
+      level: 'warning',
+      tags: { webhook: 'dodo', dodo_event: 'signature_verification_failed' },
+      extra: { webhookId },
+    });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
   const { type, data } = event;
+  // Dodo's own opaque ids — safe to attach to error reports, unlike the
+  // Supabase user id (kept out per sentry-config.ts's no-PII policy).
+  const { payment_id: eventPaymentId, subscription_id: eventSubscriptionId } =
+    data as { payment_id?: string; subscription_id?: string };
+  const dodoEventId = eventPaymentId ?? eventSubscriptionId ?? 'unknown';
   log.info(`received type=${type} webhook-id=${webhookId}`);
 
   async function recordAffiliateConversion(
@@ -416,6 +429,12 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
     // A critical entitlement write failed — return 500 so Dodo redelivers the
     // event rather than silently leaving the user in the wrong state.
     log.error(`handler failed, returning 500 for retry webhook-id=${webhookId}`, (err as Error).message);
+    // Same failure, reported for alerting — this is the case Vercel logs alone
+    // won't surface as an "error" anyone gets paged for.
+    Sentry.captureException(err, {
+      tags: { webhook: 'dodo', dodo_event: type },
+      extra: { webhookId, dodoEventId },
+    });
     return NextResponse.json({ error: 'processing_failed' }, { status: 500 });
   }
 
