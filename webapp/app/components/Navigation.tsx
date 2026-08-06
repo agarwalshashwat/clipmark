@@ -1,5 +1,6 @@
 import React from 'react';
 import { createServerSupabase } from '@/lib/supabase';
+import { CHROME_STORE_URL } from '@/app/lib/constants';
 
 export async function Navigation() {
   const supabase = await createServerSupabase();
@@ -51,7 +52,9 @@ export async function Navigation() {
           }}>
             ✦ Go Pro
           </a>
-          <a href="https://chrome.google.com/webstore"
+          <a href={CHROME_STORE_URL}
+             target="_blank"
+             rel="noopener noreferrer"
              aria-label="Add Clipmark to Chrome browser for free"
              className="nav-cta"
              style={{

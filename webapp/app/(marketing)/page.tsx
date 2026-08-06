@@ -5,6 +5,7 @@ import { createServerSupabase } from '@/lib/supabase';
 import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
+import { CHROME_STORE_URL } from '@/app/lib/constants';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 import { ScrollReveal } from './ScrollReveal';
 import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
@@ -201,7 +202,9 @@ export default async function Home({
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <a href="https://chrome.google.com/webstore" 
+            <a href={CHROME_STORE_URL}
+               target="_blank"
+               rel="noopener noreferrer"
                style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '20px 44px',
@@ -816,7 +819,9 @@ export default async function Home({
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
             Turn casual watching into lifelong knowledge — build a second brain you&apos;ll actually revisit.
           </p>
-          <a href="https://chrome.google.com/webstore" 
+          <a href={CHROME_STORE_URL}
+             target="_blank"
+             rel="noopener noreferrer"
              aria-label="Install Clipmark Chrome Extension"
              style={{
             display: 'inline-block', padding: '20px 48px',

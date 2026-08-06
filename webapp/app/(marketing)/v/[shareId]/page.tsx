@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
-import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { APP_URL, CHROME_STORE_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -307,7 +307,9 @@ export default async function SharePage(
                   timestamped highlights from any YouTube video — in one click.
                 </p>
                 <a
-                  href="https://chrome.google.com/webstore"
+                  href={CHROME_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={styles.sideBtn}
                   style={{
                     background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',

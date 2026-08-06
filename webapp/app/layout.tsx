@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
-import { APP_URL } from './lib/constants';
+import { APP_URL, CHROME_STORE_URL } from './lib/constants';
 
 const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -81,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     'name': 'Clipmark',
     'operatingSystem': 'ChromeOS, Windows, macOS, Linux',
     'applicationCategory': 'EducationalApplication, BrowserExtension',
+    'installUrl': CHROME_STORE_URL,
     'offers': {
       '@type': 'Offer',
       'price': '0',
