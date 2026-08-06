@@ -3,6 +3,9 @@ import { PRIVACY_EMAIL } from '@/app/lib/constants';
 export const metadata = {
   title: 'Privacy Policy — Clipmark',
   description: 'How Clipmark collects, uses, and protects your data.',
+  alternates: {
+    canonical: '/privacy',
+  },
 };
 
 const SECTION_STYLE = {

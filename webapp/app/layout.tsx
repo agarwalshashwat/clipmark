@@ -81,11 +81,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     'name': 'Clipmark',
     'operatingSystem': 'ChromeOS, Windows, macOS, Linux',
     'applicationCategory': 'EducationalApplication, BrowserExtension',
-    'aggregateRating': {
-      '@type': 'AggregateRating',
-      'ratingValue': '4.9',
-      'reviewCount': '1250'
-    },
     'offers': {
       '@type': 'Offer',
       'price': '0',

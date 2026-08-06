@@ -3,6 +3,9 @@ import { LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
 export const metadata = {
   title: 'Affiliate Terms & Conditions — Clipmark',
   description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+  alternates: {
+    canonical: '/affiliate/terms',
+  },
 };
 
 const SECTION_STYLE = {
