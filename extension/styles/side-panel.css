@@ -1657,16 +1657,27 @@ body {
 }
 .sp-unsupported-secondary:hover { color: #1a1c1d; }
 
-/* ── Due-for-review banner ────────────────────────────────────────────────────── */
+/* ── Due-for-review strip ─────────────────────────────────────────────────────
+   Rendered only when something is actually due (see renderIdleScreen); the
+   panel never shows an empty strip. Mirrors the dashboard's .recall-due-strip
+   palette so the two surfaces read as one product. */
 .sp-idle-due-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  margin-bottom: 18px;
-  background: rgba(20, 184, 166, 0.1);
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px 11px 14px;
+  margin-bottom: 20px;
+  background: rgba(20, 184, 166, 0.08);
   border: 1px solid rgba(20, 184, 166, 0.25);
-  border-radius: 10px;
+  border-radius: 12px;
+}
+
+.sp-idle-due-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .sp-idle-due-icon {
@@ -1681,12 +1692,31 @@ body {
   color: #0d5f57;
 }
 
-/* ── Recent bookmarks list ────────────────────────────────────────────────────── */
+.sp-idle-due-start-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 0.12s;
+}
+.sp-idle-due-start-btn:hover { filter: brightness(1.07); }
+.sp-idle-due-start-btn:active { transform: scale(0.98); }
+
+/* ── Recent clips ─────────────────────────────────────────────────────────────
+   Thumbnail cards grouped by video. Deliberately echoes the dashboard's
+   .vc-card language — 16/9 thumb, bottom gradient, hover play affordance —
+   at side-panel scale rather than cloning its two-column desktop layout. */
 .sp-idle-recent {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 28px;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .sp-idle-recent-label {
@@ -1700,7 +1730,7 @@ body {
 .sp-idle-recent-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 
 .sp-idle-recent-empty {
@@ -1709,28 +1739,143 @@ body {
   padding: 10px 2px;
 }
 
-.sp-idle-recent-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 12px;
+.sp-clip-card {
   background: #fff;
   border: 1px solid rgba(26, 28, 29, 0.08);
-  border-radius: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(26, 28, 29, 0.05);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.sp-clip-card:hover {
+  border-color: rgba(20, 184, 166, 0.35);
+  box-shadow: 0 8px 24px rgba(26, 28, 29, 0.08);
+}
+
+.sp-clip-head {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  transition: border-color 0.15s, transform 0.1s;
-}
-.sp-idle-recent-item:hover {
-  border-color: rgba(20, 184, 166, 0.4);
-}
-.sp-idle-recent-item:active {
-  transform: scale(0.99);
 }
 
-.sp-idle-recent-time {
+.sp-clip-thumb-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.sp-clip-thumb {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.sp-clip-head:hover .sp-clip-thumb { transform: scale(1.04); }
+
+/* Sits underneath the <img>. If the thumbnail 404s the img is hidden and this
+   shows through, so a missing thumbnail is never a broken-image icon. */
+.sp-clip-thumb-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.35);
+}
+.sp-clip-thumb-fallback .material-symbols-outlined { font-size: 32px !important; }
+
+.sp-clip-thumb-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.sp-clip-play {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.sp-clip-play .material-symbols-outlined { font-size: 28px !important; }
+.sp-clip-head:hover .sp-clip-play { opacity: 1; transform: scale(1); }
+
+.sp-clip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 8px;
+}
+
+.sp-clip-title {
+  font-family: var(--font-family-display, inherit);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #1a1c1d;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sp-clip-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0d9488;
+}
+
+.sp-clip-moments {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(26, 28, 29, 0.06);
+}
+
+.sp-clip-moment {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(26, 28, 29, 0.05);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.sp-clip-moment:last-of-type { border-bottom: none; }
+.sp-clip-moment:hover { background: rgba(20, 184, 166, 0.07); }
+.sp-clip-moment:active { background: rgba(20, 184, 166, 0.12); }
+
+.sp-clip-moment-time {
   flex-shrink: 0;
   font-family: var(--font-family-mono, monospace);
   font-size: 11px;
@@ -1741,10 +1886,17 @@ body {
   border-radius: 5px;
 }
 
-.sp-idle-recent-desc {
+.sp-clip-moment-desc {
   font-size: 12px;
   color: #3a3f3d;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sp-clip-more {
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a8f8d;
 }

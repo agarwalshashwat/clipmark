@@ -168,23 +168,30 @@
         </div>
         <h2 class="sp-idle-title">Not watching right now</h2>
         <p class="sp-idle-subtitle">Open a YouTube video to start clipping moments.</p>
-        <div class="sp-idle-cta-row">
-          <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
-            <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
-            Open YouTube
-          </button>
-          <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
-        </div>
       </div>
 
+      <!-- Due-for-review strip. Rendered only when something is actually due;
+           renderIdleScreen keeps it display:none otherwise (never an empty strip). -->
       <div id="sp-idle-due-banner" class="sp-idle-due-banner" style="display:none;">
-        <span class="material-symbols-outlined sp-idle-due-icon">psychology</span>
-        <span class="sp-idle-due-text"></span>
+        <div class="sp-idle-due-row">
+          <span class="material-symbols-outlined sp-idle-due-icon">psychology</span>
+          <span class="sp-idle-due-text"></span>
+        </div>
+        <button id="sp-idle-due-start-btn" class="sp-idle-due-start-btn">Start review</button>
       </div>
 
       <div class="sp-idle-recent">
-        <span class="sp-idle-recent-label">Recent bookmarks</span>
+        <span class="sp-idle-recent-label">Recent clips</span>
         <div id="sp-idle-recent-list" class="sp-idle-recent-list"></div>
+      </div>
+
+      <!-- Order is deliberate: due-for-review → recent clips → these CTAs. -->
+      <div class="sp-idle-cta-row">
+        <button id="sp-go-youtube-btn" class="sp-unsupported-primary">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">play_circle</span>
+          Open YouTube
+        </button>
+        <button id="sp-open-dashboard-btn" class="sp-unsupported-secondary">Open Dashboard</button>
       </div>
     </div>
   </div>
