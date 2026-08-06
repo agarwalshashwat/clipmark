@@ -3,6 +3,9 @@ import { SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
 export const metadata = {
   title: 'Terms of Service — Clipmark',
   description: 'Terms and conditions for using Clipmark.',
+  alternates: {
+    canonical: '/terms',
+  },
 };
 
 const SECTION_STYLE = {

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 
 function formatTimestamp(seconds: number): string {
@@ -14,6 +15,17 @@ async function getCollection(shareId: string): Promise<Collection | null> {
     .eq('id', shareId)
     .single();
   return (error || !data) ? null : data as Collection;
+}
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ shareId: string }> }
+): Promise<Metadata> {
+  const { shareId } = await params;
+  return {
+    alternates: {
+      canonical: `/embed/${shareId}`,
+    },
+  };
 }
 
 export default async function EmbedPage(
