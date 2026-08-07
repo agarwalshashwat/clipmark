@@ -1,11 +1,33 @@
 import { Metadata } from 'next';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
+import { APP_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Affiliate Program — ClipMark',
   description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the ClipMark affiliate program and monetize your audience.',
   alternates: {
     canonical: '/affiliate',
+  },
+  openGraph: {
+    title: 'Affiliate Program — Clipmark',
+    description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the Clipmark affiliate program and monetize your audience.',
+    type: 'website',
+    url: '/affiliate',
+    siteName: 'Clipmark',
+    images: [
+      {
+        url: `${APP_URL}/clipmark-logo.png`,
+        width: 512,
+        height: 512,
+        alt: 'Clipmark — YouTube Bookmark Extension',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Affiliate Program — Clipmark',
+    description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the Clipmark affiliate program and monetize your audience.',
+    images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
 

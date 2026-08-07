@@ -9,10 +9,34 @@ import { SocialProof } from '@/app/components/SocialProof';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import styles from './upgrade.module.css';
+import { APP_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
+  title: 'Clipmark Pricing — Free & Pro Plans',
+  description: 'Compare Clipmark Free and Pro. Free covers unlimited local bookmarks and Active Recall basics; Pro adds cloud sync, unlimited flashcards, and Anki export.',
   alternates: {
     canonical: '/upgrade',
+  },
+  openGraph: {
+    title: 'Clipmark Pricing — Free & Pro Plans',
+    description: 'Compare Clipmark Free and Pro. Free covers unlimited local bookmarks and Active Recall basics; Pro adds cloud sync, unlimited flashcards, and Anki export.',
+    type: 'website',
+    url: '/upgrade',
+    siteName: 'Clipmark',
+    images: [
+      {
+        url: `${APP_URL}/clipmark-logo.png`,
+        width: 512,
+        height: 512,
+        alt: 'Clipmark — YouTube Bookmark Extension',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Clipmark Pricing — Free & Pro Plans',
+    description: 'Compare Clipmark Free and Pro. Free covers unlimited local bookmarks and Active Recall basics; Pro adds cloud sync, unlimited flashcards, and Anki export.',
+    images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
 
