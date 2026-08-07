@@ -5,12 +5,13 @@ import { createServerSupabase } from '@/lib/supabase';
 import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
+import { CHROME_STORE_URL } from '@/app/lib/constants';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 import { ScrollReveal } from './ScrollReveal';
 import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
 
 export const metadata: Metadata = {
-  title: 'Clipmark — Turn YouTube Into Video Flashcards You Remember',
+  title: 'ClipMark — Turn YouTube Into Video Flashcards You Remember',
   description: 'Bookmark the moments that matter, then let Active Recall quiz you on them before replaying the clip. Spaced review, local AI notes, and one-click export to Anki.',
   keywords: [
     'youtube bookmarks', 'video flashcards', 'active recall', 'spaced repetition',
@@ -26,15 +27,15 @@ const FAQ_DATA = [
   },
   {
     q: 'How does AI Auto-fill work?',
-    a: 'When you save a moment, Clipmark reads the transcript around that timestamp and drafts a short note for you, then suggests tags based on what the clip is about. You can edit either before saving.',
+    a: 'When you save a moment, ClipMark reads the transcript around that timestamp and drafts a short note for you, then suggests tags based on what the clip is about. You can edit either before saving.',
   },
   {
     q: 'How does Active Recall decide what to show me?',
     a: 'Each saved moment gets a review schedule (1, 3 and 7 days to start). When a moment comes due, Active Recall shows you the timestamp and tags but hides your note, so you have to remember it before you reveal and replay the clip. Answer "Got it" and the next interval doubles, up to 60 days; answer "Again" and it comes back tomorrow.',
   },
   {
-    q: 'Does Clipmark replace Anki?',
-    a: 'No — it feeds it. Anki can\'t bookmark and replay the actual moment from a lecture, which is exactly what Clipmark does. Pro users can export their clips as an Anki-importable file, and every card links straight back to the second it came from, so you keep the deck you already trust.',
+    q: 'Does ClipMark replace Anki?',
+    a: 'No — it feeds it. Anki can\'t bookmark and replay the actual moment from a lecture, which is exactly what ClipMark does. Pro users can export their clips as an Anki-importable file, and every card links straight back to the second it came from, so you keep the deck you already trust.',
   },
   {
     q: 'What happens to my clips if I downgrade?',
@@ -86,7 +87,7 @@ export default async function Home({
   const howToLd = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    "name": "How to Use Clipmark for YouTube Bookmarking",
+    "name": "How to Use ClipMark for YouTube Bookmarking",
     "description": "Follow the Curator's Journey to capture and organize your favorite YouTube moments with AI-powered tools.",
     "step": [
       {
@@ -97,7 +98,7 @@ export default async function Home({
       {
         "@type": "HowToStep",
         "name": "Organize with AI",
-        "text": "Clipmark drafts a note from the transcript and suggests tags for every clip, using Chrome's on-device Gemini Nano."
+        "text": "ClipMark drafts a note from the transcript and suggests tags for every clip, using Chrome's on-device Gemini Nano."
       },
       {
         "@type": "HowToStep",
@@ -151,7 +152,7 @@ export default async function Home({
           fontWeight: 500,
         }}>
           <span style={{ marginRight: 6 }}>👋</span>
-          You were referred by <strong>@{referrerUsername}</strong> — welcome to Clipmark!
+          You were referred by <strong>@{referrerUsername}</strong> — welcome to ClipMark!
         </div>
       )}
 
@@ -201,7 +202,9 @@ export default async function Home({
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <a href="https://chrome.google.com/webstore" 
+            <a href={CHROME_STORE_URL}
+               target="_blank"
+               rel="noopener noreferrer"
                style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '20px 44px',
@@ -283,7 +286,7 @@ export default async function Home({
               Stop Scrubbing, <br /><span style={{ color: 'var(--primary-deep)' }}>Start Remembering.</span>
             </h2>
             <p style={{ fontSize: 18, color: '#545f6c', marginBottom: 40, lineHeight: 1.75 }}>
-              Most of what you watch fades within a day. Clipmark&apos;s <strong>Active Recall</strong> quizzes you on the moments you saved before replaying them — turning hours of idle watching into minutes of active mastery.
+              Most of what you watch fades within a day. ClipMark&apos;s <strong>Active Recall</strong> quizzes you on the moments you saved before replaying them — turning hours of idle watching into minutes of active mastery.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -300,7 +303,7 @@ export default async function Home({
                   <span className="material-symbols-outlined">bolt</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>The Clipmark System (Pro)</h4>
+                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>The ClipMark System (Pro)</h4>
                   <p style={{ fontSize: 14, color: '#545f6c', fontStyle: 'italic' }}>&ldquo;Playing 4 peak moments in 6 minutes. System locked in.&rdquo;</p>
                 </div>
               </div>
@@ -330,7 +333,7 @@ export default async function Home({
                   <span className="material-symbols-outlined" style={{ fontSize: 32 }}>arrow_forward</span>
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <div style={{ color: 'var(--primary-deep)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The Clipmark Way</div>
+                  <div style={{ color: 'var(--primary-deep)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The ClipMark Way</div>
                   <div style={{ height: 120, background: '#ccfbf1', borderRadius: 16, border: '2px solid #99f6e4', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 12 }}>
                     <div style={{ width: '90%', height: 12, background: '#14B8A6', borderRadius: 6 }} />
                     <div style={{ width: '90%', height: 12, background: '#14B8A6', borderRadius: 6 }} />
@@ -377,7 +380,7 @@ export default async function Home({
               Don&apos;t just rewatch it.<br />Try to <em style={{ color: '#0D9488', fontStyle: 'italic' }}>remember</em> it.
             </h2>
             <p style={{ fontSize: 18, color: '#545f6c', maxWidth: 620, margin: '0 auto', lineHeight: 1.7 }}>
-              Rewatching feels like studying, but recognition isn&apos;t recall. Clipmark shows you the
+              Rewatching feels like studying, but recognition isn&apos;t recall. ClipMark shows you the
               timestamp and hides your note — so you have to retrieve it before the clip plays.
             </p>
           </div>
@@ -388,8 +391,8 @@ export default async function Home({
             gap: 32, alignItems: 'stretch', maxWidth: 900, margin: '0 auto 72px',
           }}>
             {[
-              { src: '/active-recall-prompt.png', w: 330, h: 190, alt: 'Clipmark asking you to recall a saved moment: the timestamp and tag are shown, the note is hidden, with a Reveal and Play button.', cap: '1 · You get the cue, not the answer' },
-              { src: '/active-recall-grade.png', w: 330, h: 130, alt: 'Clipmark revealing the saved note after the clip played, with Again and Got it buttons.', cap: '2 · Watch, then grade yourself' },
+              { src: '/active-recall-prompt.png', w: 330, h: 190, alt: 'ClipMark asking you to recall a saved moment: the timestamp and tag are shown, the note is hidden, with a Reveal and Play button.', cap: '1 · You get the cue, not the answer' },
+              { src: '/active-recall-grade.png', w: 330, h: 130, alt: 'ClipMark revealing the saved note after the clip played, with Again and Got it buttons.', cap: '2 · Watch, then grade yourself' },
             ].map(({ src, w, h, alt, cap }) => (
               <figure key={src} style={{ margin: 0, textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
                 <div style={{
@@ -447,7 +450,7 @@ export default async function Home({
               Keep your deck. Add the moment.
             </h2>
             <p style={{ fontSize: 17, color: '#545f6c', lineHeight: 1.75, marginBottom: 24 }}>
-              Clipmark isn&apos;t trying to replace the deck you&apos;ve spent years building. Anki can&apos;t
+              ClipMark isn&apos;t trying to replace the deck you&apos;ve spent years building. Anki can&apos;t
               bookmark and replay the exact second a concept was explained — that&apos;s the part we add.
               Export your clips and every card links straight back to the source.
             </p>
@@ -455,7 +458,7 @@ export default async function Home({
               {[
                 'One-click export to an Anki-importable file (Front / Back / Tags)',
                 'Every card carries a “▶ Replay the moment” link to the exact second',
-                'Your Clipmark tags come across as Anki tags',
+                'Your ClipMark tags come across as Anki tags',
                 'Export from the extension or the web dashboard',
               ].map(item => (
                 <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, color: '#1A1C1D' }}>
@@ -508,7 +511,7 @@ export default async function Home({
               Curated For Your Workflow
             </h2>
             <p style={{ color: '#545f6c', maxWidth: 480, margin: '0 auto', fontSize: 16 }}>
-              Whether you&apos;re building, studying, or creating, Clipmark adapts to your mental model.
+              Whether you&apos;re building, studying, or creating, ClipMark adapts to your mental model.
             </p>
           </div>
 
@@ -664,7 +667,7 @@ export default async function Home({
               { 
                 num: '02', 
                 title: 'Organize with AI',   
-                desc: 'Clipmark drafts a note from the transcript and suggests tags, using Chrome\'s on-device Gemini Nano.',
+                desc: 'ClipMark drafts a note from the transcript and suggests tags, using Chrome\'s on-device Gemini Nano.',
                 icon: 'psychology'
               },
               { 
@@ -801,10 +804,10 @@ export default async function Home({
             <span className="material-symbols-outlined" style={{ fontSize: 32 }}>person</span>
           </div>
           <p style={{ fontSize: 18, fontStyle: 'italic', color: '#1A1C1D', lineHeight: 1.6, marginBottom: 24, fontWeight: 500 }}>
-            &ldquo;I built Clipmark because I was tired of re-watching the same 3-hour podcasts just to find that one 30-second gem I forgot to write down. YouTube is a goldmine, but only if you have a way to mine it.&rdquo;
+            &ldquo;I built ClipMark because I was tired of re-watching the same 3-hour podcasts just to find that one 30-second gem I forgot to write down. YouTube is a goldmine, but only if you have a way to mine it.&rdquo;
           </p>
           <p style={{ fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#545f6c' }}>
-            — Creator of Clipmark
+            — Creator of ClipMark
           </p>
         </div>
 
@@ -816,8 +819,10 @@ export default async function Home({
           <p style={{ fontSize: 20, color: '#545f6c', marginBottom: 48 }}>
             Turn casual watching into lifelong knowledge — build a second brain you&apos;ll actually revisit.
           </p>
-          <a href="https://chrome.google.com/webstore" 
-             aria-label="Install Clipmark Chrome Extension"
+          <a href={CHROME_STORE_URL}
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-label="Install ClipMark Chrome Extension"
              style={{
             display: 'inline-block', padding: '20px 48px',
             background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)',
