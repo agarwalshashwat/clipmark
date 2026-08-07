@@ -1,10 +1,31 @@
-import { LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { APP_URL, LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
 export const metadata = {
   title: 'Affiliate Terms & Conditions — Clipmark',
   description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
   alternates: {
     canonical: '/affiliate/terms',
+  },
+  openGraph: {
+    title: 'Affiliate Terms & Conditions — Clipmark',
+    description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+    type: 'website',
+    url: '/affiliate/terms',
+    siteName: 'Clipmark',
+    images: [
+      {
+        url: `${APP_URL}/clipmark-logo.png`,
+        width: 512,
+        height: 512,
+        alt: 'Clipmark — YouTube Bookmark Extension',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Affiliate Terms & Conditions — Clipmark',
+    description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+    images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
 
