@@ -1,8 +1,8 @@
 import { APP_URL, SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
 
 export const metadata = {
-  title: 'Terms of Service — Clipmark',
-  description: 'Terms and conditions for using Clipmark.',
+  title: 'Terms of Service — ClipMark',
+  description: 'Terms and conditions for using ClipMark.',
   alternates: {
     canonical: '/terms',
   },
@@ -85,8 +85,8 @@ export default function TermsPage() {
             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>description</span>
           </div>
           <p style={P_STYLE}>
-            These Terms of Service (&quot;Terms&quot;) govern your use of Clipmark (&quot;the Service&quot;) operated by Clipmark
-            (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By using Clipmark, you agree to these Terms. If you do not agree, do not use the Service.
+            These Terms of Service (&quot;Terms&quot;) govern your use of ClipMark (&quot;the Service&quot;) operated by ClipMark
+            (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By using ClipMark, you agree to these Terms. If you do not agree, do not use the Service.
           </p>
         </div>
 
@@ -95,13 +95,13 @@ export default function TermsPage() {
             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>account_circle</span>
           </div>
           <h2 style={H2_STYLE}>1. Use of the Service</h2>
-          <p style={P_STYLE}>You may use Clipmark to:</p>
+          <p style={P_STYLE}>You may use ClipMark to:</p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>Save timestamped bookmarks on YouTube videos for personal use.</li>
             <li style={LI_STYLE}>Organize, tag, and share collections of bookmarks.</li>
             <li style={LI_STYLE}>Use AI-powered features (Pro tier) to generate summaries and tags.</li>
           </ul>
-          <p style={P_STYLE}>You may <strong>not</strong> use Clipmark to:</p>
+          <p style={P_STYLE}>You may <strong>not</strong> use ClipMark to:</p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>Violate any applicable laws or regulations.</li>
             <li style={LI_STYLE}>Infringe on the intellectual property rights of others.</li>
@@ -117,7 +117,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>2. Accounts</h2>
           <p style={P_STYLE}>
-            You may use Clipmark without an account (bookmarks stored locally). To access cloud sync and sharing features, you must sign in with a Google account. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account.
+            You may use ClipMark without an account (bookmarks stored locally). To access cloud sync and sharing features, you must sign in with a Google account. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account.
           </p>
         </div>
 
@@ -127,7 +127,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>3. Pro Subscription</h2>
           <p style={P_STYLE}>
-            Clipmark offers a paid Pro tier that unlocks AI features, unlimited shared collections, and spaced revisit. The following terms apply to Pro subscriptions:
+            ClipMark offers a paid Pro tier that unlocks AI features, unlimited shared collections, and spaced revisit. The following terms apply to Pro subscriptions:
           </p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Billing</strong> — subscriptions are billed monthly or annually as selected. Payments are processed by Dodo Payments.</li>
@@ -144,7 +144,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>4. Your Content</h2>
           <p style={P_STYLE}>
-            You own the content you create in Clipmark (bookmark descriptions, tags, notes). By sharing a collection publicly, you grant us a non-exclusive license to display that content at the shared URL. You can revoke this by deleting the shared collection.
+            You own the content you create in ClipMark (bookmark descriptions, tags, notes). By sharing a collection publicly, you grant us a non-exclusive license to display that content at the shared URL. You can revoke this by deleting the shared collection.
           </p>
           <p style={P_STYLE}>
             You represent that any content you create or share does not violate third-party rights or applicable laws.
@@ -157,7 +157,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>5. Third-Party Content</h2>
           <p style={P_STYLE}>
-            Clipmark interacts with YouTube videos and content. We do not host, cache, or redistribute any YouTube video content. YouTube&apos;s own <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Terms of Service</a> apply to your use of YouTube.
+            ClipMark interacts with YouTube videos and content. We do not host, cache, or redistribute any YouTube video content. YouTube&apos;s own <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Terms of Service</a> apply to your use of YouTube.
           </p>
         </div>
 
@@ -180,7 +180,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>7. Limitation of Liability</h2>
           <p style={P_STYLE}>
-            To the maximum extent permitted by law, Clipmark is provided &quot;as is&quot; without warranties of any kind. We shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, loss of bookmarks, or service interruption.
+            To the maximum extent permitted by law, ClipMark is provided &quot;as is&quot; without warranties of any kind. We shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service, including but not limited to loss of data, loss of bookmarks, or service interruption.
           </p>
           <p style={P_STYLE}>
             Our total liability to you for any claim arising from these Terms or the Service shall not exceed the amount you paid us in the 12 months preceding the claim.
@@ -203,7 +203,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>9. Governing Law</h2>
           <p style={P_STYLE}>
-            These Terms are governed by the laws of the jurisdiction in which Clipmark is incorporated, without regard to conflict of law principles.
+            These Terms are governed by the laws of the jurisdiction in which ClipMark is incorporated, without regard to conflict of law principles.
           </p>
         </div>
 

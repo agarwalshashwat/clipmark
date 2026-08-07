@@ -3,7 +3,7 @@ import { createServerSupabase, type Collection, type Bookmark } from '@/lib/supa
 import DashboardContent from './_components/DashboardContent';
 import styles from './page.module.css';
 
-export const metadata = { title: 'Dashboard — Clipmark' };
+export const metadata = { title: 'Dashboard — ClipMark' };
 
 export default async function DashboardPage({
   searchParams,
@@ -57,7 +57,7 @@ export default async function DashboardPage({
       textAlign: 'center', fontSize: 15, color: '#006b5f',
       fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
-      Payment successful — welcome to Clipmark Pro! 🎉
+      Payment successful — welcome to ClipMark Pro! 🎉
     </div>
   ) : undefined;
 

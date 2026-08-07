@@ -50,7 +50,7 @@ function ExtensionSuccessInner() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 26, color: '#14B8A6',
           }}>✓</span>
-          <p style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Signed in to Clipmark!</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Signed in to ClipMark!</p>
           <p style={{ fontSize: 13, color: '#6b7280' }}>You can close this tab and return to YouTube.</p>
         </>
       )}

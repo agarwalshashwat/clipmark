@@ -159,7 +159,10 @@ This matters because `docs/gtm/chrome-web-store-listing.md` explicitly names "Re
 - The two product screenshots have genuinely descriptive, keyword-relevant alt text (page.tsx:401) — not generic "screenshot.png" alt text, which is a common failure mode this site avoids.
 - Internal linking from `Navigation.tsx` and `Footer.tsx` is clean and consistent (`/upgrade`, `/affiliate`, `/privacy`, `/terms` all linked from both) — the crawl graph itself is fine; it was the canonical tags undermining it (✅ fixed by PR #82).
 
-### Adjacent, non-SEO issue worth flagging since it touches organic conversion
+### Adjacent, non-SEO issue worth flagging since it touches organic conversion — ✅ Resolved
+
+> **✅ Resolved.** The Chrome Web Store listing now exists, and every install CTA points at it via a single `CHROME_STORE_URL` constant in `webapp/app/lib/constants.ts` (nav, footer, both homepage CTAs, the shared-collection page, plus the dashboard empty state). The `SoftwareApplication` JSON-LD also gained an `installUrl`. The original finding is preserved below for the record.
+
 Every "Get the extension" CTA — [Navigation.tsx:54](../../webapp/app/components/Navigation.tsx), homepage ([page.tsx:204](<../../webapp/app/(marketing)/page.tsx>), [:819](<../../webapp/app/(marketing)/page.tsx>)), and the shared-collection page ([v/[shareId]/page.tsx:310](<../../webapp/app/(marketing)/v/[shareId]/page.tsx>)) — link to the generic `https://chrome.google.com/webstore`, not a real listing (there isn't one yet — the extension isn't published on the Chrome Web Store per `docs/gtm/chrome-web-store-listing.md`). Once the listing goes live, all five of these need the real `chromewebstore.google.com/detail/...` URL — otherwise every visitor who clicks "Get the extension," including anyone arriving from organic search, lands on an unrelated generic search page. **Owner action once the CWS listing is approved**, not a code issue today.
 
 ---
@@ -224,11 +227,11 @@ Three real, currently-operating competitors were found running content specifica
 | 3 | Stand up a `/blog` or `/guides` section — currently the site has none, while all three real competitors found are winning long-tail traffic through exactly this | High (compounds over time) | Substantial | Content/editorial resourcing |
 | 4 | Bring the MED/USMLE/IMG positioning already documented internally (`docs/gtm/chrome-web-store-listing.md`) onto the actual homepage — at minimum, rename "For the Serious Learner" into something that names the audience, or add a fourth persona card | Medium–high | Moderate | Product/marketing sign-off on public-facing med-specific claims (the CWS doc notes deliberate scoping to "usable for any serious YouTube learner" — decide before shipping) |
 | 5 | Roll out `Content-Security-Policy-Report-Only` per `docs/TEST-STRATEGY.md` §4.2's existing recommendation, ahead of enforcing a real CSP | Low direct SEO impact today; protects future backlink/traffic equity | Moderate | Engineering time, not blocked on anything above |
-| 6 | Once the Chrome Web Store listing is live, update all 5 "Get the extension" CTA links to the real listing URL | Indirect — protects organic conversion, not ranking | Low | **Owner action**: CWS listing approval |
+| 6 | ~~Once the Chrome Web Store listing is live, update all 5 "Get the extension" CTA links to the real listing URL~~ — **✅ Resolved**; all CTAs now read from `CHROME_STORE_URL` | Indirect — protects organic conversion, not ranking | Low | — |
 | 7 | Consider Search Console verification of performance/coverage data (already verified per §1) to track whether the canonical fix in quick-win #1 actually restores indexation of `/affiliate` et al. — a concrete before/after check | Confirms whether fixes worked | Low | Quick win #1 shipped first |
 
 ### Needs owner action (not a dev task)
-- Chrome Web Store listing approval, so the real extension URL can replace the generic `chrome.google.com/webstore` link in 5 places (§2, strategic #6).
+- ~~Chrome Web Store listing approval, so the real extension URL can replace the generic `chrome.google.com/webstore` link in 5 places (§2, strategic #6).~~ — **✅ Resolved**: the listing is live and all CTAs now point at it.
 - `NEXT_PUBLIC_APP_URL` Vercel production env var — confirm/fix the trailing slash (§1.6, quick win #6) and trigger a redeploy.
 - A product/marketing decision on how explicitly to surface the USMLE/IMG wedge on the public site vs. keeping copy broad (strategic #4) — this is a positioning call, not something to default on unilaterally.
 - Google Search Console already appears verified (site-verification meta present); worth confirming someone on the team actually has account access, and pulling real Coverage/Performance data once quick wins ship to validate impact.

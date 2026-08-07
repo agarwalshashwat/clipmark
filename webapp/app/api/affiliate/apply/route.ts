@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     const discount = await dodo.discounts.create({
       type: 'percentage',
       amount: 1000, // 1000 basis points = 10%
-      name: `Clipmark Affiliate — ${profile.username}`,
+      name: `ClipMark Affiliate — ${profile.username}`,
       usage_limit: null,  // unlimited
       expires_at:  null,  // never expires
     });

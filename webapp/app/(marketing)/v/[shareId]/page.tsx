@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
-import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { APP_URL, CHROME_STORE_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -64,20 +64,20 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { shareId } = await params;
   const collection = await getCollection(shareId);
-  if (!collection) return { title: 'Not found — Clipmark' };
+  if (!collection) return { title: 'Not found — ClipMark' };
 
   const title = collection.video_title || 'YouTube Video';
   const baseUrl = APP_URL;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`;
 
   return {
-    title: `${title} — Clipmark`,
+    title: `${title} — ClipMark`,
     description: `${collection.bookmarks.length} timestamped bookmarks for "${title}"`,
     alternates: {
       canonical: `/v/${shareId}`,
     },
     openGraph: {
-      title: `${title} — Clipmark`,
+      title: `${title} — ClipMark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
       type: 'video.other',
       url: `/v/${shareId}`,
@@ -87,13 +87,13 @@ export async function generateMetadata(
           url: ogUrl,
           width: 1200,
           height: 630,
-          alt: `Clipmark shared bookmarks for ${title}`,
+          alt: `ClipMark shared bookmarks for ${title}`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} — Clipmark`,
+      title: `${title} — ClipMark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
       images: [ogUrl],
     },
@@ -190,7 +190,7 @@ export default async function SharePage(
               <h1 className={styles.videoTitle}>{title}</h1>
               <p className={styles.sharedBy}>
                 Curated via{' '}
-                <span className={styles.sharedByHighlight}>Clipmark</span>
+                <span className={styles.sharedByHighlight}>ClipMark</span>
               </p>
             </div>
 
@@ -305,11 +305,13 @@ export default async function SharePage(
                   Create your own collections
                 </h6>
                 <p className={styles.promoBody} style={{ fontSize: 14, marginBottom: 24 }}>
-                  Clipmark is a free extension that lets you save, tag, and share
+                  ClipMark is a free extension that lets you save, tag, and share
                   timestamped highlights from any YouTube video — in one click.
                 </p>
                 <a
-                  href="https://chrome.google.com/webstore"
+                  href={CHROME_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={styles.sideBtn}
                   style={{
                     background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',

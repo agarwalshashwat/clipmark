@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
-import { APP_URL } from './lib/constants';
+import { APP_URL, CHROME_STORE_URL } from './lib/constants';
 
 const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -29,7 +29,7 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  title: 'Clipmark — YouTube Timestamp Bookmarks',
+  title: 'ClipMark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
   icons: {
@@ -44,23 +44,23 @@ export const metadata: Metadata = {
     google: 'chJnY3idU4qZvir3ZZ3NAcVF3mde32n0AMYk2SJNt1k',
   },
   openGraph: {
-    title: 'Clipmark — YouTube Timestamp Bookmarks',
+    title: 'ClipMark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     type: 'website',
     url: APP_URL,
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Clipmark — YouTube Timestamp Bookmarks',
+    title: 'ClipMark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
@@ -78,9 +78,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    'name': 'Clipmark',
+    'name': 'ClipMark',
     'operatingSystem': 'ChromeOS, Windows, macOS, Linux',
     'applicationCategory': 'EducationalApplication, BrowserExtension',
+    'installUrl': CHROME_STORE_URL,
     'offers': {
       '@type': 'Offer',
       'price': '0',

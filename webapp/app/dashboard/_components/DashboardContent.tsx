@@ -19,6 +19,7 @@ import GroupPickerModal from './GroupPickerModal';
 import BookmarkNotes from './BookmarkNotes';
 import { getSavedSearches, saveSavedSearch, deleteSavedSearch, type SavedSearch } from '../_utils/savedSearches';
 import type { Collection, Bookmark } from '@/lib/supabase';
+import { CHROME_STORE_URL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -137,7 +138,7 @@ function exportCSV(collections: Collection[]) {
 }
 
 function exportMarkdown(collections: Collection[]) {
-  const lines: string[] = ['# Clipmark Bookmarks\n'];
+  const lines: string[] = ['# ClipMark Bookmarks\n'];
   for (const c of collections) {
     lines.push(`## ${c.video_title ?? 'Untitled'}`);
     lines.push(`[Open on YouTube](https://www.youtube.com/watch?v=${c.video_id})\n`);
@@ -160,7 +161,7 @@ function exportAnki(collections: Collection[]) {
 
 // Pro. Mirrors extension/src/popup/dashboard.js::exportObsidian.
 function exportObsidian(collections: Collection[]) {
-  const lines: string[] = ['# Clipmark Export — Obsidian\n'];
+  const lines: string[] = ['# ClipMark Export — Obsidian\n'];
   for (const c of collections) {
     const title = c.video_title ?? c.video_id;
     lines.push(`> [!note] [${title}](https://www.youtube.com/watch?v=${c.video_id})\n`);
@@ -196,7 +197,7 @@ function exportNotionCSV(collections: Collection[]) {
 
 // Pro. Mirrors extension/src/popup/dashboard.js::exportReadingList.
 function exportReadingList(collections: Collection[]) {
-  const lines: string[] = ['Clipmark — Reading List Export', '='.repeat(40), ''];
+  const lines: string[] = ['ClipMark — Reading List Export', '='.repeat(40), ''];
   for (const c of collections) {
     const title = c.video_title ?? c.video_id;
     lines.push(`▶ ${title}`, `   https://www.youtube.com/watch?v=${c.video_id}`, '');
@@ -721,7 +722,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
             <span className={styles.recallDueHint}>
               {bridgeReady
                 ? 'Click a video to start Active Recall in the extension.'
-                : 'Open a video with the Clipmark extension to start Active Recall.'}
+                : 'Open a video with the ClipMark extension to start Active Recall.'}
             </span>
           </div>
           <div className={styles.recallDueChips}>
@@ -778,7 +779,15 @@ export default function DashboardContent({ collections, isPro, initialView, init
             </div>
             <h3 className={styles.emptyTitle}>No collections yet</h3>
             <p className={styles.emptyText}>
-              Install the extension and bookmark moments from YouTube videos to see them here.
+              <a
+                href={CHROME_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--accent)', fontWeight: 700 }}
+              >
+                Install the extension
+              </a>
+              {' '}and bookmark moments from YouTube videos to see them here.
             </p>
           </div>
         )
