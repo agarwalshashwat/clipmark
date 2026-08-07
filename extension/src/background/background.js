@@ -4,6 +4,7 @@
 // script forwards to it (see src/error-report-bridge.js).
 import { initErrorReporting, isOwnScript } from '../error-reporting.js';
 import { countEnrolledRecallSegments, isEnrollmentCapReached, FREE_RECALL_ENROLLED_CAP } from '../usage-caps.module.js';
+import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
 
 const errorReporter = initErrorReporting('extension-background');
 
@@ -339,16 +340,9 @@ const TAG_COLORS = {
   });
 
 // ─── External message from webapp (auth token after OAuth) ────────────────────
-// Only the ClipMark web app may talk to the extension. `externally_connectable`
-// in the manifest is the real gate (Chrome refuses to deliver from any other
-// origin); this is defence in depth, and it matters more now that an external
-// message can take an action (opening tabs) rather than just storing tokens.
-const APP_ORIGIN = 'https://clipmark.mithahara.com';
-
-function isTrustedExternalSender(sender) {
-  const origin = sender?.origin || sender?.url || '';
-  return origin === APP_ORIGIN || origin.startsWith(`${APP_ORIGIN}/`);
-}
+// The trust gate and the AUTH_SUCCESS payload shape live in
+// src/external-messaging.module.js so they can be unit-tested; see the notes
+// there for why only the ClipMark web app may talk to the extension.
 
 /**
  * Start an Active Recall session for a video, driven from the web dashboard.
@@ -402,15 +396,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
   }
 
   if (message.type === 'AUTH_SUCCESS') {
-    chrome.storage.sync.set({
-      bmUser: {
-        userId:       message.userId,
-        userEmail:    message.userEmail,
-        accessToken:  message.accessToken,
-        refreshToken: message.refreshToken,
-        isPro:        message.isPro || false,
-      }
-    }, () => {
+    chrome.storage.sync.set({ bmUser: buildAuthUser(message) }, () => {
       sendResponse({ ok: true });
       scheduleReminderAlarms();
     });
