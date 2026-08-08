@@ -17,6 +17,13 @@
  * by writing video.currentTime. That still exercises the shipped watchdog: its
  * 200ms safety interval ticks regardless of whether frames are being presented.
  *
+ * Deliberately avoids `networkidle`, `hover()` and real mouse clicks: YouTube
+ * rarely goes idle, and the player auto-hides its control bar, so a coordinate
+ * click on our injected button lands on whatever overlay is on top instead.
+ * The controls are asserted as ATTACHED and driven with dispatchEvent, which
+ * targets the element directly — this spec is testing our handlers, not
+ * YouTube's chrome.
+ *
  * Requires `make ext-build` first (skips with a message otherwise).
  */
 import { test, expect, chromium, BrowserContext, Page, Worker } from '@playwright/test';
@@ -79,15 +86,29 @@ async function seed(worker: Worker, bookmarks: unknown[]): Promise<void> {
 
 async function openWatchPage(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
-  await page.goto(VIDEO_URL, { waitUntil: 'networkidle' });
+  await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
   // The built content.js references the loop helpers as bare globals, so the
-  // injected player buttons prove the loop chunk survived bundling.
-  await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 20_000 });
-  await page.locator('video').hover({ force: true });
-  await page.locator('.yt-loop-player-btn').waitFor({ timeout: 20_000 });
+  // injected player buttons prove the loop chunk survived bundling. Attached,
+  // not visible: YouTube hides the control bar until the pointer moves.
+  await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 30_000 });
+  await page.locator('.yt-loop-player-btn').waitFor({ state: 'attached', timeout: 30_000 });
   // Keep the player quiet — position is driven explicitly below.
   await page.locator('video').evaluate((v: HTMLVideoElement) => v.pause());
   return page;
+}
+
+/** Opens the loop panel and arms the saved loop at `index`. */
+async function armSavedLoop(page: Page, index = 0): Promise<void> {
+  await page.locator('.yt-loop-player-btn').dispatchEvent('click');
+  await page.locator('.yt-loop-panel').waitFor({ timeout: 15_000 });
+  await page.locator('.yt-loop-row').nth(index).dispatchEvent('click');
+  await page.waitForTimeout(600);
+}
+
+async function setRate(page: Page, rate: number): Promise<void> {
+  await page.locator('video').evaluate((v: HTMLVideoElement, r: number) => {
+    v.playbackRate = r;
+  }, rate);
 }
 
 const position = (page: Page) =>
@@ -102,6 +123,9 @@ async function overshootAndSettle(page: Page, to: number): Promise<void> {
 test.describe('A–B loop (packaged dist build)', () => {
   test.beforeEach(() => {
     test.skip(!existsSync(DIST), 'extension/dist missing — run `make ext-build` first');
+    // Each test launches a browser AND loads a real YouTube watch page before it
+    // asserts anything; the 60s project default is not enough headroom.
+    test.setTimeout(120_000);
   });
 
   test('a saved loop round-trips from storage and can be re-armed', async () => {
@@ -115,14 +139,14 @@ test.describe('A–B loop (packaged dist build)', () => {
       await page.locator('.yt-loop-range--saved').waitFor({ timeout: 15_000 });
 
       // …and is listed in the panel, named, with its range.
-      await page.locator('.yt-loop-player-btn').click();
+      await page.locator('.yt-loop-player-btn').dispatchEvent('click');
       const panel = page.locator('.yt-loop-panel');
-      await panel.waitFor({ timeout: 10_000 });
+      await panel.waitFor({ timeout: 15_000 });
       await expect(panel).toContainText('Hard bit');
       await expect(panel).toContainText('0:30 → 0:40');
 
       // Clicking it arms the loop on the real player.
-      await panel.locator('.yt-loop-row').first().click();
+      await panel.locator('.yt-loop-row').first().dispatchEvent('click');
       await page.waitForTimeout(600);
       expect(await position(page)).toBeGreaterThanOrEqual(A - 1);
       expect(await position(page)).toBeLessThan(B);
@@ -131,36 +155,32 @@ test.describe('A–B loop (packaged dist build)', () => {
     }
   });
 
-  for (const rate of [1, 1.5, 2]) {
-    test(`wraps back to A at ${rate}x`, async () => {
-      const context = await launchPackaged();
-      try {
-        const worker = await extensionServiceWorker(context);
-        await seed(worker, seedLoopBookmark());
-        const page = await openWatchPage(context);
+  // One context for all three rates: each browser launch + YouTube load is the
+  // slow, flaky part, and the rate is the only variable being exercised.
+  test('wraps back to A at 1x, 1.5x and 2x', async () => {
+    const context = await launchPackaged();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await seed(worker, seedLoopBookmark());
+      const page = await openWatchPage(context);
+      await armSavedLoop(page);
 
-        await page.locator('.yt-loop-player-btn').click();
-        await page.locator('.yt-loop-panel').waitFor({ timeout: 10_000 });
-        await page.locator('.yt-loop-row').first().click();
-        await page.locator('video').evaluate((v: HTMLVideoElement, r: number) => {
-          v.playbackRate = r;
-        }, rate);
-        await page.waitForTimeout(500);
+      for (const rate of [1, 1.5, 2]) {
+        await setRate(page, rate);
 
         // Land exactly on B, then well past it — the second case is what breaks
         // competitors at speed, where one tick of media time overshoots the end.
-        await overshootAndSettle(page, B);
-        expect(await position(page)).toBeLessThan(B);
-        expect(await position(page)).toBeGreaterThanOrEqual(A - 1);
-
-        await overshootAndSettle(page, B + 3);
-        expect(await position(page)).toBeLessThan(B);
-        expect(await position(page)).toBeGreaterThanOrEqual(A - 1);
-      } finally {
-        await context.close();
+        for (const target of [B, B + 3]) {
+          await overshootAndSettle(page, target);
+          const at = await position(page);
+          expect(at, `escaped the loop at ${rate}x from ${target}`).toBeLessThan(B);
+          expect(at, `seeked outside the loop at ${rate}x from ${target}`).toBeGreaterThanOrEqual(A - 1);
+        }
       }
-    });
-  }
+    } finally {
+      await context.close();
+    }
+  });
 
   test('keeps looping at 2x inside fullscreen, with the panel still visible', async () => {
     const context = await launchPackaged();
@@ -169,13 +189,13 @@ test.describe('A–B loop (packaged dist build)', () => {
       await seed(worker, seedLoopBookmark());
       const page = await openWatchPage(context);
 
-      await page.locator('.yt-loop-player-btn').click();
-      await page.locator('.yt-loop-panel').waitFor({ timeout: 10_000 });
-      await page.locator('.yt-loop-row').first().click();
-      await page.locator('video').evaluate((v: HTMLVideoElement) => { v.playbackRate = 2; });
+      await armSavedLoop(page);
+      await setRate(page, 2);
 
-      // requestFullscreen needs user activation, so go through a real click on a
-      // temporary trigger rather than a bare page.evaluate().
+      // requestFullscreen needs USER ACTIVATION, so a dispatched (untrusted)
+      // event won't do. A mouse click would, but Playwright hit-tests the
+      // coordinates and YouTube's overlays sit on top — so focus a temporary
+      // trigger and press Enter, which is trusted and needs no hit-testing.
       await page.evaluate(() => {
         const trigger = document.createElement('button');
         trigger.id = 'clipmark-fs-trigger';
@@ -187,8 +207,9 @@ test.describe('A–B loop (packaged dist build)', () => {
         });
         document.body.appendChild(trigger);
       });
-      await page.locator('#clipmark-fs-trigger').click();
-      await page.waitForTimeout(1200);
+      await page.locator('#clipmark-fs-trigger').focus();
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(1500);
 
       const inFullscreen = await page.evaluate(() => !!document.fullscreenElement);
       test.skip(!inFullscreen, 'browser refused fullscreen in this environment');
@@ -220,21 +241,21 @@ test.describe('A–B loop (packaged dist build)', () => {
       ]);
       const page = await openWatchPage(context);
 
-      await page.locator('.yt-loop-player-btn').click();
+      await page.locator('.yt-loop-player-btn').dispatchEvent('click');
       const panel = page.locator('.yt-loop-panel');
-      await panel.waitFor({ timeout: 10_000 });
+      await panel.waitFor({ timeout: 15_000 });
       // Both saved loops are listed — the single-segment limitation is the top
       // complaint about the market leader, so this is the differentiator.
       expect(await panel.locator('.yt-loop-row').count()).toBe(2);
 
       // Arm both, then run off the end of the first: chain mode advances to the
       // second segment rather than wrapping in place.
-      await panel.locator('.yt-loop-row').nth(0).click();
-      await page.locator('.yt-loop-player-btn').click();
-      await panel.locator('.yt-loop-row').nth(1).click();
+      await panel.locator('.yt-loop-row').nth(0).dispatchEvent('click');
+      await page.locator('.yt-loop-player-btn').dispatchEvent('click');
+      await panel.locator('.yt-loop-row').nth(1).dispatchEvent('click');
       await page.waitForTimeout(500);
 
-      await panel.locator('.yt-loop-row').first().click(); // back to segment 1
+      await panel.locator('.yt-loop-row').first().dispatchEvent('click'); // back to segment 1
       await page.waitForTimeout(500);
       await overshootAndSettle(page, B + 1);
 
