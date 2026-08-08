@@ -106,6 +106,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // Vite injects `<link rel="modulepreload">` for every code-split chunk an
+    // HTML entry pulls in. On an extension page Chrome cannot match those hints
+    // to the eventual import, so its Errors page fills with
+    //   "A preload for '…' is found, but is not used because it is a
+    //    cross-world extension resource mismatch"
+    // plus the generic "preloaded ... but not used within a few seconds" warning.
+    // Harmless, but noisy enough to invite questions during store review.
+    //
+    // The hints buy nothing here: these are local files served from the
+    // extension origin with no network latency to hide, and the entry's own
+    // static imports load them regardless. `false` also drops the preload
+    // polyfill, which is irrelevant to a Chrome-only MV3 target.
+    modulePreload: false,
     rollupOptions: {
       // dashboard.html is only reachable via web_accessible_resources, so crxjs
       // copies it verbatim instead of treating it as an HTML entry — leaving its
