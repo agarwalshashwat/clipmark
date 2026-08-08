@@ -1,5 +1,6 @@
 import {
   getTagColor,
+  tagHueVars,
   stringToColor,
   ytWatchUrl,
   ytThumbnailUrl,
@@ -517,12 +518,12 @@ async function renderBookmarks() {
                   <div class="vc-vt-circle" style="border-color:${c}"></div>
                   <div class="vc-vt-content">
                     <div class="vc-vt-header">
-                      <span class="vc-vt-time" style="background:${c}20;color:${c}">${formatTimestamp(b.timestamp)}</span>
+                      <span class="vc-vt-time" style="${tagHueVars(c)}">${formatTimestamp(b.timestamp)}</span>
                     </div>
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
                       ? `<div class="vc-tags">${b.tags.map(t =>
-                          `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+                          `<span class="tag-badge" style="${tagHueVars(getTagColor([t]))}">#${t}</span>`
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
@@ -550,12 +551,12 @@ async function renderBookmarks() {
                   <div class="vc-vt-circle" style="border-color:${c}"></div>
                   <div class="vc-vt-content">
                     <div class="vc-vt-header">
-                      <span class="vc-vt-time" style="background:${c}20;color:${c}">${formatTimestamp(b.timestamp)}</span>
+                      <span class="vc-vt-time" style="${tagHueVars(c)}">${formatTimestamp(b.timestamp)}</span>
                     </div>
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
                       ? `<div class="vc-tags">${b.tags.map(t =>
-                          `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+                          `<span class="tag-badge" style="${tagHueVars(getTagColor([t]))}">#${t}</span>`
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
@@ -719,7 +720,7 @@ function renderTimelineView(bookmarks, container) {
       const thumb    = ytThumbnailUrl(b.videoId);
       const tagsHtml = b.tags?.length
         ? `<div class="tl-tags">${b.tags.map(t =>
-            `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+            `<span class="tag-badge" style="${tagHueVars(getTagColor([t]))}">#${t}</span>`
           ).join('')}</div>`
         : '';
 
@@ -1639,7 +1640,7 @@ async function renderRevisitView(container, highlightTargetId = null) {
     rmPreviewTitle.textContent = bms[0].videoTitle || '';
     const tags = [...new Set(bms.flatMap(b => b.tags || []))].slice(0, 4);
     rmPreviewTags.innerHTML = tags.map(t =>
-      `<span class="rm-preview-tag" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+      `<span class="rm-preview-tag" style="${tagHueVars(getTagColor([t]))}">#${t}</span>`
     ).join('');
     if (rmPreviewGroup) rmPreviewGroup.style.display = 'none';
     if (rmPreviewEmpty) rmPreviewEmpty.style.display = 'none';
@@ -2047,7 +2048,7 @@ async function renderVideosView(container) {
 
     const allTags = [...new Set(bookmarks.flatMap(b => b.tags || []))];
     const tagBadges = allTags.slice(0, 4).map(t =>
-      `<span class="tag-badge" style="background:${getTagColor([t])}18;color:${getTagColor([t])}">#${t}</span>`
+      `<span class="tag-badge" style="${tagHueVars(getTagColor([t]))}">#${t}</span>`
     ).join('');
 
     const card = document.createElement('div');

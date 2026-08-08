@@ -2,7 +2,7 @@ import { createServerSupabase, type Bookmark } from '@/lib/supabase';
 import AnalyticsContent from './_components/AnalyticsContent';
 import styles from './page.module.css';
 
-export const metadata = { title: 'Analytics — Clipmark' };
+export const metadata = { title: 'Analytics — ClipMark' };
 
 import { getTagColor } from '../_utils/tagColors';
 
@@ -38,7 +38,7 @@ export default async function AnalyticsPage() {
             href="/upgrade"
             style={{
               display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10,
-              background: '#14B8A6', color: 'white', fontWeight: 700, fontSize: 14, textDecoration: 'none',
+              background: 'var(--accent-strong)', color: 'white', fontWeight: 700, fontSize: 14, textDecoration: 'none',
             }}
           >
             ✦ Upgrade to Pro

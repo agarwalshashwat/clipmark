@@ -138,7 +138,7 @@ function exportCSV(collections: Collection[]) {
 }
 
 function exportMarkdown(collections: Collection[]) {
-  const lines: string[] = ['# Clipmark Bookmarks\n'];
+  const lines: string[] = ['# ClipMark Bookmarks\n'];
   for (const c of collections) {
     lines.push(`## ${c.video_title ?? 'Untitled'}`);
     lines.push(`[Open on YouTube](https://www.youtube.com/watch?v=${c.video_id})\n`);
@@ -161,7 +161,7 @@ function exportAnki(collections: Collection[]) {
 
 // Pro. Mirrors extension/src/popup/dashboard.js::exportObsidian.
 function exportObsidian(collections: Collection[]) {
-  const lines: string[] = ['# Clipmark Export — Obsidian\n'];
+  const lines: string[] = ['# ClipMark Export — Obsidian\n'];
   for (const c of collections) {
     const title = c.video_title ?? c.video_id;
     lines.push(`> [!note] [${title}](https://www.youtube.com/watch?v=${c.video_id})\n`);
@@ -197,7 +197,7 @@ function exportNotionCSV(collections: Collection[]) {
 
 // Pro. Mirrors extension/src/popup/dashboard.js::exportReadingList.
 function exportReadingList(collections: Collection[]) {
-  const lines: string[] = ['Clipmark — Reading List Export', '='.repeat(40), ''];
+  const lines: string[] = ['ClipMark — Reading List Export', '='.repeat(40), ''];
   for (const c of collections) {
     const title = c.video_title ?? c.video_id;
     lines.push(`▶ ${title}`, `   https://www.youtube.com/watch?v=${c.video_id}`, '');
@@ -471,7 +471,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
       <div className={toolbarStyles.toolbar}>
         <div className={toolbarStyles.toolbarLeft}>
           <div className={toolbarStyles.searchWrap}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6c7a77' }}>search</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>search</span>
             <input
               type="text"
               placeholder="Search bookmarks…"
@@ -722,7 +722,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
             <span className={styles.recallDueHint}>
               {bridgeReady
                 ? 'Click a video to start Active Recall in the extension.'
-                : 'Open a video with the Clipmark extension to start Active Recall.'}
+                : 'Open a video with the ClipMark extension to start Active Recall.'}
             </span>
           </div>
           <div className={styles.recallDueChips}>
@@ -826,7 +826,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                         <div
                           key={i}
                           className={styles.scrubberMarker}
-                          style={{ left: `${pos}%`, borderColor: b.color || '#006b5f' }}
+                          style={{ left: `${pos}%`, borderColor: b.color || 'var(--accent-strong)' }}
                           title={formatTimestamp(b.timestamp)}
                         />
                       );
@@ -890,10 +890,10 @@ export default function DashboardContent({ collections, isPro, initialView, init
                           onChange={() => toggleSelect(c.video_id, b.id)}
                           title="Select"
                         />
-                        <div className={styles.threadDot} style={{ borderColor: b.color || '#006b5f' }} />
+                        <div className={styles.threadDot} style={{ borderColor: b.color || 'var(--accent-strong)' }} />
                         <div className={styles.threadContent}>
                           <div className={styles.threadMeta}>
-                            <span className={styles.threadTime} style={{ color: b.color || '#006b5f', background: `${b.color || '#006b5f'}12` }}>
+                            <span className={styles.threadTime} style={{ color: b.color || 'var(--accent-strong)', background: `${b.color || 'var(--accent-strong)'}12` }}>
                               {/* A saved A–B loop shows the range it covers, not just its A point. */}
                               {formatLoopRange(b) ?? formatTimestamp(b.timestamp)}
                             </span>
@@ -960,10 +960,10 @@ export default function DashboardContent({ collections, isPro, initialView, init
                                     onChange={() => toggleSelect(c.video_id, b.id)}
                                     title="Select"
                                   />
-                                  <div className={styles.threadDot} style={{ borderColor: b.color || '#006b5f' }} />
+                                  <div className={styles.threadDot} style={{ borderColor: b.color || 'var(--accent-strong)' }} />
                                   <div className={styles.threadContent}>
                                     <div className={styles.threadMeta}>
-                                      <span className={styles.threadTime} style={{ color: b.color || '#006b5f', background: `${b.color || '#006b5f'}12` }}>
+                                      <span className={styles.threadTime} style={{ color: b.color || 'var(--accent-strong)', background: `${b.color || 'var(--accent-strong)'}12` }}>
                                         {formatTimestamp(b.timestamp)}
                                       </span>
                                       <span className={styles.threadType}>
@@ -1011,9 +1011,9 @@ export default function DashboardContent({ collections, isPro, initialView, init
                       href={`https://www.youtube.com/watch?v=${c.video_id}&t=${Math.floor(b.timestamp)}s`}
                       className={styles.pillChip}
                       style={{
-                        background: `${b.color || '#006b5f'}18`,
-                        color: b.color || '#006b5f',
-                        border: `1px solid ${b.color || '#006b5f'}30`,
+                        background: `${b.color || 'var(--accent-strong)'}18`,
+                        color: b.color || 'var(--accent-strong)',
+                        border: `1px solid ${b.color || 'var(--accent-strong)'}30`,
                       }}
                       title={b.description || formatTimestamp(b.timestamp)}
                       target="_blank"
@@ -1086,11 +1086,11 @@ export default function DashboardContent({ collections, isPro, initialView, init
                               onChange={() => toggleSelect(group.collection.video_id, b.id)}
                               title="Select"
                             />
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: b.color || '#006b5f', flexShrink: 0 }} />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: b.color || 'var(--accent-strong)', flexShrink: 0 }} />
                             <a
                               href={`https://www.youtube.com/watch?v=${group.collection.video_id}&t=${Math.floor(b.timestamp)}s`}
                               className={styles.clipTimestamp}
-                              style={{ color: b.color || '#006b5f', background: `${b.color || '#006b5f'}12` }}
+                              style={{ color: b.color || 'var(--accent-strong)', background: `${b.color || 'var(--accent-strong)'}12` }}
                             >
                               {formatTimestamp(b.timestamp)}
                             </a>

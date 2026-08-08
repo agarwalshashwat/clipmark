@@ -21,12 +21,12 @@ export function GuaranteeLine({
         justifyContent: 'center',
         gap: 6,
         fontSize: 12,
-        color: '#64748b',
+        color: 'var(--text-muted)',
         marginTop: 12,
         ...style,
       }}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#14B8A6' }}>
+      <span className="material-symbols-outlined" style={{ fontSize: 15, color: 'var(--brand-ink)' }}>
         verified_user
       </span>
       {refundDays ? `${refundDays}-day money-back guarantee` : 'Money-back guarantee'} · taxes

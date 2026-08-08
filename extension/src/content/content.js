@@ -582,7 +582,7 @@ async function silentSaveBookmark() {
 
   const timestamp = video.currentTime;
   const tags      = [];
-  const color     = '#4da1ee';
+  const color     = '#14b8a6';
 
   // Try transcript first, fall back to "Bookmark at M:SS"
   const transcript     = await fetchTranscript().catch(() => null);
@@ -687,7 +687,7 @@ function showSaveFlash() {
   const overlay = document.createElement('div');
   overlay.className = 'yt-save-flash';
 
-  const colors = ['#14B8A6', '#5865f2', '#f59e0b', '#ff6b6b', '#22c55e', '#a78bfa'];
+  const colors = ['#14B8A6', '#2dd4bf', '#b45309', '#dc2626', '#15803d', '#8b5cf6'];
   const count  = 10;
   for (let i = 0; i < count; i++) {
     const dot = document.createElement('div');
@@ -716,7 +716,7 @@ function showSilentSaveIndicator(message, type = 'success') {
   el.className = 'yt-bookmark-toast';
   el.textContent = message;
   if (type === 'error') {
-    el.style.borderLeftColor = '#ef4444';
+    el.style.borderLeftColor = '#dc2626';
   } else {
     el.style.borderLeftColor = '#14B8A6';
   }
@@ -1047,8 +1047,8 @@ function injectStyles() {
       transform: translateX(-50%);
       width: 3px;
       height: 100%;
-      background: var(--bm-color, #4da1ee);
-      box-shadow: 0 0 5px var(--bm-color, #4da1ee);
+      background: var(--bm-color, #14b8a6);
+      box-shadow: 0 0 5px var(--bm-color, #14b8a6);
       transition: width 0.2s ease, filter 0.2s ease;
     }
     .yt-bookmark-marker:hover::after {
@@ -1057,7 +1057,7 @@ function injectStyles() {
     }
     .yt-bookmark-marker--active::after {
       width: 5px;
-      box-shadow: 0 0 10px var(--bm-color, #4da1ee), 0 0 20px var(--bm-color, #4da1ee);
+      box-shadow: 0 0 10px var(--bm-color, #14b8a6), 0 0 20px var(--bm-color, #14b8a6);
       animation: bm-pass-pulse 0.5s ease-out;
     }
     @keyframes bm-pass-pulse {
@@ -1075,7 +1075,7 @@ function injectStyles() {
       transform: translateX(-50%) rotate(45deg);
       width: 8px;
       height: 8px;
-      background: var(--bm-color, #4da1ee);
+      background: var(--bm-color, #14b8a6);
       border-radius: 2px;
       opacity: 0.85;
       box-shadow: 0 1px 4px rgba(0,0,0,0.45);
@@ -1144,7 +1144,7 @@ function injectStyles() {
     .yt-bm-tt-tag {
       padding: 1px 7px;
       border-radius: 4px;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.04em;
     }
@@ -1182,7 +1182,7 @@ function injectStyles() {
       border-radius: 8px;
       font-size: 13px;
       font-family: ${FONT_FAMILY_NATIVE};
-      border-left: 3px solid #4da1ee;
+      border-left: 3px solid #14b8a6;
       opacity: 0;
       transform: translateY(-8px);
       transition: opacity 0.3s ease, transform 0.3s ease;
@@ -1241,7 +1241,7 @@ function injectStyles() {
       box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
     .yt-revision-label {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       color: #14B8A6;
       letter-spacing: 0.8px;
@@ -1261,7 +1261,7 @@ function injectStyles() {
     }
     .yt-revision-next {
       font-size: 11px;
-      color: #fbbf24;
+      color: #b45309;
       min-height: 16px;
     }
     .yt-revision-close {
@@ -1296,7 +1296,7 @@ function injectStyles() {
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 5px;
       color: rgba(255,255,255,0.70);
-      font-size: 10px;
+      font-size: 11px;
       font-family: inherit;
       cursor: pointer;
       padding: 3px 0;
@@ -1379,7 +1379,7 @@ function injectStyles() {
     .yt-recall-tag {
       padding: 1px 7px;
       border-radius: 4px;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.04em;
     }
@@ -1493,7 +1493,7 @@ function injectStyles() {
       position: fixed; right: 24px; bottom: 96px; z-index: 2147483000;
       width: 296px; padding: 14px 14px 12px;
       background: rgba(17, 17, 20, 0.96);
-      color: #f4f4f5;
+      color: #f3f4f6;
       border: 1px solid rgba(139, 92, 246, 0.5);
       border-radius: 12px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
@@ -1511,7 +1511,7 @@ function injectStyles() {
     .yt-loop-mode {
       margin-left: auto; font-size: 11px; font-weight: 600;
       padding: 2px 8px; border-radius: 999px; cursor: pointer;
-      background: rgba(139, 92, 246, 0.2); color: #c4b5fd;
+      background: rgba(139, 92, 246, 0.2); color: #8b5cf6;
       border: 1px solid rgba(139, 92, 246, 0.45);
     }
     .yt-loop-list { max-height: 168px; overflow-y: auto; margin: 0 0 8px; }
@@ -1523,34 +1523,34 @@ function injectStyles() {
     .yt-loop-row:hover { background: rgba(255, 255, 255, 0.07); }
     .yt-loop-row--current { background: rgba(139, 92, 246, 0.22); }
     .yt-loop-row-time {
-      font-variant-numeric: tabular-nums; color: #c4b5fd; white-space: nowrap;
+      font-variant-numeric: tabular-nums; color: #8b5cf6; white-space: nowrap;
     }
     .yt-loop-row-name {
       flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: #e4e4e7;
+      color: #e5e7eb;
     }
     .yt-loop-row-saved { color: #8b5cf6; font-size: 11px; }
     .yt-loop-row-remove {
-      background: none; border: 0; color: #a1a1aa; cursor: pointer;
+      background: none; border: 0; color: #9ca3af; cursor: pointer;
       font-size: 13px; line-height: 1; padding: 2px 4px;
     }
     .yt-loop-row-edit {
       background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #c4b5fd; cursor: pointer; border-radius: 5px;
-      font-size: 10px; font-weight: 700; font-family: inherit;
+      color: #8b5cf6; cursor: pointer; border-radius: 5px;
+      font-size: 11px; font-weight: 700; font-family: inherit;
       line-height: 1; padding: 3px 5px;
     }
     .yt-loop-row-edit:hover { background: rgba(139, 92, 246, 0.35); color: #fff; }
     .yt-loop-row-name { cursor: text; }
-    .yt-loop-row-remove:hover { color: #ef4444; }
-    .yt-loop-empty { color: #a1a1aa; padding: 6px 2px 8px; line-height: 1.5; }
-    .yt-loop-draft { color: #a1a1aa; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
-    .yt-loop-draft b { color: #f4f4f5; font-weight: 600; }
+    .yt-loop-row-remove:hover { color: #dc2626; }
+    .yt-loop-empty { color: #9ca3af; padding: 6px 2px 8px; line-height: 1.5; }
+    .yt-loop-draft { color: #9ca3af; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+    .yt-loop-draft b { color: #f3f4f6; font-weight: 600; }
     .yt-loop-actions { display: flex; flex-wrap: wrap; gap: 6px; }
     .yt-loop-btn {
       flex: 1 1 auto; min-width: 78px;
       padding: 6px 8px; border-radius: 7px; cursor: pointer;
-      background: rgba(255, 255, 255, 0.08); color: #f4f4f5;
+      background: rgba(255, 255, 255, 0.08); color: #f3f4f6;
       border: 1px solid rgba(255, 255, 255, 0.14);
       font-size: 12px; font-weight: 600; font-family: inherit;
     }
@@ -1558,21 +1558,21 @@ function injectStyles() {
     .yt-loop-btn--primary {
       background: #8b5cf6; border-color: #8b5cf6; color: #fff;
     }
-    .yt-loop-btn--primary:hover { background: #7c4ddb; }
+    .yt-loop-btn--primary:hover { background: #7c3aed; }
     .yt-loop-btn:disabled { opacity: .45; cursor: not-allowed; }
     .yt-loop-name-input {
       width: 100%; margin-bottom: 6px; padding: 6px 8px;
       border-radius: 7px; border: 1px solid rgba(139, 92, 246, 0.6);
-      background: rgba(0, 0, 0, 0.45); color: #f4f4f5;
+      background: rgba(0, 0, 0, 0.45); color: #f3f4f6;
       font-family: inherit; font-size: 12px; box-sizing: border-box;
     }
     .yt-loop-close {
       position: absolute; top: 8px; right: 8px;
-      background: none; border: 0; color: #a1a1aa; cursor: pointer;
+      background: none; border: 0; color: #9ca3af; cursor: pointer;
       font-size: 14px; line-height: 1;
     }
-    .yt-loop-close:hover { color: #f4f4f5; }
-    .yt-loop-hint { color: #71717a; font-size: 11px; margin-top: 8px; line-height: 1.5; }
+    .yt-loop-close:hover { color: #f3f4f6; }
+    .yt-loop-hint { color: #6b7280; font-size: 11px; margin-top: 8px; line-height: 1.5; }
   `;
   document.head.appendChild(style);
 }

@@ -33,19 +33,19 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { username } = await params;
   const profile = await getProfile(username);
-  if (!profile) return { title: 'User not found — Clipmark' };
+  if (!profile) return { title: 'User not found — ClipMark' };
 
   const baseUrl = APP_URL;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`;
 
   return {
-    title: `@${username} — Clipmark`,
-    description: `Browse ${username}'s public YouTube bookmark collections on Clipmark.`,
+    title: `@${username} — ClipMark`,
+    description: `Browse ${username}'s public YouTube bookmark collections on ClipMark.`,
     alternates: {
       canonical: `/u/${username}`,
     },
     openGraph: {
-      title: `@${username} — Clipmark`,
+      title: `@${username} — ClipMark`,
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       type: 'profile',
       username: username,
@@ -59,7 +59,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title: `@${username} — Clipmark`,
+      title: `@${username} — ClipMark`,
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       images: [ogUrl],
     },
@@ -155,7 +155,7 @@ export default async function UserProfilePage(
               <div className="cm-icon-badge" style={{ margin: '0 auto 24px', width: 64, height: 64 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 32 }}>folder_off</span>
               </div>
-              <p style={{ fontSize: 18, color: '#64748b', fontWeight: 600 }}>No public collections yet.</p>
+              <p style={{ fontSize: 18, color: 'var(--text-muted)', fontWeight: 600 }}>No public collections yet.</p>
             </div>
           ) : (
             <div className={styles.grid}>
@@ -182,7 +182,7 @@ export default async function UserProfilePage(
                     </p>
                     {c.bookmarks?.slice(0, 1).map((b, i) => (
                       <p key={i} className={styles.cardSnippet}>
-                        <span style={{ color: b.color || '#14B8A6', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                        <span style={{ color: b.color || 'var(--accent)', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
                           [{formatTimestamp(b.timestamp)}]
                         </span>
                         {' '}

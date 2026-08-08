@@ -76,7 +76,7 @@ export function VideosClient({ videos, groups, userId }: VideosClientProps) {
                   />
                   <div className={styles.thumbOverlay} />
                   <span className={styles.badge}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 10, verticalAlign: 'middle' }}>bookmark</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 11, verticalAlign: 'middle' }}>bookmark</span>
                     {' '}{v.bookmarkCount}
                   </span>
                   <div className={styles.playBtn}>

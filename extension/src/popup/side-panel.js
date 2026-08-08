@@ -1,6 +1,7 @@
 import {
   parseTags,
   getTagColor,
+  tagHueVars,
   ytWatchUrl,
   ytThumbnailUrl,
   MAX_RECONNECT_ATTEMPTS,
@@ -1353,13 +1354,13 @@ async function loadBookmarks() {
     }
 
     list.innerHTML = bookmarks.map(b => `
-      <div class="bookmark" data-timestamp="${b.timestamp}" data-id="${b.id}" data-video-id="${videoId}" style="border-left-color: ${b.color || '#4da1ee'}">
+      <div class="bookmark" data-timestamp="${b.timestamp}" data-id="${b.id}" data-video-id="${videoId}" style="border-left-color: ${b.color || 'var(--accent)'}">
         <div class="bookmark-content">
-          <span class="bookmark-time" style="color:${b.color || '#4da1ee'}">${formatTimestamp(b.timestamp)}</span>
+          <span class="bookmark-time" style="${tagHueVars(b.color || '#14b8a6')}">${formatTimestamp(b.timestamp)}</span>
           <span class="bookmark-desc">${b.description || 'No description'}</span>
           ${b.tags && b.tags.length
             ? `<div class="bookmark-tags">${b.tags.map(t =>
-                `<span class="tag-badge" style="background:${getTagColor([t])};opacity:0.8;color:white">${t}</span>`
+                `<span class="tag-badge" style="${tagHueVars(getTagColor([t]))}">#${t}</span>`
               ).join('')}</div>`
             : ''}
         </div>

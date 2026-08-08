@@ -14,8 +14,8 @@ export async function Navigation() {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1240, margin: '0 auto', padding: '0 24px', height: 80 }}>
         <a href="/" style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: '-1px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-display)' }}>
-          <img src="/clipmark-logo.png" style={{ width: 34, height: 34, objectFit: 'contain' }} alt="Clipmark" />
-          Clipmark
+          <img src="/clipmark-logo.png" style={{ width: 34, height: 34, objectFit: 'contain' }} alt="ClipMark" />
+          ClipMark
         </a>
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <a href="/#features" style={{ color: 'var(--text-sub)', fontWeight: 600, fontSize: 13, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Features</a>
@@ -45,18 +45,18 @@ export async function Navigation() {
              style={{
             padding: '12px 20px',
             background: 'transparent',
-            color: 'var(--accent)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
+            color: 'var(--brand-ink)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
             border: '1px solid var(--accent)',
             transition: 'all 0.2s ease',
           }}>
             ✦ Go Pro
           </a>
           <a href="https://chrome.google.com/webstore"
-             aria-label="Add Clipmark to Chrome browser for free"
+             aria-label="Add ClipMark to Chrome browser for free"
              className="nav-cta"
              style={{
             padding: '12px 24px',
-            background: 'var(--accent)',
+            background: 'var(--accent-strong)',
             boxShadow: '0 4px 14px 0 rgba(20, 184, 166, 0.39)',
             color: 'white', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
             transition: 'all 0.2s ease',

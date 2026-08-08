@@ -216,10 +216,10 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                           ))}
                       </select>
                       <button className={styles.addBtn} onClick={() => handleAddVideo(group.id)}>Add</button>
-                      <button className={styles.typeBtn} style={{ fontSize: 10 }} onClick={() => setAddingToGroup(null)}>Cancel</button>
+                      <button className={styles.typeBtn} style={{ fontSize: 11 }} onClick={() => setAddingToGroup(null)}>Cancel</button>
                     </>
                   ) : (
-                    <button className={styles.addBtn} style={{ background: 'none', color: '#94a3b8' }} onClick={() => setAddingToGroup(group.id)}>
+                    <button className={styles.addBtn} style={{ background: 'none', color: 'var(--text-muted)' }} onClick={() => setAddingToGroup(group.id)}>
                       <span className="material-symbols-outlined">add_circle</span>
                       <span style={{ display: 'block', fontSize: 11, marginTop: 4 }}>Add Video</span>
                     </button>

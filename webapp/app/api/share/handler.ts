@@ -71,7 +71,7 @@ export async function handleShare(request: NextRequest, { admin, getUserId }: Sh
         return NextResponse.json(
           {
             error: 'free_limit_reached',
-            message: `Free plan allows ${FREE_SHARE_LIMIT} shared collections. Upgrade to Clipmark Pro for unlimited sharing.`,
+            message: `Free plan allows ${FREE_SHARE_LIMIT} shared collections. Upgrade to ClipMark Pro for unlimited sharing.`,
             limit: FREE_SHARE_LIMIT,
             count,
           },

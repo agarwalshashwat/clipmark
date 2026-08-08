@@ -31,7 +31,7 @@ function formatDate(isoString: string): string {
 
 // Derive a stable tag color from the tag string or bookmark color
 function tagStyle(color: string | null | undefined): { background: string; color: string } {
-  const base = color || '#14B8A6';
+  const base = color || 'var(--accent)';
   return {
     background: `${base}18`,
     color: base,
@@ -64,20 +64,20 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { shareId } = await params;
   const collection = await getCollection(shareId);
-  if (!collection) return { title: 'Not found — Clipmark' };
+  if (!collection) return { title: 'Not found — ClipMark' };
 
   const title = collection.video_title || 'YouTube Video';
   const baseUrl = APP_URL;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(title)}&videoId=${collection.video_id}&count=${collection.bookmarks.length}`;
 
   return {
-    title: `${title} — Clipmark`,
+    title: `${title} — ClipMark`,
     description: `${collection.bookmarks.length} timestamped bookmarks for "${title}"`,
     alternates: {
       canonical: `/v/${shareId}`,
     },
     openGraph: {
-      title: `${title} — Clipmark`,
+      title: `${title} — ClipMark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
       type: 'video.other',
       images: [
@@ -85,13 +85,13 @@ export async function generateMetadata(
           url: ogUrl,
           width: 1200,
           height: 630,
-          alt: `Clipmark shared bookmarks for ${title}`,
+          alt: `ClipMark shared bookmarks for ${title}`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} — Clipmark`,
+      title: `${title} — ClipMark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
       images: [ogUrl],
     },
@@ -188,7 +188,7 @@ export default async function SharePage(
               <h1 className={styles.videoTitle}>{title}</h1>
               <p className={styles.sharedBy}>
                 Curated via{' '}
-                <span className={styles.sharedByHighlight}>Clipmark</span>
+                <span className={styles.sharedByHighlight}>ClipMark</span>
               </p>
             </div>
 
@@ -205,7 +205,7 @@ export default async function SharePage(
                 {bookmarks.map((b: Bookmark, i: number) => (
                   <li key={b.id ?? i} className={styles.timelineItem}>
                     <div className={styles.timelineDot}>
-                      <span className="material-symbols-rounded" style={{ color: '#14B8A6', fontSize: 24 }}>bookmark_heart</span>
+                      <span className="material-symbols-rounded" style={{ color: 'var(--brand-ink)', fontSize: 24 }}>bookmark_heart</span>
                     </div>
                     <div className={styles.timelineItemBody}>
                       <a
@@ -293,30 +293,30 @@ export default async function SharePage(
                 border: '1px solid rgba(20,184,166,0.25)',
               }}>
                 <div style={{ 
-                  width: 48, height: 48, background: 'rgba(20, 184, 166, 0.1)', 
+                  width: 48, height: 48, background: 'var(--accent-light)', 
                   borderRadius: '50%', display: 'flex', alignItems: 'center', 
                   justifyContent: 'center', margin: '0 auto 20px' 
                 }}>
-                  <span className="material-symbols-rounded" style={{ color: '#14B8A6' }}>extension</span>
+                  <span className="material-symbols-rounded" style={{ color: 'var(--brand-ink)' }}>extension</span>
                 </div>
                 <h6 className={styles.promoTitle} style={{ fontSize: 18, marginBottom: 12 }}>
                   Create your own collections
                 </h6>
                 <p className={styles.promoBody} style={{ fontSize: 14, marginBottom: 24 }}>
-                  Clipmark is a free extension that lets you save, tag, and share
+                  ClipMark is a free extension that lets you save, tag, and share
                   timestamped highlights from any YouTube video — in one click.
                 </p>
                 <a
                   href="https://chrome.google.com/webstore"
                   className={styles.sideBtn}
                   style={{
-                    background: 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)',
+                    background: 'var(--accent-strong)',
                     marginBottom: 12,
                   }}
                 >
                   Add to Chrome — it&apos;s free
                 </a>
-                <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
                   No sign-up required to start
                 </p>
               </div>

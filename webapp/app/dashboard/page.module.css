@@ -19,17 +19,17 @@
   font-size: 40px;
   font-weight: 800;
   letter-spacing: -2px;
-  color: #0f172a;
+  color: var(--gray-900);
   margin: 0 0 8px;
 }
 @media (min-width: 768px) { .pageTitle { font-size: 56px; } }
 
-.pageSub { font-size: 16px; color: #64748b; margin: 0; font-weight: 500; }
+.pageSub { font-size: 16px; color: var(--text-muted); margin: 0; font-weight: 500; }
 
 .empty {
   text-align: center;
   padding: 120px 24px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 15px;
   font-weight: 500;
 }
@@ -57,7 +57,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: #e2e8f0;
+  background: var(--gray-200);
 }
 
 .monthMarker {
@@ -73,8 +73,8 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #14B8A6;
-  border: 3px solid #f8fafc;
+  background: var(--accent);
+  border: 3px solid var(--gray-50);
   box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.2);
   flex-shrink: 0;
   margin-left: 26px;
@@ -86,8 +86,8 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #14B8A6;
-  background: #f8fafc;
+  color: var(--brand-ink);
+  background: var(--gray-50);
   padding-right: 16px;
 }
 
@@ -112,7 +112,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -149,7 +149,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--gray-100);
 }
 @media (min-width: 640px) { .entryThumb { width: 220px; } }
 
@@ -192,17 +192,17 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   line-height: 1.4;
   margin: 0;
   transition: color 0.2s;
   letter-spacing: -0.5px;
 }
-.entryCard:hover .entryTitle { color: #14B8A6; }
+.entryCard:hover .entryTitle { color: var(--brand-ink); }
 
 .entryNote {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.6;
   margin: 0;
   display: -webkit-box;
@@ -229,7 +229,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 13px;
   font-weight: 800;
-  color: #14B8A6;
+  color: var(--brand-ink);
   transition: all 0.2s;
   margin-top: 4px;
 }
@@ -279,7 +279,7 @@
   padding: 0 32px 0 0;
 }
 .statBorder {
-  border-left: 1px solid #f1f5f9;
+  border-left: 1px solid var(--gray-100);
   padding-left: 32px;
 }
 .statLabel {
@@ -287,16 +287,16 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 .statNum {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #14B8A6;
+  color: var(--brand-ink);
   letter-spacing: -1.5px;
 }
-.statNumSecondary { color: #64748b; }
+.statNumSecondary { color: var(--text-muted); }
 
 /* ── Video Cards ──────────────────────────────────────────────────────────── */
 .videoGrid { display: grid; grid-template-columns: 1fr; gap: 32px; }
@@ -372,7 +372,7 @@
 .videoGridSmall .videoCard {
   flex-direction: column;
   border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(26,28,29,0.05);
+  box-shadow: 0 4px 16px rgba(17, 24, 39,0.05);
 }
 
 @media (min-width: 1024px) {
@@ -420,13 +420,13 @@
 }
 .videoGridSmall .bookmarkThread { display: none; }
 .videoGridSmall .pillRow        { display: flex; }
-.videoGridSmall .pillChip       { padding: 2px 8px; font-size: 10px; }
+.videoGridSmall .pillChip       { padding: 2px 8px; font-size: 11px; }
 
 .videoCard {
   background: #ffffff;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(26, 28, 29, 0.06);
+  box-shadow: 0 4px 24px rgba(17, 24, 39, 0.06);
   display: flex;
   flex-direction: column;
 }
@@ -435,7 +435,7 @@
 /* The video with the most bookmarks, when there's more than one video --
    mirrors the extension's .vc-card--featured (dashboard.js). */
 .videoCardFeatured {
-  box-shadow: 0 4px 24px rgba(26, 28, 29, 0.06), 0 0 0 2px rgba(20, 184, 166, 0.35);
+  box-shadow: 0 4px 24px rgba(17, 24, 39, 0.06), 0 0 0 2px rgba(20, 184, 166, 0.35);
 }
 
 .videoLeft {
@@ -451,7 +451,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a1c1d;
+  background: var(--gray-900);
   display: block;
 }
 
@@ -480,9 +480,9 @@
 }
 
 .videoBadge {
-  background: #006b5f;
+  background: var(--accent-strong);
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -516,7 +516,7 @@
 .scrubberTrack {
   height: 6px;
   width: 100%;
-  background: #e8e8e9;
+  background: var(--gray-200);
   border-radius: 9999px;
   position: relative;
 }
@@ -527,7 +527,7 @@
   width: 12px;
   height: 12px;
   background: #fff;
-  border: 2px solid #006b5f;
+  border: 2px solid var(--accent-strong);
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.15s;
@@ -543,19 +543,19 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 0;
-  background: #f3f3f4;
+  background: var(--gray-100);
   border: none;
   border-radius: 12px;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #006b5f;
+  color: var(--accent-strong);
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s;
 }
-.videoActionBtn:hover { background: #e8e8e9; }
-.videoActionBtnSecondary { color: #545f6c; }
+.videoActionBtn:hover { background: var(--gray-200); }
+.videoActionBtnSecondary { color: var(--text-muted); }
 
 .videoRight {
   padding: 32px;
@@ -576,20 +576,20 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1c1d;
+  color: var(--gray-900);
   line-height: 1.3;
   margin: 0 0 8px;
 }
 .videoSubMeta {
   font-size: 12px;
-  color: #6c7a77;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0;
 }
-.videoClipCount { font-weight: 700; color: #006b5f; }
-.metaDot { width: 3px; height: 3px; border-radius: 50%; background: #bbcac6; }
+.videoClipCount { font-weight: 700; color: var(--accent-strong); }
+.metaDot { width: 3px; height: 3px; border-radius: 50%; background: var(--gray-300); }
 
 .bookmarkThread {
   position: relative;
@@ -616,7 +616,7 @@
   height: 14px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #006b5f;
+  border: 2px solid var(--accent-strong);
   outline: 3px solid #fff;
 }
 .threadContent { display: flex; flex-direction: column; gap: 4px; }
@@ -629,13 +629,13 @@
   border-radius: 4px;
 }
 .threadType {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #6c7a77;
+  color: var(--text-muted);
 }
-.threadNote { font-size: 13px; color: #545f6c; line-height: 1.5; margin: 0; }
+.threadNote { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; }
 
 .expandLink {
   display: flex;
@@ -644,7 +644,7 @@
   gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #006b5f;
+  color: var(--accent-strong);
   text-decoration: none;
   padding-top: 20px;
   padding-bottom: 0;
@@ -659,7 +659,7 @@
   font-family: inherit;
   transition: color 0.15s;
 }
-.expandLink:hover { color: #14B8A6; }
+.expandLink:hover { color: var(--brand-ink); }
 
 .extraBookmarks {
   display: grid;
@@ -729,7 +729,7 @@
 .clipTimestamp:hover { opacity: 0.8; }
 .clipRowNote {
   font-size: 13px;
-  color: #545f6c;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -766,7 +766,7 @@
   height: 64px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.08);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -775,12 +775,12 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1c1d;
+  color: var(--gray-900);
   margin: 0;
 }
 .suggestionText, .emptyText {
   font-size: 13px;
-  color: #6c7a77;
+  color: var(--text-muted);
   max-width: 280px;
   line-height: 1.6;
   margin: 0;
@@ -793,12 +793,12 @@
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 700;
-  color: #006b5f;
+  color: var(--accent-strong);
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.08);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.08);
   transition: box-shadow 0.2s;
 }
-.suggestionCta:hover { box-shadow: 0 4px 16px rgba(26, 28, 29, 0.12); }
+.suggestionCta:hover { box-shadow: 0 4px 16px rgba(17, 24, 39, 0.12); }
 
 /* ── Due for recall (read-only strip; Active Recall itself runs in the extension) ── */
 .recallDueStrip {
@@ -822,12 +822,12 @@
 .recallDueCount {
   font-size: 15px;
   font-weight: 800;
-  color: #0d9488;
+  color: var(--brand-ink);
 }
 
 .recallDueHint {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .recallDueChips {
@@ -846,7 +846,7 @@
   border-radius: 9999px;
   background: #fff;
   border: 1px solid rgba(20, 184, 166, 0.25);
-  color: #0f172a;
+  color: var(--gray-900);
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
@@ -865,7 +865,7 @@
   flex-shrink: 0;
   padding: 0 6px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  background: var(--accent-strong);
   color: #fff;
   font-size: 11px;
   font-weight: 800;
@@ -873,5 +873,5 @@
 
 .recallDueMore {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
 }

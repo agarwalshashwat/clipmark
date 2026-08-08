@@ -19,8 +19,8 @@ export function CopyLinkButton({ url, className }: { url: string; className?: st
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 14px', borderRadius: 8,
-        background: '#f9f9fa', border: '1px solid rgba(26,28,29,0.08)',
-        color: '#1a1c1d', cursor: 'pointer',
+        background: 'var(--gray-50)', border: '1px solid rgba(17, 24, 39,0.08)',
+        color: 'var(--gray-900)', cursor: 'pointer',
         fontSize: 13, fontWeight: 600, width: '100%',
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}

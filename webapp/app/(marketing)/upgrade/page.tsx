@@ -34,14 +34,14 @@ const FEATURES = [
 function Check() {
   return (
     <span className="material-symbols-outlined" style={{
-      color: '#14B8A6', fontWeight: 700, fontSize: 20,
+      color: 'var(--brand-ink)', fontWeight: 700, fontSize: 20,
     }}>check_circle</span>
   );
 }
 function Cross() {
   return (
     <span className="material-symbols-outlined" style={{ 
-      color: '#cbd5e1', fontSize: 20 
+      color: 'var(--gray-300)', fontSize: 20 
     }}>cancel</span>
   );
 }
@@ -117,7 +117,7 @@ export default async function UpgradePage({
       <main className={styles.main}>
         {success && (
           <div className={styles.bannerSuccess}>
-            Payment successful — welcome to Clipmark Pro! 🎉
+            Payment successful — welcome to ClipMark Pro! 🎉
           </div>
         )}
 
@@ -141,8 +141,8 @@ export default async function UpgradePage({
         {isPro && !success && (
           <div className={styles.manageBox}>
             <div className={styles.manageHeader}>
-              <span className="material-symbols-outlined" style={{ color: '#14B8A6' }}>verified</span>
-              <span className={styles.manageTitle}>You&apos;re on Clipmark Pro</span>
+              <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)' }}>verified</span>
+              <span className={styles.manageTitle}>You&apos;re on ClipMark Pro</span>
             </div>
             {!subscriptionId ? (
               <p className={styles.manageText}>Lifetime Access — your Pro benefits never expire.</p>

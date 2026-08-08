@@ -4,7 +4,7 @@ import styles from './page.module.css';
 import RemindersContent from './RemindersContent';
 import { loadRemindersQueue } from './data';
 
-export const metadata = { title: 'Reminders — Clipmark' };
+export const metadata = { title: 'Reminders — ClipMark' };
 
 export default async function RemindersPage() {
   const supabase = await createServerSupabase();
