@@ -149,18 +149,26 @@ test('capture the restyled surfaces', async () => {
   await panel.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   await panel.waitForTimeout(400);
 
-  // ── 3. Side-panel header, for parity against the dashboard header ──────────
-  // In the off-YouTube state the idle screen (position:absolute; inset:0;
-  // z-index:1000) covers the header, so an element crop captures the overlay
-  // rather than the chrome. Hide it for this one shot — the header's own styles
-  // are untouched, it is simply no longer occluded.
-  await panel.evaluate(() => {
-    for (const id of ['sp-unsupported-screen', 'sp-inactive-screen']) {
-      const el = document.getElementById(id);
-      if (el) (el as HTMLElement).style.display = 'none';
-    }
+  // ── 2b. The occlusion fix, called out on its own ──────────────────────────
+  // The idle screen used to cover the whole panel at `inset: 0; z-index: 1000`,
+  // so the ClipMark wordmark was absent from the panel's most common state. It
+  // now covers only .side-panel-body. Crop the top so the fix is unmistakable.
+  await panel.screenshot({
+    path: `${OUT}/09-idle-state-wordmark-visible.png`,
+    clip: { x: 0, y: 0, width: 420, height: 300 },
   });
-  await panel.waitForTimeout(200);
+  await panel.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+  await panel.waitForTimeout(400);
+  await panel.screenshot({
+    path: `${OUT}/09b-idle-state-wordmark-visible-dark.png`,
+    clip: { x: 0, y: 0, width: 420, height: 300 },
+  });
+  await panel.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  await panel.waitForTimeout(400);
+
+  // ── 3. Side-panel header, for parity against the dashboard header ──────────
+  // The idle screen now covers only .side-panel-body, so the header is visible
+  // in this state and the crop needs no overlay lifting.
   await panel.locator('.side-panel-header').screenshot({ path: `${OUT}/06a-header-side-panel.png` });
 
   // ── 4 + 5. Dashboard: new gray ramp + teal-700, and its header ─────────────

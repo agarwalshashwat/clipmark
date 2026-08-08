@@ -1901,7 +1901,7 @@
 .vc-group-btn:hover {
     background: var(--ai);
     color: white;
-    border-color: var(--ai-strong);
+    border-color: var(--ai-ink);
 }
 
 /* ── Group Picker dropdown ────────────────────────────────────────────────── */
@@ -1957,7 +1957,7 @@
 }
 
 .gp-cb {
-    accent-color: var(--ai-strong);
+    accent-color: var(--ai-ink);
     cursor: pointer;
 }
 

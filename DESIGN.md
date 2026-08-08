@@ -50,6 +50,7 @@ colors:
   ai: "#8b5cf6"        # identity/tint only — 4.24:1 as text on white
   ai-strong: "#7c3aed" # AI text on a LIGHT surface — 5.7:1 on white
   ai-soft: "#c4b5fd"   # AI text on a DARK surface  — 9.6:1 on gray-900
+  ai-ink: "{colors.ai-strong} | {colors.ai-soft}"  # theme-aware AI text
   ai-tint: "rgba(139, 92, 246, 0.12)"
 
   # ── Semantic ─────────────────────────────────────────────────────────────
@@ -584,7 +585,8 @@ Video thumbnails are 16:9, framed at `{rounded.md}` with a hairline edge, and ar
 - Draw every neutral from the single gray ramp `{colors.gray-50}`–`{colors.gray-950}`, in both light and dark mode.
 - Keep the page on `{colors.canvas}` and put white `{colors.surface}` under anything the user acts on.
 - Scope violet to AI features only, and only as a tinted control (`button-ai`) or an AI section eyebrow. Violet follows the same two-role split as teal: `{colors.ai}` identifies and tints, `{colors.ai-strong}` is the ink on light surfaces, `{colors.ai-soft}` the ink on dark ones. Commerce surfaces — Upgrade buttons, Pro badges, pricing eyebrows — are **teal**, not violet; they are not AI.
-- Set the wordmark as solid teal "ClipMark" at `{typography.heading-4}` on every surface.
+- Set the wordmark as solid teal "ClipMark" at `{typography.heading-4}` on every surface — and keep it VISIBLE there. An empty/idle state may replace the content area, never the chrome: the side panel's off-YouTube screen used to cover the whole panel at `inset: 0; z-index: 1000`, so the product's most common state showed no wordmark at all. Overlays are scoped to the body region, not the panel.
+- Reach for the theme-aware ink tokens — `{colors.brand-ink}` for brand text, `{colors.ai-ink}` for AI text — rather than picking a ramp step by hand. Teal-800 and violet-600 are LIGHT-mode inks; on the dark canvas they measure 1.94:1 and 2.58:1.
 - Keep all text at `{typography.micro}` (11px) or larger — tighten padding, raise weight, or truncate before you shrink type.
 - Define surfaces with `{colors.hairline}` plus the Level-1/2 shadows; give the dashboard and side-panel headers the identical glass token.
 - Declare a solid `color`/`background` fallback *before* any `background-clip: text` or gradient background.
@@ -599,6 +601,7 @@ Video thumbnails are 16:9, framed at `{rounded.md}` with a hairline edge, and ar
 - Don't render the wordmark as gradient text, in lowercase ("Clipmark"), or in all-caps in user-facing copy.
 - Don't write a font-size below 11px, in any rule, at any breakpoint, on any surface.
 - Don't bake a per-item hue (a tag colour, a clip's own colour) into a rendered string as both fill and text. JS emits the HUE as `--tag-h` / `--tag-s` and CSS picks the lightness per theme, so a theme flip re-colours pills that were rendered once. A baked-in ink measured 1.41:1 on the dark card.
+- Don't hardcode a white background under theme-aware text. A fixed `#fff` card whose title uses `{colors.ink}` renders gray-50 on white in dark mode — invisible. Card surfaces are `{colors.surface}`.
 - Don't use `var()` in `extension/src/tour-theme.css` or the content script's injected styles. Those render inside youtube.com, where our `:root` tokens do not exist, so a token resolves to nothing — those files carry literal ramp values by design.
 - Don't fetch a font from `fonts.googleapis.com` at runtime — least of all from an extension page.
 - Don't use `{colors.success}`'s brighter cousin #22c55e as text, and don't keep three different reds; use `{colors.danger}`.

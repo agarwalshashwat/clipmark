@@ -61,6 +61,9 @@
   --ai-strong:       #7c3aed;   /* AI text on a LIGHT surface   — 5.7:1 on white */
   --ai-soft:         #c4b5fd;   /* AI text on a DARK surface    — 9.6:1 on gray-900 */
   --ai-light:        rgba(139, 92, 246, 0.12);
+  /* Theme-aware AI text — the violet counterpart of --brand-ink. Use this for
+     any AI label/glyph rather than picking -strong or -soft by hand. */
+  --ai-ink:          var(--ai-strong);
 
   /* Legacy names for the same violet. */
   --secondary:       var(--ai);
@@ -174,6 +177,7 @@
   --accent-hover:  var(--teal-800);
   --accent-light:  rgba(20, 184, 166, 0.12);
   --brand-ink:     var(--teal-400);
+  --ai-ink:        var(--ai-soft);
 
   --danger:        #f87171;
   --danger-light:  rgba(248, 113, 113, 0.12);

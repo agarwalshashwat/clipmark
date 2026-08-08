@@ -36,6 +36,11 @@
     </div>
   </header>
 
+  <!-- Everything the idle/inactive overlays are allowed to cover. They are
+       absolutely positioned against THIS wrapper, not the whole panel, so the
+       header and its wordmark stay visible in the off-YouTube state. -->
+  <div class="side-panel-body">
+
   <div id="status-message" class="status-message"></div>
 
   <!-- Scrollable main content -->
@@ -252,6 +257,8 @@
     </div>
   </div>
 
+
+  </div><!-- /.side-panel-body -->
 
 </div><!-- /.side-panel-container -->
 

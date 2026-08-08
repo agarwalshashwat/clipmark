@@ -71,8 +71,14 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
     await worker.evaluate(
       ([key, bookmarks]) =>
         new Promise<void>((resolve) =>
-          // @ts-expect-error — chrome is the extension's own global here
-          chrome.storage.sync.set({ [key as string]: bookmarks }, () => resolve())
+            // @ts-expect-error — chrome is the extension's own global here
+          chrome.storage.sync.set({
+            [key as string]: bookmarks,
+            // A fresh profile runs the first-run guided tour, whose driver.js
+            // overlay is fixed at z-index 1000010 and sits over everything.
+            // These tests assert steady-state styling, so start past it.
+            tourState: { youtubeTour: true, sidePanelTour: true, recallCoachMark: true },
+          }, () => resolve())
         ),
       [`bm_${VIDEO_ID}`, seedBookmarks()] as const
     );
@@ -205,6 +211,42 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
     await panel.close();
   });
 
+  test('the wordmark stays visible in the off-YouTube idle state', async () => {
+    // The idle screen used to be `inset: 0; z-index: 1000` against the whole
+    // panel, so it covered the header — the panel's MOST COMMON state showed no
+    // wordmark. It now covers only .side-panel-body.
+    const panel = await context.newPage();
+    await panel.setViewportSize({ width: 420, height: 920 });
+    await panel.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
+    const mark = panel.locator('.sp-logo-text');
+    await mark.waitFor({ timeout: 15_000 });
+
+    // The idle screen really is showing — otherwise this proves nothing.
+    await expect(panel.locator('#sp-unsupported-screen')).toBeVisible();
+
+    for (const theme of ['light', 'dark'] as const) {
+      await panel.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
+      await settle(panel);
+
+      await expect(mark, `wordmark hidden in ${theme}`).toBeVisible();
+      await expect(mark).toHaveText('ClipMark');
+
+      // Visible to Playwright is not enough — assert nothing is painted on top.
+      const onTop = await mark.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !!hit && (hit === el || el.contains(hit) || hit.contains(el));
+      });
+      expect(onTop, `something is painted over the wordmark in ${theme}`).toBe(true);
+
+      // And it is still the brand ink, not washed out by an overlay.
+      const color = await mark.evaluate((el) => getComputedStyle(el).color);
+      expect(color).toBe(theme === 'dark' ? 'rgb(45, 212, 191)' : 'rgb(15, 118, 110)');
+    }
+
+    await panel.close();
+  });
+
   test('the extension dashboard shows loop ranges too', async () => {
     // Third surface with the same bug: the extension dashboard had no loop
     // awareness at all, so a saved loop rendered as its A point while the web
@@ -250,6 +292,20 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
 
     // No violet anywhere in the shipped content script.
     expect(css, 'AI violet leaked into the on-YouTube surfaces').not.toMatch(/139,\s*92,\s*246|#8b5cf6/i);
+  });
+
+  test('dark mode holds the same rules — side panel', async () => {
+    // The dark audit used to cover only the dashboard, which is how a hardcoded
+    // white clip-card body survived: its title uses the theme-aware --text, so
+    // in dark mode it rendered gray-50 on white.
+    const panel = await context.newPage();
+    await panel.setViewportSize({ width: 420, height: 920 });
+    await panel.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
+    await panel.locator('.sp-clip-moment-time--loop').first().waitFor({ timeout: 15_000 });
+    await panel.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await settle(panel);
+    await auditPage(panel, 'side-panel (dark)');
+    await panel.close();
   });
 
   test('dark mode holds the same rules', async () => {
