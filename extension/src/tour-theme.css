@@ -100,8 +100,27 @@
   border-right-color: #f9fafb;
 }
 
-/* Sit above the extension's own top-of-stack UI (toast, revision overlay use 999999). */
-.driver-overlay,
+/* Sit above the extension's own top-of-stack UI (toast, revision overlay use
+   999999).
+
+   These MUST NOT share a z-index. driver.js gives the popover 1000000000 and the
+   backdrop svg a much lower one precisely so the popover wins; flattening both
+   to 1000010 put them on the same layer, where DOM order decides — and the
+   backdrop is re-appended per step, so it ended up painting over the popover.
+   Its <path> then intercepted every click, which is why Next / Back / × did
+   nothing on a first run. Keep a gap, and belt-and-braces the backdrop out of
+   hit-testing: driver.css only sets pointer-events:none on it via
+   `.driver-active .driver-overlay`, which does not cover the <path> child in
+   every engine. */
+.driver-overlay {
+  z-index: 1000000 !important;
+  pointer-events: none !important;
+}
+
+.driver-overlay * {
+  pointer-events: none !important;
+}
+
 #driver-popover-content {
   z-index: 1000010 !important;
 }

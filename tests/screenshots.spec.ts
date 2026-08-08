@@ -256,6 +256,43 @@ test('capture the restyled surfaces', async () => {
 
   await yt.close();
   await panel.close();
+
+  // ── 10-11. The first-run tour, actually working ───────────────────────────
+  // Its own profile so the tour has genuinely never been seen.
+  const tourCtx = await chromium.launchPersistentContext('', {
+    headless: false,
+    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox', '--mute-audio'],
+  });
+  try {
+    const tw = await extensionServiceWorker(tourCtx);
+    await tw.evaluate(() => new Promise<void>((r) => chrome.storage.sync.remove('tourState', () => r())));
+    const tp = await tourCtx.newPage();
+    await tp.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
+    await tp.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+    await tp.locator('.clipmark-tour-popover').waitFor({ timeout: 40_000 });
+    await tp.waitForFunction(() => {
+      const el = document.querySelector('.clipmark-tour-popover');
+      return !!el && getComputedStyle(el).opacity === '1';
+    }, null, { timeout: 15_000 });
+    await silence(tp);
+
+    // Advance to step 2 — the thing that used to be impossible.
+    await tp.locator('.driver-popover-next-btn').click();
+    await tp.locator('.driver-popover-progress-text').filter({ hasText: '2 of 3' }).waitFor({ timeout: 10_000 });
+    await tp.waitForTimeout(600);
+    await silence(tp);
+    await tp.screenshot({ path: `${OUT}/10-tour-step-2-of-3.png` });
+
+    // …and dismissed with the close button.
+    await tp.locator('.driver-popover-close-btn').click();
+    await tp.locator('.clipmark-tour-popover').waitFor({ state: 'detached', timeout: 10_000 });
+    await tp.waitForTimeout(700);
+    await silence(tp);
+    await tp.screenshot({ path: `${OUT}/11-tour-dismissed.png` });
+  } finally {
+    await tourCtx.close();
+  }
+
   await context.close();
 
   console.log(`\nScreenshots written to ${OUT}\n`);
