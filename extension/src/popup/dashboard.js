@@ -528,10 +528,10 @@ async function renderBookmarks() {
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
-                      <button class="vc-action-btn vc-notes-btn cm-pro-gated${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
-                      <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
-                      <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
-                      <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
+                      <button class="vc-action-btn vc-notes-btn cm-pro-gated${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" data-tip="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
+                      <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" data-tip="Copy link" aria-label="Copy link">${ICON_LINK}</button>
+                      <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" data-tip="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
+                      <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" data-tip="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
                     </div>
                     <div class="vc-notes-panel" id="notes-${b.id}" data-bookmark-id="${b.id}" data-video-id="${videoId}">
                       <textarea class="vc-notes-textarea" placeholder="Add a longer note, context, or key insight…" rows="2">${b.notes || ''}</textarea>
@@ -561,10 +561,10 @@ async function renderBookmarks() {
                         ).join('')}</div>`
                       : ''}
                     <div class="vc-actions">
-                      <button class="vc-action-btn vc-notes-btn cm-pro-gated${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
-                      <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
-                      <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
-                      <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
+                      <button class="vc-action-btn vc-notes-btn cm-pro-gated${hasNotes ? ' vc-notes-btn--has-notes' : ''}" data-bookmark-id="${b.id}" data-video-id="${videoId}" data-tip="Extended notes${hasNotes ? ' (has notes)' : ''}" aria-label="Extended notes${hasNotes ? ' (has notes)' : ''}">${ICON_NOTES}</button>
+                      <button class="vc-action-btn copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" data-tip="Copy link" aria-label="Copy link">${ICON_LINK}</button>
+                      <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" data-tip="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
+                      <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${videoId}" data-tip="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
                     </div>
                     <div class="vc-notes-panel" id="notes-${b.id}" data-bookmark-id="${b.id}" data-video-id="${videoId}">
                       <textarea class="vc-notes-textarea" placeholder="Add a longer note, context, or key insight…" rows="2">${b.notes || ''}</textarea>
@@ -733,9 +733,9 @@ function renderTimelineView(bookmarks, container) {
           <div class="tl-desc">${b.description || 'No note added.'}</div>
           ${tagsHtml}
           <div class="tl-actions">
-            <button class="vc-action-btn copy-link" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Copy link" aria-label="Copy link">${ICON_LINK}</button>
-            <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" title="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
-            <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${b.videoId}" title="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
+            <button class="vc-action-btn copy-link" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" data-tip="Copy link" aria-label="Copy link">${ICON_LINK}</button>
+            <button class="vc-action-btn vc-action-jump jump-to-video" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}" data-tip="Jump to timestamp" aria-label="Jump to timestamp">${ICON_JUMP}</button>
+            <button class="vc-action-btn vc-action-del delete-bookmark" data-bookmark-id="${b.id}" data-video-id="${b.videoId}" data-tip="Delete bookmark" aria-label="Delete bookmark">${ICON_TRASH}</button>
           </div>
         </div>`;
       const nodeHtml = `<div class="tl-node"><div class="tl-dot" style="background:${color}"></div></div>`;

@@ -267,6 +267,166 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
     await dash.close();
   });
 
+  test('the bookmark action row does not collide with the PRO badge or its tooltip', async () => {
+    // The row packs a Pro-gated notes button, three icon buttons, and (on hover)
+    // a tooltip. At gap:2px with a PRO badge ~36px wide sitting on a 28px button,
+    // the badge painted 4px over the copy-link button and the native `title`
+    // tooltip landed wherever the cursor was — the row read as broken.
+    const dash = await context.newPage();
+    await dash.setViewportSize({ width: 1360, height: 940 });
+    await dash.goto(`chrome-extension://${extensionId}/src/pages/dashboard.html`);
+    await dash.locator('.vc-chapter').first().waitFor({ timeout: 20_000 });
+
+    // Sign the profile in as a FREE user so the PRO badges actually render.
+    await dash.evaluate(() => document.body.classList.add('cm-free-tier'));
+
+    const measure = (theme: string, view: string) =>
+      dash.evaluate(({ theme, view }) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        const rows = [...document.querySelectorAll('.vc-actions, .tl-actions')];
+        const problems: string[] = [];
+        let rowsSeen = 0;
+        let badgesSeen = 0;
+
+        for (const row of rows) {
+          // The row only paints on hover; force it so geometry is measurable.
+          (row as HTMLElement).style.opacity = '1';
+          const btns = [...row.querySelectorAll('.vc-action-btn')];
+          if (!btns.length) continue;
+          rowsSeen += 1;
+
+          const boxes = btns.map((b) => ({ el: b, r: b.getBoundingClientRect() }));
+
+          // Hit targets.
+          for (const { el, r } of boxes) {
+            if (r.width < 30 || r.height < 30) {
+              problems.push(`${view}/${theme}: ${(el.className as string).split(' ')[1]} is ${r.width}x${r.height}, below the 30px minimum`);
+            }
+          }
+
+          // Buttons must not overlap each other.
+          for (let i = 0; i < boxes.length; i++) {
+            for (let j = i + 1; j < boxes.length; j++) {
+              const a = boxes[i].r, b = boxes[j].r;
+              const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+              const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+              if (ox > 0 && oy > 0) problems.push(`${view}/${theme}: buttons ${i} and ${j} overlap by ${ox.toFixed(1)}px`);
+            }
+          }
+
+          // The PRO badge is an ::after on the gated button; derive its box and
+          // make sure it lands on no sibling.
+          const gated = row.querySelector('.cm-pro-gated');
+          if (gated) {
+            badgesSeen += 1;
+            const gr = gated.getBoundingClientRect();
+            const a = getComputedStyle(gated, '::after');
+            const bw = parseFloat(a.width) || 0;
+            const right = parseFloat(a.right) || 0;
+            const bLeft = gr.right - right - bw;
+            const bRight = bLeft + bw;
+            for (const { el, r } of boxes) {
+              if (el === gated) continue;
+              const ox = Math.min(bRight, r.right) - Math.max(bLeft, r.left);
+              if (ox > 0) problems.push(`${view}/${theme}: PRO badge covers ${(el.className as string).split(' ')[1]} by ${ox.toFixed(1)}px`);
+            }
+          }
+
+          // Neither the tooltip nor the PRO badge may cover the row's own
+          // buttons OR the note text and tag pills above it. The first pass
+          // only checked buttons, and the tooltip promptly landed on the tags.
+          // Scope to the whole card, not just this bookmark's own block: a
+          // tooltip that renders below the row is adjacent to the NEXT
+          // bookmark's timestamp chip, and covering that is just as wrong.
+          const neighbours = [...(row.closest('.vc-card, .tl-card, .vc-body')?.querySelectorAll(
+            '.vc-tags, .vc-vt-note, .vc-vt-time, .vc-vt-type, .tl-desc, .tl-ts, .tag-badge') ?? [])]
+            .map((n) => ({ n, r: n.getBoundingClientRect() }))
+            .filter(({ r }) => r.width > 0 && r.height > 0);
+
+          const hits = (a: DOMRect | { top: number; bottom: number; left: number; right: number }) =>
+            neighbours.filter(({ r }) =>
+              Math.min(a.right, r.right) - Math.max(a.left, r.left) > 1 &&
+              Math.min(a.bottom, r.bottom) - Math.max(a.top, r.top) > 1);
+
+          for (const { el, r } of boxes) {
+            const tip = getComputedStyle(el, '::before');
+            if (!tip.content || tip.content === 'none') continue;
+            const tw = parseFloat(tip.width) || 0;
+            const th = parseFloat(tip.height) || 0;
+            if (!tw || !th) continue;
+            // Derive the pseudo-element's painted box. getComputedStyle returns
+            // USED values for a positioned element, so `top`/`left` are already
+            // px relative to the button's padding box — and `bottom` is resolved
+            // too, which is why keying off "is bottom auto?" got this wrong the
+            // first time. Prefer `top`/`left`, and apply the transform's own
+            // translation rather than assuming translateX(-50%).
+            const tx = (() => {
+              const m = /matrix\(([^)]+)\)/.exec(tip.transform || '');
+              return m ? parseFloat(m[1].split(',')[4]) || 0 : 0;
+            })();
+            const top = tip.top !== 'auto'
+              ? r.top + parseFloat(tip.top)
+              : r.bottom - parseFloat(tip.bottom) - th;
+            const left = tip.left !== 'auto'
+              ? r.left + parseFloat(tip.left) + tx
+              : r.right - parseFloat(tip.right) - tw + tx;
+            const box = { top, bottom: top + th, left, right: left + tw };
+            const name = (el.className as string).split(' ')[1];
+            for (const { el: b, r: br } of boxes) {
+              if (Math.min(box.right, br.right) - Math.max(box.left, br.left) > 1 &&
+                  Math.min(box.bottom, br.bottom) - Math.max(box.top, br.top) > 1) {
+                problems.push(`${view}/${theme}: tooltip on ${name} covers ${(b.className as string).split(' ')[1]}`);
+              }
+            }
+            for (const h of hits(box)) {
+              problems.push(`${view}/${theme}: tooltip on ${name} covers "${(h.n.textContent ?? '').trim().slice(0, 24)}"`);
+            }
+          }
+
+          if (gated) {
+            const gr2 = gated.getBoundingClientRect();
+            const a2 = getComputedStyle(gated, '::after');
+            const bw2 = parseFloat(a2.width) || 0;
+            const bh2 = parseFloat(a2.height) || 0;
+            const right2 = parseFloat(a2.right) || 0;
+            const top2 = parseFloat(a2.top) || 0;
+            const bbox = { left: gr2.right - right2 - bw2, right: gr2.right - right2,
+                           top: gr2.top + top2, bottom: gr2.top + top2 + bh2 };
+            for (const h of hits(bbox)) {
+              problems.push(`${view}/${theme}: PRO badge covers "${(h.n.textContent ?? '').trim().slice(0, 24)}"`);
+            }
+          }
+        }
+        return { problems, rowsSeen, badgesSeen };
+      }, { theme, view });
+
+    const all: string[] = [];
+    let totalRows = 0;
+    let totalBadges = 0;
+    for (const theme of ['light', 'dark']) {
+      const res = await measure(theme, 'grid');
+      all.push(...res.problems);
+      totalRows += res.rowsSeen;
+      totalBadges += res.badgesSeen;
+    }
+
+    // Timeline view exercises .tl-actions, a separate row.
+    await dash.locator('#view-timeline').click();
+    await dash.waitForTimeout(700);
+    for (const theme of ['light', 'dark']) {
+      const res = await measure(theme, 'timeline');
+      all.push(...res.problems);
+      totalRows += res.rowsSeen;
+    }
+
+    if (all.length) console.log(`\n[action-row] findings:\n    ${all.join('\n    ')}\n`);
+    expect(totalRows, 'no action rows were measured').toBeGreaterThan(0);
+    expect(totalBadges, 'no PRO badge was rendered — the collision case was not exercised').toBeGreaterThan(0);
+    expect(all, 'bookmark action row layout collisions').toEqual([]);
+
+    await dash.close();
+  });
+
   test('the loop range on the scrubber is teal and actually visible', async () => {
     // Looping is not an AI feature, so it may not use the AI violet; and the
     // saved band was 0.18 alpha on a ~6px bar, competing with YouTube's red

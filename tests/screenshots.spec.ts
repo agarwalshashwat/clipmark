@@ -183,9 +183,52 @@ test('capture the restyled surfaces', async () => {
   await dash.screenshot({ path: `${OUT}/04-dashboard.png` });
   await dash.locator('.page-header').screenshot({ path: `${OUT}/06b-header-dashboard.png` });
 
+  // ── 4b. The bookmark action row, hovered ──────────────────────────────────
+  // Free tier (no bmUser => not Pro), so the gated notes button carries its PRO
+  // badge. Hovering reveals the row and the copy-link tooltip, which is the
+  // exact combination that used to collide.
+  const chapter = dash.locator('.vc-chapter').first();
+  await chapter.scrollIntoViewIfNeeded();
+  await chapter.hover();
+  await dash.waitForTimeout(300);
+  await dash.locator('.vc-actions .copy-link').first().hover();
+  await dash.waitForTimeout(400);
+  const rowBox = await chapter.boundingBox();
+  if (rowBox) {
+    await dash.screenshot({
+      path: `${OUT}/14-bookmark-action-row.png`,
+      clip: {
+        x: Math.max(0, rowBox.x - 8),
+        y: Math.max(0, rowBox.y - 12),
+        width: Math.min(1360, rowBox.width + 16),
+        height: rowBox.height + 62,
+      },
+    });
+  }
+
   await dash.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   await dash.waitForTimeout(400);
   await dash.screenshot({ path: `${OUT}/05-dashboard-dark.png` });
+  // The row is hover-revealed; a full-page screenshot in between drops the
+  // hover, so pin it open before re-hovering for the tooltip.
+  await dash.evaluate(() => {
+    const row = document.querySelector('.vc-actions') as HTMLElement | null;
+    if (row) row.style.opacity = '1';
+  });
+  await dash.locator('.vc-actions .copy-link').first().hover();
+  await dash.waitForTimeout(500);
+  const darkBox = await dash.locator('.vc-chapter').first().boundingBox();
+  if (darkBox) {
+    await dash.screenshot({
+      path: `${OUT}/14b-bookmark-action-row-dark.png`,
+      clip: {
+        x: Math.max(0, darkBox.x - 8),
+        y: Math.max(0, darkBox.y - 12),
+        width: Math.min(1360, darkBox.width + 16),
+        height: darkBox.height + 62,
+      },
+    });
+  }
   await dash.close();
 
   // ── 6-8. On YouTube: the scrubber ranges, an armed loop, the recall prompt ─

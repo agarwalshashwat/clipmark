@@ -1547,7 +1547,11 @@
     padding-left: 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    /* 20px did not leave room for an action-button tooltip, which renders below
+       its row and clipped the NEXT bookmark's timestamp chip by ~7px. The
+       tooltip needs 6px of offset plus its own ~23px box; 30px clears it and
+       gives the list the air DESIGN.md asks for. */
+    gap: 30px;
     flex: 1;
 }
 
@@ -1743,13 +1747,20 @@
     flex-wrap: nowrap;
 }
 
+/* gap must clear the PRO badge's overhang. The badge is an absolutely-positioned
+   ::after on the gated button at right:-6px, and it is WIDER than the 30px button
+   (~36px at the 11px type floor), so it overhangs 6px to the right. At the old
+   2px gap it painted 4px over the copy-link button next to it, which is what made
+   the row read as broken. 8px clears it with room to spare, and also gives the
+   icons the breathing room DESIGN.md asks for. */
 .vc-actions {
     display: flex;
-    gap: 2px;
+    gap: 8px;
     align-items: center;
-    margin-top: 8px;
+    margin-top: 10px;
     opacity: 0;
     transition: opacity 0.12s;
+    flex-wrap: nowrap;
 }
 
 .vc-chapter:hover .vc-actions {
@@ -1761,8 +1772,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    /* DESIGN.md: extension icon buttons are 30-32px square, no smaller. */
+    width: 30px;
+    height: 30px;
+    position: relative;
     padding: 0;
     background: transparent;
     border: none;
@@ -2680,7 +2693,8 @@
 
 .tl-actions {
     display: flex;
-    gap: 4px;
+    align-items: center;
+    gap: 8px;
     margin-top: 10px;
     opacity: 0;
     transition: opacity 0.12s;
@@ -4312,3 +4326,50 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
+
+/* ── Action-button tooltips ───────────────────────────────────────────────── */
+/* These buttons used native `title` tooltips, which the browser draws next to
+   the CURSOR — so on a dense row the "Copy link" bubble landed over the buttons
+   and the note text beside them. A positioned tooltip renders above the row
+   instead, where it covers nothing. `aria-label` still carries the name for
+   assistive tech; `title` is dropped so the two don't both appear. */
+.vc-action-btn[data-tip]::before {
+    content: attr(data-tip);
+    position: absolute;
+    /* BELOW the button, not above. The action row is the last thing in a
+       bookmark block, so below is empty; above is the note text and its tag
+       pills, which an upward tooltip covered on every single button. */
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--gray-900);
+    color: var(--gray-50);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 20;
+}
+
+.vc-action-btn[data-tip]:hover::before,
+.vc-action-btn[data-tip]:focus-visible::before {
+    opacity: 1;
+}
+
+/* The last button sits at the row's right edge; a centred tooltip would spill
+   out of the card, so anchor that one to the right. */
+.vc-actions .vc-action-btn:last-child[data-tip]::before,
+.tl-actions .vc-action-btn:last-child[data-tip]::before {
+    left: auto;
+    right: 0;
+    transform: none;
+}
+
+/* The PRO badge sits on the gated button's top-right corner and the tooltip is
+   below it, so they no longer compete for the same space. */
