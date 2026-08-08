@@ -8,7 +8,7 @@ import {
 export const metadata: Metadata = buildPageMetadata({
   title: 'Spaced Repetition for YouTube — Revise Lectures That Stick',
   description:
-    'Put YouTube lectures on a spaced-repetition schedule. ClipMark resurfaces saved moments after 1, 3 and 7 days — doubling to 60 — and quizzes you before replaying the clip.',
+    'Put YouTube lectures on a spaced-repetition schedule. ClipMark resurfaces saved moments after 1, 3 and 7 days, doubling to 60, and quizzes you before the replay.',
   path: '/spaced-repetition-youtube',
   keywords: [
     'spaced repetition youtube', 'revise lectures', 'spaced repetition video',
@@ -114,13 +114,13 @@ export default function SpacedRepetitionYouTubePage() {
           and 30 reviews a month — a real revision habit, not a demo. Pro removes both caps and adds cloud sync across
           devices, scheduled reminders, and unlimited Anki export. Permanent transcript archiving and deep search inside
           transcripts are <strong>coming soon</strong> and not part of Pro today; the{' '}
-          <a href="/upgrade" style={{ color: '#0D9488', fontWeight: 600 }}>pricing page</a> marks them as such.
+          <a href="/upgrade" style={{ color: '#0F766E', fontWeight: 600 }}>pricing page</a> marks them as such.
         </p>
         <h3 style={H3}>If you already run Anki</h3>
         <p style={{ ...PROSE, marginBottom: 0 }}>
           Keep it. ClipMark schedules video moments, which Anki can&apos;t hold, and exports them into your existing
           deck with a link back to the second each card came from — see{' '}
-          <a href="/youtube-to-anki" style={{ color: '#0D9488', fontWeight: 600 }}>YouTube to Anki</a>.
+          <a href="/youtube-to-anki" style={{ color: '#0F766E', fontWeight: 600 }}>YouTube to Anki</a>.
         </p>
       </Section>
 

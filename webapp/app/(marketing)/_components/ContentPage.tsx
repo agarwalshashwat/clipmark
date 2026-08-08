@@ -14,7 +14,7 @@ import { CHROME_STORE_URL } from '@/app/lib/constants';
 
 const INK = '#1A1C1D';
 const INK_SUB = '#545f6c';
-const ACCENT_DEEP = '#0D9488';
+const ACCENT_DEEP = '#0F766E';
 
 export const PROSE: React.CSSProperties = {
   fontSize: 17,
@@ -83,7 +83,7 @@ export function PageHero({
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '17px 36px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+              background: 'linear-gradient(135deg, #14B8A6 0%, #0F766E 100%)',
               color: 'white', borderRadius: 16, fontSize: 17, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 16px 40px rgba(13, 148, 136, 0.22)',
             }}
@@ -183,6 +183,10 @@ export function CardGrid({ items }: { items: { icon: string; title: string; desc
 /**
  * Q&A cards. The same `items` array is what callers hand to `buildFaqLd`, so the
  * marked-up answer text is always the visible answer text.
+ *
+ * Questions render as `h2` because on /faq they sit directly under the page `h1`
+ * with no intervening section heading — using `h3` there skipped a level. The
+ * homepage's own FAQ block is separate code and keeps its `h2` → `h3` nesting.
  */
 export function FaqList({ items }: { items: { q: string; a: string }[] }) {
   return (
@@ -196,7 +200,7 @@ export function FaqList({ items }: { items: { q: string; a: string }[] }) {
             border: '1px solid rgba(26,28,29,0.06)',
           }}
         >
-          <h3 style={{ ...H3, fontSize: 17 }}>{q}</h3>
+          <h2 style={{ ...H3, fontSize: 17 }}>{q}</h2>
           <p style={{ ...PROSE, fontSize: 15, marginBottom: 0 }}>{a}</p>
         </div>
       ))}
@@ -287,7 +291,9 @@ export function CtaBand({ heading, sub }: { heading: React.ReactNode; sub: React
         >
           Add ClipMark to Chrome — Free
         </a>
-        <p style={{ marginTop: 20, fontSize: 13, color: '#94A3B8' }}>
+        {/* #64748B, not the lighter #94A3B8 used elsewhere for fine print: at 13px
+            that failed WCAG AA (2.5:1), and this line carries the free-tier promise. */}
+        <p style={{ marginTop: 20, fontSize: 13, color: '#64748B' }}>
           Free tier needs no card. Works in Chrome, Edge, and Brave.
         </p>
       </div>

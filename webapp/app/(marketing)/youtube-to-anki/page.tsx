@@ -101,7 +101,7 @@ export default function YouTubeToAnkiPage() {
         <p style={PROSE}>
           Anki export runs <strong>once a month on the free tier</strong> and unlimited on Pro. That is a real
           constraint, not a hidden one: it&apos;s printed on the{' '}
-          <a href="/upgrade" style={{ color: '#0D9488', fontWeight: 600 }}>pricing page</a> next to every other cap. One
+          <a href="/upgrade" style={{ color: '#0F766E', fontWeight: 600 }}>pricing page</a> next to every other cap. One
           export a month is enough to move a term&apos;s worth of clips into a deck in a single batch; if you export
           weekly, you want Pro.
         </p>

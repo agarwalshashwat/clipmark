@@ -8,7 +8,7 @@ import {
 export const metadata: Metadata = buildPageMetadata({
   title: 'Active Recall From YouTube — Quiz Yourself on Any Video',
   description:
-    'Turn any YouTube video into an active-recall session. ClipMark saves the moment, hides your note, and asks you to remember it before replaying the clip. Free to start.',
+    'Turn any YouTube video into an active-recall session. ClipMark hides your note and asks you to remember the moment before replaying the clip. Free to start.',
   path: '/active-recall-youtube',
   keywords: [
     'active recall from youtube', 'active recall youtube', 'quiz yourself on a video',
@@ -119,7 +119,7 @@ export default function ActiveRecallYouTubePage() {
           allowance: 25 enrolled cards standing at any time and 30 reviews a month. That is enough to run genuine
           retrieval practice over a full course, not a teaser. Pro lifts both to unlimited and adds cloud sync across
           devices, scheduled review reminders, and unlimited Anki export — the exact split is on the{' '}
-          <a href="/upgrade" style={{ color: '#0D9488', fontWeight: 600 }}>pricing page</a>.
+          <a href="/upgrade" style={{ color: '#0F766E', fontWeight: 600 }}>pricing page</a>.
         </p>
         <h3 style={H3}>Where the AI does and doesn&apos;t help</h3>
         <p style={{ ...PROSE, marginBottom: 0 }}>

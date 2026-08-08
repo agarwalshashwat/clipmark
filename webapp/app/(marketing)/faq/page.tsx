@@ -7,7 +7,7 @@ import { PageHero, Section, FaqList, RelatedLinks, CtaBand, PROSE } from '../_co
 export const metadata: Metadata = buildPageMetadata({
   title: 'ClipMark FAQ — Playback Speed, Sync, Export, Permissions',
   description:
-    'Straight answers about ClipMark: does it work at 2x and in fullscreen, can you sync and export clips, what the free tier really includes, and how it differs from summarisers.',
+    'Straight answers about ClipMark: 2x and fullscreen, syncing and exporting clips, what the free tier really includes, and how it differs from a summariser.',
   path: '/faq',
   keywords: [
     'clipmark faq', 'youtube bookmark extension faq', 'youtube timestamp extension questions',
@@ -113,7 +113,7 @@ export default function FaqPage() {
         <FaqList items={FAQ_ITEMS} />
         <p style={{ ...PROSE, marginTop: 32, marginBottom: 0, fontSize: 15 }}>
           Something not covered? Email{' '}
-          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#0D9488', fontWeight: 600 }}>
+          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#0F766E', fontWeight: 600 }}>
             {SUPPORT_EMAIL}
           </a>{' '}
           and you&apos;ll get a real answer, including &ldquo;no, we don&apos;t do that.&rdquo;
