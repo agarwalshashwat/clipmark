@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, copyFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { crx } from '@crxjs/vite-plugin';
@@ -66,8 +66,43 @@ function contentGlobalsGuard() {
   };
 }
 
+// styles/dashboard.css is listed in web_accessible_resources, so crxjs copies it
+// into dist/ verbatim — @import lines and all. Its imports (./design-tokens.css,
+// ./fonts.css) were never copied alongside it, so that exposed stylesheet has
+// always resolved to no tokens and no fonts. dashboard.html itself is fine (Vite
+// inlines the imports into the hashed bundle it links instead), which is why this
+// went unnoticed. Emit the two companions next to the verbatim copy, rewriting
+// fonts.css's relative woff2 urls onto the hashed assets the build actually
+// produced, so every stylesheet the package serves resolves.
+function copyStyleImports() {
+  return {
+    name: 'clipmark-copy-style-imports',
+    apply: 'build',
+    closeBundle() {
+      const styles = fileURLToPath(new URL('./styles', import.meta.url));
+      const outStyles = fileURLToPath(new URL('./dist/styles', import.meta.url));
+      const assets = fileURLToPath(new URL('./dist/assets', import.meta.url));
+      if (!existsSync(outStyles)) return; // nothing was copied verbatim
+
+      copyFileSync(`${styles}/design-tokens.css`, `${outStyles}/design-tokens.css`);
+
+      const hashed = readdirSync(assets).filter((f) => f.endsWith('.woff2'));
+      let fonts = readFileSync(`${styles}/fonts.css`, 'utf8');
+      fonts = fonts.replace(/url\('\.\.\/assets\/fonts\/([^']+)\.woff2'\)/g, (m, stem) => {
+        const hit = hashed.find((f) => f.startsWith(`${stem}-`));
+        if (!hit) {
+          this.error(`fonts.css references ${stem}.woff2 but no hashed build of it is in dist/assets.`);
+          return m;
+        }
+        return `url('../assets/${hit}')`;
+      });
+      writeFileSync(`${outStyles}/fonts.css`, fonts);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [apiBaseGuard(), crx({ manifest }), contentGlobalsGuard()],
+  plugins: [apiBaseGuard(), crx({ manifest }), contentGlobalsGuard(), copyStyleImports()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
