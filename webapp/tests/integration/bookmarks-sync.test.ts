@@ -85,3 +85,94 @@ describe('cloud sync (#4, integration)', () => {
     assert.equal(leak?.length ?? 0, 0, 'RLS must hide another user\'s row');
   });
 });
+
+// ─── Saved A–B loops ─────────────────────────────────────────────────────────
+// A saved loop is an ordinary bookmark carrying `loop: { end }` — it has no
+// route of its own, so its Pro gate IS this route's gate. These run against the
+// real DB with real JWTs, so RLS applies: this is the server-side proof that a
+// non-Pro user cannot persist or sync a loop, whatever the client believes.
+describe('saved A–B loops (#4, integration)', () => {
+  const loop = (id: number, start: number, end: number, name = 'Hard bit') => ({
+    id, videoId: 'loopvid', timestamp: start, description: name,
+    tags: [], color: '#8b5cf6', createdAt: new Date().toISOString(),
+    videoTitle: 'T', reviewSchedule: [1, 3, 7], lastReviewed: null,
+    loop: { end },
+  });
+
+  it('a non-Pro user cannot PERSIST a saved loop (403) and nothing is written', async () => {
+    const free = await createTestUser('loop-free@example.test');
+
+    const res = await handlePutBookmarks(
+      putReq({ videoId: 'loopvid', bookmarks: [loop(1, 30, 40)] }),
+      depsFor(free),
+    );
+    assert.equal(res.status, 403);
+    assert.equal((await res.json()).error, 'pro_required');
+
+    // The row must genuinely not exist — a 403 that still wrote would be the bug.
+    const { count } = await admin
+      .from('user_bookmarks')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', free.id)
+      .eq('video_id', 'loopvid');
+    assert.equal(count, 0, 'a rejected loop must leave no row behind');
+  });
+
+  it('a non-Pro user cannot SYNC saved loops back down (403)', async () => {
+    const free = await createTestUser('loop-free-read@example.test');
+    assert.equal((await handleGetBookmarks(getReq('loopvid'), depsFor(free))).status, 403);
+    assert.equal((await handleGetBookmarks(getReq(), depsFor(free))).status, 403);
+  });
+
+  it('a non-Pro user cannot bypass the handler and write the row directly (RLS)', async () => {
+    const free = await createTestUser('loop-free-rls@example.test');
+    const { error } = await userClient(free.accessToken)
+      .from('user_bookmarks')
+      .upsert({ user_id: free.id, video_id: 'loopvid', bookmarks: [loop(2, 10, 20)] });
+    // Whether RLS rejects outright or silently filters, no row may result.
+    const { count } = await admin
+      .from('user_bookmarks')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', free.id)
+      .eq('video_id', 'loopvid');
+    assert.equal(count ?? 0, 0, `direct write left a row behind (error was ${error?.message ?? 'none'})`);
+  });
+
+  it('a Pro user round-trips a saved loop with its range intact', async () => {
+    const u = await createTestUser('loop-pro@example.test');
+    await makePro(u.id);
+
+    assert.equal(
+      (await handlePutBookmarks(putReq({ videoId: 'loopvid', bookmarks: [loop(3, 30, 40, 'Chorus')] }), depsFor(u))).status,
+      200,
+    );
+
+    const got = await handleGetBookmarks(getReq('loopvid'), depsFor(u));
+    const [stored] = (await got.json()).bookmarks;
+    assert.equal(stored.timestamp, 30, 'A point survives the JSONB round-trip');
+    assert.equal(stored.loop.end, 40, 'B point survives the JSONB round-trip');
+    assert.equal(stored.description, 'Chorus');
+    assert.deepEqual(stored.reviewSchedule, [1, 3, 7], 'still a recall card after syncing');
+  });
+
+  it('rejects a malformed range server-side even for a Pro user (400)', async () => {
+    const u = await createTestUser('loop-pro-bad@example.test');
+    await makePro(u.id);
+
+    for (const bad of [loop(4, 40, 30), { ...loop(5, 10, 20), loop: { end: 'x' } }]) {
+      const res = await handlePutBookmarks(
+        putReq({ videoId: 'loopbad', bookmarks: [bad] }),
+        depsFor(u),
+      );
+      assert.equal(res.status, 400);
+      assert.equal((await res.json()).error, 'invalid_loop');
+    }
+
+    const { count } = await admin
+      .from('user_bookmarks')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', u.id)
+      .eq('video_id', 'loopbad');
+    assert.equal(count, 0);
+  });
+});
