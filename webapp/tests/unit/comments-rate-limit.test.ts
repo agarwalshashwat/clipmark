@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { GET } from '../../app/api/comments/route.js';
 import { makeRequest } from './fixtures/fakes.js';
 
-function reqFrom(ip: string, videoId = 'dQw4w9WgXcQ') {
+function reqFrom(ip: string, videoId = 'aircAruvnKk') {
   return makeRequest({
     url: `http://localhost/api/comments?videoId=${videoId}`,
     method: 'GET',

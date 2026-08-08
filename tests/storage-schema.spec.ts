@@ -12,10 +12,10 @@
  *
  * Run: npm run test:yt -- --grep "storage schema"
  */
-import { test, expect, TEST_VIDEO_URL } from './fixtures';
+import { test, expect, TEST_VIDEO_ID, TEST_VIDEO_URL } from './fixtures';
 import { getStoredBookmarks, getServiceWorker } from './helpers';
 
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_ID = TEST_VIDEO_ID;
 
 test.describe('Storage schema', () => {
   // Helper: save one bookmark via Alt+B and return the stored data

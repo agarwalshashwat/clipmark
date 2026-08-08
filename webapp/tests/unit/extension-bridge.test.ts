@@ -90,7 +90,7 @@ describe('extension bridge: startRecallInExtension', () => {
     installWindow(); // no chrome.runtime
     const m = await load();
     m.rememberExtensionId(VALID_ID);
-    assert.deepEqual(await m.startRecallInExtension('dQw4w9WgXcQ', [1]), {
+    assert.deepEqual(await m.startRecallInExtension('aircAruvnKk', [1]), {
       ok: false, error: 'extension_unavailable',
     });
   });
@@ -107,10 +107,10 @@ describe('extension bridge: startRecallInExtension', () => {
     });
     const m = await load();
     m.rememberExtensionId(VALID_ID);
-    const res = await m.startRecallInExtension('dQw4w9WgXcQ', [7, 8]);
+    const res = await m.startRecallInExtension('aircAruvnKk', [7, 8]);
     assert.deepEqual(res, { ok: true, count: 3 });
     assert.equal(seen.id, VALID_ID);
-    assert.deepEqual(seen.msg, { type: 'START_RECALL', videoId: 'dQw4w9WgXcQ', bookmarkIds: [7, 8] });
+    assert.deepEqual(seen.msg, { type: 'START_RECALL', videoId: 'aircAruvnKk', bookmarkIds: [7, 8] });
   });
 
   it('surfaces chrome.runtime.lastError (extension uninstalled)', async () => {
@@ -122,7 +122,7 @@ describe('extension bridge: startRecallInExtension', () => {
     });
     const m = await load();
     m.rememberExtensionId(VALID_ID);
-    const res = await m.startRecallInExtension('dQw4w9WgXcQ');
+    const res = await m.startRecallInExtension('aircAruvnKk');
     assert.equal(res.ok, false);
     assert.match((res as { error: string }).error, /Could not establish connection/);
   });
@@ -133,7 +133,7 @@ describe('extension bridge: startRecallInExtension', () => {
     });
     const m = await load();
     m.rememberExtensionId(VALID_ID);
-    assert.deepEqual(await m.startRecallInExtension('dQw4w9WgXcQ'), { ok: false, error: 'no_bookmarks' });
+    assert.deepEqual(await m.startRecallInExtension('aircAruvnKk'), { ok: false, error: 'no_bookmarks' });
   });
 
   it('treats a missing response as a failure rather than success', async () => {
@@ -142,7 +142,7 @@ describe('extension bridge: startRecallInExtension', () => {
     });
     const m = await load();
     m.rememberExtensionId(VALID_ID);
-    assert.deepEqual(await m.startRecallInExtension('dQw4w9WgXcQ'), { ok: false, error: 'no_response' });
+    assert.deepEqual(await m.startRecallInExtension('aircAruvnKk'), { ok: false, error: 'no_response' });
   });
 
   it('does not reject when sendMessage throws', async () => {
@@ -151,7 +151,7 @@ describe('extension bridge: startRecallInExtension', () => {
     });
     const m = await load();
     m.rememberExtensionId(VALID_ID);
-    const res = await m.startRecallInExtension('dQw4w9WgXcQ');
+    const res = await m.startRecallInExtension('aircAruvnKk');
     assert.equal(res.ok, false);
     assert.match((res as { error: string }).error, /boom/);
   });

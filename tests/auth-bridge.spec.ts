@@ -17,7 +17,8 @@
  *
  * Requires `make ext-build` (skips with a message otherwise).
  */
-import { test, expect, chromium, BrowserContext, Worker, Page } from '@playwright/test';
+import { test, expect, BrowserContext, Worker, Page } from '@playwright/test';
+import { launchExtensionContext } from './fixtures';
 import { existsSync } from 'node:fs';
 import path from 'path';
 
@@ -63,10 +64,7 @@ async function extensionServiceWorker(context: BrowserContext): Promise<Worker> 
 }
 
 async function launchPackaged(): Promise<BrowserContext> {
-  const context = await chromium.launchPersistentContext('', {
-    headless: false, // extensions require non-headless
-    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox'],
-  });
+  const context = await launchExtensionContext(DIST);
   // A successful AUTH_SUCCESS kicks off scheduleReminderAlarms(), which fetches
   // the live reminders API. Stub it so the spec never depends on production
   // being up. (Mocking the worker's own network calls properly is §1.4/phase 2.)

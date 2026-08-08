@@ -15,10 +15,10 @@
  *
  * Run: npm run test:yt -- --grep "marker interaction"
  */
-import { test, expect, TEST_VIDEO_URL } from './fixtures';
+import { test, expect, TEST_VIDEO_ID, TEST_VIDEO_URL } from './fixtures';
 import { makeBookmark, seedBookmarks } from './helpers';
 
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_ID = TEST_VIDEO_ID;
 
 test.describe('Marker interactions', () => {
   // ── Click a marker to seek ────────────────────────────────────────────────
