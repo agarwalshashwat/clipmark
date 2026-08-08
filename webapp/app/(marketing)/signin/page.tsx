@@ -92,13 +92,13 @@ export default async function SignInPage({
               </div>
               <h1 style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 32, fontWeight: 800, color: '#1a1c1d',
+                fontSize: 32, fontWeight: 800, color: 'var(--gray-900)',
                 letterSpacing: '-1px', margin: '0 0 12px',
               }}>
                 Welcome Back
               </h1>
               <p style={{
-                fontSize: 15, color: '#64748b', lineHeight: 1.6,
+                fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.6,
                 maxWidth: 280, margin: '0 auto', fontWeight: 500
               }}>
                 {extensionId
@@ -110,10 +110,10 @@ export default async function SignInPage({
             {/* Error banner */}
             {error && (
               <div style={{
-                background: '#fef2f2', border: '1px solid #fee2e2',
+                background: 'var(--danger-light)', border: '1px solid var(--danger-light)',
                 borderRadius: 12, padding: '12px 16px', marginBottom: 24,
                 display: 'flex', alignItems: 'center', gap: 10,
-                color: '#dc2626', fontSize: 13, fontWeight: 600,
+                color: 'var(--danger)', fontSize: 13, fontWeight: 600,
               }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
                 Sign-in failed — please try again.
@@ -128,9 +128,9 @@ export default async function SignInPage({
                   width: '100%',
                   padding: '14px',
                   background: 'white',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--gray-200)',
                   borderRadius: 12,
-                  color: '#1e293b',
+                  color: 'var(--gray-800)',
                   fontSize: 15,
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -155,10 +155,10 @@ export default async function SignInPage({
 
             {/* Test-only password sign-in (see isPasswordLoginEnabled) */}
             {passwordLoginEnabled && (
-              <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed #e2e8f0' }}>
+              <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed var(--gray-200)' }}>
                 <p style={{
-                  fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
-                  color: '#94a3b8', textAlign: 'center', marginBottom: 16,
+                  fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16,
                 }}>
                   Testing only · email &amp; password
                 </p>
@@ -168,7 +168,7 @@ export default async function SignInPage({
                     placeholder="test-monthly@clipmark.test"
                     style={{
                       width: '100%', padding: '12px 14px', borderRadius: 10,
-                      border: '1px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit',
+                      border: '1px solid var(--gray-200)', fontSize: 14, fontFamily: 'inherit',
                     }}
                   />
                   <input
@@ -176,14 +176,14 @@ export default async function SignInPage({
                     placeholder="Password"
                     style={{
                       width: '100%', padding: '12px 14px', borderRadius: 10,
-                      border: '1px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit',
+                      border: '1px solid var(--gray-200)', fontSize: 14, fontFamily: 'inherit',
                     }}
                   />
                   <button
                     type="submit"
                     style={{
-                      width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #cbd5e1',
-                      background: '#f8fafc', color: '#475569', fontSize: 14, fontWeight: 700,
+                      width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--gray-300)',
+                      background: 'var(--gray-50)', color: 'var(--gray-600)', fontSize: 14, fontWeight: 700,
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >
@@ -195,23 +195,23 @@ export default async function SignInPage({
 
             {/* Trust signals */}
             <div style={{ textAlign: 'center', marginTop: 32 }}>
-              <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16, fontWeight: 500 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, fontWeight: 500 }}>
                 By signing in you agree to our{' '}
-                <a href="/terms" style={{ color: '#14B8A6', textDecoration: 'underline', fontWeight: 700 }}>Terms</a>.
+                <a href="/terms" style={{ color: 'var(--brand-ink)', textDecoration: 'underline', fontWeight: 700 }}>Terms</a>.
               </p>
               <div style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                gap: 8, padding: '8px 16px', background: '#f8fafc', borderRadius: 999
+                gap: 8, padding: '8px 16px', background: 'var(--gray-50)', borderRadius: 999
               }}>
                 <span
                   className="material-symbols-outlined"
-                  style={{ fontSize: 16, color: '#14B8A6' }}
+                  style={{ fontSize: 16, color: 'var(--brand-ink)' }}
                 >
                   lock
                 </span>
                 <span style={{
                   fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
-                  letterSpacing: '0.05em', color: '#64748b'
+                  letterSpacing: '0.05em', color: 'var(--text-muted)'
                 }}>
                   Always Private by default
                 </span>
@@ -219,9 +219,9 @@ export default async function SignInPage({
             </div>
           </div>
 
-          <p style={{ marginTop: 32, textAlign: 'center', fontSize: 14, color: '#64748b', fontWeight: 500 }}>
+          <p style={{ marginTop: 32, textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>
             Don&apos;t have an account?{' '}
-            <a href="/signin" style={{ color: '#14B8A6', fontWeight: 700, textDecoration: 'none' }}>
+            <a href="/signin" style={{ color: 'var(--brand-ink)', fontWeight: 700, textDecoration: 'none' }}>
               Create collection
             </a>
           </p>

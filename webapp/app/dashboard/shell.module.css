@@ -1,16 +1,16 @@
 /* ── Design tokens
-   Primary:    #006b5f (deep teal) / #14B8A6 (vibrant interactive teal)
-   Tertiary:   #732EE4 (violet / AI accent)
-   Surface:    #f9f9fa
-   On-surface: #1a1c1d
-   Secondary:  #545f6c
+   Primary:    var(--accent-strong) (deep teal) / var(--accent) (vibrant interactive teal)
+   Tertiary:   var(--ai) (violet / AI accent)
+   Surface:    var(--gray-50)
+   On-surface: var(--gray-900)
+   Secondary:  var(--gray-500)
    ────────────────────────────────────────────────────────────────────────── */
 
 .page {
   min-height: 100vh;
   background: white;
   font-family: 'Inter', system-ui, sans-serif;
-  color: #0f172a;
+  color: var(--gray-900);
 }
 
 /* ── Top App Bar ──────────────────────────────────────────────────────────── */
@@ -25,7 +25,7 @@
   align-items: center;
   padding: 0 24px;
   background: white;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--gray-100);
 }
 
 .topBarLeft {
@@ -38,7 +38,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 22px;
   font-weight: 800;
-  color: #14B8A6;
+  color: var(--brand-ink);
   text-decoration: none;
   letter-spacing: -1px;
   flex-shrink: 0;
@@ -58,7 +58,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-muted);
   text-decoration: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -66,12 +66,12 @@
 }
 
 .topNavLink:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--gray-900);
+  background: var(--gray-100);
 }
 
 .topNavLinkActive {
-  color: #14B8A6;
+  color: var(--brand-ink);
   background: rgba(20, 184, 166, 0.08);
 }
 
@@ -86,17 +86,17 @@
   display: none;
   align-items: center;
   gap: 8px;
-  background: #f8fafc;
+  background: var(--gray-50);
   border-radius: 12px;
   padding: 8px 14px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
   transition: all 0.2s;
 }
 
 .searchBox:focus-within {
   background: #fff;
-  border-color: #14B8A6;
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+  border-color: var(--brand-ink);
+  box-shadow: 0 0 0 3px var(--accent-light);
 }
 
 @media (min-width: 640px) {
@@ -109,7 +109,7 @@
   outline: none;
   font-size: 14px;
   font-family: 'Inter', system-ui, sans-serif;
-  color: #1e293b;
+  color: var(--gray-800);
   width: 200px;
 }
 
@@ -117,7 +117,7 @@
   .searchInput { width: 120px; }
 }
 
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--text-muted); }
 
 .iconBtn {
   width: 36px;
@@ -128,14 +128,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .iconBtn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--gray-100);
+  color: var(--gray-900);
 }
 
 /* Hide topbar sign-out on tablet — sidebar has it */
@@ -149,7 +149,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0f172a;
+  background: var(--gray-900);
   color: #fff;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 13px;
@@ -165,7 +165,7 @@
 }
 
 .upgradeCta:hover {
-  background: #1e293b;
+  background: var(--gray-800);
   transform: translateY(-1px);
 }
 
@@ -181,7 +181,7 @@
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: #14B8A6;
+  background: var(--accent-strong);
   color: #fff;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 800;
@@ -203,7 +203,7 @@
   width: 260px;
   padding: 84px 16px 24px;
   background: white;
-  border-right: 1px solid #f1f5f9;
+  border-right: 1px solid var(--gray-100);
   z-index: 40;
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -231,21 +231,21 @@
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gray-200);
   border-radius: 8px;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-muted);
   transition: all 0.2s;
 }
 
 .collapseBtn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  border-color: var(--gray-300);
 }
 
 .sidebarBrand {
@@ -262,11 +262,11 @@
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: rgba(20, 184, 166, 0.1);
+  background: var(--accent-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #14B8A6;
+  color: var(--brand-ink);
   flex-shrink: 0;
 }
 
@@ -274,16 +274,16 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   margin: 0;
 }
 
 .sidebarBrandSub {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -298,7 +298,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 24px 12px 8px;
@@ -312,7 +312,7 @@
   gap: 12px;
   padding: 10px 12px;
   border-radius: 10px;
-  color: #64748b;
+  color: var(--text-muted);
   text-decoration: none;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 14px;
@@ -321,12 +321,12 @@
 }
 
 .sideNavItem:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--gray-900);
+  background: var(--gray-100);
 }
 
 .sideNavItemActive {
-  color: #14B8A6;
+  color: var(--brand-ink);
   background: rgba(20, 184, 166, 0.08);
 }
 
@@ -345,9 +345,9 @@
 .sidebarCollapsed .sideNavItemLabel { display: none; }
 
 .dueBadge {
-  background: #ef4444;
+  background: var(--danger);
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   padding: 1px 6px;
   border-radius: 999px;
@@ -363,12 +363,12 @@
 
 .sideNavUpgrade {
   margin-top: 12px;
-  background: #0f172a;
+  background: var(--gray-900);
   color: #fff;
 }
 
 .sideNavUpgrade:hover {
-  background: #1e293b;
+  background: var(--gray-800);
   color: #fff;
 }
 
@@ -382,8 +382,8 @@
 }
 
 .signOutBtn:hover {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-light);
+  color: var(--danger);
 }
 
 /* ── Main content area ─────────────────────────────────────────────────────── */
@@ -411,7 +411,7 @@
   width: 100%;
   height: 72px;
   background: white;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--gray-100);
   z-index: 50;
   padding: 0 12px;
 }
@@ -427,17 +427,17 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .mobileNavItemActive {
-  color: #14B8A6;
+  color: var(--brand-ink);
 }
 
 .mobileNavLabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   text-transform: uppercase;
@@ -450,7 +450,7 @@
   right: 24%;
   width: 8px;
   height: 8px;
-  background: #ef4444;
+  background: var(--danger);
   border-radius: 50%;
   border: 2px solid #fff;
 }
@@ -462,20 +462,20 @@
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  color: #545f6c;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s, background 0.15s, transform 0.2s;
 }
 
 .sideNavItem:hover {
-  color: #14B8A6;
+  color: var(--brand-ink);
   transform: translateX(2px);
 }
 
 .sideNavItemActive {
   background: #ffffff;
-  color: #006b5f;
-  box-shadow: 0 1px 4px rgba(26, 28, 29, 0.08);
+  color: var(--accent-strong);
+  box-shadow: 0 1px 4px rgba(17, 24, 39, 0.08);
   transform: none !important;
 }
 
@@ -485,9 +485,9 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9px;
-  background: #ef4444;
+  background: var(--danger);
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -504,9 +504,9 @@
   padding: 0 4px;
   margin-left: 5px;
   border-radius: 8px;
-  background: #ef4444;
+  background: var(--danger);
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   vertical-align: middle;
@@ -519,15 +519,15 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ef4444;
-  border: 2px solid #f9f9fa;
+  background: var(--danger);
+  border: 2px solid var(--gray-50);
 }
 
 .sideNavUpgrade {
-  color: #732EE4;
+  color: var(--ai);
 }
 
-.sideNavUpgrade:hover { color: #732EE4; }
+.sideNavUpgrade:hover { color: var(--ai); }
 
 .signOutBtn {
   width: 100%;
@@ -535,20 +535,20 @@
   border: none;
   cursor: pointer;
   text-align: left;
-  color: #6c7a77;
+  color: var(--text-muted);
 }
 
 .signOutBtn:hover {
-  color: #ba1a1a;
+  color: var(--danger);
   background: rgba(186, 26, 26, 0.06);
 }
 
 .sideNavSection {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 16px 16px 4px;
   margin: 0;
 }
@@ -593,7 +593,7 @@
   font-size: 40px;
   font-weight: 800;
   letter-spacing: -1px;
-  color: #1a1c1d;
+  color: var(--gray-900);
   margin: 0 0 8px;
 }
 
@@ -603,14 +603,14 @@
 
 .pageSub {
   font-size: 15px;
-  color: #545f6c;
+  color: var(--text-muted);
   margin: 0;
 }
 
 .empty {
   text-align: center;
   padding: 80px 24px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 15px;
 }
 
@@ -647,8 +647,8 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #006b5f;
-  border: 3px solid #f9f9fa;
+  background: var(--accent-strong);
+  border: 3px solid var(--gray-50);
   outline: 1px solid rgba(20, 184, 166, 0.3);
   flex-shrink: 0;
   margin-left: 26px;
@@ -656,12 +656,12 @@
 
 .monthLabel {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #006b5f;
-  background: #f9f9fa;
+  color: var(--accent-strong);
+  background: var(--gray-50);
   padding-right: 16px;
 }
 
@@ -684,9 +684,9 @@
 
 .dayLabel {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: #6c7a77;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -696,7 +696,7 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.06);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.06);
   border: 1px solid transparent;
   text-decoration: none;
   color: inherit;
@@ -705,7 +705,7 @@
 }
 
 .entryCard:hover {
-  box-shadow: 0 8px 32px rgba(26, 28, 29, 0.1);
+  box-shadow: 0 8px 32px rgba(17, 24, 39, 0.1);
   border-color: rgba(20, 184, 166, 0.15);
 }
 
@@ -726,7 +726,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 10px;
   overflow: hidden;
-  background: #e8e8e9;
+  background: var(--gray-200);
 }
 
 @media (min-width: 640px) {
@@ -749,10 +749,10 @@
   position: absolute;
   bottom: 8px;
   right: 8px;
-  background: rgba(26, 28, 29, 0.8);
+  background: rgba(17, 24, 39, 0.8);
   color: #fff;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -775,17 +775,17 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 16px;
   font-weight: 700;
-  color: #1a1c1d;
+  color: var(--gray-900);
   line-height: 1.35;
   margin: 0;
   transition: color 0.15s;
 }
 
-.entryCard:hover .entryTitle { color: #006b5f; }
+.entryCard:hover .entryTitle { color: var(--accent-strong); }
 
 .entryNote {
   font-size: 13px;
-  color: #545f6c;
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
@@ -803,8 +803,8 @@
 .entryTag {
   padding: 3px 10px;
   background: rgba(0, 107, 95, 0.08);
-  color: #006b5f;
-  font-size: 10px;
+  color: var(--accent-strong);
+  font-size: 11px;
   font-weight: 700;
   border-radius: 9999px;
   text-transform: uppercase;
@@ -820,7 +820,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #006b5f;
+  color: var(--accent-strong);
   transition: transform 0.2s;
   margin-top: 4px;
 }
@@ -853,7 +853,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0;
-  background: #f3f3f4;
+  background: var(--gray-100);
   padding: 20px 24px;
   border-radius: 16px;
 }
@@ -871,22 +871,22 @@
 }
 
 .statLabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #6c7a77;
+  color: var(--text-muted);
 }
 
 .statNum {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 24px;
   font-weight: 800;
-  color: #006b5f;
+  color: var(--accent-strong);
   letter-spacing: -0.5px;
 }
 
-.statNumSecondary { color: #545f6c; }
+.statNumSecondary { color: var(--text-muted); }
 
 /* ── Video Grid ───────────────────────────────────────────────────────────── */
 .videoGrid {
@@ -899,7 +899,7 @@
   background: #ffffff;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(26, 28, 29, 0.06);
+  box-shadow: 0 4px 24px rgba(17, 24, 39, 0.06);
   display: flex;
   flex-direction: column;
 }
@@ -925,7 +925,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a1c1d;
+  background: var(--gray-900);
   display: block;
   group: true;
 }
@@ -956,9 +956,9 @@
 }
 
 .videoBadge {
-  background: #006b5f;
+  background: var(--accent-strong);
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -995,7 +995,7 @@
 .scrubberTrack {
   height: 6px;
   width: 100%;
-  background: #e8e8e9;
+  background: var(--gray-200);
   border-radius: 9999px;
   position: relative;
 }
@@ -1007,7 +1007,7 @@
   width: 12px;
   height: 12px;
   background: #fff;
-  border: 2px solid #006b5f;
+  border: 2px solid var(--accent-strong);
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.15s;
@@ -1027,21 +1027,21 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 0;
-  background: #f3f3f4;
+  background: var(--gray-100);
   border: none;
   border-radius: 12px;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #006b5f;
+  color: var(--accent-strong);
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.videoActionBtn:hover { background: #e8e8e9; }
+.videoActionBtn:hover { background: var(--gray-200); }
 
-.videoActionBtnSecondary { color: #545f6c; }
+.videoActionBtnSecondary { color: var(--text-muted); }
 
 /* Video right panel */
 .videoRight {
@@ -1065,14 +1065,14 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1c1d;
+  color: var(--gray-900);
   line-height: 1.3;
   margin: 0 0 8px;
 }
 
 .videoSubMeta {
   font-size: 12px;
-  color: #6c7a77;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1081,14 +1081,14 @@
 
 .videoClipCount {
   font-weight: 700;
-  color: #006b5f;
+  color: var(--accent-strong);
 }
 
 .metaDot {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: #bbcac6;
+  background: var(--gray-300);
 }
 
 /* Bookmark thread */
@@ -1124,7 +1124,7 @@
   height: 14px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #006b5f;
+  border: 2px solid var(--accent-strong);
   outline: 3px solid #fff;
   flex-shrink: 0;
 }
@@ -1150,16 +1150,16 @@
 }
 
 .threadType {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #6c7a77;
+  color: var(--text-muted);
 }
 
 .threadNote {
   font-size: 13px;
-  color: #545f6c;
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -1171,7 +1171,7 @@
   gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #006b5f;
+  color: var(--accent-strong);
   text-decoration: none;
   padding-top: 20px;
   border-top: 1px solid rgba(187, 202, 198, 0.2);
@@ -1179,7 +1179,7 @@
   transition: color 0.15s;
 }
 
-.expandLink:hover { color: #14B8A6; }
+.expandLink:hover { color: var(--brand-ink); }
 
 /* ── Suggestion / empty state card ───────────────────────────────────────── */
 .suggestionCard {
@@ -1214,7 +1214,7 @@
   height: 64px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.08);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1225,14 +1225,14 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1c1d;
+  color: var(--gray-900);
   margin: 0;
 }
 
 .suggestionText,
 .emptyText {
   font-size: 13px;
-  color: #6c7a77;
+  color: var(--text-muted);
   max-width: 280px;
   line-height: 1.6;
   margin: 0;
@@ -1246,13 +1246,13 @@
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 700;
-  color: #006b5f;
+  color: var(--accent-strong);
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(26, 28, 29, 0.08);
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.08);
   transition: box-shadow 0.2s;
 }
 
-.suggestionCta:hover { box-shadow: 0 4px 16px rgba(26, 28, 29, 0.12); }
+.suggestionCta:hover { box-shadow: 0 4px 16px rgba(17, 24, 39, 0.12); }
 
 /* ── Mobile bottom nav ────────────────────────────────────────────────────── */
 .mobileNav {
@@ -1267,7 +1267,7 @@
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(26, 28, 29, 0.06);
+  border-top: 1px solid rgba(17, 24, 39, 0.06);
   box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
   z-index: 50;
 }
@@ -1282,16 +1282,16 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  color: #9ca3af;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s;
 }
 
-.mobileNavItemActive { color: #006b5f; }
+.mobileNavItemActive { color: var(--accent-strong); }
 
 .mobileNavLabel {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;

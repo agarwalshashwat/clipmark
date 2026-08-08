@@ -57,7 +57,7 @@ export default function LifetimeCountdown() {
       {extended && (
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: 'rgba(20,184,166,0.15)', color: '#14B8A6',
+          background: 'rgba(20,184,166,0.15)', color: 'var(--brand-ink)',
           padding: '3px 10px', borderRadius: 9999,
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontWeight: 700, fontSize: 11, letterSpacing: '0.08em',
@@ -68,7 +68,7 @@ export default function LifetimeCountdown() {
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{
-          fontSize: 12, color: '#64748b',
+          fontSize: 12, color: 'var(--text-muted)',
           fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}>
           Offer ends in:
@@ -86,14 +86,14 @@ export default function LifetimeCountdown() {
             textAlign: 'center', minWidth: 38,
           }}>
             <div style={{
-              fontSize: 18, fontWeight: 800, color: '#f9fafb',
+              fontSize: 18, fontWeight: 800, color: 'var(--gray-50)',
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               letterSpacing: '-0.5px', lineHeight: 1.1,
             }}>
               {pad(value)}
             </div>
             <div style={{
-              fontSize: 9, color: '#64748b',
+              fontSize: 11, color: 'var(--text-muted)',
               textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>
               {label}

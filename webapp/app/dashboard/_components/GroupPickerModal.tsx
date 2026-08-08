@@ -65,22 +65,22 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1a2421' }}>Add to Group</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--gray-900)' }}>Add to Group</h2>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#6c7a77', fontSize: 20, lineHeight: 1 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', fontSize: 20, lineHeight: 1 }}
           >×</button>
         </div>
 
         {videoTitle && (
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6c7a77', lineHeight: 1.4 }}>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
             <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>play_circle</span>
             {videoTitle}
           </p>
         )}
 
         {groups.length === 0 ? (
-          <p style={{ fontSize: 14, color: '#6c7a77', textAlign: 'center', padding: '8px 0 16px' }}>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0 16px' }}>
             No custom groups yet — create one below.
           </p>
         ) : (
@@ -92,8 +92,8 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 14px', borderRadius: 10, border: 'none',
-                  background: selectedGroupId === g.id ? 'rgba(0,107,95,0.1)' : '#f3f3f4',
-                  color: selectedGroupId === g.id ? '#006b5f' : '#1a2421',
+                  background: selectedGroupId === g.id ? 'rgba(0,107,95,0.1)' : 'var(--gray-100)',
+                  color: selectedGroupId === g.id ? 'var(--accent-strong)' : 'var(--gray-900)',
                   fontWeight: selectedGroupId === g.id ? 700 : 500,
                   fontSize: 14, cursor: 'pointer', textAlign: 'left',
                   outline: selectedGroupId === g.id ? '2px solid rgba(0,107,95,0.3)' : 'none',
@@ -117,8 +117,8 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
             placeholder="New group…"
             maxLength={40}
             style={{
-              flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid #e0e0e0',
-              fontSize: 13, fontFamily: 'inherit', outline: 'none', color: '#1a2421',
+              flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid var(--gray-200)',
+              fontSize: 13, fontFamily: 'inherit', outline: 'none', color: 'var(--gray-900)',
             }}
           />
           <button
@@ -127,8 +127,8 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
             title="Create group"
             style={{
               padding: '0 14px', borderRadius: 10, border: 'none',
-              background: newGroupName.trim() ? '#1a2421' : '#e0e0e0',
-              color: newGroupName.trim() ? '#fff' : '#9ca3af',
+              background: newGroupName.trim() ? 'var(--gray-900)' : 'var(--gray-200)',
+              color: newGroupName.trim() ? '#fff' : 'var(--gray-400)',
               fontSize: 16, fontWeight: 700, cursor: newGroupName.trim() ? 'pointer' : 'not-allowed',
               fontFamily: 'inherit',
             }}
@@ -138,14 +138,14 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
         </div>
 
         {done ? (
-          <p style={{ textAlign: 'center', color: '#006b5f', fontWeight: 700, fontSize: 15 }}>Added ✓</p>
+          <p style={{ textAlign: 'center', color: 'var(--accent-strong)', fontWeight: 700, fontSize: 15 }}>Added ✓</p>
         ) : (
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={onClose}
               style={{
-                flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #e0e0e0',
-                background: '#fff', color: '#545f6c', fontSize: 14, fontWeight: 600,
+                flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--gray-200)',
+                background: '#fff', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -156,7 +156,7 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
               disabled={!selectedGroupId || isPending}
               style={{
                 flex: 1, padding: '10px', borderRadius: 10, border: 'none',
-                background: selectedGroupId ? '#006b5f' : '#ccc',
+                background: selectedGroupId ? 'var(--accent-strong)' : 'var(--gray-300)',
                 color: '#fff', fontSize: 14, fontWeight: 700,
                 cursor: selectedGroupId ? 'pointer' : 'not-allowed',
                 fontFamily: 'inherit', transition: 'background 0.15s',

@@ -1,7 +1,7 @@
 .pageWrap {
-  background: #f9fafb;
+  background: var(--gray-50);
   min-height: 100vh;
-  color: #111827;
+  color: var(--gray-900);
   padding-bottom: 100px;
 }
 
@@ -21,13 +21,13 @@
   font-size: clamp(32px, 8vw, 56px);
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: #0f172a;
+  color: var(--gray-900);
   margin-bottom: 16px;
 }
 
 .sub {
   font-size: 20px;
-  color: #374151;
+  color: var(--gray-700);
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
@@ -43,7 +43,7 @@
 
 .pricingCard {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gray-200);
   border-radius: 24px;
   padding: 48px;
   display: flex;
@@ -57,20 +57,20 @@
 
 .pricingCard:hover {
   transform: translateY(-8px);
-  border-color: #14B8A6;
+  border-color: var(--brand-ink);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .pricingCardPro {
-  border: 2px solid #14B8A6;
-  box-shadow: 0 20px 25px -5px rgba(20, 184, 166, 0.1), 0 10px 10px -5px rgba(20, 184, 166, 0.04);
+  border: 2px solid var(--accent);
+  box-shadow: 0 20px 25px -5px var(--accent-light), 0 10px 10px -5px rgba(20, 184, 166, 0.04);
 }
 
 .badge {
   position: absolute;
   top: -14px;
   left: 32px;
-  background: #14B8A6;
+  background: var(--accent-strong);
   color: white;
   padding: 6px 12px;
   border-radius: 8px;
@@ -83,7 +83,7 @@
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 800;
-  color: #14B8A6;
+  color: var(--brand-ink);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 8px;
@@ -100,17 +100,17 @@
   font-family: var(--font-display);
   font-size: 56px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
 }
 
 .period {
   font-size: 16px;
-  color: #4b5563;
+  color: var(--gray-600);
 }
 
 .foundingNote {
   font-size: 13px;
-  color: #6b21a8;
+  color: var(--ai-strong);
   line-height: 1.4;
   margin: -24px 0 32px;
 }
@@ -127,7 +127,7 @@
   align-items: center;
   gap: 12px;
   font-size: 15px;
-  color: #1f2937;
+  color: var(--gray-800);
 }
 
 .ctaWrap {
@@ -138,9 +138,10 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #64748b;
-  font-size: 10px;
+  background: var(--gray-100);
+  /* gray-500 on gray-100 is 4.39:1 — just under AA at this size. */
+  color: var(--text-muted);
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -151,7 +152,7 @@
   width: 100%;
   padding: 16px;
   border-radius: 12px;
-  background: #0f172a;
+  background: var(--gray-900);
   color: white;
   font-weight: 700;
   border: none;
@@ -162,17 +163,17 @@
 }
 
 .ctaBtn:hover {
-  background: #1e293b;
+  background: var(--gray-800);
   transform: scale(1.02);
 }
 
 .ctaBtnPro {
-  background: #14B8A6;
+  background: var(--accent-strong);
   color: white;
 }
 
 .ctaBtnPro:hover {
-  background: #0d9488;
+  background: var(--teal-600);
 }
 
 .comparisonSection {
@@ -185,12 +186,12 @@
   font-size: 32px;
   font-weight: 800;
   margin-bottom: 48px;
-  color: #0f172a;
+  color: var(--gray-900);
 }
 
 .compTableWrapper {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gray-200);
   border-radius: 24px;
   overflow: hidden;
   max-width: 900px;
@@ -203,7 +204,7 @@
 }
 
 .compRow {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--gray-100);
 }
 
 .compCell {
@@ -211,24 +212,24 @@
 }
 
 .compLabel {
-  color: #1e293b;
+  color: var(--gray-800);
   font-weight: 500;
 }
 
 .compVal {
   text-align: center;
   width: 120px;
-  color: #374151;
+  color: var(--gray-700);
 }
 
 .compValPro {
-  color: #14B8A6;
+  color: var(--brand-ink);
   font-weight: 700;
-  background: #f0fdfa;
+  background: var(--teal-50);
 }
 
 .compHeadRow {
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--gray-200);
 }
 
 .compHeadCell {
@@ -241,7 +242,7 @@
 }
 
 .bannerSuccess {
-  background: #14B8A6;
+  background: var(--accent-strong);
   color: white;
   padding: 12px 24px;
   border-radius: 12px;
@@ -251,9 +252,9 @@
 }
 
 .bannerReferral {
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  color: #7c3aed;
+  background: var(--ai-light);
+  border: 1px solid var(--ai-light);
+  color: var(--ai-strong);
   padding: 12px 24px;
   border-radius: 12px;
   text-align: center;
@@ -266,7 +267,7 @@
 
 .manageBox {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gray-200);
   padding: 32px;
   border-radius: 24px;
   max-width: 600px;
@@ -284,10 +285,10 @@
 .manageTitle {
   font-size: 20px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--gray-900);
 }
 
 .manageText {
-  color: #374151;
+  color: var(--gray-700);
   margin-bottom: 24px;
 }

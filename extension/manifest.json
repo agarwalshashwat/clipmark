@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ClipMark",
   "short_name": "ClipMark",
-  "version": "1.0.3",
+  "version": "1.0.2",
   "description": "Capture YouTube timestamps, quiz yourself with spaced-repetition Active Recall, and export straight to Anki.",
   "permissions": [
     "storage",

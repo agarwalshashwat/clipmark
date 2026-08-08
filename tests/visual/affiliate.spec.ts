@@ -6,7 +6,7 @@ test.describe('Affiliate Page Visual Regression', () => {
         await page.goto('/affiliate');
 
         // Wait for hero to be visible
-        await expect(page.locator('h1')).toContainText('Share Clipmark');
+        await expect(page.locator('h1')).toContainText('Share ClipMark');
 
         // Snapshot comparison
         await expect(page).toHaveScreenshot('affiliate-page.png', {

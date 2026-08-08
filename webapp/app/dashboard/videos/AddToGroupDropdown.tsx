@@ -100,7 +100,7 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
                     <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span>
                   )}
                   {addingId === 'done' && (
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#14B8A6' }}>check_circle</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--brand-ink)' }}>check_circle</span>
                   )}
                 </button>
               ))}

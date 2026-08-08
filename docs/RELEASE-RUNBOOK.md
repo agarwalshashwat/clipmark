@@ -23,7 +23,8 @@ A webapp change and an extension change can ship independently. A webapp-only bu
 
 **Semver, applied independently per surface:**
 
-- **Extension** (`extension/manifest.json` `version`, mirrored in `extension/package.json` `version`) — `MAJOR.MINOR.PATCH`. Chrome Web Store requires the version to strictly increase on every upload (no re-uploading the same version number). Current: `1.0.0`.
+- **Extension** (`extension/manifest.json` `version`, mirrored in `extension/package.json` `version`) — `MAJOR.MINOR.PATCH`. Chrome Web Store requires the version to strictly increase on every upload (no re-uploading the same version number). Current: `1.0.2`.
+  - Note on `1.0.2`: an earlier `1.0.2` was tagged in the repo but **never uploaded to the Web Store**, so the number was still free and the combined restyle release reuses it. Reusing a version number is only safe when the store has never seen it — the live listing is `1.0.1`, and `1.0.2 > 1.0.1`, so the upload is accepted. Check the store listing, not just git history, before doing this again.
   - **PATCH** — bugfix, no new user-facing behavior (e.g. fix a crash, correct copy).
   - **MINOR** — new feature, backward-compatible (e.g. a new keyboard shortcut, a new export format).
   - **MAJOR** — breaking change to stored data shape, or a change that requires the webapp to be updated in lockstep (rare — coordinate carefully, see §0).

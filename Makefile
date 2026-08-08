@@ -1,7 +1,7 @@
 # Clipmark — dev commands
 # Usage: make <target>
 
-.PHONY: help dev build start db-migrate sync-tokens ext-dev ext-build ext-zip ext-open test test-report clean
+.PHONY: help dev build start db-migrate sync-tokens design-audit ext-dev ext-build ext-zip ext-open test test-report clean
 
 WEBAPP_DIR := webapp
 EXT_DIR    := extension
@@ -31,6 +31,7 @@ help:
 	@echo ""
 	@echo "  Shared"
 	@echo "    make sync-tokens — sync design tokens from extension → webapp"
+	@echo "    make design-audit — check every surface against DESIGN.md"
 	@echo "    make clean       — remove build artifacts"
 	@echo ""
 
@@ -57,6 +58,11 @@ test-report:
 # ── Shared ────────────────────────────────────────────────────────────────────
 sync-tokens:
 	npm run sync-tokens
+
+# Source-level conformance. Add --dist (npm run design:audit:dist) after an
+# ext-build to check the packaged artifact too.
+design-audit:
+	npm run design:audit
 
 # ── Extension ─────────────────────────────────────────────────────────────────
 ext-dev:

@@ -22,8 +22,8 @@ function injectStyleOnce() {
       content: 'PRO';
       position: absolute; top: -6px; right: -6px;
       padding: 1px 5px; border-radius: 9999px;
-      background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%);
-      color: #fff; font-size: 8px; font-weight: 800; letter-spacing: 0.05em;
+      background: #0f766e;
+      color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.05em;
       line-height: 1.5; pointer-events: none; z-index: 3;
       font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     }

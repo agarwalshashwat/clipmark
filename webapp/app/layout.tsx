@@ -29,7 +29,7 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  title: 'Clipmark — YouTube Timestamp Bookmarks',
+  title: 'ClipMark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
   icons: {
@@ -44,23 +44,23 @@ export const metadata: Metadata = {
     google: 'chJnY3idU4qZvir3ZZ3NAcVF3mde32n0AMYk2SJNt1k',
   },
   openGraph: {
-    title: 'Clipmark — YouTube Timestamp Bookmarks',
+    title: 'ClipMark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     type: 'website',
     url: APP_URL,
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Clipmark — YouTube Timestamp Bookmarks',
+    title: 'ClipMark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
@@ -78,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    'name': 'Clipmark',
+    'name': 'ClipMark',
     'operatingSystem': 'ChromeOS, Windows, macOS, Linux',
     'applicationCategory': 'EducationalApplication, BrowserExtension',
     'offers': {
@@ -97,8 +97,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+        {/* Material Symbols is self-hosted from /public/fonts (see the @font-face
+            in globals.css) — the text families already come from next/font, which
+            serves them off our own origin, so no font is fetched from Google at
+            runtime. Preloaded because icons appear above the fold in the nav. */}
+        <link
+          rel="preload"
+          href="/fonts/material-symbols-outlined.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>

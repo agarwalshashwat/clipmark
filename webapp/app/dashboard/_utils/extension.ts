@@ -1,5 +1,5 @@
 /**
- * Bridge from the web app to the Clipmark extension.
+ * Bridge from the web app to the ClipMark extension.
  *
  * Chrome injects a limited `chrome.runtime` into pages listed in the extension's
  * `externally_connectable` manifest entry, which lets this origin message the

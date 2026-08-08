@@ -1,7 +1,8 @@
 /**
  * Saved A–B loop helpers for the web dashboard (read-only).
  *
- * ⚠️ TWIN of `isLoopBookmark` / `loopEndForBookmark` / `formatLoopClock` in
+ * ⚠️ TWIN of `isLoopBookmark` / `loopEndForBookmark` / `formatLoopClock` /
+ * `formatLoopRange` in
  * `extension/src/loop.module.js` — keep in sync. Identical behaviour is enforced
  * by `webapp/tests/unit/loop-parity.test.ts`, which imports BOTH and diffs their
  * results. (Direct import is avoided because the extension module lives outside

@@ -98,10 +98,10 @@ export default function AdminPanel() {
 
   const inputStyle: React.CSSProperties = {
     background: 'white',
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--gray-200)',
     borderRadius: 12,
     padding: '12px 16px',
-    color: '#1e293b',
+    color: 'var(--gray-800)',
     fontSize: 14,
     width: '100%',
     boxSizing: 'border-box',
@@ -112,12 +112,12 @@ export default function AdminPanel() {
   const btn = (variant: 'primary' | 'danger' | 'ghost' = 'primary'): React.CSSProperties => ({
     padding: '12px 24px',
     borderRadius: 12,
-    border: variant === 'ghost' ? '1px solid #e2e8f0' : 'none',
+    border: variant === 'ghost' ? '1px solid var(--gray-200)' : 'none',
     cursor: 'pointer',
     fontWeight: 700,
     fontSize: 14,
-    background: variant === 'primary' ? 'linear-gradient(135deg, #14B8A6 0%, #006B5F 100%)' : variant === 'danger' ? '#ef4444' : 'white',
-    color: variant === 'ghost' ? '#64748b' : '#fff',
+    background: variant === 'primary' ? 'var(--accent-strong)' : variant === 'danger' ? 'var(--danger)' : 'white',
+    color: variant === 'ghost' ? 'var(--gray-500)' : '#fff',
     transition: 'all 0.2s ease',
     fontFamily: "'Plus Jakarta Sans', sans-serif",
   });
@@ -126,10 +126,10 @@ export default function AdminPanel() {
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
       <header style={{ marginBottom: 48, textAlign: 'center' }}>
         <span className="cm-section-label">System Operations</span>
-        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 40, fontWeight: 800, color: '#1a1c1d', letterSpacing: '-1.5px', marginBottom: 12 }}>
+        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 40, fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-1.5px', marginBottom: 12 }}>
           Admin Panel
         </h1>
-        <p style={{ color: '#64748b', fontSize: 16, fontWeight: 500 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
           Manage user permissions, gifted access, and affiliate partnerships.
         </p>
       </header>
@@ -137,10 +137,10 @@ export default function AdminPanel() {
       {/* ── Search ── */}
       <div className="cm-card" style={{ padding: '32px', marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <div className="cm-icon-badge" style={{ background: 'rgba(20, 184, 166, 0.1)', color: '#14B8A6' }}>
+          <div className="cm-icon-badge" style={{ background: 'var(--accent-light)', color: 'var(--brand-ink)' }}>
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person_search</span>
           </div>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>User Management</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>User Management</h2>
         </div>
         
         <div style={{ display: 'flex', gap: 12 }}>
@@ -160,7 +160,7 @@ export default function AdminPanel() {
           <div style={{ overflowX: 'auto', marginTop: 32 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
-                <tr style={{ color: '#64748b', textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                <tr style={{ color: 'var(--text-muted)', textAlign: 'left', borderBottom: '2px solid var(--gray-100)' }}>
                   <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>User</th>
                   <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>Status</th>
                   <th style={{ padding: '16px 12px', fontWeight: 700, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.05em' }}>Affiliate</th>
@@ -170,27 +170,27 @@ export default function AdminPanel() {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                    <td style={{ padding: '16px 12px', fontWeight: 600, color: '#1e293b' }}>{u.email}</td>
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--gray-50)' }}>
+                    <td style={{ padding: '16px 12px', fontWeight: 600, color: 'var(--gray-800)' }}>{u.email}</td>
                     <td style={{ padding: '16px 12px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
                         {u.is_pro && (
-                          <span style={{ background: '#ecfdf5', color: '#10b981', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>PRO</span>
+                          <span style={{ background: 'var(--success-light)', color: 'var(--success)', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>PRO</span>
                         )}
                         {u.is_gifted_pro && (
-                          <span style={{ background: '#f5f3ff', color: '#8B5CF6', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>GIFTED</span>
+                          <span style={{ background: 'var(--ai-light)', color: 'var(--ai)', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>GIFTED</span>
                         )}
                         {!u.is_pro && (
-                          <span style={{ background: '#f8fafc', color: '#94a3b8', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>FREE</span>
+                          <span style={{ background: 'var(--gray-50)', color: 'var(--text-muted)', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 800 }}>FREE</span>
                         )}
                       </div>
                     </td>
                     <td style={{ padding: '16px 12px' }}>
                       {u.is_affiliate ? (
-                        <span style={{ color: '#14B8A6', fontWeight: 700, fontSize: 13 }}>{Math.round((u.commission_rate ?? 0) * 100)}%</span>
+                        <span style={{ color: 'var(--brand-ink)', fontWeight: 700, fontSize: 13 }}>{Math.round((u.commission_rate ?? 0) * 100)}%</span>
                       ) : '—'}
                     </td>
-                    <td style={{ padding: '16px 12px', fontFamily: 'monospace', color: '#64748b', fontWeight: 600 }}>{u.affiliate_code ?? '—'}</td>
+                    <td style={{ padding: '16px 12px', fontFamily: 'monospace', color: 'var(--text-muted)', fontWeight: 600 }}>{u.affiliate_code ?? '—'}</td>
                     <td style={{ padding: '16px 12px', textAlign: 'right' }}>
                       <button style={{ ...btn('ghost'), padding: '8px 16px' }} onClick={() => { setSelected(u); setAffCode(u.affiliate_code ?? ''); }}>
                         Details
@@ -206,13 +206,13 @@ export default function AdminPanel() {
 
       {/* ── Selected user actions ── */}
       {selected && (
-        <div className="cm-card" style={{ padding: '40px', border: '2px solid #14B8A6', boxShadow: '0 20px 40px rgba(20, 184, 166, 0.1)' }}>
+        <div className="cm-card" style={{ padding: '40px', border: '2px solid var(--accent)', boxShadow: '0 20px 40px var(--accent-light)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div className="cm-icon-badge" style={{ background: '#14B8A6', color: 'white' }}>
+              <div className="cm-icon-badge" style={{ background: 'var(--accent-strong)', color: 'white' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>account_circle</span>
               </div>
-              <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {selected.email}
               </h2>
             </div>
@@ -225,12 +225,12 @@ export default function AdminPanel() {
             {/* ── Grant Pro ── */}
             <section>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <span className="material-symbols-outlined" style={{ color: '#8B5CF6', fontSize: 20 }}>card_membership</span>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Gifted Access</h3>
+                <span className="material-symbols-outlined" style={{ color: 'var(--ai)', fontSize: 20 }}>card_membership</span>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Gifted Access</h3>
               </div>
               <div style={{ display: 'grid', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Gift Note</label>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Gift Note</label>
                   <input
                     style={inputStyle}
                     placeholder="e.g. Creator Collaboration Deal"
@@ -239,7 +239,7 @@ export default function AdminPanel() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Expiry Date</label>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Expiry Date</label>
                   <input
                     style={inputStyle}
                     type="date"
@@ -263,12 +263,12 @@ export default function AdminPanel() {
             {/* ── Affiliate setup ── */}
             <section>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontSize: 20 }}>share_reviews</span>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1e293b', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Partnership Setup</h3>
+                <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)', fontSize: 20 }}>share_reviews</span>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Partnership Setup</h3>
               </div>
               <div style={{ display: 'grid', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Partner Code</label>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Partner Code</label>
                   <input
                     style={inputStyle}
                     placeholder="e.g. mkbhd"
@@ -278,7 +278,7 @@ export default function AdminPanel() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <div>
-                    <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Comm. %</label>
+                    <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Comm. %</label>
                     <input
                       style={inputStyle}
                       type="number"
@@ -287,7 +287,7 @@ export default function AdminPanel() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: '#64748b', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Discount %</label>
+                    <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Discount %</label>
                     <input
                       style={inputStyle}
                       type="number"
@@ -311,8 +311,8 @@ export default function AdminPanel() {
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              background: statusMsg.startsWith('✓') ? '#ecfdf5' : '#fef2f2',
-              color: statusMsg.startsWith('✓') ? '#059669' : '#dc2626',
+              background: statusMsg.startsWith('✓') ? 'var(--success-light)' : 'var(--danger-light)',
+              color: statusMsg.startsWith('✓') ? 'var(--success)' : 'var(--danger)',
               fontWeight: 700,
               fontSize: 14,
               border: statusMsg.startsWith('✓') ? '1px solid #10b98133' : '1px solid #ef444433'

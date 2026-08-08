@@ -19,6 +19,26 @@ jobs:
       - run: npm ci
       - run: npm run test:unit
 
+  design-conformance:
+    name: ci-design-conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm --prefix webapp ci
+      # Source-level DESIGN.md conformance: one gray ramp, AA filled CTAs, the
+      # 11px floor, the wordmark, the gradient budget, self-hosted fonts, header
+      # parity, no dangling token references, and that every stylesheet parses.
+      - run: node scripts/design-audit.mjs
+      # Then the same rules against the artifact that actually ships.
+      - run: npm --prefix extension ci
+      - run: npm run ext-build
+      - run: node scripts/design-audit.mjs --dist
+
   extension-smoke:
     name: ci-extension-smoke
     runs-on: ubuntu-latest

@@ -41,7 +41,7 @@
 
 .clipmark-tour-popover button.driver-popover-next-btn,
 .clipmark-tour-popover button.driver-popover-done-btn {
-  background: #14b8a6;
+  background: #0f766e;
   color: #fff;
   border: none;
   text-shadow: none;
@@ -61,6 +61,30 @@
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 6px 14px;
+}
+
+/* driver.js ships its own gray ramp for the close button, the footer-button
+   hover and the disabled state. Its .driver-popover-footer-btn:hover rule also
+   wins over our prev-btn override, which is why that one needs restating. Left
+   unstyled, the first-run tour was the one screen still painted in someone
+   else's neutrals. */
+.clipmark-tour-popover button.driver-popover-prev-btn:hover,
+.clipmark-tour-popover .driver-popover-footer-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.clipmark-tour-popover button.driver-popover-close-btn {
+  color: #9ca3af;
+}
+
+.clipmark-tour-popover button.driver-popover-close-btn:hover,
+.clipmark-tour-popover button.driver-popover-close-btn:focus {
+  color: #111827;
+}
+
+.clipmark-tour-popover .driver-popover-btn-disabled {
+  color: #9ca3af;
+  border-color: #e5e7eb;
 }
 
 .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {

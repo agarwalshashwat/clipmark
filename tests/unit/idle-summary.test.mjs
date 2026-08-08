@@ -242,3 +242,19 @@ describe('labels', () => {
     assert.equal(dueCountLabel(4), '4 moments due for review');
   });
 });
+
+describe('moments carry the A–B loop range', () => {
+  // The projection used to drop `loop`, so an off-YouTube clip card rendered a
+  // saved loop as a single timecode while the web dashboard showed the range.
+  it('passes loop through so the card can render a range', () => {
+    const cards = buildIdleVideoCards({
+      bookmarks: [
+        { id: 1, videoId: 'vid1', timestamp: 140, description: 'Drill this', loop: { end: 168 } },
+        { id: 2, videoId: 'vid1', timestamp: 30, description: 'A point' },
+      ],
+    });
+    const moments = cards[0].moments;
+    assert.deepEqual(moments.find(m => m.id === 1).loop, { end: 168 });
+    assert.equal(moments.find(m => m.id === 2).loop, null);
+  });
+});

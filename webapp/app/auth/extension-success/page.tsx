@@ -42,23 +42,23 @@ function ExtensionSuccessInner() {
       justifyContent: 'center', minHeight: '100vh', gap: 16,
       fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
     }}>
-      {status === 'sending' && <p style={{ color: '#6b7280' }}>Completing sign-in…</p>}
+      {status === 'sending' && <p style={{ color: 'var(--text-muted)' }}>Completing sign-in…</p>}
       {status === 'done'    && (
         <>
           <span style={{
-            width: 56, height: 56, background: '#f0fdfa', borderRadius: '50%',
+            width: 56, height: 56, background: 'var(--teal-50)', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 26, color: '#14B8A6',
+            fontSize: 26, color: 'var(--brand-ink)',
           }}>✓</span>
-          <p style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Signed in to Clipmark!</p>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>You can close this tab and return to YouTube.</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--gray-900)' }}>Signed in to ClipMark!</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>You can close this tab and return to YouTube.</p>
         </>
       )}
       {status === 'error' && (
         <>
           <span style={{ fontSize: 40 }}>✗</span>
-          <p style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>Sign-in failed</p>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>Please close this tab and try again.</p>
+          <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--gray-900)' }}>Sign-in failed</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Please close this tab and try again.</p>
         </>
       )}
     </main>
