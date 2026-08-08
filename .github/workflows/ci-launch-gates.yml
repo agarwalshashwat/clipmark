@@ -38,6 +38,10 @@ jobs:
       - run: npm --prefix extension ci
       - run: npm run ext-build
       - run: node scripts/design-audit.mjs --dist
+      # Every <script src>/<link href>/@import/url() in the SHIPPED bytes must
+      # resolve. Two separate releases have gone out with a dangling reference
+      # that no source-level test could see.
+      - run: npm run ext:verify
 
   extension-smoke:
     name: ci-extension-smoke
