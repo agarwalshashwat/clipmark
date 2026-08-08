@@ -24,6 +24,38 @@ async function isProUser(admin: SupabaseClient, userId: string): Promise<boolean
   return data?.is_pro === true;
 }
 
+/**
+ * Server-side shape check for saved A–B loops.
+ *
+ * Loops ride the existing bookmarks payload (`loop: { end }` alongside the A
+ * point in `timestamp`), so they inherit this route's Pro gate: a free account
+ * gets 403 before reaching here, which is the entitlement line the client-side
+ * cap only *mirrors*. This function is the second half of that — it stops a
+ * malformed or inverted range from being persisted and later driving the
+ * player, regardless of what the client claims.
+ *
+ * Records WITHOUT a `loop` field are untouched: existing bookmarks (including
+ * pre-loop rows) must keep syncing unchanged.
+ *
+ * @returns an error code, or null when every loop record is well-formed.
+ */
+export function validateLoopFields(bookmarks: unknown[]): string | null {
+  for (const entry of bookmarks) {
+    if (!entry || typeof entry !== 'object') continue;
+    const bm = entry as { timestamp?: unknown; loop?: unknown };
+    if (bm.loop === undefined || bm.loop === null) continue;
+
+    if (typeof bm.loop !== 'object' || Array.isArray(bm.loop)) return 'invalid_loop';
+    const end = (bm.loop as { end?: unknown }).end;
+    if (typeof end !== 'number' || !Number.isFinite(end)) return 'invalid_loop';
+    if (typeof bm.timestamp !== 'number' || !Number.isFinite(bm.timestamp)) return 'invalid_loop';
+    // B must come after A — an inverted or zero-length range would make the
+    // loop watchdog seek on every single frame.
+    if (end <= bm.timestamp) return 'invalid_loop';
+  }
+  return null;
+}
+
 // Authenticate via Bearer token (extension) or cookie session (webapp)
 export async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
@@ -113,6 +145,11 @@ export async function handlePutBookmarks(request: NextRequest, { admin, getAuthe
 
     if (!videoId || !Array.isArray(bookmarks)) {
       return NextResponse.json({ error: 'videoId and bookmarks are required' }, { status: 400 });
+    }
+
+    const loopError = validateLoopFields(bookmarks);
+    if (loopError) {
+      return NextResponse.json({ error: loopError }, { status: 400 });
     }
 
     const { error } = await auth.client
