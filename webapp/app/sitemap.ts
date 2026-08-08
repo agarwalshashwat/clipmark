@@ -10,6 +10,19 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Indexable content routes, highest-intent first. `/upgrade` is deliberately
+// absent — it is Disallow'd in robots.ts, so listing it here would contradict
+// that. Keep this in step with the pages under app/(marketing)/.
+const CONTENT_PATHS = [
+  '/active-recall-youtube',
+  '/spaced-repetition-youtube',
+  '/youtube-flashcards',
+  '/youtube-to-anki',
+  '/faq',
+  '/switch-from-videosegments',
+  '/affiliate',
+];
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 1. Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -19,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
+    ...CONTENT_PATHS.map((path) => ({
+      url: `${baseUrl}${path}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
     {
       url: `${baseUrl}/signin`,
       lastModified: new Date(),
