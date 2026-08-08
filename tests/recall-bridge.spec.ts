@@ -13,13 +13,14 @@
  *
  * Requires `make ext-build` (skips with a message otherwise).
  */
-import { test, expect, chromium, BrowserContext, Worker, Page } from '@playwright/test';
+import { test, expect, BrowserContext, Worker, Page } from '@playwright/test';
+import { TEST_VIDEO_ID, TEST_VIDEO_URL, launchExtensionContext } from './fixtures';
 import { existsSync } from 'node:fs';
 import path from 'path';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
-const VIDEO_ID = 'dQw4w9WgXcQ';
-const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
+const VIDEO_ID = TEST_VIDEO_ID;
+const VIDEO_URL = TEST_VIDEO_URL;
 const APP_URL = 'https://clipmark.mithahara.com/dashboard';
 
 async function extensionServiceWorker(context: BrowserContext): Promise<Worker> {
@@ -33,10 +34,7 @@ async function extensionServiceWorker(context: BrowserContext): Promise<Worker> 
 }
 
 async function launchPackaged(): Promise<BrowserContext> {
-  return chromium.launchPersistentContext('', {
-    headless: false, // extensions require non-headless
-    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox'],
-  });
+  return launchExtensionContext(DIST);
 }
 
 /** Three bookmarks, all due (createdAt 10 days back vs a [1,3,7] schedule). */
@@ -68,7 +66,7 @@ async function openAppStandIn(context: BrowserContext): Promise<Page> {
 function sendStartRecall(page: Page, extensionId: string, bookmarkIds?: number[]) {
   return page.evaluate(({ id, ids }) => new Promise(resolve => {
     const cr = (window as unknown as { chrome: { runtime: { sendMessage: (i: string, m: unknown, cb: (r: unknown) => void) => void; lastError?: { message?: string } } } }).chrome.runtime;
-    cr.sendMessage(id, { type: 'START_RECALL', videoId: 'dQw4w9WgXcQ', bookmarkIds: ids }, r =>
+    cr.sendMessage(id, { type: 'START_RECALL', videoId: VIDEO_ID, bookmarkIds: ids }, r =>
       resolve(r ?? { ok: false, error: cr.lastError?.message }));
   }), { id: extensionId, ids: bookmarkIds });
 }
