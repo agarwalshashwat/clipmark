@@ -205,6 +205,26 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
     await panel.close();
   });
 
+  test('the extension dashboard shows loop ranges too', async () => {
+    // Third surface with the same bug: the extension dashboard had no loop
+    // awareness at all, so a saved loop rendered as its A point while the web
+    // dashboard showed the range.
+    const dash = await context.newPage();
+    await dash.setViewportSize({ width: 1280, height: 900 });
+    await dash.goto(`chrome-extension://${extensionId}/src/pages/dashboard.html`);
+    await dash.locator('.vc-vt-time').first().waitFor({ timeout: 15_000 });
+
+    const loopChip = dash.locator('.vc-vt-time--loop');
+    await expect(loopChip).toHaveCount(1);
+    await expect(loopChip.first()).toContainText('2:20 → 2:48');
+
+    const plain = dash.locator('.vc-vt-time:not(.vc-vt-time--loop)');
+    await expect(plain).toHaveCount(2);
+    await expect(plain.first()).not.toContainText('→');
+
+    await dash.close();
+  });
+
   test('the loop range on the scrubber is teal and actually visible', async () => {
     // Looping is not an AI feature, so it may not use the AI violet; and the
     // saved band was 0.18 alpha on a ~6px bar, competing with YouTube's red

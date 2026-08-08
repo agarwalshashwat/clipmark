@@ -4305,3 +4305,10 @@
     background: hsla(var(--tag-h), var(--tag-s), 60%, 0.20);
     color: hsl(var(--tag-h), var(--tag-s), 80%);
 }
+
+/* A saved A–B loop shows the range it covers, so its chip is wider than a point
+   timestamp — same rule as the side panel and the web dashboard. */
+.vc-vt-time--loop {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}

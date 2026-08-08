@@ -1567,10 +1567,14 @@ function injectStyles() {
       font-size: 12px; font-weight: 600; font-family: inherit;
     }
     .yt-loop-btn:hover { background: rgba(255, 255, 255, 0.16); }
+    /* On this dark panel the filled CTA is bright teal with DARK text (9.5:1) —
+       the same recipe .yt-recall-btn already uses. White on teal-400 is 1.86:1.
+       The hover was still the AI violet, which the teal sweep missed because it
+       was the -strong step rather than the base hue. */
     .yt-loop-btn--primary {
-      background: #2dd4bf; border-color: #2dd4bf; color: #fff;
+      background: #2dd4bf; border-color: #2dd4bf; color: #111827; font-weight: 700;
     }
-    .yt-loop-btn--primary:hover { background: #7c3aed; }
+    .yt-loop-btn--primary:hover { background: #5eead4; border-color: #5eead4; }
     .yt-loop-btn:disabled { opacity: .45; cursor: not-allowed; }
     .yt-loop-name-input {
       width: 100%; margin-bottom: 6px; padding: 6px 8px;

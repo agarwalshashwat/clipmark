@@ -1,3 +1,4 @@
+import { formatLoopRange } from '../loop.module.js';
 import {
   getTagColor,
   tagHueVars,
@@ -336,7 +337,7 @@ function buildTimeline(bookmarks, trackMax) {
   return bookmarks.map(b => {
     const pct   = ((b.timestamp / trackMax) * 95).toFixed(2);
     const color = b.color || '#14B8A6';
-    const label = `${formatTimestamp(b.timestamp)} — ${b.description || 'No note'}`;
+    const label = `${formatLoopRange(b) ?? formatTimestamp(b.timestamp)} — ${b.description || 'No note'}`;
     return `<div class="vc-dot" style="left:${pct}%;background:${color}" data-label="${label.replace(/"/g, '&quot;')}" title="${label}"></div>`;
   }).join('');
 }
@@ -518,7 +519,7 @@ async function renderBookmarks() {
                   <div class="vc-vt-circle" style="border-color:${c}"></div>
                   <div class="vc-vt-content">
                     <div class="vc-vt-header">
-                      <span class="vc-vt-time" style="${tagHueVars(c)}">${formatTimestamp(b.timestamp)}</span>
+                      <span class="vc-vt-time${formatLoopRange(b) ? ' vc-vt-time--loop' : ''}" style="${tagHueVars(c)}">${formatLoopRange(b) ?? formatTimestamp(b.timestamp)}</span>
                     </div>
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
@@ -551,7 +552,7 @@ async function renderBookmarks() {
                   <div class="vc-vt-circle" style="border-color:${c}"></div>
                   <div class="vc-vt-content">
                     <div class="vc-vt-header">
-                      <span class="vc-vt-time" style="${tagHueVars(c)}">${formatTimestamp(b.timestamp)}</span>
+                      <span class="vc-vt-time${formatLoopRange(b) ? ' vc-vt-time--loop' : ''}" style="${tagHueVars(c)}">${formatLoopRange(b) ?? formatTimestamp(b.timestamp)}</span>
                     </div>
                     <div class="vc-vt-note">${b.description || 'No note added.'}</div>
                     ${b.tags && b.tags.length
@@ -585,7 +586,7 @@ async function renderBookmarks() {
           <div class="vc-pill-row">
             ${sortedBookmarks.map(b => {
               const c = b.color || '#14B8A6';
-              return `<button class="vc-pill jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" style="background:${c}18;color:${c};border:1px solid ${c}30">${formatTimestamp(b.timestamp)}</button>`;
+              return `<button class="vc-pill jump-to-video" data-video-id="${videoId}" data-timestamp="${b.timestamp}" style="background:${c}18;color:${c};border:1px solid ${c}30">${formatLoopRange(b) ?? formatTimestamp(b.timestamp)}</button>`;
             }).join('')}
           </div>
         </div>
@@ -727,7 +728,7 @@ function renderTimelineView(bookmarks, container) {
       const cardHtml = `
         <div class="tl-card" style="--tl-idx:${idx}">
           <img class="tl-thumb" src="${thumb}" loading="lazy" alt="">
-          <div class="tl-ts" style="color:${color}">${formatTimestamp(b.timestamp)}</div>
+          <div class="tl-ts" style="color:${color}">${formatLoopRange(b) ?? formatTimestamp(b.timestamp)}</div>
           <div class="tl-video" title="${b.videoTitle || ''}">${b.videoTitle || 'Unknown video'}</div>
           <div class="tl-desc">${b.description || 'No note added.'}</div>
           ${tagsHtml}

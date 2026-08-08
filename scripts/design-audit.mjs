@@ -205,6 +205,31 @@ function auditContrast() {
       }
     }
   }
+  // The on-YouTube overlays inject their CSS from JS template literals, so they
+  // are invisible to the CSS-file scan above and to the rendered specs (which
+  // drive extension pages, not youtube.com). Check the literal pairs here.
+  const ON_YT_JS = sh(`find extension/src/content extension/src/popup -name '*.js'`);
+  const HEX_LUM = (hex) => {
+    const [r, g, b] = hexToRgb(hex);
+    return lum([r, g, b]);
+  };
+  for (const f of [...ON_YT_JS, ...ON_YOUTUBE]) {
+    const src = read(f);
+    // `background: #xxxxxx;` … `color: #yyy;` inside one declaration block.
+    // `color:` must not match the tail of `border-color:` / `outline-color:` —
+    // that read a border hex as the foreground and reported 1.00:1 against its
+    // own background.
+    for (const m of src.matchAll(/background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})\s*;[^}]{0,400}?(?:^|[;{\s])color:\s*(#[0-9a-fA-F]{3,6}|white)\s*;/gm)) {
+      const bg = m[1].toLowerCase();
+      const fg = m[2].toLowerCase() === 'white' ? '#ffffff' : m[2].toLowerCase();
+      const l = [HEX_LUM(bg), HEX_LUM(fg)].sort((a, b) => b - a);
+      const r = (l[0] + 0.05) / (l[1] + 0.05);
+      if (r < 4.5) {
+        fail('R2', `${f}: ${fg} on ${bg} is ${r.toFixed(2)}:1 — below AA (injected on-YouTube style)`);
+      }
+    }
+  }
+
   // Same check for React inline styles.
   for (const f of WEBAPP_TSX) {
     const src = read(f);
