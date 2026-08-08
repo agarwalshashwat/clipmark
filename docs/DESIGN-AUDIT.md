@@ -32,8 +32,9 @@ Three findings dominate:
    `<title>`, OpenGraph, and JSON-LD.
 2. **The dashboard is typeset at side-panel density** (§D-1) — 13px body, 21
    declarations at 10px, one at 8px, on a full-width desktop tab.
-3. **Three neutral ramps run simultaneously** (§X-4) — gray in the tokens, slate
-   in the webapp, an orphaned Material-You set in the extension.
+3. **25 distinct colour systems are in use across the three surfaces** (§X-6) —
+   including **five** separate neutral ramps (§X-4) and **four** teal/brand
+   variants. 105 distinct colour values, 698 hardcoded occurrences.
 
 ---
 
@@ -385,18 +386,66 @@ Every surface renders a raster PNG. The website nav loads a **154KB**
 `clipmark-logo.png` into a 34px slot. An SVG is a prerequisite for any real logo
 work (DESIGN §2).
 
-### X-4 · P2 · Three neutral ramps
+### X-4 · P1 · Five neutral ramps (this was undercounted as three)
 
-| Ramp | Where | Evidence |
+| Ramp | Distinct values in use | Where |
 | --- | --- | --- |
-| Tailwind gray | `tokens.css` (the "official" tokens) | `#111827`, `#6b7280`, `#9ca3af`, `#e5e7eb` |
-| Tailwind slate | webapp inline styles | `#0f172a` 68×, `#64748b` 61×, `#f1f5f9` 52×, `#94a3b8` 40× |
-| Material-You / ad-hoc | extension CSS + leaking into webapp | `#1a1c1d` 49×, `#545f6c` 46×, `#6c7a77` 16×, `#888`, `#aaa`, `#f3f3f4`, `#f9f9fa` |
+| Tailwind **gray** | 10 | `tokens.css` (the "official" tokens), webapp, dashboard |
+| Tailwind **slate** | 10 | webapp inline styles (`#0f172a` 68×, `#64748b` 61×, `#f1f5f9` 52×) |
+| **Material-You / "Curator"** | 17 | both extension stylesheets + leaking into webapp (`#1a1c1d` 49×, `#545f6c` 46×, `#6c7a77` 16×, plus a near-white tail `#f9f9fa` / `#f3f3f4` / `#f3f3f5` / `#f0f0f1` / `#edeeef` / `#f8f9fa` / `#fcfcfd` / `#e8e8e9`) |
+| **CSS-shorthand greys** | 10 | dashboard (8) + webapp (5) — `#111`, `#1a1a1a`, `#2a2a2a`, `#444`, `#888`, `#aaa`, `#ccc`, `#e0e0e0`, `#f0f0f0` |
+| **Cream / beige** | 4 | dashboard (3) + side panel (1) — `#e8dcc8`, `#c9b99a`, `#f5f3ef`, `#faf6ec` |
+| *(stray)* Tailwind zinc | 1 | dashboard — `#e4e4e7` |
+
+An earlier draft of this audit said "three neutral ramps". That collapsed the
+CSS-shorthand greys into the Material-You bucket and missed the cream set
+entirely. Verified count is **five ramps plus one stray value**, 52 distinct
+neutral hexes total. See §X-6 for the full census.
 
 DESIGN §3.2 picks slate and explains why, and flags gray as the legitimate
 minimum-churn alternative. **This is the one decision that needs Ash's explicit
 answer before any restyle starts** — it determines whether the first migration
 PR touches the extension or the webapp.
+
+### X-6 · P1 · Colour-system census — 25 systems, 105 values, 698 occurrences
+
+Every hex literal in `webapp/app/**.{tsx,css}` (excluding the generated
+`design-tokens.css`), `extension/styles/{dashboard,side-panel}.css`, and
+`extension/src/popup/{dashboard,side-panel}.js`, normalised (3-digit expanded,
+alpha dropped) and matched against the Tailwind ramps. Pure black/white excluded.
+
+**105 distinct values** — 56 sit on a Tailwind ramp, **49 sit on no ramp at all**.
+Occurrence volume: 373 inline hexes in the webapp + 325 in the two extension
+stylesheets = **698 hardcoded colours**.
+
+| Family | Systems | Systems in use |
+| --- | --- | --- |
+| Neutral | **5** (+1 stray) | slate · gray · Material-You/Curator · CSS-shorthand greys · cream/beige · *(stray zinc)* |
+| Teal / brand | **4** | Tailwind teal · M3 off-ramp (`#006b5f`, `#0d5f57`) · ad-hoc (`#0ea5a0`, `#4db8a8`, `#4fdbc8`) · Tailwind emerald |
+| Purple / AI | **3** | Tailwind violet · Tailwind purple · ad-hoc (`#732ee4`, `#9b4ff4`, `#b591ff`, `#d2bbff`) |
+| Red / danger | **3** | Tailwind red · Tailwind rose · M3 error `#ba1a1a` + `#e53e3e` |
+| Green / success | *(counted under teal)* | Tailwind green · Tailwind emerald |
+| Other semantic | **5** | amber · orange · pink · Tailwind blue · ad-hoc blue `#4da1ee` |
+| Third-party brand | **3** | Google (4 values) · Discord blurple · YouTube red — legitimate, keep |
+
+Per surface (distinct systems present):
+
+| | Website | Ext dashboard | Ext side panel |
+| --- | --- | --- | --- |
+| Systems in use | **19** | **16** | **7** |
+| Distinct values | 79 | 46 | 14 |
+
+Two details worth noting:
+
+- **`--primary-deep` (`#0f766e`) is defined and effectively unused** — zero
+  literal occurrences anywhere, and only 9 `var(--primary-deep)` references
+  against 65 `var(--accent*)`. The AA-safe teal exists and nothing reaches for it
+  (§X-2).
+- **The extension side panel is the cleanest surface** at 7 systems / 14 values.
+  The website is the worst at 19 / 79, driven by inline styling (§W-6).
+
+Excluding the three legitimate third-party brand palettes, **ClipMark's own
+design language is currently 22 competing colour systems where it should be 1.**
 
 ### X-5 · P2 · `packages/design-system/README.md` documents files that don't exist
 
