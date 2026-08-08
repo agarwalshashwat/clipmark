@@ -17,6 +17,15 @@ export function Footer() {
             <a href={CHROME_STORE_URL} target="_blank" rel="noopener noreferrer" className="footer-link">Chrome Extension</a>
           </div>
           <div className="footer-links-col">
+            <span className="footer-links-title">Learn</span>
+            <a href="/active-recall-youtube" className="footer-link">Active Recall from YouTube</a>
+            <a href="/spaced-repetition-youtube" className="footer-link">Spaced Repetition for YouTube</a>
+            <a href="/youtube-flashcards" className="footer-link">YouTube Flashcards</a>
+            <a href="/youtube-to-anki" className="footer-link">YouTube to Anki</a>
+            <a href="/faq" className="footer-link">FAQ</a>
+            <a href="/switch-from-videosegments" className="footer-link">Switching from VideoSegments</a>
+          </div>
+          <div className="footer-links-col">
             <span className="footer-links-title">Legal</span>
             <a href="/privacy" className="footer-link">Privacy Policy</a>
             <a href="/terms" className="footer-link">Terms of Service</a>
