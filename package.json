@@ -12,7 +12,10 @@
     "test:webapp:smoke": "playwright test --project=webapp tests/ci/webapp-smoke.spec.ts",
     "test:unit:webapp": "npm --prefix webapp run test:unit",
     "test:integration": "npm --prefix webapp run test:integration",
-    "test:all": "npm run test:unit && npm run test:yt && npm run test:visual"
+    "test:all": "npm run test:unit && npm run test:yt && npm run test:visual",
+    "ext-build": "npm --prefix extension run build",
+    "design:audit": "node scripts/design-audit.mjs",
+    "design:audit:dist": "node scripts/design-audit.mjs --dist"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0"

@@ -164,16 +164,20 @@ describe('parseTags', () => {
 
 // ─── getTagColor ───────────────────────────────────────────────────────────
 describe('getTagColor', () => {
-  it('returns default blue for empty array', () => {
-    assert.strictEqual(getTagColor([]), '#4da1ee');
+  // The untagged default used to be #4da1ee, a stale blue from before the teal
+  // rebrand and the only blue left in the product. An untagged clip has no
+  // identity colour to express, so it falls back to the gray ramp (gray-500)
+  // rather than introducing a hue. See /DESIGN.md.
+  it('returns the neutral gray for empty array', () => {
+    assert.strictEqual(getTagColor([]), '#6b7280');
   });
 
-  it('returns default blue for null', () => {
-    assert.strictEqual(getTagColor(null), '#4da1ee');
+  it('returns the neutral gray for null', () => {
+    assert.strictEqual(getTagColor(null), '#6b7280');
   });
 
-  it('returns default blue for undefined', () => {
-    assert.strictEqual(getTagColor(undefined), '#4da1ee');
+  it('returns the neutral gray for undefined', () => {
+    assert.strictEqual(getTagColor(undefined), '#6b7280');
   });
 
   it('returns correct color for "important"', () => {
