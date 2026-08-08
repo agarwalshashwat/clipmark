@@ -23,7 +23,7 @@ describe('assertContentGlobals', () => {
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
     const chunkD = exposing(['clipmarkReportError', 'clipmarkContentScriptVersion']);
     const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold', 'countSavedLoops', 'isSavedLoopCapReached']);
-    const chunkF = exposing(['advanceLoop', 'normalizeLoopSegment', 'isValidLoopSegment', 'isSameLoopSegment', 'insertLoopSegment', 'removeLoopSegment', 'needsOverlayRemount', 'shouldRebindVideo', 'loopEndForBookmark', 'loopSegmentsFromBookmarks', 'formatLoopClock', 'buildLoopBookmark', 'isDuplicateLoop', 'LOOP_CONSTANTS']);
+    const chunkF = exposing(['advanceLoop', 'normalizeLoopSegment', 'isValidLoopSegment', 'isSameLoopSegment', 'insertLoopSegment', 'removeLoopSegment', 'updateLoopSegmentBound', 'needsOverlayRemount', 'shouldRebindVideo', 'loopEndForBookmark', 'loopSegmentsFromBookmarks', 'formatLoopClock', 'buildLoopBookmark', 'isDuplicateLoop', 'LOOP_CONSTANTS']);
     assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE, chunkF]), true);
   });
 
@@ -53,6 +53,7 @@ describe('assertContentGlobals', () => {
       'isSameLoopSegment',
       'insertLoopSegment',
       'removeLoopSegment',
+      'updateLoopSegmentBound',
       'needsOverlayRemount',
       'shouldRebindVideo',
       'loopEndForBookmark',

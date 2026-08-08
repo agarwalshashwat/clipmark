@@ -112,6 +112,42 @@ export function insertLoopSegment(segments, pair, duration = 0) {
   return next;
 }
 
+/**
+ * Re-anchors one bound of an existing segment to `time` (i.e. "make A/B here").
+ *
+ * The result is re-normalized and re-sorted, so dragging A past B just flips the
+ * pair rather than producing an inverted range. Returns the list UNCHANGED when
+ * the edit would make an invalid segment — the caller can compare identity to
+ * tell whether it applied.
+ *
+ * Any extra fields on the segment (a saved loop's `id`/`name`) are preserved so
+ * the caller can persist the edit against the right stored record.
+ *
+ * @param {Array} segments
+ * @param {number} index
+ * @param {'start'|'end'} which
+ * @param {number} time
+ * @param {number} [duration]
+ * @returns {Array} a NEW array (input untouched)
+ */
+export function updateLoopSegmentBound(segments, index, which, time, duration = 0) {
+  const list = Array.isArray(segments) ? segments : [];
+  if (!Number.isInteger(index) || index < 0 || index >= list.length) return [...list];
+  if (which !== 'start' && which !== 'end') return [...list];
+
+  const current = list[index];
+  const edited = normalizeLoopSegment(
+    which === 'start' ? { a: time, b: current.end } : { a: current.start, b: time },
+    duration,
+  );
+  if (!edited) return [...list];
+
+  const next = [...list];
+  next[index] = { ...current, ...edited };
+  next.sort((x, y) => x.start - y.start || x.end - y.end);
+  return next;
+}
+
 /** Removes the segment at `index`, returning a NEW array. */
 export function removeLoopSegment(segments, index) {
   const list = Array.isArray(segments) ? segments : [];

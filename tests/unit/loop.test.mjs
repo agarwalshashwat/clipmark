@@ -37,6 +37,7 @@ import {
   normalizeLoopSegment,
   removeLoopSegment,
   sanitizeLoopName,
+  updateLoopSegmentBound,
   shouldRebindVideo,
   LOOP_CONSTANTS,
 } from '../../extension/src/loop.module.js';
@@ -142,6 +143,73 @@ describe('insertLoopSegment / removeLoopSegment', () => {
     const segs = insertLoopSegment([], { a: 10, b: 20 });
     assert.equal(removeLoopSegment(segs, 9).length, 1);
     assert.equal(removeLoopSegment(segs, -1).length, 1);
+  });
+});
+
+describe('updateLoopSegmentBound (editing an existing segment)', () => {
+  const segs = () => [{ start: 10, end: 20 }, { start: 40, end: 50 }];
+
+  it('moves A to the playhead', () => {
+    const next = updateLoopSegmentBound(segs(), 0, 'start', 12);
+    assert.deepEqual(next[0], { start: 12, end: 20 });
+  });
+
+  it('moves B to the playhead', () => {
+    const next = updateLoopSegmentBound(segs(), 0, 'end', 25);
+    assert.deepEqual(next[0], { start: 10, end: 25 });
+  });
+
+  it('flips the pair rather than inverting it when A is dragged past B', () => {
+    const next = updateLoopSegmentBound(segs(), 0, 'start', 30);
+    assert.deepEqual(next.find(s => s.start === 20), { start: 20, end: 30 });
+  });
+
+  it('re-sorts when an edit moves a segment past its neighbour', () => {
+    const next = updateLoopSegmentBound(segs(), 0, 'end', 60);
+    assert.deepEqual(next.map(s => s.start), [10, 40]);
+    assert.deepEqual(next.map(s => s.end), [60, 50]);
+  });
+
+  it('preserves a saved loop\'s id and name so the edit can be persisted', () => {
+    const withId = [{ start: 10, end: 20, id: 77, name: 'Chorus' }];
+    const next = updateLoopSegmentBound(withId, 0, 'end', 30);
+    assert.equal(next[0].id, 77);
+    assert.equal(next[0].name, 'Chorus');
+    assert.equal(next[0].end, 30);
+  });
+
+  it('returns the list unchanged when the edit would be too short', () => {
+    const before = segs();
+    const next = updateLoopSegmentBound(before, 0, 'start', 19.95);
+    // Every entry survives by identity — the caller uses that to detect a no-op.
+    assert.ok(next.every(seg => before.includes(seg)));
+  });
+
+  it('ignores a bad index or bound name', () => {
+    const before = segs();
+    assert.ok(updateLoopSegmentBound(before, 9, 'start', 5).every(s => before.includes(s)));
+    assert.ok(updateLoopSegmentBound(before, -1, 'start', 5).every(s => before.includes(s)));
+    assert.ok(updateLoopSegmentBound(before, 0, 'middle', 5).every(s => before.includes(s)));
+  });
+
+  it('clamps the edited bound to the video duration', () => {
+    const next = updateLoopSegmentBound(segs(), 0, 'end', 999, 120);
+    assert.equal(next.find(s => s.start === 10).end, 120);
+  });
+
+  it('never mutates its input', () => {
+    const before = segs();
+    const snapshot = JSON.stringify(before);
+    updateLoopSegmentBound(before, 0, 'end', 30);
+    assert.equal(JSON.stringify(before), snapshot);
+  });
+
+  it('rebuilds ONLY the edited entry, leaving siblings by reference', () => {
+    const before = segs();
+    const next = updateLoopSegmentBound(before, 0, 'end', 30);
+    const rebuilt = next.filter(seg => !before.includes(seg));
+    assert.equal(rebuilt.length, 1, 'exactly one new object — this is how callers locate the edit');
+    assert.equal(rebuilt[0].end, 30);
   });
 });
 

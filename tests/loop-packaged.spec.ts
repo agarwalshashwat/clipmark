@@ -84,6 +84,9 @@ async function seed(worker: Worker, bookmarks: unknown[]): Promise<void> {
   );
 }
 
+/** YouTube sometimes mounts a second <video> (ads/preview) — the player is the first. */
+const mainVideo = (page: Page) => page.locator('video').first();
+
 async function openWatchPage(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
   await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
@@ -93,7 +96,7 @@ async function openWatchPage(context: BrowserContext): Promise<Page> {
   await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 30_000 });
   await page.locator('.yt-loop-player-btn').waitFor({ state: 'attached', timeout: 30_000 });
   // Keep the player quiet — position is driven explicitly below.
-  await page.locator('video').evaluate((v: HTMLVideoElement) => v.pause());
+  await mainVideo(page).evaluate((v: HTMLVideoElement) => v.pause());
   return page;
 }
 
@@ -106,17 +109,38 @@ async function armSavedLoop(page: Page, index = 0): Promise<void> {
 }
 
 async function setRate(page: Page, rate: number): Promise<void> {
-  await page.locator('video').evaluate((v: HTMLVideoElement, r: number) => {
+  await mainVideo(page).evaluate((v: HTMLVideoElement, r: number) => {
     v.playbackRate = r;
   }, rate);
 }
 
+/** Ask the content script (via the SW) to start a revisit/recall session. */
+async function startRevision(worker: Worker, bookmarks: unknown[], recall: boolean): Promise<void> {
+  await worker.evaluate(
+    ({ url, bms, useRecall }) => new Promise<void>((resolve, reject) => {
+      chrome.tabs.query({ url }, tabs => {
+        if (!tabs[0]?.id) { reject(new Error('No matching YouTube tab found')); return; }
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'startRevision', bookmarks: bms, recall: useRecall }, () => resolve());
+      });
+    }),
+    { url: `${VIDEO_URL}*`, bms: bookmarks, useRecall: recall },
+  );
+}
+
+async function storedBookmarks(worker: Worker): Promise<Record<string, unknown>[]> {
+  return worker.evaluate(
+    ({ key }) => new Promise<Record<string, unknown>[]>(r =>
+      chrome.storage.sync.get({ [key]: [] }, x => r((x as Record<string, Record<string, unknown>[]>)[key]))),
+    { key: bmKey(VIDEO_ID) },
+  );
+}
+
 const position = (page: Page) =>
-  page.locator('video').evaluate((v: HTMLVideoElement) => v.currentTime);
+  mainVideo(page).evaluate((v: HTMLVideoElement) => v.currentTime);
 
 /** Drops the playhead past B and gives the watchdog time to pull it back. */
 async function overshootAndSettle(page: Page, to: number): Promise<void> {
-  await page.locator('video').evaluate((v: HTMLVideoElement, t: number) => { v.currentTime = t; }, to);
+  await mainVideo(page).evaluate((v: HTMLVideoElement, t: number) => { v.currentTime = t; }, to);
   await page.waitForTimeout(900); // ≫ the watchdog's 200ms safety interval
 }
 
@@ -262,6 +286,109 @@ test.describe('A–B loop (packaged dist build)', () => {
       const at = await position(page);
       expect(at, 'chain mode should have advanced to the second segment').toBeGreaterThanOrEqual(79);
       expect(at).toBeLessThan(90);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('a segment can be edited: B re-anchors to the playhead and the save follows', async () => {
+    const context = await launchPackaged();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await seed(worker, seedLoopBookmark());
+      const page = await openWatchPage(context);
+      await armSavedLoop(page);
+
+      // Park the playhead past the current B and make that the new B. The first
+      // edit suspends the loop, so the watchdog can't yank the playhead back to
+      // A mid-edit — that suspend is the behaviour under test as much as the
+      // range change is.
+      await mainVideo(page).evaluate((v: HTMLVideoElement) => { v.currentTime = 55; });
+      await page.locator('[data-loop-edit$=":end"]').first().dispatchEvent('click');
+      await page.waitForTimeout(800);
+
+      await expect(page.locator('.yt-loop-panel')).toContainText('0:30 → 0:55');
+      await expect(page.locator('[data-loop-action="toggle"]')).toContainText('Loop');
+
+      // The edit must reach storage, not just the panel — this is a saved loop.
+      const stored = await storedBookmarks(worker);
+      const loopRecord = stored.find(b => (b as { loop?: unknown }).loop) as
+        { timestamp: number; loop: { end: number } } | undefined;
+      expect(loopRecord?.loop.end).toBe(55);
+      expect(loopRecord?.timestamp).toBe(30);
+
+      // …and once re-armed, the loop honours the new bound.
+      await page.locator('[data-loop-action="toggle"]').dispatchEvent('click');
+      await page.waitForTimeout(600);
+      await overshootAndSettle(page, 56);
+      expect(await position(page)).toBeLessThan(55);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('a saved loop drives Active Recall over its exact A–B range', async () => {
+    const context = await launchPackaged();
+    try {
+      const worker = await extensionServiceWorker(context);
+      const saved = seedLoopBookmark();
+      await seed(worker, saved);
+      const page = await openWatchPage(context);
+
+      // Same entry point the web dashboard uses — no loop-specific plumbing.
+      await startRevision(worker, saved, true);
+      const prompt = page.locator('.yt-recall-panel');
+      await prompt.waitFor({ timeout: 15_000 });
+      await expect(prompt).toContainText('Recall this moment');
+      await expect(prompt).toContainText('0:30');
+
+      await prompt.locator('.yt-recall-btn').dispatchEvent('click');
+      await page.waitForTimeout(800);
+
+      // The revisit overlay must show the loop's OWN range, not the default
+      // "next bookmark or +60s" heuristic (which would read 0:30 → 1:30).
+      await expect(page.locator('.yt-revision-range')).toHaveText('0:30 → 0:40');
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('survives YouTube removing the player chrome it hooks into', async () => {
+    const context = await launchPackaged();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await seed(worker, seedLoopBookmark());
+      const page = await openWatchPage(context);
+
+      // Only errors thrown by the EXTENSION count here. Ripping out YouTube's
+      // own nodes predictably makes YouTube's own scripts throw, which is not
+      // what this test is about.
+      const crashes: string[] = [];
+      page.on('pageerror', e => {
+        if ((e.stack ?? '').includes('chrome-extension://')) crashes.push(`${e}\n${e.stack}`);
+      });
+
+      // Rip out every selector the loop code reaches for, then poke the same
+      // events a YouTube layout change / SPA nav would fire.
+      await page.evaluate(() => {
+        document.querySelector('.ytp-right-controls')?.remove();
+        document.querySelector('.ytp-progress-bar')?.remove();
+        document.querySelector('.yt-loop-ranges')?.remove();
+        document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
+        document.dispatchEvent(new CustomEvent('fullscreenchange'));
+      });
+      await page.waitForTimeout(1500);
+
+      // Keyboard control is bound to document, not the player chrome, so
+      // looping must still be reachable with the controls gone.
+      await page.keyboard.press('Alt+BracketLeft');
+      await page.waitForTimeout(300);
+      await mainVideo(page).evaluate((v: HTMLVideoElement) => { v.currentTime = 70; });
+      await page.keyboard.press('Alt+BracketRight');
+      await page.waitForTimeout(1000);
+
+      expect(crashes, `content script threw: ${crashes[0] ?? ''}`).toEqual([]);
+      await expect(page.locator('.yt-loop-panel')).toBeVisible();
     } finally {
       await context.close();
     }

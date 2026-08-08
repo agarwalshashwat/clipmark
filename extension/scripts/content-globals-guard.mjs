@@ -35,6 +35,7 @@ export const REQUIRED_CONTENT_GLOBALS = [
   'isSameLoopSegment',
   'insertLoopSegment',
   'removeLoopSegment',
+  'updateLoopSegmentBound',
   'needsOverlayRemount',
   'shouldRebindVideo',
   'loopEndForBookmark',

@@ -156,3 +156,52 @@ describe('extension bridge: startRecallInExtension', () => {
     assert.match((res as { error: string }).error, /boom/);
   });
 });
+
+// ─── Bridge contract vs. saved A–B loops ─────────────────────────────────────
+// Loops sync through /api/bookmarks (Pro-gated server-side), NOT through this
+// bridge. These assertions pin that down: the bridge must stay a recall
+// hand-off with no write surface, so it can never become a way for a non-Pro
+// client to persist a loop.
+describe('bridge exposes no loop-persistence surface', () => {
+  const BACKGROUND = new URL('../../../extension/src/background/background.js', import.meta.url);
+
+  it('the background listener accepts exactly AUTH_SUCCESS and START_RECALL', async () => {
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync(BACKGROUND, 'utf8');
+    const external = source.slice(source.indexOf('onMessageExternal'));
+    // Plain exec loop: matchAll spread needs downlevelIteration under this tsconfig.
+    const accepted: string[] = [];
+    const re = /message\.type === '([A-Z_]+)'/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(external)) !== null) accepted.push(m[1]);
+    assert.deepEqual(
+      accepted.sort(),
+      ['AUTH_SUCCESS', 'START_RECALL'],
+      'a new externally-callable message type is a new trust boundary — gate it deliberately',
+    );
+  });
+
+  it('no externally-reachable handler writes a loop into storage', async () => {
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync(BACKGROUND, 'utf8');
+    const external = source.slice(source.indexOf('onMessageExternal'));
+    assert.ok(!/loop/i.test(external), 'the external bridge must not touch loop data');
+  });
+
+  it('START_RECALL still carries only a videoId and bookmarkIds', async () => {
+    installWindow({
+      runtime: {
+        sendMessage: (_id: string, message: Record<string, unknown>, cb: (r: unknown) => void) => {
+          assert.deepEqual(Object.keys(message).sort(), ['bookmarkIds', 'type', 'videoId']);
+          assert.equal(message.type, 'START_RECALL');
+          cb({ ok: true, count: 1 });
+        },
+      },
+    });
+    process.env.NEXT_PUBLIC_EXTENSION_ID = VALID_ID;
+    const mod = await load();
+    const res = await mod.startRecallInExtension('dQw4w9WgXcQ', [1, 2]);
+    assert.deepEqual(res, { ok: true, count: 1 });
+    clearWindow();
+  });
+});
