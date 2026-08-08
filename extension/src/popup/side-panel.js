@@ -8,6 +8,7 @@ import {
   RECONNECT_DELAY,
   isExtensionContextValid,
 } from '../constants.module.js';
+import { formatLoopRange, isLoopBookmark } from '../loop.module.js';
 import {
   buildDueSummary,
   buildIdleVideoCards,
@@ -1139,11 +1140,18 @@ const YT_MISSING_THUMB_MAX_WIDTH = 120;
 
 function idleCardMarkup(card) {
   const title = escapeHtml(card.title);
-  const moments = card.moments.map(m => `
+  const moments = card.moments.map(m => {
+    const range = formatLoopRange(m);
+    return `
         <button class="sp-clip-moment" data-video-id="${escapeHtml(card.videoId)}" data-timestamp="${m.timestamp}">
-          <span class="sp-clip-moment-time">${formatTimestamp(m.timestamp)}</span>
+          <span class="sp-clip-moment-time${range ? ' sp-clip-moment-time--loop' : ''}">${
+            range
+              ? `<span class="material-symbols-outlined bookmark-loop-icon" aria-hidden="true">repeat</span>${range}`
+              : formatTimestamp(m.timestamp)
+          }</span>
           <span class="sp-clip-moment-desc">${escapeHtml(m.description)}</span>
-        </button>`).join('');
+        </button>`;
+  }).join('');
 
   const more = card.hiddenMomentCount
     ? `<span class="sp-clip-more">+${card.hiddenMomentCount} more</span>`
@@ -1353,10 +1361,20 @@ async function loadBookmarks() {
       return;
     }
 
-    list.innerHTML = bookmarks.map(b => `
-      <div class="bookmark" data-timestamp="${b.timestamp}" data-id="${b.id}" data-video-id="${videoId}" style="border-left-color: ${b.color || 'var(--accent)'}">
+    list.innerHTML = bookmarks.map(b => {
+      // A saved A–B loop shows the range it covers, not just its A point —
+      // matching the web dashboard, which has always rendered it that way. The
+      // panel used to show "01:35" for a loop, so the same record looked like a
+      // point bookmark here and a range there.
+      const loopRange = formatLoopRange(b);
+      return `
+      <div class="bookmark${loopRange ? ' bookmark--loop' : ''}" data-timestamp="${b.timestamp}" data-id="${b.id}" data-video-id="${videoId}" style="border-left-color: ${b.color || 'var(--accent)'}">
         <div class="bookmark-content">
-          <span class="bookmark-time" style="${tagHueVars(b.color || '#14b8a6')}">${formatTimestamp(b.timestamp)}</span>
+          <span class="bookmark-time${loopRange ? ' bookmark-time--loop' : ''}" style="${tagHueVars(b.color || '#14b8a6')}">${
+            loopRange
+              ? `<span class="material-symbols-outlined bookmark-loop-icon" aria-hidden="true">repeat</span>${loopRange}`
+              : formatTimestamp(b.timestamp)
+          }</span>
           <span class="bookmark-desc">${b.description || 'No description'}</span>
           ${b.tags && b.tags.length
             ? `<div class="bookmark-tags">${b.tags.map(t =>
@@ -1367,7 +1385,8 @@ async function loadBookmarks() {
         <button class="copy-link" data-video-id="${videoId}" data-timestamp="${b.timestamp}" aria-label="Copy link" title="Copy link">⎘</button>
         <button class="delete-bookmark" aria-label="Delete bookmark" title="Delete">&times;</button>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     list.querySelectorAll('.bookmark').forEach(el => {
       const id = el.dataset.id;

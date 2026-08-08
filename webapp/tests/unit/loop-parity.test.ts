@@ -21,6 +21,7 @@ import {
   isLoopBookmark as extensionIsLoop,
   loopEndForBookmark as extensionLoopEnd,
   formatLoopClock as extensionClock,
+  formatLoopRange as extensionRange,
 } from '../../../extension/src/loop.module.js';
 
 const CASES: { name: string; bookmark: any }[] = [
@@ -70,7 +71,11 @@ describe('formatLoopClock parity', () => {
   });
 });
 
-describe('formatLoopRange (webapp display only)', () => {
+describe('formatLoopRange parity', () => {
+  // No longer webapp-only: the side panel rendered saved loops as POINT
+  // bookmarks while the dashboard showed the range, so the same loop looked
+  // like two different things depending on which surface you opened. The
+  // extension twin now carries the helper too, and these cases diff them.
   it('renders the A → B range for a loop', () => {
     assert.equal(formatLoopRange({ timestamp: 42, loop: { end: 75 } }), '0:42 → 1:15');
   });
@@ -78,5 +83,18 @@ describe('formatLoopRange (webapp display only)', () => {
   it('returns null for a plain bookmark so the caller falls back', () => {
     assert.equal(formatLoopRange({ timestamp: 42 }), null);
     assert.equal(formatLoopRange(null), null);
+  });
+
+  for (const { name, bookmark } of CASES) {
+    it(`matches the extension twin for ${name}`, () => {
+      const ext = extensionRange as (b: unknown) => string | null;
+      assert.equal(formatLoopRange(bookmark), ext(bookmark), `formatLoopRange diverged for: ${name}`);
+    });
+  }
+
+  it('handles null/undefined identically', () => {
+    const ext = extensionRange as (b: unknown) => string | null;
+    assert.equal(formatLoopRange(null), ext(null));
+    assert.equal(formatLoopRange(undefined), ext(undefined));
   });
 });

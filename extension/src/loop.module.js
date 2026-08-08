@@ -309,6 +309,21 @@ export function formatLoopClock(seconds) {
 }
 
 /**
+ * "0:42 → 1:15" for a loop, or null when the record isn't a loop.
+ *
+ * TWIN of formatLoopRange in webapp/app/dashboard/_utils/loop.ts — the web
+ * dashboard has rendered loops as ranges since the loop shipped, while the side
+ * panel still showed them as point bookmarks ("01:35 Solo — drill this"), so a
+ * saved loop looked like two different things on two surfaces. Same helper, same
+ * output; parity is enforced by webapp/tests/unit/loop-parity.test.ts.
+ */
+export function formatLoopRange(bookmark) {
+  const end = loopEndForBookmark(bookmark);
+  if (end === null) return null;
+  return `${formatLoopClock(bookmark.timestamp)} → ${formatLoopClock(end)}`;
+}
+
+/**
  * Builds the bookmark record for a saved loop.
  *
  * `reviewSchedule` is resolved by the CALLER using the existing Active-Recall

@@ -527,8 +527,11 @@ Video thumbnails are 16:9, framed at `{rounded.md}` with a hairline edge, and ar
 **`timestamp-chip`** — A clip's timestamp
 - `{colors.primary-tint}` fill, `{colors.primary-strong}` text, `{typography.micro}` in JetBrains Mono, `{rounded.full}`, padding `2px 8px`.
 
-**`loop-segment-bar`** — A–B loop segment track
-- A `{colors.primary-tint}` track with `{colors.primary}` segment fills and `{colors.primary-strong}` handles, `{rounded.full}`. Segment labels sit at `{typography.micro}`.
+**`loop-segment-bar`** — A–B loop range, on the YouTube scrubber
+- Teal, never violet: looping is not an AI feature. The band is `{colors.primary-soft}` at 0.42 alpha (0.72 when armed) with 2px `{colors.primary-soft}` edges, and it extends a few pixels above and below the progress bar rather than sitting inside it. Both details matter: at 0.18 alpha confined to a ~6px bar it was competing with YouTube's red progress line and was effectively invisible, and bracketing the bar leaves that red line legible through the middle. Segment labels sit at `{typography.micro}`.
+
+**`loop-range-chip`** — A saved loop in a list
+- A saved loop always shows the **range** it covers ("0:30 → 0:40"), never just its A point, with a `repeat` glyph. This holds on every surface that lists clips — the web dashboard, the side panel's on-video list, and the side panel's off-YouTube clip cards — and is produced by one helper, `formatLoopRange`, twinned across `extension/src/loop.{js,module.js}` and `webapp/app/dashboard/_utils/loop.ts` with parity enforced by `webapp/tests/unit/loop-parity.test.ts`. A loop that renders as a point bookmark on one surface and a range on another is the same record claiming to be two different things.
 
 **`badge-pill`** — Eyebrow / category pill
 - `{colors.primary-tint}` fill, `{colors.primary-strong}` text, `{typography.micro}`, `{rounded.full}`, padding `4px 8px`. Tag pills substitute the tag's own deterministic hue for the tint while keeping the shape and type role.

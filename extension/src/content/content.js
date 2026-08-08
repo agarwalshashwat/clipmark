@@ -687,7 +687,11 @@ function showSaveFlash() {
   const overlay = document.createElement('div');
   overlay.className = 'yt-save-flash';
 
-  const colors = ['#14B8A6', '#2dd4bf', '#b45309', '#dc2626', '#15803d', '#8b5cf6'];
+  // Celebratory sparkle burst on a successful save. Was a grab-bag of off-ramp
+  // hues (a Discord blurple, a coral, a light violet); normalising them onto the
+  // ramps left two identical teals, so it now walks the teal ramp for variety
+  // plus the success green. No violet: that means AI, not "saved".
+  const colors = ['#14b8a6', '#2dd4bf', '#5eead4', '#0d9488', '#99f6e4', '#15803d'];
   const count  = 10;
   for (let i = 0; i < count; i++) {
     const dot = document.createElement('div');
@@ -1458,9 +1462,9 @@ function injectStyles() {
     .yt-loop-player-btn:hover {
       opacity: 1;
       transform: scale(1.15);
-      color: #8b5cf6;
+      color: #2dd4bf;
     }
-    .yt-loop-player-btn--armed { color: #8b5cf6; opacity: 1; }
+    .yt-loop-player-btn--armed { color: #2dd4bf; opacity: 1; }
     .yt-bookmark-player-btn.saving {
       animation: bm-pulse 0.4s ease;
     }
@@ -1474,19 +1478,27 @@ function injectStyles() {
     .yt-loop-ranges {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 1;
+      overflow: visible;
     }
+    /* Two problems with the original: the tint was violet — which DESIGN.md
+       reserves for AI, and looping is not an AI feature — and a saved range at
+       0.18 alpha, confined to a ~6px bar, was competing with YouTube's red
+       progress line and effectively invisible. Teal at a real opacity, and the
+       band brackets the bar (a few px proud top and bottom) so the red line
+       stays legible through the middle instead of fighting it. */
     .yt-loop-range {
-      position: absolute; top: 0; height: 100%;
-      background: rgba(139, 92, 246, 0.35);
-      border-left:  2px solid #8b5cf6;
-      border-right: 2px solid #8b5cf6;
+      position: absolute; top: -3px; height: calc(100% + 6px);
+      background: rgba(45, 212, 191, 0.42);
+      border-left:  2px solid #2dd4bf;
+      border-right: 2px solid #2dd4bf;
+      border-radius: 2px;
       box-sizing: border-box;
       pointer-events: auto;
       cursor: pointer;
     }
-    .yt-loop-range--saved { background: rgba(139, 92, 246, 0.18); }
-    .yt-loop-range--active { background: rgba(139, 92, 246, 0.55); }
-    .yt-loop-range:hover { background: rgba(139, 92, 246, 0.6); }
+    .yt-loop-range--saved { background: rgba(45, 212, 191, 0.42); }
+    .yt-loop-range--active { background: rgba(45, 212, 191, 0.72); }
+    .yt-loop-range:hover { background: rgba(45, 212, 191, 0.85); }
 
     /* ── A–B loop panel ──────────────────────────────────────────────────── */
     .yt-loop-panel {
@@ -1494,7 +1506,7 @@ function injectStyles() {
       width: 296px; padding: 14px 14px 12px;
       background: rgba(17, 17, 20, 0.96);
       color: #f3f4f6;
-      border: 1px solid rgba(139, 92, 246, 0.5);
+      border: 1px solid rgba(45, 212, 191, 0.5);
       border-radius: 12px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
       font-family: ${FONT_FAMILY_NATIVE};
@@ -1511,8 +1523,8 @@ function injectStyles() {
     .yt-loop-mode {
       margin-left: auto; font-size: 11px; font-weight: 600;
       padding: 2px 8px; border-radius: 999px; cursor: pointer;
-      background: rgba(139, 92, 246, 0.2); color: #8b5cf6;
-      border: 1px solid rgba(139, 92, 246, 0.45);
+      background: rgba(45, 212, 191, 0.2); color: #2dd4bf;
+      border: 1px solid rgba(45, 212, 191, 0.45);
     }
     .yt-loop-list { max-height: 168px; overflow-y: auto; margin: 0 0 8px; }
     .yt-loop-row {
@@ -1521,26 +1533,26 @@ function injectStyles() {
       cursor: pointer;
     }
     .yt-loop-row:hover { background: rgba(255, 255, 255, 0.07); }
-    .yt-loop-row--current { background: rgba(139, 92, 246, 0.22); }
+    .yt-loop-row--current { background: rgba(45, 212, 191, 0.22); }
     .yt-loop-row-time {
-      font-variant-numeric: tabular-nums; color: #8b5cf6; white-space: nowrap;
+      font-variant-numeric: tabular-nums; color: #2dd4bf; white-space: nowrap;
     }
     .yt-loop-row-name {
       flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       color: #e5e7eb;
     }
-    .yt-loop-row-saved { color: #8b5cf6; font-size: 11px; }
+    .yt-loop-row-saved { color: #2dd4bf; font-size: 11px; }
     .yt-loop-row-remove {
       background: none; border: 0; color: #9ca3af; cursor: pointer;
       font-size: 13px; line-height: 1; padding: 2px 4px;
     }
     .yt-loop-row-edit {
       background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #8b5cf6; cursor: pointer; border-radius: 5px;
+      color: #2dd4bf; cursor: pointer; border-radius: 5px;
       font-size: 11px; font-weight: 700; font-family: inherit;
       line-height: 1; padding: 3px 5px;
     }
-    .yt-loop-row-edit:hover { background: rgba(139, 92, 246, 0.35); color: #fff; }
+    .yt-loop-row-edit:hover { background: rgba(45, 212, 191, 0.35); color: #fff; }
     .yt-loop-row-name { cursor: text; }
     .yt-loop-row-remove:hover { color: #dc2626; }
     .yt-loop-empty { color: #9ca3af; padding: 6px 2px 8px; line-height: 1.5; }
@@ -1556,13 +1568,13 @@ function injectStyles() {
     }
     .yt-loop-btn:hover { background: rgba(255, 255, 255, 0.16); }
     .yt-loop-btn--primary {
-      background: #8b5cf6; border-color: #8b5cf6; color: #fff;
+      background: #2dd4bf; border-color: #2dd4bf; color: #fff;
     }
     .yt-loop-btn--primary:hover { background: #7c3aed; }
     .yt-loop-btn:disabled { opacity: .45; cursor: not-allowed; }
     .yt-loop-name-input {
       width: 100%; margin-bottom: 6px; padding: 6px 8px;
-      border-radius: 7px; border: 1px solid rgba(139, 92, 246, 0.6);
+      border-radius: 7px; border: 1px solid rgba(45, 212, 191, 0.6);
       background: rgba(0, 0, 0, 0.45); color: #f3f4f6;
       font-family: inherit; font-size: 12px; box-sizing: border-box;
     }

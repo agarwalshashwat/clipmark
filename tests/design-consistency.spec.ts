@@ -19,7 +19,7 @@
  * Requires `make ext-build` first (skips with a message otherwise).
  */
 import { test, expect, chromium, BrowserContext, Page, Worker } from '@playwright/test';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'path';
 import { PAGE_AUDIT } from './helpers/page-audit';
 
@@ -179,6 +179,57 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
 
     await panel.close();
     await dash.close();
+  });
+
+  test('a saved loop shows its A-B range, matching the web dashboard', async () => {
+    const panel = await context.newPage();
+    await panel.setViewportSize({ width: 400, height: 900 });
+    await panel.goto(`chrome-extension://${extensionId}/src/pages/side-panel.html`);
+    await panel.locator('.sp-logo-text').waitFor();
+
+    // Opened standalone there is no active YouTube tab, so the panel shows its
+    // off-YouTube clip cards — the surface #87 added, and the one a user sees
+    // most often. The seed carries one loop (140 -> 168) and two point
+    // bookmarks; the card used to render all three as single timecodes because
+    // the moment projection dropped the loop field entirely.
+    const loopChip = panel.locator('.sp-clip-moment-time--loop');
+    await loopChip.first().waitFor({ timeout: 15_000 });
+    await expect(loopChip).toHaveCount(1);
+    await expect(loopChip.first()).toContainText('2:20 → 2:48');
+
+    // Point bookmarks keep their single timecode.
+    const plain = panel.locator('.sp-clip-moment-time:not(.sp-clip-moment-time--loop)');
+    await expect(plain).toHaveCount(2);
+    await expect(plain.first()).not.toContainText('→');
+
+    await panel.close();
+  });
+
+  test('the loop range on the scrubber is teal and actually visible', async () => {
+    // Looping is not an AI feature, so it may not use the AI violet; and the
+    // saved band was 0.18 alpha on a ~6px bar, competing with YouTube's red
+    // progress line. Assert both the hue family and a usable opacity.
+    const css = readFileSync(`${DIST}/assets/${
+      readdirSync(`${DIST}/assets`).find((f) => f.startsWith('content.js-') && f.endsWith('.js'))
+    }`, 'utf8');
+
+    const saved = css.match(/\.yt-loop-range--saved\s*\{\s*background:\s*rgba\(([^)]+)\)/);
+    expect(saved, '.yt-loop-range--saved not found in the packaged content script').not.toBeNull();
+    const [r, g, b, a] = saved![1].split(',').map((n) => parseFloat(n));
+
+    // Teal, not violet: green is the dominant channel and red is the weakest.
+    expect(g, 'the saved loop range should be teal, not violet').toBeGreaterThan(r);
+    expect(b, 'the saved loop range should be teal, not violet').toBeGreaterThan(r);
+    expect(a, 'the saved loop range is too faint to see on the progress bar')
+      .toBeGreaterThanOrEqual(0.35);
+
+    // And it must not be confined to the bar's own height, where the red
+    // progress line wins.
+    expect(css, 'the range should extend past the progress bar so the red line stays legible')
+      .toMatch(/\.yt-loop-range\s*\{[^}]*height:\s*calc\(100% \+/);
+
+    // No violet anywhere in the shipped content script.
+    expect(css, 'AI violet leaked into the on-YouTube surfaces').not.toMatch(/139,\s*92,\s*246|#8b5cf6/i);
   });
 
   test('dark mode holds the same rules', async () => {

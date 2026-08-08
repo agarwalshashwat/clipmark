@@ -1922,3 +1922,31 @@ body {
     background: hsla(var(--tag-h), var(--tag-s), 60%, 0.20);
     color: hsl(var(--tag-h), var(--tag-s), 80%);
 }
+
+/* ── Saved A–B loop rows ──────────────────────────────────────────────────── */
+/* A loop shows its RANGE ("0:30 → 0:40"), so its chip is wider than a point
+   timestamp and carries a repeat glyph. Same information the web dashboard
+   shows, so one saved loop reads the same on both surfaces. */
+.bookmark-time--loop {
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bookmark-loop-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.bookmark--loop {
+  border-left-width: 3px;
+}
+
+/* Same treatment on the off-YouTube clip cards, so a loop reads as a range on
+   every side-panel state rather than only the on-video one. */
+.sp-clip-moment-time--loop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
