@@ -34,7 +34,7 @@ export function SocialProof({
         padding: '6px 14px',
         borderRadius: 9999,
         background: 'rgba(20,184,166,0.10)',
-        color: '#0D9488',
+        color: 'var(--teal-600)',
         fontWeight: 700,
         fontSize: 13,
         border: '1px solid rgba(20,184,166,0.15)',

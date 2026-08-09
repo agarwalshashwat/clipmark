@@ -35,14 +35,14 @@ function injectStyleOnce() {
     #${OVERLAY_ID}[hidden] { display: none; }
     #${OVERLAY_ID} .cm-upgrade-card {
       position: relative; width: 100%; max-width: 360px;
-      background: #ffffff; color: #0f172a; border-radius: 20px;
+      background: #ffffff; color: #111827; border-radius: 20px;
       padding: 28px 24px 20px; text-align: center;
       box-shadow: 0 24px 70px rgba(0,0,0,0.35); border: 1px solid rgba(0,0,0,0.06);
       font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     }
     #${OVERLAY_ID} .cm-upgrade-close {
       position: absolute; top: 10px; right: 12px; border: none; background: none;
-      font-size: 26px; line-height: 1; color: #94a3b8; cursor: pointer;
+      font-size: 26px; line-height: 1; color: #9ca3af; cursor: pointer;
     }
     #${OVERLAY_ID} .cm-upgrade-spark {
       width: 52px; height: 52px; margin: 4px auto 16px; border-radius: 9999px;
@@ -50,20 +50,20 @@ function injectStyleOnce() {
       background: rgba(20,184,166,0.12); color: #0D9488;
     }
     #${OVERLAY_ID} .cm-upgrade-title { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
-    #${OVERLAY_ID} .cm-upgrade-benefit { font-size: 14px; line-height: 1.55; color: #475569; margin: 0 0 20px; }
+    #${OVERLAY_ID} .cm-upgrade-benefit { font-size: 14px; line-height: 1.55; color: #4b5563; margin: 0 0 20px; }
     #${OVERLAY_ID} .cm-upgrade-cta {
       display: block; width: 100%; padding: 13px 20px; border: none; cursor: pointer;
-      background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%); color: #fff;
+      background: #0f766e; color: #fff;
       border-radius: 12px; font-size: 15px; font-weight: 800;
       box-shadow: 0 8px 22px rgba(13,148,136,0.28);
     }
     #${OVERLAY_ID} .cm-upgrade-dismiss {
       display: block; width: 100%; margin-top: 8px; padding: 8px; border: none; background: none;
-      color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer;
+      color: #6b7280; font-size: 13px; font-weight: 600; cursor: pointer;
     }
     #${OVERLAY_ID} .cm-upgrade-guarantee {
       display: flex; align-items: center; justify-content: center; gap: 5px;
-      font-size: 11px; color: #94a3b8; margin: 12px 0 0;
+      font-size: 11px; color: #9ca3af; margin: 12px 0 0;
     }
   `;
   document.head.appendChild(style);

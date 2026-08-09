@@ -121,8 +121,8 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
               />
             </div>
           ) : (
-            <div style={{ height: 180, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#cbd5e1' }}>
+            <div style={{ height: 180, background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 48, color: 'var(--gray-300)' }}>
                 {selectedTarget?.type === 'group' ? 'folder' : 'smart_display'}
               </span>
             </div>
@@ -196,7 +196,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>
                   <span className="material-symbols-outlined" style={{ fontSize: 18 }}>label</span>
-                  Label <span style={{ fontWeight: 500, color: '#94a3b8' }}>(optional)</span>
+                  Label <span style={{ fontWeight: 500, color: 'var(--text-muted)' }}>(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -214,7 +214,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
                 <button
                   type="button"
                   className={styles.submitBtn}
-                  style={{ background: '#f1f5f9', color: '#475569', flex: '0 0 auto', width: 'auto', padding: '12px 24px' }}
+                  style={{ background: 'var(--gray-100)', color: 'var(--gray-600)', flex: '0 0 auto', width: 'auto', padding: '12px 24px' }}
                   onClick={resetForm}
                 >
                   Cancel

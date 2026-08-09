@@ -162,6 +162,11 @@ let navigationEpoch = 0;
 // Per-run outcome, read by onDestroyed to decide whether the tour counts as seen.
 let stepShown = false;
 let abandonedForNavigation = false;
+// The video the tour is running on, or is currently trying to start on. Set at
+// ATTEMPT time, not just once the tour is live, so a `yt-navigate-finish` that
+// lands while we are still waiting for the anchor doesn't cancel the attempt for
+// the very video it fired on. Cleared when an attempt gives up or a tour ends.
+let tourVideoId = null;
 
 async function startYoutubeTour() {
   if (starting || tourInstance) return;
@@ -170,6 +175,7 @@ async function startYoutubeTour() {
 
   starting = true;
   const epoch = navigationEpoch;
+  tourVideoId = currentVideoId();
   try {
     // v1.0.1 drove the tour immediately and leaned on driver.js's own
     // `waitForElement` for the anchor. That does not fail loudly: on timeout
@@ -180,7 +186,8 @@ async function startYoutubeTour() {
     // gets another go. (driver.js keeps its own 6s waitForElement below as a
     // backstop for the later `.yt-bookmark-markers` step.)
     const anchored = await waitForElement(TOUR_ANCHOR_SELECTOR, TOUR_ANCHOR_TIMEOUT_MS);
-    if (!anchored) return;
+    // Give up on this video but let a later event try again.
+    if (!anchored) { tourVideoId = null; return; }
 
     // Re-check everything the awaits above could have invalidated: the user may
     // have navigated away, or replayed/completed the tour from the side panel.
@@ -212,6 +219,7 @@ async function startYoutubeTour() {
       },
       onDestroyed: () => {
         tourInstance = null;
+        tourVideoId = null;
         if (shouldMarkTourSeen({ stepShown, abandonedForNavigation })) markYoutubeTourSeen();
       },
       steps: buildSteps(bookmarkCount > 0),
@@ -231,12 +239,27 @@ async function startYoutubeTour() {
 // tour mid-step should dismiss rather than try to survive a torn-down DOM.
 // Dismissing this way is not the user declining the tour, so it does not count
 // as seen — the tour picks up again on the video they navigated to.
+//
+// But `yt-navigate-finish` is NOT a reliable "you navigated" signal: YouTube
+// fires it on the INITIAL load of a watch page (~600ms in, well after our tour
+// has started) and again as the SPA settles, all without the video changing.
+// Treating those as navigations tore the live tour down and restarted it at
+// step 1 roughly a second after it appeared — so Next appeared to do nothing
+// (the step advanced, then the restart reset it), and the close button appeared
+// dead (the tour was dismissed, then immediately re-shown). Worse, every one of
+// those teardowns set abandonedForNavigation, which by design suppresses
+// marking the tour seen — so a first-run user could neither finish it nor get
+// rid of it. Gate on the video id actually changing.
 document.addEventListener('yt-navigate-finish', () => {
+  const nextVideoId = currentVideoId();
+  if (nextVideoId && nextVideoId === tourVideoId) return; // same video — not a navigation
+
   navigationEpoch += 1;
   if (tourInstance?.isActive()) {
     abandonedForNavigation = true;
     tourInstance.destroy();
   }
+  tourVideoId = null;
   startYoutubeTour();
 });
 

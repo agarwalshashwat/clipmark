@@ -46,7 +46,7 @@ export async function Navigation() {
              style={{
             padding: '12px 20px',
             background: 'transparent',
-            color: 'var(--accent)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
+            color: 'var(--brand-ink)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
             border: '1px solid var(--accent)',
             transition: 'all 0.2s ease',
           }}>
@@ -59,7 +59,7 @@ export async function Navigation() {
              className="nav-cta"
              style={{
             padding: '12px 24px',
-            background: 'var(--accent)',
+            background: 'var(--accent-strong)',
             boxShadow: '0 4px 14px 0 rgba(20, 184, 166, 0.39)',
             color: 'white', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
             transition: 'all 0.2s ease',

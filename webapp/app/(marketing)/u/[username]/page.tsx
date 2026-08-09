@@ -49,7 +49,7 @@ export async function generateMetadata(
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       type: 'profile',
       url: `/u/${username}`,
-      siteName: 'Clipmark',
+      siteName: 'ClipMark',
       username: username,
       images: [
         {
@@ -157,7 +157,7 @@ export default async function UserProfilePage(
               <div className="cm-icon-badge" style={{ margin: '0 auto 24px', width: 64, height: 64 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 32 }}>folder_off</span>
               </div>
-              <p style={{ fontSize: 18, color: '#64748b', fontWeight: 600 }}>No public collections yet.</p>
+              <p style={{ fontSize: 18, color: 'var(--text-muted)', fontWeight: 600 }}>No public collections yet.</p>
             </div>
           ) : (
             <div className={styles.grid}>
@@ -184,7 +184,7 @@ export default async function UserProfilePage(
                     </p>
                     {c.bookmarks?.slice(0, 1).map((b, i) => (
                       <p key={i} className={styles.cardSnippet}>
-                        <span style={{ color: b.color || '#14B8A6', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+                        <span style={{ color: b.color || 'var(--accent)', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
                           [{formatTimestamp(b.timestamp)}]
                         </span>
                         {' '}

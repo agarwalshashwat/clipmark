@@ -31,13 +31,13 @@ export async function generateMetadata(
     openGraph: {
       type: 'website',
       url: `/embed/${shareId}`,
-      siteName: 'Clipmark',
+      siteName: 'ClipMark',
       images: [
         {
           url: `${APP_URL}/clipmark-logo.png`,
           width: 512,
           height: 512,
-          alt: 'Clipmark — YouTube Bookmark Extension',
+          alt: 'ClipMark — YouTube Bookmark Extension',
         },
       ],
     },
@@ -57,19 +57,19 @@ export default async function EmbedPage(
   return (
     <div style={{
       fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif',
-      background: '#ffffff', color: '#111827', height: '100%',
+      background: '#ffffff', color: 'var(--gray-900)', height: '100%',
       display: 'flex', flexDirection: 'column',
       WebkitFontSmoothing: 'antialiased',
     }}>
 
       {/* Header */}
       <div style={{
-        padding: '10px 14px 8px', borderBottom: '1px solid #f3f4f6',
+        padding: '10px 14px 8px', borderBottom: '1px solid var(--gray-100)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
         flexShrink: 0,
       }}>
         <p style={{
-          fontSize: 12, fontWeight: 600, color: '#374151',
+          fontSize: 12, fontWeight: 600, color: 'var(--gray-700)',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1,
         }}>
           {title}
@@ -79,7 +79,7 @@ export default async function EmbedPage(
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            fontSize: 11, fontWeight: 600, color: '#14B8A6',
+            fontSize: 11, fontWeight: 600, color: 'var(--brand-ink)',
             whiteSpace: 'nowrap', flexShrink: 0, textDecoration: 'none',
           }}
         >
@@ -97,21 +97,21 @@ export default async function EmbedPage(
             rel="noopener noreferrer"
             style={{
               display: 'flex', alignItems: 'flex-start', gap: 10,
-              padding: '9px 14px', borderBottom: '1px solid #f9fafb',
+              padding: '9px 14px', borderBottom: '1px solid var(--gray-50)',
               textDecoration: 'none', color: 'inherit',
               transition: 'background 0.1s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--gray-50)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <span style={{
-              fontSize: 11, fontWeight: 700, color: b.color || '#14B8A6',
+              fontSize: 11, fontWeight: 700, color: b.color || 'var(--accent)',
               letterSpacing: '0.4px', flexShrink: 0, minWidth: 36, paddingTop: 1,
               fontVariantNumeric: 'tabular-nums',
             }}>
               {formatTimestamp(b.timestamp)}
             </span>
-            <span style={{ fontSize: 12, color: '#374151', lineHeight: 1.45 }}>
+            <span style={{ fontSize: 12, color: 'var(--gray-700)', lineHeight: 1.45 }}>
               {b.description || 'No description'}
             </span>
           </a>
@@ -120,15 +120,15 @@ export default async function EmbedPage(
 
       {/* Footer */}
       <div style={{
-        padding: '6px 14px', borderTop: '1px solid #f3f4f6',
+        padding: '6px 14px', borderTop: '1px solid var(--gray-100)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: 10, color: '#9ca3af' }}>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
           {bookmarks.length} bookmark{bookmarks.length !== 1 ? 's' : ''}
         </span>
         <a href="/" target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 10, color: '#9ca3af', textDecoration: 'none' }}>
+          style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>
           ClipMark
         </a>
       </div>

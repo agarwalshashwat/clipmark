@@ -55,7 +55,7 @@ export const sentryBaseOptions = {
   tracesSampleRate: 0,
 
   /**
-   * Never attach IP addresses, cookies, or request bodies. Clipmark handles
+   * Never attach IP addresses, cookies, or request bodies. ClipMark handles
    * user emails and private bookmark titles; an error report is not a reason to
    * ship any of that to a third party. Leave this false.
    */

@@ -75,7 +75,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
         </div>
         <div className={styles.topBarRight}>
           <form className={styles.searchBox} onSubmit={handleHeaderSearch} role="search">
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6c7a77' }}>search</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>search</span>
             <input
               type="text"
               placeholder="Search your bookmarks..."
@@ -87,7 +87,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           </form>
           {!isPro
             ? <a href="/upgrade" className={styles.upgradeCta}>✦ Upgrade</a>
-            : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: '#006b5f', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
+            : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: 'var(--accent-strong)', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
           }
           {/* Avatar — always visible */}
           {avatarUrl ? (

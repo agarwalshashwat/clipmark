@@ -7,24 +7,24 @@ export const metadata = {
     canonical: '/privacy',
   },
   openGraph: {
-    title: 'Privacy Policy — Clipmark',
-    description: 'How Clipmark collects, uses, and protects your data.',
+    title: 'Privacy Policy — ClipMark',
+    description: 'How ClipMark collects, uses, and protects your data.',
     type: 'website',
     url: '/privacy',
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Privacy Policy — Clipmark',
-    description: 'How Clipmark collects, uses, and protects your data.',
+    title: 'Privacy Policy — ClipMark',
+    description: 'How ClipMark collects, uses, and protects your data.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
@@ -37,14 +37,14 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: '#1a1c1d',
+  color: 'var(--gray-900)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: '#3c4947',
+  color: 'var(--gray-700)',
   lineHeight: 1.75,
   marginBottom: 12,
 };
@@ -56,7 +56,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: '#3c4947',
+  color: 'var(--gray-700)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -71,11 +71,11 @@ export default function PrivacyPage() {
           <h1 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 'clamp(32px, 6vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px',
-            color: '#1a1c1d', marginBottom: 16, marginTop: 0,
+            color: 'var(--gray-900)', marginBottom: 16, marginTop: 0,
           }}>
             Privacy Policy
           </h1>
-          <p style={{ fontSize: 15, color: '#545f6c', marginBottom: 0 }}>
+          <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 0 }}>
             Last updated: March 25, 2026 • We respect your data.
           </p>
         </div>
@@ -127,11 +127,11 @@ export default function PrivacyPage() {
           <h2 style={H2_STYLE}>3. Third-Party Services</h2>
           <p style={P_STYLE}>ClipMark uses the following third-party services:</p>
           <ul style={UL_STYLE}>
-            <li style={LI_STYLE}><strong>Google OAuth</strong> — for sign-in. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Google&apos;s Privacy Policy</a>.</li>
-            <li style={LI_STYLE}><strong>Supabase</strong> — our database provider. Data is stored in the United States. See <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Supabase&apos;s Privacy Policy</a>.</li>
+            <li style={LI_STYLE}><strong>Google OAuth</strong> — for sign-in. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Google&apos;s Privacy Policy</a>.</li>
+            <li style={LI_STYLE}><strong>Supabase</strong> — our database provider. Data is stored in the United States. See <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Supabase&apos;s Privacy Policy</a>.</li>
             <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like summarization and tag suggestions are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
             <li style={LI_STYLE}><strong>Dodo Payments</strong> — for Pro subscriptions. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
-            <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Vercel&apos;s Privacy Policy</a>.</li>
+            <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel&apos;s Privacy Policy</a>.</li>
           </ul>
         </div>
 
@@ -207,7 +207,7 @@ export default function PrivacyPage() {
           <h2 style={H2_STYLE}>9. Contact</h2>
           <p style={P_STYLE}>
             If you have questions or requests regarding your data, please contact us at:<br />
-            <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: '#14B8A6', fontWeight: 600 }}>{PRIVACY_EMAIL}</a>
+            <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>{PRIVACY_EMAIL}</a>
           </p>
         </div>
 

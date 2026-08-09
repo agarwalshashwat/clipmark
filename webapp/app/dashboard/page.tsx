@@ -52,9 +52,9 @@ export default async function DashboardPage({
 
   const successBanner = success ? (
     <div style={{
-      background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)',
+      background: 'var(--accent-light)', border: '1px solid rgba(20,184,166,0.3)',
       borderRadius: 10, padding: '14px 24px', marginBottom: 24,
-      textAlign: 'center', fontSize: 15, color: '#006b5f',
+      textAlign: 'center', fontSize: 15, color: 'var(--accent-strong)',
       fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
       Payment successful — welcome to ClipMark Pro! 🎉

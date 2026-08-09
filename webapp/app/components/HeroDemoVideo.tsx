@@ -75,7 +75,7 @@ export function HeroDemoVideo() {
         aspectRatio: '16/9',
         borderRadius: 24,
         overflow: 'hidden',
-        background: '#050505',
+        background: 'var(--gray-950)',
         cursor: started ? 'pointer' : 'default',
       }}
       onMouseEnter={() => setHovering(true)}
@@ -124,7 +124,7 @@ export function HeroDemoVideo() {
               width: 84,
               height: 84,
               borderRadius: 9999,
-              background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+              background: 'var(--accent-strong)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

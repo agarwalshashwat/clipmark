@@ -11,13 +11,13 @@
   font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #0f172a;
+  color: var(--gray-900);
   margin: 0 0 8px;
 }
 
 .sub { 
   font-size: 16px; 
-  color: #64748b; 
+  color: var(--text-muted); 
   margin: 0; 
   font-weight: 500;
 }
@@ -25,7 +25,7 @@
 /* Empty state */
 .empty {
   background: white;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   border-radius: 20px;
   padding: 80px 32px;
@@ -40,11 +40,11 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(20, 184, 166, 0.1);
+  background: var(--accent-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #14B8A6;
+  color: var(--brand-ink);
   margin-bottom: 8px;
 }
 
@@ -52,13 +52,13 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   margin: 0;
 }
 
 .emptyText {
   font-size: 15px;
-  color: #64748b;
+  color: var(--text-muted);
   max-width: 320px;
   line-height: 1.6;
   margin: 0;
@@ -73,22 +73,22 @@
   gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--gray-100);
 }
 
 .groupTag {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   letter-spacing: -0.02em;
 }
 
 .groupCount {
   font-size: 11px;
   font-weight: 800;
-  color: #14B8A6;
-  background: rgba(20, 184, 166, 0.1);
+  color: var(--brand-ink);
+  background: var(--accent-light);
   padding: 4px 12px;
   border-radius: 9999px;
   text-transform: uppercase;
@@ -124,7 +124,7 @@
 .sectionTitle {
   font-size: 14px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin: 0;
@@ -134,7 +134,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #0f172a;
+  background: var(--gray-900);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -145,14 +145,14 @@
   transition: all 0.2s;
 }
 .newGroupBtn:hover {
-  background: #1e293b;
+  background: var(--gray-800);
   transform: translateY(-1px);
 }
 
 /* ── Create Form ──────────────────────────────────────────────────────────── */
 .createForm {
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 40px;
@@ -165,7 +165,7 @@
   border-radius: 12px;
   width: fit-content;
   margin-bottom: 20px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
 }
 
 .typeBtn {
@@ -176,12 +176,12 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-muted);
   transition: all 0.2s;
 }
 
 .typeBtn.active {
-  background: #0f172a;
+  background: var(--gray-900);
   color: #ffffff;
 }
 
@@ -193,7 +193,7 @@
 .formInput {
   flex: 1;
   background: #ffffff;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 14px;
@@ -201,13 +201,13 @@
   outline: none;
 }
 .formInput:focus {
-  border-color: #14B8A6;
+  border-color: var(--brand-ink);
 }
 
 /* ── Mini Cards (inside groups) ────────────────────────────────────────────── */
 .miniCard {
   background: #ffffff;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
   border-radius: 14px;
   padding: 12px;
   display: flex;
@@ -217,14 +217,14 @@
   transition: all 0.2s;
 }
 .miniCard:hover {
-  border-color: #e2e8f0;
+  border-color: var(--gray-200);
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .miniThumb {
   width: 100%;
   aspect-ratio: 16/9;
-  background: #f1f5f9;
+  background: var(--gray-100);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -233,7 +233,7 @@
 .miniTitle {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--gray-900);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -245,7 +245,7 @@
 .tagsSection {
   margin-top: 64px;
   padding-top: 48px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--gray-100);
 }
 
 .removeBtn {
@@ -253,7 +253,7 @@
   top: 8px;
   right: 8px;
   background: white;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
   border-radius: 6px;
   width: 24px;
   height: 24px;
@@ -261,13 +261,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--text-muted);
   opacity: 0;
   transition: all 0.2s;
   z-index: 10;
 }
 .miniCard:hover .removeBtn { opacity: 1; }
-.removeBtn:hover { color: #f43f5e; border-color: #fca5a5; }
+.removeBtn:hover { color: var(--danger); border-color: var(--danger-light); }
 
 .thumbOverlay {
   position: absolute;
@@ -276,14 +276,14 @@
 }
 
 .addCard {
-  border: 2px dashed #f1f5f9;
+  border: 2px dashed var(--gray-100);
   border-radius: 14px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-  background: #f8fafc;
+  background: var(--gray-50);
   min-height: 120px;
 }
 
@@ -291,7 +291,7 @@
   width: 100%;
   padding: 6px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--gray-200);
   font-size: 11px;
   font-weight: 600;
   background: white;
@@ -302,7 +302,7 @@
   width: 100%;
   padding: 6px;
   border-radius: 8px;
-  background: #0f172a;
+  background: var(--gray-900);
   color: white;
   border: none;
   font-size: 11px;

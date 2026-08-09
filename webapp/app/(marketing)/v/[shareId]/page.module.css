@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   background: white;
-  color: #0f172a;
+  color: var(--gray-900);
   font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
@@ -64,7 +64,7 @@
 .playButton {
   width: 80px;
   height: 80px;
-  background: #14B8A6;
+  background: var(--accent-strong);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -98,7 +98,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 36px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   letter-spacing: -1.5px;
   margin: 0 0 12px;
   line-height: 1.2;
@@ -108,7 +108,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   display: flex;
@@ -117,11 +117,11 @@
 }
 
 .sharedByHighlight {
-  color: #14B8A6;
+  color: var(--brand-ink);
 }
 
 .highlights {
-  background: #f8fafc;
+  background: var(--gray-50);
   border-radius: 24px;
   padding: 40px;
 }
@@ -130,7 +130,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   margin: 0 0 40px;
   display: flex;
   align-items: center;
@@ -139,7 +139,7 @@
 
 .clipsCount {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 700;
   background: white;
   padding: 4px 12px;
@@ -159,7 +159,7 @@
   position: absolute;
   left: 31px; top: 0; bottom: 0;
   width: 2px;
-  background: #e2e8f0;
+  background: var(--gray-200);
 }
 
 .timelineItem {
@@ -173,7 +173,7 @@
   width: 64px;
   height: 64px;
   background: white;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--gray-200);
   border-radius: 12px;
   flex-shrink: 0;
   display: flex;
@@ -184,7 +184,7 @@
 }
 
 .timelineItem:hover .timelineDot {
-  border-color: #14B8A6;
+  border-color: var(--brand-ink);
   background: rgba(20, 184, 166, 0.05);
   transform: scale(1.05);
 }
@@ -198,9 +198,9 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   font-weight: 800;
-  color: #14B8A6;
+  color: var(--brand-ink);
   text-decoration: none;
-  background: rgba(20, 184, 166, 0.1);
+  background: var(--accent-light);
   padding: 4px 10px;
   border-radius: 6px;
   margin-bottom: 12px;
@@ -209,7 +209,7 @@
 }
 
 .tsLink:hover {
-  background: #14B8A6;
+  background: var(--accent-strong);
   color: white;
 }
 
@@ -217,7 +217,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--gray-900);
   letter-spacing: -0.3px;
   margin: 0 0 12px;
   line-height: 1.5;
@@ -255,7 +255,7 @@
 
 .sideCard {
   background: white;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--gray-100);
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.02);
@@ -265,7 +265,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin: 0 0 24px;
@@ -289,19 +289,19 @@
 .metaLabel {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .metaValue {
   font-size: 14px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
 }
 
 .sideCardDivider {
   border: none;
   height: 1px;
-  background: #f1f5f9;
+  background: var(--gray-100);
   margin: 0 0 32px;
 }
 
@@ -315,7 +315,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 100%;
   padding: 14px;
-  background: #0f172a;
+  background: var(--gray-900);
   color: white;
   border: none;
   border-radius: 12px;
@@ -328,7 +328,7 @@
 }
 
 .sideBtn:hover {
-  background: #1e293b;
+  background: var(--gray-800);
   transform: translateY(-1px);
 }
 
@@ -336,9 +336,9 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 100%;
   padding: 14px;
-  background: #f8fafc;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  border: 1px solid var(--gray-200);
   border-radius: 12px;
   font-size: 14px;
   font-weight: 800;
@@ -348,7 +348,7 @@
 
 .sideBtnSecondary:hover {
   background: white;
-  border-color: #cbd5e1;
+  border-color: var(--gray-300);
 }
 
 .promoCard {
@@ -360,11 +360,11 @@
 .promoTitle {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--gray-900);
   line-height: 1.3;
 }
 
 .promoBody {
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.5;
 }

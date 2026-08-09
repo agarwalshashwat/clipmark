@@ -4,7 +4,7 @@ import styles from './upgrade.module.css';
 
 function Check() {
   return (
-    <span className="material-symbols-outlined" style={{ color: '#14B8A6', fontWeight: 700, fontSize: 20 }}>
+    <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)', fontWeight: 700, fontSize: 20 }}>
       check_circle
     </span>
   );
@@ -60,7 +60,7 @@ const PLANS: Plan[] = [
     name: 'Lifetime',
     priceKey: 'lifetime',
     period: '',
-    badge: { label: 'Founding Price', color: '#732EE4' },
+    badge: { label: 'Founding Price', color: 'var(--accent-strong)' },
     features: [
       'Everything in Pro',
       'Own your data forever',

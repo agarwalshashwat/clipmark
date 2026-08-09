@@ -7,24 +7,24 @@ export const metadata = {
     canonical: '/affiliate/terms',
   },
   openGraph: {
-    title: 'Affiliate Terms & Conditions — Clipmark',
-    description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+    title: 'Affiliate Terms & Conditions — ClipMark',
+    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
     type: 'website',
     url: '/affiliate/terms',
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Affiliate Terms & Conditions — Clipmark',
-    description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+    title: 'Affiliate Terms & Conditions — ClipMark',
+    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
@@ -37,14 +37,14 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: '#1a1c1d',
+  color: 'var(--gray-900)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: '#3c4947',
+  color: 'var(--gray-700)',
   lineHeight: 1.75,
   marginBottom: 12,
   marginTop: 0,
@@ -57,7 +57,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: '#3c4947',
+  color: 'var(--gray-700)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -66,8 +66,8 @@ export default function AffiliateTermsPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f9f9fa',
-      color: '#1a1c1d',
+      background: 'var(--gray-50)',
+      color: 'var(--gray-900)',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       WebkitFontSmoothing: 'antialiased',
     }}>
@@ -77,13 +77,13 @@ export default function AffiliateTermsPage() {
         position: 'sticky', top: 0, zIndex: 50,
         background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 1px 0 rgba(26,28,29,0.06)',
+        boxShadow: '0 1px 0 rgba(17, 24, 39,0.06)',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a href="/" style={{ fontSize: 20, fontWeight: 800, color: '#14B8A6', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', textDecoration: 'none' }}>
+          <a href="/" style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand-ink)', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', textDecoration: 'none' }}>
             ClipMark
           </a>
-          <a href="/affiliate" style={{ fontSize: 14, fontWeight: 600, color: '#545f6c', textDecoration: 'none' }}>
+          <a href="/affiliate" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>
             ← Affiliate Program
           </a>
         </div>
@@ -95,16 +95,16 @@ export default function AffiliateTermsPage() {
         <h1 style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontSize: 40, fontWeight: 800, letterSpacing: '-1px',
-          color: '#1a1c1d', marginBottom: 12, marginTop: 0,
+          color: 'var(--gray-900)', marginBottom: 12, marginTop: 0,
         }}>
           Affiliate Terms &amp; Conditions
         </h1>
-        <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 16 }}>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
           Last updated: April 24, 2026
         </p>
-        <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 56 }}>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 56 }}>
           These Affiliate Terms &amp; Conditions (&quot;Affiliate Terms&quot;) govern your participation in the ClipMark Affiliate Program (&quot;Program&quot;) and form part of the overall{' '}
-          <a href="/terms" style={{ color: '#14B8A6', textDecoration: 'none' }}>ClipMark Terms of Service</a>.
+          <a href="/terms" style={{ color: 'var(--brand-ink)', textDecoration: 'none' }}>ClipMark Terms of Service</a>.
           In the event of a conflict, these Affiliate Terms take precedence with respect to the Program.
         </p>
 
@@ -113,11 +113,11 @@ export default function AffiliateTermsPage() {
           <h2 style={H2_STYLE}>1. Definitions</h2>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>&quot;Affiliate&quot;</strong> — an approved participant in the Program who has been issued a unique affiliate code.</li>
-            <li style={LI_STYLE}><strong>&quot;Affiliate Link&quot;</strong> — the personalised URL in the format <code style={{ fontSize: 13, background: '#f0f0f0', padding: '2px 6px', borderRadius: 4 }}>clipmark.mithahara.com/r/[your-code]</code> assigned to you upon approval.</li>
+            <li style={LI_STYLE}><strong>&quot;Affiliate Link&quot;</strong> — the personalised URL in the format <code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>clipmark.mithahara.com/r/[your-code]</code> assigned to you upon approval.</li>
             <li style={LI_STYLE}><strong>&quot;Commission&quot;</strong> — 30% of the net sale amount earned when a Referred Customer completes a qualifying purchase.</li>
             <li style={LI_STYLE}><strong>&quot;Referred Customer&quot;</strong> — a new customer who clicks your Affiliate Link and completes a qualifying purchase within the 30-day attribution window.</li>
             <li style={LI_STYLE}><strong>&quot;Qualifying Purchase&quot;</strong> — a first-time Pro subscription (monthly, annual, or lifetime) by a Referred Customer. Subscription renewals and purchases by existing Pro users do not qualify.</li>
-            <li style={LI_STYLE}><strong>&quot;Attribution Window&quot;</strong> — the 30-day period during which a click on your Affiliate Link is tracked via the <code style={{ fontSize: 13, background: '#f0f0f0', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code> cookie.</li>
+            <li style={LI_STYLE}><strong>&quot;Attribution Window&quot;</strong> — the 30-day period during which a click on your Affiliate Link is tracked via the <code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code> cookie.</li>
           </ul>
         </div>
 
@@ -162,7 +162,7 @@ export default function AffiliateTermsPage() {
           <h3 style={{ ...H2_STYLE, fontSize: 17, fontWeight: 600, marginBottom: 10 }}>3.4 Payment Methods</h3>
           <p style={P_STYLE}>
             Payouts are made via Wise (bank transfer) or PayPal. You are responsible for providing accurate payment details and for any fees charged by your payment provider. Contact{' '}
-            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6' }}>affiliates@clipmark.mithahara.com</a> after approval to register your payout method.
+            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: 'var(--brand-ink)' }}>affiliates@clipmark.mithahara.com</a> after approval to register your payout method.
           </p>
 
           <h3 style={{ ...H2_STYLE, fontSize: 17, fontWeight: 600, marginBottom: 10 }}>3.5 Refunds &amp; Chargebacks</h3>
@@ -209,7 +209,7 @@ export default function AffiliateTermsPage() {
             You must clearly and conspicuously disclose your affiliate relationship with ClipMark whenever you share your Affiliate Link, in accordance with applicable laws and regulations (including the FTC Endorsement Guidelines in the US and equivalent regulations in your jurisdiction). An acceptable disclosure is:
           </p>
           <div style={{
-            background: 'rgba(20,184,166,0.06)', borderLeft: '3px solid #14B8A6',
+            background: 'rgba(20,184,166,0.06)', borderLeft: '3px solid var(--accent)',
             padding: '14px 20px', borderRadius: '0 8px 8px 0', margin: '16px 0',
           }}>
             <p style={{ ...P_STYLE, marginBottom: 0, fontStyle: 'italic' }}>
@@ -222,11 +222,11 @@ export default function AffiliateTermsPage() {
         <div style={SECTION_STYLE}>
           <h2 style={H2_STYLE}>7. Tracking &amp; Attribution</h2>
           <p style={P_STYLE}>
-            Affiliate attribution is tracked via a first-click, 30-day cookie (<code style={{ fontSize: 13, background: '#f0f0f0', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code>) set when a visitor clicks your Affiliate Link. If a visitor already has an affiliate cookie from a different affiliate, a new click will <em>not</em> overwrite the existing cookie — first-click attribution applies.
+            Affiliate attribution is tracked via a first-click, 30-day cookie (<code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code>) set when a visitor clicks your Affiliate Link. If a visitor already has an affiliate cookie from a different affiliate, a new click will <em>not</em> overwrite the existing cookie — first-click attribution applies.
           </p>
           <p style={P_STYLE}>
             ClipMark&apos;s tracking records are the authoritative source for commission calculations. Discrepancies must be reported within 30 days of the relevant payout statement by emailing{' '}
-            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6' }}>affiliates@clipmark.mithahara.com</a>.
+            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: 'var(--brand-ink)' }}>affiliates@clipmark.mithahara.com</a>.
           </p>
         </div>
 
@@ -302,25 +302,25 @@ export default function AffiliateTermsPage() {
           <h2 style={H2_STYLE}>14. Contact</h2>
           <p style={P_STYLE}>
             For questions about the Affiliate Program or these terms, contact:<br />
-            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: '#14B8A6', fontWeight: 600 }}>affiliates@clipmark.mithahara.com</a>
+            <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>affiliates@clipmark.mithahara.com</a>
           </p>
           <p style={P_STYLE}>
             For general legal enquiries:<br />
-            <a href={`mailto:${LEGAL_EMAIL}`} style={{ color: '#14B8A6', fontWeight: 600 }}>{LEGAL_EMAIL}</a>
+            <a href={`mailto:${LEGAL_EMAIL}`} style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>{LEGAL_EMAIL}</a>
           </p>
         </div>
 
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{ padding: '32px', borderTop: '1px solid rgba(26,28,29,0.06)', background: '#f3f3f4' }}>
+      <footer style={{ padding: '32px', borderTop: '1px solid rgba(17, 24, 39,0.06)', background: 'var(--gray-100)' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <span style={{ fontSize: 13, color: '#9ca3af' }}>© {new Date().getFullYear()} ClipMark.</span>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>© {new Date().getFullYear()} ClipMark.</span>
           <div style={{ display: 'flex', gap: 24 }}>
-            <a href="/affiliate" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none', fontWeight: 600 }}>Affiliate Program</a>
-            <a href="/privacy" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none' }}>Privacy</a>
-            <a href="/terms" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none' }}>Terms</a>
-            <a href="/" style={{ fontSize: 13, color: '#545f6c', textDecoration: 'none' }}>Home</a>
+            <a href="/affiliate" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 600 }}>Affiliate Program</a>
+            <a href="/privacy" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</a>
+            <a href="/terms" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</a>
+            <a href="/" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>Home</a>
           </div>
         </div>
       </footer>

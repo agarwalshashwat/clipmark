@@ -98,8 +98,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+        {/* Material Symbols is self-hosted from /public/fonts (see the @font-face
+            in globals.css) — the text families already come from next/font, which
+            serves them off our own origin, so no font is fetched from Google at
+            runtime. Preloaded because icons appear above the fold in the nav. */}
+        <link
+          rel="preload"
+          href="/fonts/material-symbols-outlined.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>

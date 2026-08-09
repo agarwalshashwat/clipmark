@@ -34,10 +34,10 @@ export default function GlobalError({
           alignItems: 'center',
           justifyContent: 'center',
           padding: 24,
-          background: '#f8fafc',
+          background: 'var(--gray-50)',
           fontFamily:
             "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-          color: '#1a1c1d',
+          color: 'var(--gray-900)',
         }}
       >
         <div style={{ maxWidth: 420, textAlign: 'center' }}>
@@ -47,12 +47,12 @@ export default function GlobalError({
               height: 64,
               margin: '0 auto 24px',
               borderRadius: 16,
-              background: 'rgba(20, 184, 166, 0.1)',
+              background: 'var(--accent-light)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 28,
-              color: '#14B8A6',
+              color: 'var(--brand-ink)',
             }}
           >
             !
@@ -60,7 +60,7 @@ export default function GlobalError({
           <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', margin: '0 0 12px' }}>
             Something went wrong
           </h1>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#64748b', margin: '0 0 28px' }}>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--text-muted)', margin: '0 0 28px' }}>
             The error has been reported and we&apos;re looking into it. Your bookmarks are safe.
           </p>
           {/* A full reload, not reset() — if the root layout failed to render,
@@ -71,7 +71,7 @@ export default function GlobalError({
               display: 'inline-block',
               padding: '13px 28px',
               borderRadius: 12,
-              background: '#14B8A6',
+              background: 'var(--accent-strong)',
               color: '#ffffff',
               fontSize: 15,
               fontWeight: 700,
@@ -81,7 +81,7 @@ export default function GlobalError({
             Back to home
           </a>
           {error.digest && (
-            <p style={{ marginTop: 28, fontSize: 12, color: '#94a3b8' }}>
+            <p style={{ marginTop: 28, fontSize: 12, color: 'var(--text-muted)' }}>
               Reference: <code>{error.digest}</code>
             </p>
           )}

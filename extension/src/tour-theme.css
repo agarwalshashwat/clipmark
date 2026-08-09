@@ -41,7 +41,7 @@
 
 .clipmark-tour-popover button.driver-popover-next-btn,
 .clipmark-tour-popover button.driver-popover-done-btn {
-  background: #14b8a6;
+  background: #0f766e;
   color: #fff;
   border: none;
   text-shadow: none;
@@ -63,6 +63,30 @@
   padding: 6px 14px;
 }
 
+/* driver.js ships its own gray ramp for the close button, the footer-button
+   hover and the disabled state. Its .driver-popover-footer-btn:hover rule also
+   wins over our prev-btn override, which is why that one needs restating. Left
+   unstyled, the first-run tour was the one screen still painted in someone
+   else's neutrals. */
+.clipmark-tour-popover button.driver-popover-prev-btn:hover,
+.clipmark-tour-popover .driver-popover-footer-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.clipmark-tour-popover button.driver-popover-close-btn {
+  color: #9ca3af;
+}
+
+.clipmark-tour-popover button.driver-popover-close-btn:hover,
+.clipmark-tour-popover button.driver-popover-close-btn:focus {
+  color: #111827;
+}
+
+.clipmark-tour-popover .driver-popover-btn-disabled {
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
 .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
   border-bottom-color: #f9fafb;
 }
@@ -76,8 +100,27 @@
   border-right-color: #f9fafb;
 }
 
-/* Sit above the extension's own top-of-stack UI (toast, revision overlay use 999999). */
-.driver-overlay,
+/* Sit above the extension's own top-of-stack UI (toast, revision overlay use
+   999999).
+
+   These MUST NOT share a z-index. driver.js gives the popover 1000000000 and the
+   backdrop svg a much lower one precisely so the popover wins; flattening both
+   to 1000010 put them on the same layer, where DOM order decides — and the
+   backdrop is re-appended per step, so it ended up painting over the popover.
+   Its <path> then intercepted every click, which is why Next / Back / × did
+   nothing on a first run. Keep a gap, and belt-and-braces the backdrop out of
+   hit-testing: driver.css only sets pointer-events:none on it via
+   `.driver-active .driver-overlay`, which does not cover the <path> child in
+   every engine. */
+.driver-overlay {
+  z-index: 1000000 !important;
+  pointer-events: none !important;
+}
+
+.driver-overlay * {
+  pointer-events: none !important;
+}
+
 #driver-popover-content {
   z-index: 1000010 !important;
 }

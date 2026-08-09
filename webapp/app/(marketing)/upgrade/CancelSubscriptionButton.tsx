@@ -27,7 +27,7 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
   if (confirming) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-        <p style={{ fontSize: 14, color: '#545f6c', margin: 0, textAlign: 'center' }}>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0, textAlign: 'center' }}>
           {isRefundEligible
             ? 'Are you sure? Your Pro access will be revoked immediately and a refund will be processed.'
             : 'Are you sure? Your Pro access will continue until the billing period ends, after which AI features and shared collections will be deactivated.'}
@@ -37,8 +37,8 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
             onClick={handleCancel}
             disabled={isPending}
             style={{
-              padding: '8px 20px', borderRadius: 8, border: '1px solid #e53e3e',
-              background: 'transparent', color: '#e53e3e', fontWeight: 600,
+              padding: '8px 20px', borderRadius: 8, border: '1px solid var(--danger)',
+              background: 'transparent', color: 'var(--danger)', fontWeight: 600,
               fontSize: 13, cursor: isPending ? 'default' : 'pointer', opacity: isPending ? 0.6 : 1,
               fontFamily: 'inherit',
             }}
@@ -49,15 +49,15 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
             onClick={() => setConfirming(false)}
             disabled={isPending}
             style={{
-              padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(26,28,29,0.15)',
-              background: 'transparent', color: '#545f6c', fontWeight: 600,
+              padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(17, 24, 39,0.15)',
+              background: 'transparent', color: 'var(--text-muted)', fontWeight: 600,
               fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
             Keep Pro
           </button>
         </div>
-        {error && <p style={{ fontSize: 13, color: '#e53e3e', margin: 0 }}>{error}</p>}
+        {error && <p style={{ fontSize: 13, color: 'var(--danger)', margin: 0 }}>{error}</p>}
       </div>
     );
   }
@@ -66,8 +66,8 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
     <button
       onClick={() => setConfirming(true)}
       style={{
-        padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(26,28,29,0.15)',
-        background: 'transparent', color: '#545f6c', fontWeight: 600,
+        padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(17, 24, 39,0.15)',
+        background: 'transparent', color: 'var(--text-muted)', fontWeight: 600,
         fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
       }}
     >

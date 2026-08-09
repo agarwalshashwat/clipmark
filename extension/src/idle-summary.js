@@ -101,6 +101,10 @@ export function buildIdleVideoCards({ bookmarks, videoTitles = {}, limit = 4, mo
           id: bookmark.id,
           timestamp: bookmark.timestamp ?? 0,
           description: bookmark.description || 'Saved moment',
+          // Carried through so the card can render a saved A–B loop as the RANGE
+          // it covers, the way the web dashboard does. Dropping it here is why
+          // an off-YouTube clip card showed a loop as a single timecode.
+          loop: bookmark.loop ?? null,
         })),
       };
     });

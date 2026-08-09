@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0F172A',
+          background: '#111827',   // gray-900 (was the slate ramp)
           padding: '40px',
         }}>
           {/* Background Decorative Gradient */}
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
             left: '-10%',
             width: '120%',
             height: '120%',
-            background: 'radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
+            background: 'radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 50%)',
           }} />
 
           {/* Logo */}
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
             marginBottom: '40px',
             fontSize: '32px',
             fontWeight: 800,
-            color: '#14B8A6',
+            color: '#2dd4bf',   // teal-400 — brand ink on a dark surface
           }}>
             ClipMark
           </div>
@@ -90,12 +90,12 @@ export async function GET(req: NextRequest) {
             <div style={{
               fontSize: '24px',
               fontWeight: 600,
-              color: '#94A3B8',
+              color: '#9ca3af',   // gray-400 (was the slate ramp)
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
             }}>
-              <span style={{ color: '#14B8A6' }}>{count}</span> Bookmarks Curated
+              <span style={{ color: '#2dd4bf' }}>{count}</span> Bookmarks Curated
             </div>
           </div>
         </div>

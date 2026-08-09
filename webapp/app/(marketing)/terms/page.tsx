@@ -7,24 +7,24 @@ export const metadata = {
     canonical: '/terms',
   },
   openGraph: {
-    title: 'Terms of Service — Clipmark',
-    description: 'Terms and conditions for using Clipmark.',
+    title: 'Terms of Service — ClipMark',
+    description: 'Terms and conditions for using ClipMark.',
     type: 'website',
     url: '/terms',
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Terms of Service — Clipmark',
-    description: 'Terms and conditions for using Clipmark.',
+    title: 'Terms of Service — ClipMark',
+    description: 'Terms and conditions for using ClipMark.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
@@ -37,14 +37,14 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: '#1a1c1d',
+  color: 'var(--gray-900)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: '#3c4947',
+  color: 'var(--gray-700)',
   lineHeight: 1.75,
   marginBottom: 12,
 };
@@ -56,7 +56,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: '#3c4947',
+  color: 'var(--gray-700)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -71,11 +71,11 @@ export default function TermsPage() {
           <h1 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 'clamp(32px, 6vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px',
-            color: '#1a1c1d', marginBottom: 16, marginTop: 0,
+            color: 'var(--gray-900)', marginBottom: 16, marginTop: 0,
           }}>
             Terms of Service
           </h1>
-          <p style={{ fontSize: 15, color: '#545f6c', marginBottom: 0 }}>
+          <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 0 }}>
             Last updated: March 25, 2026 • Clear rules for a better journey.
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function TermsPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Billing</strong> — subscriptions are billed monthly or annually as selected. Payments are processed by Dodo Payments.</li>
             <li style={LI_STYLE}><strong>Cancellation</strong> — you may cancel at any time. Pro features remain active until the end of the current billing period. No prorated refunds for partial periods on monthly plans.</li>
-            <li style={LI_STYLE}><strong>Refunds</strong> — we offer a 7-day money-back guarantee for new subscribers. Contact <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#14B8A6' }}>{SUPPORT_EMAIL}</a> within 7 days of your first payment to request a full refund.</li>
+            <li style={LI_STYLE}><strong>Refunds</strong> — we offer a 7-day money-back guarantee for new subscribers. Contact <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: 'var(--brand-ink)' }}>{SUPPORT_EMAIL}</a> within 7 days of your first payment to request a full refund.</li>
             <li style={LI_STYLE}><strong>Lifetime plans</strong> — one-time payment grants lifetime access to Pro features available at time of purchase. Future features may require a subscription upgrade.</li>
             <li style={LI_STYLE}><strong>Price changes</strong> — we may change subscription prices with 30 days&apos; notice. Existing subscribers will be grandfathered at their current rate for one additional billing cycle.</li>
           </ul>
@@ -157,7 +157,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>5. Third-Party Content</h2>
           <p style={P_STYLE}>
-            ClipMark interacts with YouTube videos and content. We do not host, cache, or redistribute any YouTube video content. YouTube&apos;s own <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#14B8A6' }}>Terms of Service</a> apply to your use of YouTube.
+            ClipMark interacts with YouTube videos and content. We do not host, cache, or redistribute any YouTube video content. YouTube&apos;s own <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Terms of Service</a> apply to your use of YouTube.
           </p>
         </div>
 
@@ -193,7 +193,7 @@ export default function TermsPage() {
           </div>
           <h2 style={H2_STYLE}>8. Termination</h2>
           <p style={P_STYLE}>
-            You may terminate your account at any time by deleting it from the dashboard. We may suspend or terminate your access if you violate these Terms. Upon termination, your data will be deleted according to our <a href="/privacy" style={{ color: '#14B8A6' }}>Privacy Policy</a>.
+            You may terminate your account at any time by deleting it from the dashboard. We may suspend or terminate your access if you violate these Terms. Upon termination, your data will be deleted according to our <a href="/privacy" style={{ color: 'var(--brand-ink)' }}>Privacy Policy</a>.
           </p>
         </div>
 
@@ -224,7 +224,7 @@ export default function TermsPage() {
           <h2 style={H2_STYLE}>11. Contact</h2>
           <p style={P_STYLE}>
             Questions about these Terms? Contact us at:<br />
-            <a href={`mailto:${LEGAL_EMAIL}`} style={{ color: '#14B8A6', fontWeight: 600 }}>{LEGAL_EMAIL}</a>
+            <a href={`mailto:${LEGAL_EMAIL}`} style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>{LEGAL_EMAIL}</a>
           </p>
         </div>
 

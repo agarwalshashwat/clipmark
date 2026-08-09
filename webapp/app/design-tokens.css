@@ -2,11 +2,19 @@
    CLIPMARK DESIGN SYSTEM — SHARED TOKENS
 
    Single source of truth for design tokens shared between:
-   - Chrome Extension (/extension)
-   - Web Application (/webapp)
+   - Chrome Extension (/extension)  — dashboard + side panel
+   - Web Application (/webapp)      — marketing + app
+
+   Canonical reference: /DESIGN.md. Values here must match that document.
 
    ⚠️  DO NOT edit tokens in individual projects!
-   ⚠️  Always edit this file and run the sync script.
+   ⚠️  Always edit this file and run `make sync-tokens`.
+
+   Three rules this file exists to enforce:
+     1. ONE gray neutral ramp. No slate, no warm gray.
+     2. Filled CTAs and brand text are teal-700 (--accent-strong), never
+        teal-500 — white on #14b8a6 is 2.49:1 and fails WCAG AA.
+     3. Nothing smaller than --text-xs (11px).
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after {
@@ -16,35 +24,112 @@
 }
 
 :root {
-  /* ── Brand Colors ──────────────────────────────────────────────────────────── */
-  --accent:          #14B8A6;
-  --accent-hover:    #0d9488;
+  /* ── Brand ramp: teal, anchored on #14b8a6 ─────────────────────────────────── */
+  --teal-50:  #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-200: #99f6e4;
+  --teal-300: #5eead4;
+  --teal-400: #2dd4bf;
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+  --teal-800: #115e59;
+  --teal-900: #134e4a;
+  --teal-950: #042f2e;
+
+  /* Brand roles.
+     --accent        identity only: logo, markers, indicators, focus rings, tints
+     --accent-strong every filled CTA + every piece of brand text (5.5:1 on white)
+     --accent-hover  hover/pressed state of a filled CTA
+     --accent-soft   brand text/icons on DARK surfaces (9.5:1 on --bg)
+     --brand-ink     theme-aware brand text — use this for the wordmark          */
+  --accent:          var(--teal-500);
+  --accent-strong:   var(--teal-700);
+  --accent-hover:    var(--teal-800);
+  --accent-soft:     var(--teal-400);
   --accent-light:    rgba(20, 184, 166, 0.12);
+  --brand-ink:       var(--teal-700);
 
-  --secondary:       #8B5CF6;
-  --secondary-hover: #A78BFA;
-  --secondary-light: rgba(139, 92, 246, 0.12);
+  /* Retained aliases so existing rules keep resolving. Both point at teal-700 —
+     the retired off-ramp #006b5f and the green CTA #22c55e are gone. */
+  --primary-deep:    var(--teal-700);
+  --cta:             var(--teal-700);
+  --cta-hover:       var(--teal-800);
 
-  --cta:             #22C55E;
-  --cta-hover:       #16a34a;
+  /* ── AI accent: violet. AI FEATURES ONLY — never a CTA, never decoration. ──── */
+  --ai:              #8b5cf6;   /* identity/tint only — 4.24:1 as text on white */
+  --ai-strong:       #7c3aed;   /* AI text on a LIGHT surface   — 5.7:1 on white */
+  --ai-soft:         #c4b5fd;   /* AI text on a DARK surface    — 9.6:1 on gray-900 */
+  --ai-light:        rgba(139, 92, 246, 0.12);
+  /* Theme-aware AI text — the violet counterpart of --brand-ink. Use this for
+     any AI label/glyph rather than picking -strong or -soft by hand. */
+  --ai-ink:          var(--ai-strong);
 
-  /* ── Typography ────────────────────────────────────────────────────────────── */
-  --font-family-display: var(--font-plus-jakarta, 'Plus Jakarta Sans'), system-ui, sans-serif;
-  --font-family-body:    var(--font-inter, 'Inter'), system-ui, sans-serif;
-  --font-family-mono:    var(--font-jetbrains, 'JetBrains Mono'), monospace;
+  /* Legacy names for the same violet. */
+  --secondary:       var(--ai);
+  --secondary-hover: var(--ai-strong);
+  --secondary-light: var(--ai-light);
+
+  /* ── Neutrals: THE gray ramp. Nothing else. ───────────────────────────────── */
+  --gray-50:  #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --gray-950: #030712;
+
+  /* ── Semantic ─────────────────────────────────────────────────────────────── */
+  --danger:        #dc2626;
+  --danger-light:  rgba(220, 38, 38, 0.10);
+  --success:       #15803d;
+  --success-light: rgba(21, 128, 61, 0.10);
+  --warning:       #b45309;
+  --warning-light: rgba(180, 83, 9, 0.10);
+
+  /* ── Typography families ──────────────────────────────────────────────────── */
+  /* Self-hosted via @font-face — never fetched from fonts.googleapis.com at
+     runtime. See webapp/app/layout.tsx and extension/styles/fonts.css. */
+  --font-family-display: var(--font-plus-jakarta, 'Plus Jakarta Sans'), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-family-body:    var(--font-inter, 'Inter'), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono:    var(--font-jetbrains, 'JetBrains Mono'), ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-family-native:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   --font:         var(--font-family-body);
   --font-display: var(--font-family-display);
   --font-mono:    var(--font-family-mono);
 
-  /* ── Brand Depth ────────────────────────────────────────────────────────────── */
-  --primary-deep: #0f766e;
+  /* ── Type scale: 11 steps, HARD 11px FLOOR ───────────────────────────────── */
+  /* --text-xs is the floor. There is no step below it; if 11px feels crowded,
+     raise the weight or tighten padding — do not invent a smaller size. */
+  --text-xs:      11px;   /* micro      — eyebrows, badges, chips, meta rows */
+  --text-sm:      12px;   /* caption    — helper text, nav labels */
+  --text-base:    13px;   /* body-sm    — dense lists, side-panel body */
+  --text-md:      14px;   /* body       — default app body copy */
+  --text-lg:      16px;   /* body-lg    — marketing body copy */
+  --text-xl:      18px;   /* title      — clip titles, feature titles */
+  --text-2xl:     20px;   /* heading-4  — wordmark, panel titles */
+  --text-3xl:     24px;   /* heading-3  — card group headings, modal titles */
+  --text-4xl:     30px;   /* heading-2  — sub-section headings */
+  --text-5xl:     38px;   /* heading-1  — page titles, section headlines */
+  --text-display: 52px;   /* display    — marketing hero */
+
+  /* ── Gradients: exactly TWO, both teal ───────────────────────────────────── */
+  /* Every consumer MUST declare a solid color/background fallback BEFORE any
+     background-clip property, so the element survives a clip failure. */
+  --gradient-brand:      linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --gradient-brand-soft: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
 
   /* ── Border Radius ─────────────────────────────────────────────────────────── */
-  --radius:      10px;
+  --radius-xs:   4px;
   --radius-sm:   6px;
+  --radius:      10px;
   --radius-lg:   16px;
+  --radius-xl:   20px;
   --radius-full: 9999px;
 
   /* ── Shadows ───────────────────────────────────────────────────────────────── */
@@ -54,53 +139,77 @@
   --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
 
   /* ── Light Theme (default) ─────────────────────────────────────────────────── */
-  --text:         #111827;
-  --text-sub:     #6b7280;
-  --text-muted:   #9ca3af;
+  /* Each step is chosen so it clears WCAG AA (4.5:1) against BOTH --bg (gray-50)
+     and --surface-alt (gray-100), not just against pure white — most of this
+     product's small text sits on one of those two, and the old ramp
+     (sub=gray-500, muted=gray-400) measured 4.39:1 and 2.43:1 on them.
+     --text-faint is the ONLY step that does not clear AA; it is for decorative
+     and disabled affordances, never for text a user has to read. */
+  --text:         var(--gray-900);   /* 16.1:1 on --bg */
+  --text-sub:     var(--gray-700);   /*  9.4:1 on --bg */
+  --text-muted:   var(--gray-600);   /*  6.9:1 on --surface-alt */
+  --text-faint:   var(--gray-400);   /* decorative / disabled ONLY — not AA */
+  --text-strong:  var(--gray-900);
 
-  --bg:           #f9fafb;
+  --bg:           var(--gray-50);
   --bg-sub:       #ffffff;
   --bg-card:      #ffffff;  /* Card backgrounds (bookmarks page) */
   --surface:      #ffffff;
-  --surface-alt:  #f3f4f6;
-  --border:       #e5e7eb;
+  --surface-alt:  var(--gray-100);
+  --border:       var(--gray-200);
 
-  --nav-bg:       rgba(249, 250, 251, 0.9);
+  /* One glass chrome shared by the dashboard header and the side-panel header. */
+  --nav-bg:       rgba(249, 250, 251, 0.85);
+  --nav-shadow:   0 1px 0 var(--border), 0 4px 16px rgba(17, 24, 39, 0.04);
 
-  --btn-secondary-bg:   #f3f4f6;
-  --btn-secondary-text: #374151;
+  --btn-secondary-bg:   var(--gray-100);
+  --btn-secondary-text: var(--gray-700);
 
-  --kbd-bg:     #f3f4f6;
-  --kbd-border: #e5e7eb;
-
-  --heading-gradient: linear-gradient(135deg, #111827 0%, #6b7280 100%);
+  --kbd-bg:     var(--gray-100);
+  --kbd-border: var(--gray-200);
 }
 
 [data-theme="dark"] {
-  --accent:       #14B8A6;
-  --accent-hover: #0d9488;
-  --accent-light: rgba(20, 184, 166, 0.12);
+  --accent:      var(--teal-500);
+  /* CTA fill stays teal-700 in dark mode too — white on it is 5.5:1 either way,
+     so the primary button needs no theme variant. Brand *text* does. */
+  --accent-strong: var(--teal-700);
+  --accent-hover:  var(--teal-800);
+  --accent-light:  rgba(20, 184, 166, 0.12);
+  --brand-ink:     var(--teal-400);
+  --ai-ink:        var(--ai-soft);
 
-  --text:         #f9fafb;
-  --text-sub:     #9ca3af;
-  --text-muted:   #6b7280;
+  --danger:        #f87171;
+  --danger-light:  rgba(248, 113, 113, 0.12);
+  --success:       #4ade80;
+  --success-light: rgba(74, 222, 128, 0.12);
+  --warning:       #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.12);
+
+  /* Mirror of the light ramp: every step clears AA against --surface (gray-900)
+     and --surface-alt (gray-800). gray-500 as muted text measured 3.04:1 on
+     gray-800, which is why it moves to --text-faint here too. */
+  --text:         var(--gray-50);    /* 17.4:1 on --surface-alt */
+  --text-sub:     var(--gray-300);   /*  9.9:1 on --surface-alt */
+  --text-muted:   var(--gray-400);   /*  5.7:1 on --surface-alt */
+  --text-faint:   var(--gray-500);   /* decorative / disabled ONLY — not AA */
+  --text-strong:  var(--gray-50);
 
   --bg:           #0a0a0f;
-  --bg-sub:       #1f2937;
-  --bg-card:      #1f2937;  /* Card backgrounds (bookmarks page) */
-  --surface:      #111827;
-  --surface-alt:  #1f2937;
-  --border:       #1f2937;
+  --bg-sub:       var(--gray-800);
+  --bg-card:      var(--gray-800);  /* Card backgrounds (bookmarks page) */
+  --surface:      var(--gray-900);
+  --surface-alt:  var(--gray-800);
+  --border:       var(--gray-800);
 
   --nav-bg:       rgba(10, 10, 15, 0.85);
+  --nav-shadow:   0 1px 0 var(--border), 0 4px 16px rgba(0, 0, 0, 0.3);
 
-  --btn-secondary-bg:   #1f2937;
-  --btn-secondary-text: #d1d5db;
+  --btn-secondary-bg:   var(--gray-800);
+  --btn-secondary-text: var(--gray-300);
 
-  --kbd-bg:     #1f2937;
-  --kbd-border: #374151;
-
-  --heading-gradient: linear-gradient(135deg, #f9fafb 0%, #9ca3af 100%);
+  --kbd-bg:     var(--gray-800);
+  --kbd-border: var(--gray-700);
 }
 
 /* ── Base Styles ─────────────────────────────────────────────────────────────── */
