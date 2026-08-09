@@ -2,7 +2,7 @@ import { createServerSupabase, type Bookmark } from '@/lib/supabase';
 import AnalyticsContent from './_components/AnalyticsContent';
 import styles from './page.module.css';
 
-export const metadata = { title: 'Analytics — Clipmark' };
+export const metadata = { title: 'Analytics — ClipMark' };
 
 import { getTagColor } from '../_utils/tagColors';
 

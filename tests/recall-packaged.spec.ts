@@ -12,13 +12,14 @@
  * dispatching a synthetic 'timeupdate' — exactly what revisionTimeUpdateHandler
  * listens for. Requires `make ext-build` first (skips with a message otherwise).
  */
-import { test, expect, chromium, BrowserContext, Worker } from '@playwright/test';
+import { test, expect, BrowserContext, Worker } from '@playwright/test';
+import { TEST_VIDEO_ID, TEST_VIDEO_URL, launchExtensionContext } from './fixtures';
 import { existsSync } from 'node:fs';
 import path from 'path';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
-const VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_URL = TEST_VIDEO_URL;
+const VIDEO_ID = TEST_VIDEO_ID;
 
 // Sentinel answers — must never appear while the user is still recalling.
 const ANSWER_1 = 'RECALL-ANSWER-ONE cardiac output basics';
@@ -37,14 +38,7 @@ async function extensionServiceWorker(context: BrowserContext): Promise<Worker> 
 }
 
 async function launchPackaged(): Promise<BrowserContext> {
-  return chromium.launchPersistentContext('', {
-    headless: false, // Chrome extensions require non-headless
-    args: [
-      `--disable-extensions-except=${DIST}`,
-      `--load-extension=${DIST}`,
-      '--no-sandbox',
-    ],
-  });
+  return launchExtensionContext(DIST);
 }
 
 /** createdAt 10 days back: the 'again' grade then appends day 12, which does not

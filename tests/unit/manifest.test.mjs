@@ -96,6 +96,33 @@ describe('manifest permission posture', () => {
   });
 });
 
+describe('Chrome Web Store listing limits', () => {
+  // The store rejects the whole package on these, and the failure only shows up
+  // at submission time — which has already cost one round trip.
+  it('keeps description within the 132-character limit', () => {
+    assert.ok(
+      typeof manifest.description === 'string' && manifest.description.length > 0,
+      'manifest must have a description',
+    );
+    assert.ok(
+      manifest.description.length <= 132,
+      `description is ${manifest.description.length} chars; the Chrome Web Store rejects anything over 132`,
+    );
+  });
+
+  it('keeps name within the 75-character limit', () => {
+    assert.ok(manifest.name.length <= 75, `name is ${manifest.name.length} chars, limit is 75`);
+  });
+
+  it('keeps short_name within the 12-character limit', () => {
+    if (manifest.short_name === undefined) return; // optional field
+    assert.ok(
+      manifest.short_name.length <= 12,
+      `short_name is ${manifest.short_name.length} chars, limit is 12`,
+    );
+  });
+});
+
 describe('error-reporting wiring', () => {
   it('declares the service worker as a module', () => {
     // background.js imports ../error-reporting.js. Chrome cannot resolve an

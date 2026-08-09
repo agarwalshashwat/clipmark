@@ -90,7 +90,7 @@ export async function handleSetAffiliate(
         type: 'percentage',
         // Dodo expects basis points: 10% = 1000, 20% = 2000
         amount: effectiveDiscountPct * 100,
-        name: `Clipmark affiliate ${affiliateCode ?? userId} ${effectiveDiscountPct}% off`,
+        name: `ClipMark affiliate ${affiliateCode ?? userId} ${effectiveDiscountPct}% off`,
         restricted_to: [],
         usage_limit: null,
         expires_at: null,

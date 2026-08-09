@@ -4,7 +4,7 @@ import styles from './page.module.css';
 import VideosSortSelect from './VideosSortSelect';
 import { VideosClient } from './VideosClient';
 
-export const metadata = { title: 'Videos — Clipmark' };
+export const metadata = { title: 'Videos — ClipMark' };
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
