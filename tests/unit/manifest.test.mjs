@@ -72,14 +72,18 @@ describe('manifest permission posture', () => {
     ]);
   });
 
-  it('does not override the default extension CSP', () => {
-    // MV3's default extension-page CSP already forbids remote script and eval.
-    // There is no reason for ClipMark to relax it, so lock in the *absence* of
-    // an override rather than asserting a policy string.
+  it('declares no content_security_policy override', () => {
+    // The side panel's idle cards load thumbnails from i.ytimg.com. MV3's
+    // default extension-page CSP is `script-src 'self'; object-src 'self'` —
+    // there is no default-src and no img-src, so remote images already load
+    // and NO override is needed. Adding one here would mean hand-writing the
+    // whole policy (easy to widen script-src by accident) and is exactly the
+    // kind of change CWS review flags. Verified against the packaged build:
+    // the thumbnail decodes with no CSP violation.
     assert.equal(
       manifest.content_security_policy,
       undefined,
-      "manifest must not declare content_security_policy — MV3's default is already strict and an override can only weaken it",
+      'remote thumbnails work under the default MV3 page CSP — do not add an override',
     );
   });
 

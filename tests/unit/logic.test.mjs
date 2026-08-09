@@ -329,21 +329,21 @@ describe('ytThumbnailUrl', () => {
   it('returns a well-formed thumbnail URL with default quality', () => {
     assert.strictEqual(
       ytThumbnailUrl('aircAruvnKk'),
-      'https://img.youtube.com/vi/aircAruvnKk/mqdefault.jpg',
+      'https://i.ytimg.com/vi/aircAruvnKk/mqdefault.jpg',
     );
   });
 
   it('respects a custom quality parameter', () => {
     assert.strictEqual(
       ytThumbnailUrl('aircAruvnKk', 'hqdefault'),
-      'https://img.youtube.com/vi/aircAruvnKk/hqdefault.jpg',
+      'https://i.ytimg.com/vi/aircAruvnKk/hqdefault.jpg',
     );
   });
 
   it('supports maxresdefault quality', () => {
     assert.strictEqual(
       ytThumbnailUrl('abc', 'maxresdefault'),
-      'https://img.youtube.com/vi/abc/maxresdefault.jpg',
+      'https://i.ytimg.com/vi/abc/maxresdefault.jpg',
     );
   });
 });

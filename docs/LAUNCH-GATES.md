@@ -164,6 +164,28 @@ Built fresh from `main` @ `68b86e4` via `make ext-zip`:
   | `activeTab` justification | "Used only when the user clicks the extension action or a keyboard shortcut, to read the current YouTube tab's video ID and playback time." |
   | Privacy policy URL | `https://clipmark.mithahara.com/privacy` (already live) |
 
+### v1.0.2 — new `scripting` permission (affects the CWS submission)
+
+Everything above describes the `1.0.1` submission. **`1.0.2` adds one new
+permission, `scripting`**, so the re-upload needs a justification for it that
+the `1.0.1` submission did not have. Host permissions are unchanged
+(`*://www.youtube.com/*` and `https://clipmark.mithahara.com/*` only), and no
+permission was removed.
+
+Why it's needed: Chrome injects declared `content_scripts` on navigation only,
+so every YouTube tab that was already open when the extension installed had no
+content script and every feature that talks to it failed until the user
+reloaded the tab by hand. The background worker now replays the manifest's own
+`content_scripts` into those tabs on `chrome.runtime.onInstalled`, which
+requires `chrome.scripting`.
+
+| Field | Suggested text |
+|---|---|
+| `scripting` justification | "On install and update, Chrome does not inject our content script into YouTube tabs that are already open, so the extension appears broken in them until the user reloads the tab. We use chrome.scripting solely to inject the same content script the manifest already declares into those already-open YouTube tabs. It is never used on any other site — injection is limited to the manifest's own content_scripts match patterns, and we hold no host permissions beyond youtube.com and our own domain." |
+
+Note this is an added permission, so the re-upload may draw a longer review
+than a code-only update.
+
 ### Owner checklist
 
 1. **Build the submission zip** from current `main` (already at version

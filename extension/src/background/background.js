@@ -5,6 +5,14 @@
 import { initErrorReporting, isOwnScript } from '../error-reporting.js';
 import { countEnrolledRecallSegments, isEnrollmentCapReached, FREE_RECALL_ENROLLED_CAP } from '../usage-caps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
+import {
+  CONTENT_SCRIPT_MARKER,
+  contentScriptMatchPatterns,
+  planInjections,
+  shouldBackfillOnInstalled,
+  shouldInjectIntoTab,
+  urlMatchesAnyPattern,
+} from './install-injection.js';
 
 const errorReporter = initErrorReporting('extension-background');
 
@@ -83,11 +91,78 @@ const TAG_COLORS = {
     }
   });
 
+  // ─── Install-time content-script backfill ──────────────────────────────────
+  // Chrome injects declared content_scripts on navigation only, so every
+  // YouTube tab that was already open when the extension installed or updated
+  // has none — and the side panel, context menus and keyboard commands all fail
+  // against it with "Content script not available" until the user reloads.
+  // Replay the manifest's own content_scripts into those tabs instead.
+  //
+  // Best-effort by design: injection legitimately refuses on hosts outside
+  // host_permissions, on sleeping/closing tabs, and on privileged pages. A
+  // failure here is never worse than v1.0.1's status quo, so nothing throws.
+  async function injectContentScriptsIntoTab(plan, currentVersion) {
+    try {
+      const [probe] = await chrome.scripting.executeScript({
+        target: { tabId: plan.tabId },
+        // Runs in the isolated world, i.e. the same global scope the content
+        // scripts share — so it can see the marker they stamp.
+        func: (marker) => globalThis[marker] ?? null,
+        args: [CONTENT_SCRIPT_MARKER],
+      });
+      if (!shouldInjectIntoTab(probe?.result, currentVersion)) return 'already-injected';
+
+      if (plan.css.length) {
+        await chrome.scripting.insertCSS({ target: { tabId: plan.tabId }, files: plan.css });
+      }
+      if (plan.js.length) {
+        await chrome.scripting.executeScript({ target: { tabId: plan.tabId }, files: plan.js });
+      }
+      return 'injected';
+    } catch {
+      return 'skipped';
+    }
+  }
+
+  async function backfillContentScripts() {
+    // `scripting` is declared in the manifest; the guard is for the E2E harness
+    // and for older runtimes, where a missing API must not break onInstalled.
+    if (!chrome.scripting?.executeScript) return [];
+
+    const manifest = chrome.runtime.getManifest();
+    const contentScripts = manifest.content_scripts || [];
+    const patterns = contentScriptMatchPatterns(contentScripts);
+    if (!patterns.length) return [];
+
+    let tabs = [];
+    try {
+      tabs = await chrome.tabs.query({ url: patterns });
+    } catch {
+      // The `url` filter needs "tabs" or host permissions covering every
+      // pattern. ClipMark's host_permissions are deliberately narrower than the
+      // content-script matches, so fall back to filtering ourselves — tabs we
+      // hold no permission for come back without a url and drop out here.
+      try {
+        const all = await chrome.tabs.query({});
+        tabs = all.filter((tab) => urlMatchesAnyPattern(tab?.url, patterns));
+      } catch {
+        return [];
+      }
+    }
+
+    const plans = planInjections({ contentScripts, tabs });
+    return Promise.all(plans.map((plan) => injectContentScriptsIntoTab(plan, manifest.version)));
+  }
+
   // ─── Context Menu Setup ───────────────────────────────────────────────────────
   // Create context menu items on extension install/update
-  chrome.runtime.onInstalled.addListener(() => {
+  chrome.runtime.onInstalled.addListener((details) => {
     // Recreate keepalive alarm on update to ensure it persists
     chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
+
+    if (shouldBackfillOnInstalled(details?.reason)) {
+      backfillContentScripts().catch(() => {});
+    }
 
     // "Bookmark at [time]" - visible only on YouTube watch pages
     chrome.contextMenus.create({

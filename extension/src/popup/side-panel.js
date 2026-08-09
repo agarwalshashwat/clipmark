@@ -2,10 +2,19 @@ import {
   parseTags,
   getTagColor,
   ytWatchUrl,
+  ytThumbnailUrl,
   MAX_RECONNECT_ATTEMPTS,
   RECONNECT_DELAY,
   isExtensionContextValid,
 } from '../constants.module.js';
+import {
+  buildDueSummary,
+  buildIdleVideoCards,
+  collectStoredBookmarks,
+  dueBookmarksForVideo,
+  dueCountLabel,
+  momentCountLabel,
+} from '../idle-summary.js';
 import {
   localAiAvailability,
   localSummarizeBookmarks,
@@ -23,6 +32,17 @@ import {
 } from '../usage-caps.module.js';
 import { isDueForRecall } from '../recall.module.js';
 import { initErrorReporting } from '../error-reporting.js';
+// `?sp` for the same reason as the driver.js imports below: content/tour.js
+// imports this too, and without the distinct module id Rollup hoists it into a
+// chunk shared with the content script. That happens to work (crxjs makes the
+// chunk web-accessible), but it puts the content script's code behind a
+// runtime chrome.runtime.getURL resolution for no benefit — inlining a copy
+// into each bundle keeps the shipped content script self-contained.
+import {
+  didYoutubeTourComplete,
+  shouldAutoRunSidePanelTour,
+  shouldMarkTourSeen,
+} from '../tour-state.js?sp';
 // The `?sp` query keeps these distinct module ids from the imports in
 // content/tour.js, so Rollup inlines a separate copy into each bundle
 // instead of hoisting a shared chunk — content_scripts entries must stay a
@@ -287,10 +307,12 @@ async function setTourState(partial) {
   await syncSet({ tourState: { ...current, ...partial } });
 }
 
-async function runSidePanelTour() {
-  if ((await getTourState()).sidePanelTour) return;
-
+async function runSidePanelTour({ force = false } = {}) {
   const tab = await getCurrentTab();
+  if (!force && !shouldAutoRunSidePanelTour({ tourState: await getTourState(), activeTabUrl: tab?.url })) {
+    return;
+  }
+
   const videoId = tab?.url ? extractVideoId(tab.url) : null;
   const bookmarks = videoId ? await getVideoBookmarksLocal(videoId) : [];
 
@@ -316,11 +338,18 @@ async function runSidePanelTour() {
         },
       }];
 
+  // Same one-shot-flag trap as Sub-tour A: driver.js fires onDestroyed even when
+  // it gave up waiting for #revisit-mode-btn, which would mark the coach-mark
+  // seen without ever rendering it. Only a step that actually highlighted counts.
+  let stepShown = false;
   driver({
     showButtons: ['next', 'close'],
     allowClose: true,
     waitForElement: 3000,
-    onDestroyed: () => setTourState({ sidePanelTour: true }),
+    onHighlighted: () => { stepShown = true; },
+    onDestroyed: () => {
+      if (shouldMarkTourSeen({ stepShown })) setTourState({ sidePanelTour: true });
+    },
     steps,
   }).drive();
 }
@@ -387,6 +416,17 @@ async function waitForContentScript(tabId, maxRetries = MAX_RECONNECT_ATTEMPTS, 
 
 // ─── UI Helpers ────────────────────────────────────────────────────────────
 function showError(message, duration = 3000) {
+  // Every waitForContentScript caller funnels its failure through here. That
+  // message is not an error the user can act on as written — it means the tab
+  // predates the install and needs one reload — so route it to the screen that
+  // says exactly that, rather than flashing the internal string in a red toast.
+  if (isContentScriptUnavailable({ message })) {
+    getCurrentTab()
+      .then((tab) => showContentInactiveScreen(tab?.id))
+      .catch(() => {});
+    return;
+  }
+
   const el = document.getElementById('error-message');
   el.textContent = message;
   el.style.display = 'block';
@@ -1014,40 +1054,135 @@ function scheduleBookmarksReload(delayMs = 150) {
 // idle screen has something useful to show while the user isn't on YouTube.
 async function getIdleScreenSummary(limit = 4) {
   const all = await syncGet(null);
-  const videoTitles = all.videoTitles || {};
-  const bookmarks = [];
-  for (const [key, val] of Object.entries(all)) {
-    if (key.startsWith('bm_') && Array.isArray(val)) {
-      const videoId = key.slice(3);
-      val.forEach(b => bookmarks.push({ ...b, videoId }));
+  const bookmarks = collectStoredBookmarks(all);
+  const now = Date.now();
+
+  return {
+    bookmarks,
+    cards: buildIdleVideoCards({ bookmarks, videoTitles: all.videoTitles || {}, limit }),
+    due: buildDueSummary({ bookmarks, isDue: isDueForRecall, now }),
+  };
+}
+
+/**
+ * Open a saved moment in YouTube.
+ *
+ * Prefers an already-open tab for that video — reloading a video the user is
+ * mid-way through just to move the playhead is worse than seeking in place, and
+ * the content script already exposes `seekTo`. Falls back to a real navigation
+ * when the tab has no reachable content script (e.g. it predates the install —
+ * the same gap the onInstalled backfill covers), and to a new tab otherwise.
+ */
+async function openVideoAt(videoId, timestamp) {
+  const seconds = Number.isFinite(timestamp) ? timestamp : 0;
+  const url = ytWatchUrl(videoId, seconds);
+
+  try {
+    const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/watch*' });
+    const existing = tabs.find(t => (t.url || '').includes(`v=${videoId}`));
+    if (existing?.id) {
+      await chrome.tabs.update(existing.id, { active: true });
+      if (existing.windowId != null) {
+        try { await chrome.windows.update(existing.windowId, { focused: true }); } catch {}
+      }
+      try {
+        await sendMessageToTab(existing.id, { action: 'seekTo', time: seconds });
+        return;
+      } catch {
+        await chrome.tabs.update(existing.id, { url });
+        return;
+      }
+    }
+  } catch {
+    // tabs.query can reject if the pattern falls outside our host permissions —
+    // opening a new tab is always allowed, so just fall through.
+  }
+
+  chrome.tabs.create({ url });
+}
+
+// Start Active Recall for a video from the idle screen. There is no YouTube tab
+// to message here, so this uses the same storage handoff the dashboard uses
+// (content.js picks `pendingRevision` up on player init) rather than a second
+// review implementation. Pro gating mirrors #revisit-mode-btn exactly.
+async function startRecallFromIdle(videoId, bookmarks) {
+  if (!videoId) return;
+  if (!(await checkPro())) {
+    const { recallReviewUsage } = await new Promise(resolve =>
+      chrome.storage.local.get({ recallReviewUsage: null }, resolve)
+    );
+    if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
+      showUpgradeModal({
+        feature: 'More reviews this month',
+        benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+      });
+      return;
     }
   }
-  bookmarks.sort((a, b) => {
-    const at = a.createdAt ? new Date(a.createdAt).getTime() : (a.id || 0);
-    const bt = b.createdAt ? new Date(b.createdAt).getTime() : (b.id || 0);
-    return bt - at;
+
+  const dueOnes = dueBookmarksForVideo({
+    bookmarks,
+    videoId,
+    isDue: isDueForRecall,
+    now: Date.now(),
   });
+  if (!dueOnes.length) return;
 
-  const now = Date.now();
-  const dueCount = bookmarks.filter(b => isDueForRecall(b, now)).length;
-  const recent = bookmarks.slice(0, limit).map(b => ({
-    videoId: b.videoId,
-    timestamp: b.timestamp,
-    description: b.description || b.videoTitle || videoTitles[b.videoId] || 'Bookmark',
-  }));
+  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks: dueOnes, recall: true } });
+  await openVideoAt(videoId, dueOnes[0].timestamp);
+}
 
-  return { recent, dueCount };
+// i.ytimg.com answers an unknown video id with a 120x90 grey placeholder rather
+// than a failed request; a real mqdefault is 320x180. See renderIdleScreen.
+const YT_MISSING_THUMB_MAX_WIDTH = 120;
+
+function idleCardMarkup(card) {
+  const title = escapeHtml(card.title);
+  const moments = card.moments.map(m => `
+        <button class="sp-clip-moment" data-video-id="${escapeHtml(card.videoId)}" data-timestamp="${m.timestamp}">
+          <span class="sp-clip-moment-time">${formatTimestamp(m.timestamp)}</span>
+          <span class="sp-clip-moment-desc">${escapeHtml(m.description)}</span>
+        </button>`).join('');
+
+  const more = card.hiddenMomentCount
+    ? `<span class="sp-clip-more">+${card.hiddenMomentCount} more</span>`
+    : '';
+
+  return `
+    <div class="sp-clip-card">
+      <button class="sp-clip-head" data-video-id="${escapeHtml(card.videoId)}" data-timestamp="${card.headerTimestamp}" title="${title}">
+        <span class="sp-clip-thumb-wrap">
+          <img class="sp-clip-thumb" src="${escapeHtml(ytThumbnailUrl(card.videoId))}" alt="" loading="lazy">
+          <span class="sp-clip-thumb-fallback" aria-hidden="true">
+            <span class="material-symbols-outlined">movie</span>
+          </span>
+          <span class="sp-clip-thumb-gradient"></span>
+          <span class="sp-clip-play">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">play_arrow</span>
+          </span>
+        </span>
+        <span class="sp-clip-meta">
+          <span class="sp-clip-title">${title}</span>
+          <span class="sp-clip-count">${momentCountLabel(card.momentCount)}</span>
+        </span>
+      </button>
+      <div class="sp-clip-moments">${moments}${more}</div>
+    </div>`;
 }
 
 async function renderIdleScreen() {
-  const { recent, dueCount } = await getIdleScreenSummary();
+  const { bookmarks, cards, due } = await getIdleScreenSummary();
 
+  // Due strip — omitted entirely when nothing is due, never shown empty.
   const dueBanner = document.getElementById('sp-idle-due-banner');
   if (dueBanner) {
-    if (dueCount > 0) {
+    if (due.dueCount > 0) {
       dueBanner.style.display = 'flex';
-      dueBanner.querySelector('.sp-idle-due-text').textContent =
-        `${dueCount} card${dueCount === 1 ? '' : 's'} due for Active Recall review`;
+      dueBanner.querySelector('.sp-idle-due-text').textContent = dueCountLabel(due.dueCount);
+      const startBtn = dueBanner.querySelector('#sp-idle-due-start-btn');
+      if (startBtn) {
+        startBtn.onclick = () => startRecallFromIdle(due.primaryVideoId, bookmarks);
+      }
     } else {
       dueBanner.style.display = 'none';
     }
@@ -1055,20 +1190,34 @@ async function renderIdleScreen() {
 
   const list = document.getElementById('sp-idle-recent-list');
   if (!list) return;
-  if (!recent.length) {
-    list.innerHTML = '<div class="sp-idle-recent-empty">Your bookmarks will show up here.</div>';
+  if (!cards.length) {
+    list.innerHTML = '<div class="sp-idle-recent-empty">Your saved moments will show up here.</div>';
     return;
   }
-  list.innerHTML = recent.map(b => `
-    <button class="sp-idle-recent-item" data-video-id="${b.videoId}" data-timestamp="${b.timestamp}">
-      <span class="sp-idle-recent-time">${formatTimestamp(b.timestamp)}</span>
-      <span class="sp-idle-recent-desc">${escapeHtml(b.description)}</span>
-    </button>
-  `).join('');
-  list.querySelectorAll('.sp-idle-recent-item').forEach(el => {
+
+  list.innerHTML = cards.map(idleCardMarkup).join('');
+
+  // Thumbnail fallback. Two distinct failure modes, and an `error` handler only
+  // catches the first:
+  //   1. the request fails outright (offline, CDN unreachable) — naturalWidth 0
+  //   2. the video is private/removed, and i.ytimg.com answers 404 with a 120x90
+  //      grey placeholder that decodes fine, so `error` never fires
+  // A real mqdefault is 320x180, so anything at or under the sentinel width is
+  // treated as missing. Either way the <img> is hidden and the styled
+  // placeholder underneath shows through — never a broken-image icon.
+  list.querySelectorAll('.sp-clip-thumb').forEach(img => {
+    const hideIfMissing = () => {
+      if (img.naturalWidth > YT_MISSING_THUMB_MAX_WIDTH) return;
+      img.style.display = 'none';
+    };
+    img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
+    if (img.complete) hideIfMissing();
+    else img.addEventListener('load', hideIfMissing, { once: true });
+  });
+
+  list.querySelectorAll('.sp-clip-head, .sp-clip-moment').forEach(el => {
     el.addEventListener('click', () => {
-      const url = ytWatchUrl(el.dataset.videoId, parseFloat(el.dataset.timestamp));
-      chrome.tabs.create({ url });
+      openVideoAt(el.dataset.videoId, parseFloat(el.dataset.timestamp));
     });
   });
 }
@@ -1088,6 +1237,33 @@ function hideUnsupportedScreen() {
   if (screen) screen.style.display = 'none';
 }
 
+// ─── Content script unreachable ────────────────────────────────────────────
+// The tab *is* a YouTube video, we just can't talk to its content script.
+// In practice that means the tab was already open when the extension was
+// installed or updated: Chrome only injects declared content_scripts on
+// navigation. The background worker backfills those tabs on onInstalled
+// (src/background/install-injection.js), but that can't reach every tab —
+// tabs discarded at the time, or hosts outside host_permissions — so the
+// panel still needs an answer better than "Failed to load bookmarks:
+// Content script not available."
+let inactiveScreenTabId = null;
+
+function showContentInactiveScreen(tabId) {
+  inactiveScreenTabId = tabId ?? null;
+  const screen = document.getElementById('sp-inactive-screen');
+  if (screen) screen.style.display = 'flex';
+}
+
+function hideContentInactiveScreen() {
+  inactiveScreenTabId = null;
+  const screen = document.getElementById('sp-inactive-screen');
+  if (screen) screen.style.display = 'none';
+}
+
+function isContentScriptUnavailable(error) {
+  return /Content script not available/i.test(error?.message || '');
+}
+
 async function loadBookmarks() {
   if (loadBookmarksInFlight) {
     loadBookmarksQueued = true;
@@ -1101,10 +1277,12 @@ async function loadBookmarks() {
     if (!tab.url || !tab.url.includes('youtube.com/watch')) {
       stopCurrentTimeSync();
       stopCommentSync();
+      hideContentInactiveScreen();
       await showUnsupportedScreen();
       return;
     }
     hideUnsupportedScreen();
+    if (inactiveScreenTabId !== null && inactiveScreenTabId !== tab.id) hideContentInactiveScreen();
 
     const videoId = extractVideoId(tab.url);
     if (!videoId) return;
@@ -1132,9 +1310,18 @@ async function loadBookmarks() {
     try {
       await waitForContentScript(tab.id, MAX_RECONNECT_ATTEMPTS + 2, RECONNECT_DELAY);
       contentScriptRetryCount = 0;
+      hideContentInactiveScreen();
       await refreshTitleFromContentScript(tab.id, videoId);
     } catch (error) {
-      const isScriptUnavailable = /Content script not available/i.test(error?.message || '');
+      const isScriptUnavailable = isContentScriptUnavailable(error);
+      if (isScriptUnavailable && contentScriptRetryCount >= MAX_SIDE_PANEL_CONTENT_RETRIES) {
+        // Out of retries: the script isn't coming without a reload. Say so
+        // plainly and offer the reload, instead of retrying forever behind a
+        // spinner (v1.0.1) or surfacing the raw error string.
+        stopCurrentTimeSync();
+        showContentInactiveScreen(tab.id);
+        return;
+      }
       if (isScriptUnavailable && contentScriptRetryCount < MAX_SIDE_PANEL_CONTENT_RETRIES) {
         contentScriptRetryCount += 1;
         debugLog('Init', 'Content script not ready yet, retrying', {
@@ -1251,7 +1438,7 @@ async function loadBookmarks() {
     });
 
     // On startup races, avoid flashing hard errors while we keep retrying.
-    if (/Content script not available/i.test(error?.message || '')) {
+    if (isContentScriptUnavailable(error)) {
       scheduleBookmarksReload(1200);
       return;
     }
@@ -1309,7 +1496,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   runSidePanelTour();
   document.getElementById('replay-tour-btn')?.addEventListener('click', async () => {
     await setTourState({ youtubeTour: false, sidePanelTour: false });
-    runSidePanelTour();
+    runSidePanelTour({ force: true });
+  });
+
+  // Sub-tour A → Sub-tour B handoff. If A was still pending when the panel
+  // opened, runSidePanelTour() above deliberately deferred; pick it up the
+  // moment A finishes so a panel left open still gets the coach-mark.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'sync' || !changes.tourState) return;
+    if (didYoutubeTourComplete(changes.tourState)) runSidePanelTour();
+  });
+
+  document.getElementById('sp-reload-tab-btn')?.addEventListener('click', async () => {
+    const tab = await getCurrentTab();
+    if (!tab?.id) return;
+    // Reloading re-runs Chrome's own declarative injection, which is the whole
+    // fix from the user's side; the panel picks the content script up on the
+    // tabs.onUpdated 'complete' below.
+    contentScriptRetryCount = 0;
+    hideContentInactiveScreen();
+    chrome.tabs.reload(tab.id);
   });
   window.addEventListener('focus', refreshEntitlement);
   document.addEventListener('visibilitychange', () => {
@@ -1328,7 +1534,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo) => {
     if (changeInfo.status === 'complete') {
       const active = await getCurrentTab();
-      if (active?.id === _tabId) scheduleBookmarksReload(0);
+      if (active?.id === _tabId) {
+        // A completed load means Chrome injected the content script itself, so
+        // give the reconnect budget back before retrying.
+        contentScriptRetryCount = 0;
+        hideContentInactiveScreen();
+        scheduleBookmarksReload(0);
+      }
     }
   });
 

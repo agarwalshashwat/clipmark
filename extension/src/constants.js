@@ -32,7 +32,10 @@ function ytWatchUrl(videoId, t = 0) {
 }
 
 function ytThumbnailUrl(videoId, quality = 'mqdefault') {
-  return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
+  // i.ytimg.com is YouTube's thumbnail CDN; img.youtube.com is a redirect to
+  // it. Pointing straight at the CDN saves the hop and is what the webapp's
+  // newer dashboard views already use. Same image either way.
+  return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
 }
 
 // ─── App constants ──────────────────────────────────────────────────────────

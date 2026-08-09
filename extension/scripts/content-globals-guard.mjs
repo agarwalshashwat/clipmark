@@ -36,6 +36,9 @@ export const REQUIRED_CONTENT_GLOBALS = [
   'isMonthlyReviewWarnThreshold',
   // src/error-report-bridge.js
   'clipmarkReportError',
+  // Load-bearing for the install-time backfill's double-injection guard — if
+  // this is ever tree-shaken away the backfill re-injects on every install.
+  'clipmarkContentScriptVersion',
 ];
 
 /**
