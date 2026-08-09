@@ -7,6 +7,7 @@ import {
   ytThumbnailUrl,
   APP_EXPORT_PREFIX,
   isExtensionContextValid,
+  buildPendingRevision,
 } from '../constants.module.js';
 import { buildAnkiTsv } from '../export-anki.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
@@ -797,7 +798,7 @@ function attachEventListeners() {
         .filter(b => b.videoId === videoId)
         .sort((a, b) => a.timestamp - b.timestamp);
       if (!bookmarks.length) return;
-      await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks, recall: true } });
+      await chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, bookmarks, true) });
       chrome.tabs.create({ url: ytWatchUrl(videoId) });
     });
   });
@@ -1505,7 +1506,7 @@ async function startRecallForVideo(videoId) {
     .filter(b => b.videoId === videoId && isDueForRecall(b, now))
     .sort((a, b) => a.timestamp - b.timestamp);
   if (!dueOnes.length) return;
-  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks: dueOnes, recall: true } });
+  await chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, dueOnes, true) });
   chrome.tabs.create({ url: ytWatchUrl(videoId) });
 }
 

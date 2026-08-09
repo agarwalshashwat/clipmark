@@ -5,6 +5,7 @@
 import { initErrorReporting, isOwnScript } from '../error-reporting.js';
 import { countEnrolledRecallSegments, isEnrollmentCapReached, FREE_RECALL_ENROLLED_CAP } from '../usage-caps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
+import { buildPendingRevision } from '../constants.module.js';
 import {
   CONTENT_SCRIPT_MARKER,
   contentScriptMatchPatterns,
@@ -457,7 +458,7 @@ async function startRecallFromWebapp(videoId, bookmarkIds) {
     }
   }
 
-  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks, recall: true } });
+  await chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, bookmarks, true) });
   if (existing?.id) await chrome.tabs.reload(existing.id);
   else await chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${videoId}` });
   return { ok: true, count: bookmarks.length, reusedTab: !!existing?.id };

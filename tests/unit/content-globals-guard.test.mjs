@@ -18,7 +18,7 @@ const exposing = (names) => names.map((n) => `globalThis.${n} = ${n};`).join('\n
 
 describe('assertContentGlobals', () => {
   it('passes when all required globals are assigned across chunks', () => {
-    const chunkA = exposing(['TAG_COLORS', 'parseTags', 'stringToColor', 'getTagColor', 'FONT_FAMILY_NATIVE', 'TRANSCRIPT_TRUNCATE_LENGTH']);
+    const chunkA = exposing(['TAG_COLORS', 'parseTags', 'stringToColor', 'getTagColor', 'FONT_FAMILY_NATIVE', 'TRANSCRIPT_TRUNCATE_LENGTH', 'isPendingRevisionExpired']);
     const chunkB = exposing(['localSummarizeSnippet']);
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
     const chunkD = exposing(['clipmarkReportError', 'clipmarkContentScriptVersion']);
