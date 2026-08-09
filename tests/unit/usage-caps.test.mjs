@@ -19,6 +19,7 @@ import {
   FREE_RECALL_ENROLLED_CAP,
   FREE_RECALL_REVIEWS_PER_MONTH,
   FREE_ANKI_EXPORTS_PER_MONTH,
+  FREE_SAVED_LOOPS_CAP,
   usagePeriodKey,
   normalizeMonthlyCounter,
   countEnrolledRecallSegments,
@@ -26,6 +27,8 @@ import {
   isMonthlyReviewCapReached,
   isMonthlyAnkiExportCapReached,
   isMonthlyReviewWarnThreshold,
+  countSavedLoops,
+  isSavedLoopCapReached,
 } from '../../extension/src/usage-caps.module.js';
 
 const NOW = Date.parse('2026-07-30T12:00:00.000Z'); // period '2026-07'
@@ -132,5 +135,51 @@ describe('isMonthlyReviewWarnThreshold (80% nudge)', () => {
 
   it('is false once the hard cap (30) is hit — the hard stop takes over', () => {
     assert.equal(isMonthlyReviewWarnThreshold({ periodStart: '2026-07', count: 30 }, NOW), false);
+  });
+});
+
+// ─── Saved A–B loops (free vs Pro) ───────────────────────────────────────────
+// Looping itself is deliberately uncapped — it is the free acquisition hook.
+// Only SAVING a named loop (which syncs and becomes a recall card) is metered.
+describe('countSavedLoops', () => {
+  const loop = (start, end) => ({ timestamp: start, loop: { end } });
+
+  it('counts only records carrying a valid A–B range', () => {
+    const all = [
+      loop(10, 20),
+      { timestamp: 5, description: 'a plain bookmark' },
+      loop(60, 90),
+    ];
+    assert.equal(countSavedLoops(all), 2);
+  });
+
+  it('ignores a malformed range rather than counting it against the user', () => {
+    assert.equal(countSavedLoops([{ timestamp: 10, loop: { end: 10 } }]), 0);
+    assert.equal(countSavedLoops([{ timestamp: 10, loop: { end: 5 } }]), 0);
+    assert.equal(countSavedLoops([{ timestamp: 10, loop: {} }]), 0);
+    assert.equal(countSavedLoops([{ loop: { end: 20 } }]), 0);
+  });
+
+  it('handles an empty/absent list', () => {
+    assert.equal(countSavedLoops([]), 0);
+    assert.equal(countSavedLoops(undefined), 0);
+    assert.equal(countSavedLoops(null), 0);
+  });
+});
+
+describe('isSavedLoopCapReached (free tier)', () => {
+  it('is false below the cap', () => {
+    for (let n = 0; n < FREE_SAVED_LOOPS_CAP; n++) {
+      assert.equal(isSavedLoopCapReached(n), false, `n=${n}`);
+    }
+  });
+
+  it('is true at and above the cap', () => {
+    assert.equal(isSavedLoopCapReached(FREE_SAVED_LOOPS_CAP), true);
+    assert.equal(isSavedLoopCapReached(FREE_SAVED_LOOPS_CAP + 5), true);
+  });
+
+  it('is a standing pool, not a monthly one — no period argument exists', () => {
+    assert.equal(isSavedLoopCapReached.length, 1);
   });
 });

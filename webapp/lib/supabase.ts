@@ -20,6 +20,12 @@ export interface Bookmark {
   // Extended Notes (Pro). Written by either surface, synced verbatim into
   // the bookmarks JSONB — absent unless the user has added notes.
   notes?: string;
+  // Saved A–B loop. Present only on loop records: `timestamp` is the A point
+  // and `loop.end` is B, so a loop is an ordinary bookmark with a range rather
+  // than a separate entity. Written by the extension (src/loop.js) and synced
+  // verbatim into the bookmarks JSONB. See validateLoopFields in
+  // app/api/bookmarks/handler.ts for the server-side shape check.
+  loop?: { end: number };
 }
 
 export interface Collection {

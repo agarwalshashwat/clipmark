@@ -218,9 +218,14 @@ function setupBookmarkMarkers() {
     }
   });
 
+  // Saved A–B loops live in the same bm_<videoId> store — load them so their
+  // ranges paint on the scrubber and can be re-armed with one click.
+  loadSavedLoops().catch(() => {});
+
   video.addEventListener('durationchange', () => {
     debugLog('Video', 'Duration changed', { duration: video.duration });
     updateBookmarkMarkers();
+    renderLoopRanges();
   });
 
   // Track watch position for resume-playback (debounced to once per 10s)
@@ -244,6 +249,10 @@ function setupBookmarkMarkers() {
 
 // ─── Player bookmark button ───────────────────────────────────────────────────
 function setupPlayerBookmarkButton() {
+  // The loop button is injected independently: a YouTube layout change that
+  // hides the bookmark button must not also take out looping, and vice versa.
+  setupPlayerLoopButton();
+
   if (document.querySelector('.yt-bookmark-player-btn')) return;
 
   const controls = document.querySelector('.ytp-right-controls');
@@ -264,6 +273,36 @@ function setupPlayerBookmarkButton() {
   // Insert before the first button in right-controls (settings gear or similar)
   controls.insertBefore(btn, controls.firstChild);
   debugLog('PlayerBtn', 'Bookmark button injected');
+}
+
+// Resilience: if YouTube renames/removes .ytp-right-controls this bails quietly
+// and looping stays fully usable from the keyboard (Alt+[ / Alt+] / Alt+L) —
+// the shortcuts are bound to document, not to the player chrome.
+function setupPlayerLoopButton() {
+  if (document.querySelector('.yt-loop-player-btn')) return;
+
+  const controls = document.querySelector('.ytp-right-controls');
+  if (!controls) {
+    debugLog('PlayerBtn', 'No .ytp-right-controls — loop stays keyboard-only');
+    return;
+  }
+
+  const btn = document.createElement('button');
+  // Deliberately NOT .yt-bookmark-player-btn — that class is resolved as a
+  // single element by the save-flash path and by tests/ci/extension-smoke.
+  btn.className = 'ytp-button yt-loop-player-btn';
+  btn.title     = 'A–B loop (Alt+L)';
+  btn.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" focusable="false">
+    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" fill="currentColor"/>
+  </svg>`;
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    showLoopPanel();
+  });
+
+  controls.insertBefore(btn, controls.firstChild);
+  debugLog('PlayerBtn', 'Loop button injected');
 }
 
 // ─── Marker clustering ────────────────────────────────────────────────────────
@@ -702,6 +741,15 @@ function handleKeyboardShortcut(event) {
     silentSaveBookmark();
   }
 
+  // A–B loop — Alt-modified so it can't collide with YouTube's own single-key
+  // player shortcuts. event.code (not event.key) so non-US layouts still work,
+  // where Alt+[ reports an accented character rather than a bracket.
+  if (event.altKey && !event.ctrlKey && !event.metaKey) {
+    if (event.code === 'BracketLeft')  { event.preventDefault(); showLoopPanel(); markLoopPointA(); return; }
+    if (event.code === 'BracketRight') { event.preventDefault(); showLoopPanel(); markLoopPointB(); return; }
+    if (event.code === 'KeyL')         { event.preventDefault(); showLoopPanel(); toggleLoopActive(); return; }
+  }
+
   // Revisit mode navigation — only when a session is active
   if (!revisionState) return;
   if (event.key === '[') { event.preventDefault(); skipToPrev(); }
@@ -800,6 +848,7 @@ function initializeMessageListener() {
       }
       if (request.action === 'bookmarkUpdated') {
         updateBookmarkMarkers();
+        loadSavedLoops().catch(() => {}); // a loop may have been added/removed elsewhere
         sendResponse({});
         return;
       }
@@ -1387,8 +1436,9 @@ function injectStyles() {
     }
     .yt-recall-grade-btn--good:hover { background: rgba(20,184,166,0.32); color: #5eead4; }
 
-    /* Player bookmark button */
-    .yt-bookmark-player-btn {
+    /* Player bookmark + loop buttons */
+    .yt-bookmark-player-btn,
+    .yt-loop-player-btn {
       color: white;
       opacity: 0.9;
       width: 40px !important;
@@ -1405,6 +1455,12 @@ function injectStyles() {
       transform: scale(1.15);
       color: #14B8A6;
     }
+    .yt-loop-player-btn:hover {
+      opacity: 1;
+      transform: scale(1.15);
+      color: #8b5cf6;
+    }
+    .yt-loop-player-btn--armed { color: #8b5cf6; opacity: 1; }
     .yt-bookmark-player-btn.saving {
       animation: bm-pulse 0.4s ease;
     }
@@ -1413,14 +1469,838 @@ function injectStyles() {
       50%  { transform: scale(1.3); color: #14B8A6; }
       100% { transform: scale(1); }
     }
+
+    /* ── A–B loop ranges on the scrubber ─────────────────────────────────── */
+    .yt-loop-ranges {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 1;
+    }
+    .yt-loop-range {
+      position: absolute; top: 0; height: 100%;
+      background: rgba(139, 92, 246, 0.35);
+      border-left:  2px solid #8b5cf6;
+      border-right: 2px solid #8b5cf6;
+      box-sizing: border-box;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .yt-loop-range--saved { background: rgba(139, 92, 246, 0.18); }
+    .yt-loop-range--active { background: rgba(139, 92, 246, 0.55); }
+    .yt-loop-range:hover { background: rgba(139, 92, 246, 0.6); }
+
+    /* ── A–B loop panel ──────────────────────────────────────────────────── */
+    .yt-loop-panel {
+      position: fixed; right: 24px; bottom: 96px; z-index: 2147483000;
+      width: 296px; padding: 14px 14px 12px;
+      background: rgba(17, 17, 20, 0.96);
+      color: #f4f4f5;
+      border: 1px solid rgba(139, 92, 246, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      font-family: ${FONT_FAMILY_NATIVE};
+      font-size: 13px;
+      cursor: grab;
+    }
+    /* Fullscreen paints only the fullscreen subtree, so the panel is re-parented
+       into it — position:fixed then resolves against the player, not the page. */
+    .yt-loop-panel--fullscreen { right: 24px; bottom: 120px; }
+    .yt-loop-label {
+      font-weight: 700; letter-spacing: .02em; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .yt-loop-mode {
+      margin-left: auto; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; cursor: pointer;
+      background: rgba(139, 92, 246, 0.2); color: #c4b5fd;
+      border: 1px solid rgba(139, 92, 246, 0.45);
+    }
+    .yt-loop-list { max-height: 168px; overflow-y: auto; margin: 0 0 8px; }
+    .yt-loop-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 6px; border-radius: 7px;
+      cursor: pointer;
+    }
+    .yt-loop-row:hover { background: rgba(255, 255, 255, 0.07); }
+    .yt-loop-row--current { background: rgba(139, 92, 246, 0.22); }
+    .yt-loop-row-time {
+      font-variant-numeric: tabular-nums; color: #c4b5fd; white-space: nowrap;
+    }
+    .yt-loop-row-name {
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: #e4e4e7;
+    }
+    .yt-loop-row-saved { color: #8b5cf6; font-size: 11px; }
+    .yt-loop-row-remove {
+      background: none; border: 0; color: #a1a1aa; cursor: pointer;
+      font-size: 13px; line-height: 1; padding: 2px 4px;
+    }
+    .yt-loop-row-edit {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #c4b5fd; cursor: pointer; border-radius: 5px;
+      font-size: 10px; font-weight: 700; font-family: inherit;
+      line-height: 1; padding: 3px 5px;
+    }
+    .yt-loop-row-edit:hover { background: rgba(139, 92, 246, 0.35); color: #fff; }
+    .yt-loop-row-name { cursor: text; }
+    .yt-loop-row-remove:hover { color: #ef4444; }
+    .yt-loop-empty { color: #a1a1aa; padding: 6px 2px 8px; line-height: 1.5; }
+    .yt-loop-draft { color: #a1a1aa; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+    .yt-loop-draft b { color: #f4f4f5; font-weight: 600; }
+    .yt-loop-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .yt-loop-btn {
+      flex: 1 1 auto; min-width: 78px;
+      padding: 6px 8px; border-radius: 7px; cursor: pointer;
+      background: rgba(255, 255, 255, 0.08); color: #f4f4f5;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      font-size: 12px; font-weight: 600; font-family: inherit;
+    }
+    .yt-loop-btn:hover { background: rgba(255, 255, 255, 0.16); }
+    .yt-loop-btn--primary {
+      background: #8b5cf6; border-color: #8b5cf6; color: #fff;
+    }
+    .yt-loop-btn--primary:hover { background: #7c4ddb; }
+    .yt-loop-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .yt-loop-name-input {
+      width: 100%; margin-bottom: 6px; padding: 6px 8px;
+      border-radius: 7px; border: 1px solid rgba(139, 92, 246, 0.6);
+      background: rgba(0, 0, 0, 0.45); color: #f4f4f5;
+      font-family: inherit; font-size: 12px; box-sizing: border-box;
+    }
+    .yt-loop-close {
+      position: absolute; top: 8px; right: 8px;
+      background: none; border: 0; color: #a1a1aa; cursor: pointer;
+      font-size: 14px; line-height: 1;
+    }
+    .yt-loop-close:hover { color: #f4f4f5; }
+    .yt-loop-hint { color: #71717a; font-size: 11px; margin-top: 8px; line-height: 1.5; }
   `;
   document.head.appendChild(style);
 }
+
+// ─── A–B multi-segment loop ───────────────────────────────────────────────────
+// The decision logic (when to seek, how wide the trigger window is at 2x, when
+// the overlay has to move for fullscreen) lives in src/loop.js as pure
+// functions; everything below is player/DOM plumbing around it.
+//
+// Free vs Pro: looping is NEVER gated — arm as many A–B pairs as you like, for
+// as long as you like. Only SAVING a named loop consumes the standing free pool
+// (FREE_SAVED_LOOPS_CAP), because a saved loop syncs to the cloud and becomes an
+// Active-Recall card. The server enforces the same line independently:
+// /api/bookmarks is Pro-only, so a free client that fakes the local check still
+// cannot sync loops.
+
+let loopState        = null;  // { segments, index, mode, pendingSeek, active, videoId }
+let loopDraftA       = null;  // A point marked, waiting for B
+let loopFrameHandle  = null;
+let loopFrameVideo   = null;  // element the frame callback is registered on
+let loopSafetyTimer  = null;
+let loopBoundVideo   = null;
+let loopLastTickAt   = 0;     // any tick — feeds the adaptive epsilon
+let loopLastFrameAt  = 0;     // frame-source ticks only — feeds the liveness check
+let loopSavedCache   = [];    // saved loop segments for the current video
+let loopNamingSegment = null; // segment awaiting a name in the save input
+let loopRenamingIndex = null; // session-segment index being renamed inline
+
+const LOOP_MAX_TICK_SECONDS   = 0.5;  // cap so a backgrounded tab can't inflate epsilon
+const LOOP_FRAME_STALL_MS     = 1000; // frame source considered dead after this
+
+function resolveLoopVideo() {
+  const live = document.querySelector('video');
+  if (live) video = live;
+  return live || video;
+}
+
+// ── Watchdog ────────────────────────────────────────────────────────────────
+// Two independent tick sources on purpose. requestVideoFrameCallback is exact
+// (one call per presented frame, so it survives any playbackRate), but it stops
+// firing if YouTube swaps the media element out from under us — which it does on
+// SPA navigation and some player re-inits. The interval is the safety net that
+// keeps looping and re-arms the frame source. loopTick() is idempotent, so
+// double-ticking from both sources is harmless.
+function loopTick() {
+  if (!loopState?.active) return;
+  const v = resolveLoopVideo();
+  if (!v) return;
+
+  if (shouldRebindVideo(loopBoundVideo, v)) {
+    debugLog('Loop', 'Media element swapped — rebinding watchdog');
+    loopBoundVideo = v;
+    scheduleLoopFrame();
+  }
+
+  const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const observed = loopLastTickAt ? (now - loopLastTickAt) / 1000 : LOOP_CONSTANTS.LOOP_DEFAULT_TICK;
+  loopLastTickAt = now;
+  // The epsilon in advanceLoop is sized from the OBSERVED tick interval, so a
+  // fullscreen transition that drops frames automatically widens the window
+  // instead of letting the playhead sail past B.
+  const tickSeconds = Math.min(
+    Math.max(observed, LOOP_CONSTANTS.LOOP_DEFAULT_TICK),
+    LOOP_MAX_TICK_SECONDS,
+  );
+
+  const before = loopState.index;
+  const { state, seek, reason } = advanceLoop(loopState, {
+    currentTime:  v.currentTime,
+    playbackRate: v.playbackRate,
+    tickSeconds,
+  });
+  loopState = state;
+
+  if (seek === null) return;
+  v.currentTime = seek;
+  if (v.paused) v.play().catch(() => {});
+  debugLog('Loop', 'Seek', { reason, seek, rate: v.playbackRate, tickSeconds });
+  if (state.index !== before) updateLoopPanel();
+}
+
+function scheduleLoopFrame() {
+  cancelLoopFrame();
+  const v = resolveLoopVideo();
+  if (!v) return;
+
+  const onTick = () => {
+    loopLastFrameAt = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    loopTick();
+    if (loopState?.active) scheduleLoopFrame();
+  };
+
+  if (typeof v.requestVideoFrameCallback === 'function') {
+    loopFrameVideo  = v;
+    loopFrameHandle = v.requestVideoFrameCallback(onTick);
+  } else {
+    loopFrameVideo  = null;
+    loopFrameHandle = requestAnimationFrame(onTick);
+  }
+}
+
+function cancelLoopFrame() {
+  if (loopFrameHandle === null) return;
+  try {
+    if (loopFrameVideo?.cancelVideoFrameCallback) {
+      loopFrameVideo.cancelVideoFrameCallback(loopFrameHandle);
+    } else {
+      cancelAnimationFrame(loopFrameHandle);
+    }
+  } catch { /* element already gone — the callback died with it */ }
+  loopFrameHandle = null;
+  loopFrameVideo  = null;
+}
+
+function startLoopWatchdog() {
+  loopLastTickAt  = 0;
+  // Seeded to "now" rather than 0 so the liveness check below also catches the
+  // case where the frame source never fires ONCE — e.g. it was registered on a
+  // media element YouTube had already detached.
+  loopLastFrameAt = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  scheduleLoopFrame();
+  if (loopSafetyTimer) return;
+  loopSafetyTimer = setInterval(() => {
+    if (!loopState?.active) return;
+    loopTick();
+    const v = resolveLoopVideo();
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    // requestVideoFrameCallback only fires while frames are presented, so a
+    // paused video is expected to look stalled — only re-arm during playback.
+    if (v && !v.paused && now - loopLastFrameAt > LOOP_FRAME_STALL_MS) {
+      debugLog('Loop', 'Frame source stalled — re-arming');
+      scheduleLoopFrame();
+    }
+  }, 200);
+}
+
+function stopLoopWatchdog() {
+  cancelLoopFrame();
+  if (loopSafetyTimer) { clearInterval(loopSafetyTimer); loopSafetyTimer = null; }
+  loopBoundVideo = null;
+}
+
+/** Tints the player's loop button while a loop is armed. */
+function syncLoopButtonState() {
+  document.querySelector('.yt-loop-player-btn')
+    ?.classList.toggle('yt-loop-player-btn--armed', !!loopState?.active);
+}
+
+// ── Session control ─────────────────────────────────────────────────────────
+function ensureLoopSession() {
+  if (!loopState) {
+    loopState = {
+      segments: [],
+      index: 0,
+      mode: 'chain',
+      pendingSeek: null,
+      active: false,
+      videoId: getCurrentVideoIdFromLocation(),
+    };
+  }
+  return loopState;
+}
+
+/** Arms the loop on `index` and starts the watchdog. */
+function activateLoop(index = 0) {
+  const state = ensureLoopSession();
+  if (!state.segments.length) return;
+  state.index = Math.max(0, Math.min(index, state.segments.length - 1));
+  state.active = true;
+  state.pendingSeek = null;
+  const v = resolveLoopVideo();
+  const seg = state.segments[state.index];
+  if (v && seg) {
+    v.currentTime = seg.start;
+    state.pendingSeek = seg.start;
+    v.play().catch(() => {});
+  }
+  startLoopWatchdog();
+  updateLoopPanel();
+  renderLoopRanges();
+  syncLoopButtonState();
+}
+
+function deactivateLoop() {
+  if (loopState) { loopState.active = false; loopState.pendingSeek = null; }
+  stopLoopWatchdog();
+  updateLoopPanel();
+  renderLoopRanges();
+  syncLoopButtonState();
+}
+
+/** Full teardown — SPA navigation, page unload, or the panel's ✕. */
+function exitLoopMode() {
+  stopLoopWatchdog();
+  loopState = null;
+  loopDraftA = null;
+  loopNamingSegment = null;
+  loopRenamingIndex = null;
+  document.querySelector('.yt-loop-panel')?.remove();
+  renderLoopRanges();
+  syncLoopButtonState();
+}
+
+function markLoopPointA() {
+  const v = resolveLoopVideo();
+  if (!v) return;
+  ensureLoopSession();
+  loopDraftA = v.currentTime;
+  updateLoopPanel();
+  showSilentSaveIndicator(`A set at ${formatLoopClock(loopDraftA)} — press Alt+] to close the loop`);
+}
+
+function markLoopPointB() {
+  const v = resolveLoopVideo();
+  if (!v) return;
+  if (loopDraftA === null) {
+    showSilentSaveIndicator('Set the A point first (Alt+[)', 'error');
+    return;
+  }
+  const state = ensureLoopSession();
+  const pair = { a: loopDraftA, b: v.currentTime };
+  if (!isValidLoopSegment(pair, v.duration || 0)) {
+    showSilentSaveIndicator('A and B are too close together', 'error');
+    return;
+  }
+  const before = state.segments.length;
+  state.segments = insertLoopSegment(state.segments, pair, v.duration || 0);
+  loopDraftA = null;
+  if (state.segments.length === before) {
+    showSilentSaveIndicator('That loop is already in this session');
+    updateLoopPanel();
+    return;
+  }
+  const seg = normalizeLoopSegment(pair, v.duration || 0);
+  const index = state.segments.findIndex(s => isSameLoopSegment(s, seg));
+  activateLoop(index === -1 ? state.segments.length - 1 : index);
+  showSilentSaveIndicator(`Looping ${formatLoopClock(seg.start)} → ${formatLoopClock(seg.end)}`);
+}
+
+function toggleLoopActive() {
+  const state = ensureLoopSession();
+  if (!state.segments.length) {
+    showLoopPanel();
+    showSilentSaveIndicator('Mark A (Alt+[) then B (Alt+]) to start looping');
+    return;
+  }
+  if (state.active) deactivateLoop();
+  else activateLoop(state.index);
+}
+
+function toggleLoopMode() {
+  const state = ensureLoopSession();
+  state.mode = state.mode === 'chain' ? 'single' : 'chain';
+  updateLoopPanel();
+}
+
+function removeLoopAt(index) {
+  const state = ensureLoopSession();
+  const removed = state.segments[index];
+  state.segments = removeLoopSegment(state.segments, index);
+  if (!state.segments.length) {
+    deactivateLoop();
+  } else if (state.index >= state.segments.length) {
+    state.index = state.segments.length - 1;
+  }
+  updateLoopPanel();
+  renderLoopRanges();
+  // A segment adopted from a saved loop carries its record id — removing it
+  // from the session also deletes the saved loop, matching what the row's ✕
+  // visibly means when the row is marked as saved.
+  if (removed?.id) deleteSavedLoop(removed.id);
+}
+
+/**
+ * Re-anchors A or B of an existing segment to the current playhead — this is
+ * how a loop is tightened after hearing it, and it's the same edit whether the
+ * segment is session-only or a saved loop (the saved record follows).
+ *
+ * Editing SUSPENDS the loop. Otherwise the two fight each other: to push B
+ * later you have to scrub past the current B, and an armed watchdog yanks you
+ * back to A before you can press the button. Re-arm with Loop (or Alt+L) when
+ * the bounds are where you want them.
+ */
+function editLoopBound(index, which) {
+  const state = ensureLoopSession();
+  const v = resolveLoopVideo();
+  const before = state.segments[index];
+  if (!v || !before) return;
+  if (state.active) deactivateLoop();
+
+  const previous = state.segments;
+  const next = updateLoopSegmentBound(previous, index, which, v.currentTime, v.duration || 0);
+  // updateLoopSegmentBound rebuilds the edited entry as a new object and leaves
+  // every other entry by reference, so the one that isn't in the old list by
+  // identity is the one we just edited — and that survives the re-sort.
+  const updated = next.find(seg => !previous.includes(seg));
+  if (!updated) {
+    showSilentSaveIndicator('That would make the loop too short', 'error');
+    return;
+  }
+
+  state.segments = next;
+  state.index = next.indexOf(updated);
+  updateLoopPanel();
+  renderLoopRanges();
+  if (before.id !== undefined) persistLoopEdit(before.id, updated);
+}
+
+/** Starts an inline rename of the segment at `index`. */
+function beginLoopRename(index) {
+  const seg = loopState?.segments?.[index];
+  if (!seg) return;
+  loopRenamingIndex = index;
+  updateLoopPanel();
+}
+
+function commitLoopRename() {
+  const index = loopRenamingIndex;
+  loopRenamingIndex = null;
+  const seg = loopState?.segments?.[index];
+  const input = document.querySelector('.yt-loop-panel [data-loop-rename]');
+  const name = input ? input.value : '';
+  if (!seg) { updateLoopPanel(); return; }
+  seg.name = sanitizeLoopName(name, seg);
+  updateLoopPanel();
+  renderLoopRanges();
+  if (seg.id !== undefined) persistLoopEdit(seg.id, seg);
+}
+
+/**
+ * Writes an in-session edit back onto the stored loop bookmark.
+ *
+ * Read-modify-write against the FRESH stored copy (same discipline as
+ * gradeAndPersistBookmark) so a concurrent edit from another surface isn't
+ * silently reverted.
+ */
+function persistLoopEdit(id, segment) {
+  if (!isContextValid()) return;
+  const videoId = getCurrentVideoIdFromLocation();
+  if (!videoId || !segment) return;
+  chrome.storage.sync.get({ [bmKey(videoId)]: [] }, result => {
+    const bookmarks = result[bmKey(videoId)];
+    const idx = bookmarks.findIndex(b => b.id === id);
+    if (idx === -1) return;
+    bookmarks[idx] = {
+      ...bookmarks[idx],
+      timestamp: segment.start,
+      description: segment.name || bookmarks[idx].description,
+      loop: { ...(bookmarks[idx].loop || {}), end: segment.end },
+    };
+    chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks }, () => {
+      if (chrome.runtime.lastError) {
+        debugLog('Loop', 'Failed to persist edit', { error: chrome.runtime.lastError.message });
+        return;
+      }
+      loadSavedLoops().catch(() => {});
+      updateBookmarkMarkers();
+    });
+  });
+}
+
+function deleteSavedLoop(id) {
+  if (!isContextValid()) return;
+  const videoId = getCurrentVideoIdFromLocation();
+  if (!videoId) return;
+  chrome.storage.sync.get({ [bmKey(videoId)]: [] }, result => {
+    const bookmarks = result[bmKey(videoId)];
+    const next = bookmarks.filter(b => b.id !== id);
+    if (next.length === bookmarks.length) return;
+    chrome.storage.sync.set({ [bmKey(videoId)]: next }, () => {
+      if (chrome.runtime.lastError) return;
+      loadSavedLoops().catch(() => {});
+      updateBookmarkMarkers();
+    });
+  });
+}
+
+// ── Saving (the Pro line) ───────────────────────────────────────────────────
+// A saved loop is written into bm_<videoId> as a bookmark carrying `loop.end`,
+// so it syncs through the existing /api/bookmarks path and is picked up by
+// Active Recall with no extra wiring. reviewSchedule comes from the SAME
+// enrollment resolver bookmarks use — loops enter recall through the existing
+// gate rather than a parallel one.
+async function resolveSavedLoopAllowance() {
+  if (await isProUser()) return { allowed: true, capped: false };
+  const all = await new Promise((resolve, reject) => {
+    chrome.storage.sync.get(null, result => {
+      if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+      resolve(result);
+    });
+  });
+  const bookmarks = [];
+  for (const [key, val] of Object.entries(all)) {
+    if (key.startsWith('bm_') && Array.isArray(val)) bookmarks.push(...val);
+  }
+  const saved = typeof countSavedLoops === 'function'
+    ? countSavedLoops(bookmarks)
+    : bookmarks.filter(b => b?.loop?.end > b?.timestamp).length;
+  const capped = typeof isSavedLoopCapReached === 'function'
+    ? isSavedLoopCapReached(saved)
+    : saved >= 3;
+  return { allowed: !capped, capped };
+}
+
+async function saveNamedLoop(segment, name) {
+  if (!isContextValid()) return;
+  const videoId = getCurrentVideoIdFromLocation();
+  if (!videoId || !segment) return;
+
+  const { allowed } = await resolveSavedLoopAllowance();
+  if (!allowed) {
+    const cap = globalThis.FREE_SAVED_LOOPS_CAP || 3;
+    showSilentSaveIndicator(
+      `You've saved all ${cap} free loops — looping stays unlimited, upgrade to save and sync more.`,
+      'error',
+    );
+    return;
+  }
+
+  try {
+    const stored = await new Promise(resolve =>
+      chrome.storage.sync.get({ [bmKey(videoId)]: [], videoTitles: {} }, resolve)
+    );
+    const bookmarks = stored[bmKey(videoId)];
+    if (isDuplicateLoop(bookmarks, segment)) {
+      showSilentSaveIndicator('That loop is already saved', 'error');
+      return;
+    }
+
+    const { reviewSchedule } = await resolveNewBookmarkReviewSchedule();
+    const record = buildLoopBookmark({
+      videoId,
+      segment,
+      name,
+      videoTitle: stored.videoTitles[videoId] || (await getVideoTitle().catch(() => null)),
+      reviewSchedule,
+      nowMs: Date.now(),
+    });
+    if (!record) return;
+
+    bookmarks.push(record);
+    await new Promise((resolve, reject) =>
+      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks }, () => {
+        if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+        else resolve();
+      })
+    );
+
+    updateBookmarkMarkers();
+    await loadSavedLoops();
+    showSaveFlash();
+    showSilentSaveIndicator(
+      reviewSchedule.length
+        ? `Saved "${record.description}" — it'll come back in Active Recall`
+        : `Saved "${record.description}"`,
+    );
+    debugLog('Loop', 'Saved named loop', { videoId, segment, enrolled: reviewSchedule.length > 0 });
+  } catch (error) {
+    debugLog('Loop', 'Save failed', { error: error?.message });
+    showSilentSaveIndicator('Could not save that loop', 'error');
+  }
+}
+
+/** Saved loops for this video, pulled from the same bm_<videoId> store. */
+async function loadSavedLoops() {
+  if (!isContextValid()) return;
+  const videoId = getCurrentVideoIdFromLocation();
+  if (!videoId) { loopSavedCache = []; return; }
+  const stored = await new Promise(resolve =>
+    chrome.storage.sync.get({ [bmKey(videoId)]: [] }, resolve)
+  );
+  loopSavedCache = loopSegmentsFromBookmarks(stored[bmKey(videoId)]);
+  renderLoopRanges();
+  updateLoopPanel();
+}
+
+// ── Scrubber ranges ─────────────────────────────────────────────────────────
+function renderLoopRanges() {
+  if (!progressBar) return;
+  let container = progressBar.querySelector('.yt-loop-ranges');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'yt-loop-ranges';
+    progressBar.appendChild(container);
+  }
+  const v = resolveLoopVideo();
+  const duration = v?.duration;
+  container.innerHTML = '';
+  if (!duration || !isFinite(duration) || duration <= 0) return;
+
+  const session = loopState?.segments || [];
+  // Saved loops the session hasn't already picked up, so a range isn't drawn twice.
+  const saved = loopSavedCache.filter(s => !session.some(x => isSameLoopSegment(x, s)));
+
+  const draw = (seg, className, onClick) => {
+    const bar = document.createElement('div');
+    bar.className = `yt-loop-range ${className}`;
+    bar.style.left  = `${(seg.start / duration) * 100}%`;
+    bar.style.width = `${Math.max(0.2, ((seg.end - seg.start) / duration) * 100)}%`;
+    bar.title = `${formatLoopClock(seg.start)} → ${formatLoopClock(seg.end)}${seg.name ? ` · ${seg.name}` : ''}`;
+    bar.addEventListener('click', event => { event.stopPropagation(); onClick(); });
+    container.appendChild(bar);
+  };
+
+  saved.forEach(seg => draw(seg, 'yt-loop-range--saved', () => adoptSavedLoop(seg)));
+  session.forEach((seg, i) => draw(
+    seg,
+    loopState?.active && loopState.index === i ? 'yt-loop-range--active' : '',
+    () => activateLoop(i),
+  ));
+}
+
+/** Pulls a saved loop into the live session and starts looping it. */
+function adoptSavedLoop(seg) {
+  const state = ensureLoopSession();
+  const v = resolveLoopVideo();
+  state.segments = insertLoopSegment(state.segments, seg, v?.duration || 0);
+  const index = state.segments.findIndex(s => isSameLoopSegment(s, seg));
+  showLoopPanel();
+  activateLoop(index === -1 ? 0 : index);
+}
+
+// ── Panel ───────────────────────────────────────────────────────────────────
+function showLoopPanel() {
+  ensureLoopSession();
+  mountLoopPanel();
+  updateLoopPanel();
+}
+
+/**
+ * Creates the panel if needed and parents it into whatever subtree is actually
+ * painted. In fullscreen the browser renders ONLY document.fullscreenElement's
+ * subtree, so a panel left on <body> silently disappears.
+ */
+function mountLoopPanel() {
+  let panel = document.querySelector('.yt-loop-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.className = 'yt-loop-panel';
+    panel.addEventListener('click', onLoopPanelClick);
+    panel.addEventListener('keydown', onLoopPanelKeydown);
+    // Keep YouTube's own player shortcuts from eating what we type/press here.
+    panel.addEventListener('keydown', e => e.stopPropagation());
+    attachLoopPanelDrag(panel);
+  }
+  const host = document.fullscreenElement || document.body;
+  if (needsOverlayRemount(panel.parentNode, document.fullscreenElement, document.body)) {
+    host.appendChild(panel);
+  }
+  panel.classList.toggle('yt-loop-panel--fullscreen', !!document.fullscreenElement);
+  return panel;
+}
+
+function attachLoopPanelDrag(panel) {
+  let dragging = false, offsetX = 0, offsetY = 0;
+  panel.addEventListener('mousedown', e => {
+    if (e.target.closest('button, input')) return;
+    dragging = true;
+    const rect = panel.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging || !panel.isConnected) return;
+    panel.style.right  = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.left = `${e.clientX - offsetX}px`;
+    panel.style.top  = `${e.clientY - offsetY}px`;
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+}
+
+function updateLoopPanel() {
+  const panel = document.querySelector('.yt-loop-panel');
+  if (!panel) return;
+  const state = loopState;
+  const segments = state?.segments || [];
+  const savedOnly = loopSavedCache.filter(s => !segments.some(x => isSameLoopSegment(x, s)));
+
+  const rows = [
+    ...segments.map((seg, i) => {
+      const current = state?.active && state.index === i;
+      const saved = loopSavedCache.some(s => isSameLoopSegment(s, seg));
+      if (loopRenamingIndex === i) {
+        return `
+          <div class="yt-loop-row yt-loop-row--current">
+            <input class="yt-loop-name-input" data-loop-rename placeholder="Rename this loop…"
+                   maxlength="${LOOP_CONSTANTS.LOOP_NAME_MAX}" value="${escapeLoopText(seg.name || '')}">
+          </div>`;
+      }
+      return `
+        <div class="yt-loop-row ${current ? 'yt-loop-row--current' : ''}" data-loop-index="${i}">
+          <span class="yt-loop-row-time">${formatLoopClock(seg.start)} → ${formatLoopClock(seg.end)}</span>
+          <span class="yt-loop-row-name" data-loop-rename-at="${i}" title="Click to rename">${escapeLoopText(seg.name || '')}</span>
+          ${saved ? '<span class="yt-loop-row-saved" title="Saved &amp; syncing">●</span>' : ''}
+          <button class="yt-loop-row-edit" data-loop-edit="${i}:start" title="Move A to the playhead">A</button>
+          <button class="yt-loop-row-edit" data-loop-edit="${i}:end" title="Move B to the playhead">B</button>
+          <button class="yt-loop-row-remove" data-loop-remove="${i}" title="${saved ? 'Delete this saved loop' : 'Remove from session'}">✕</button>
+        </div>`;
+    }),
+    ...savedOnly.map(seg => `
+      <div class="yt-loop-row" data-loop-saved="${seg.start}:${seg.end}">
+        <span class="yt-loop-row-time">${formatLoopClock(seg.start)} → ${formatLoopClock(seg.end)}</span>
+        <span class="yt-loop-row-name">${escapeLoopText(seg.name || '')}</span>
+        <span class="yt-loop-row-saved" title="Saved &amp; syncing">●</span>
+      </div>`),
+  ].join('');
+
+  const active = segments[state?.index ?? 0];
+  const naming = loopNamingSegment;
+
+  panel.innerHTML = `
+    <button class="yt-loop-close" data-loop-action="exit" title="Close">✕</button>
+    <div class="yt-loop-label">
+      🔁 A–B Loop
+      <button class="yt-loop-mode" data-loop-action="mode" title="Chain plays every segment in turn">
+        ${state?.mode === 'single' ? 'Single' : 'Chain'}
+      </button>
+    </div>
+    <div class="yt-loop-list">${rows || '<div class="yt-loop-empty">No segments yet. Mark <b>A</b> then <b>B</b> to start looping — as many pairs as you want.</div>'}</div>
+    <div class="yt-loop-draft">A: <b>${loopDraftA === null ? '—' : formatLoopClock(loopDraftA)}</b> &nbsp; B: <b>—</b></div>
+    ${naming ? `<input class="yt-loop-name-input" data-loop-name placeholder="Name this loop…" maxlength="${LOOP_CONSTANTS.LOOP_NAME_MAX}">` : ''}
+    <div class="yt-loop-actions">
+      <button class="yt-loop-btn" data-loop-action="setA">Set A</button>
+      <button class="yt-loop-btn" data-loop-action="setB">Set B</button>
+      <button class="yt-loop-btn ${state?.active ? '' : 'yt-loop-btn--primary'}" data-loop-action="toggle" ${segments.length ? '' : 'disabled'}>
+        ${state?.active ? 'Pause loop' : 'Loop'}
+      </button>
+      <button class="yt-loop-btn yt-loop-btn--primary" data-loop-action="${naming ? 'commitSave' : 'save'}" ${active ? '' : 'disabled'}>
+        ${naming ? 'Save ✓' : 'Save loop'}
+      </button>
+    </div>
+    <div class="yt-loop-hint">Alt+[ set A · Alt+] set B · Alt+L loop on/off. Editing A/B pauses the loop. Looping is free and unlimited.</div>
+  `;
+
+  if (naming) panel.querySelector('[data-loop-name]')?.focus();
+  if (loopRenamingIndex !== null) panel.querySelector('[data-loop-rename]')?.focus();
+}
+
+function escapeLoopText(text) {
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function onLoopPanelClick(event) {
+  const editBtn = event.target.closest('[data-loop-edit]');
+  if (editBtn) {
+    const [idx, which] = editBtn.dataset.loopEdit.split(':');
+    editLoopBound(Number(idx), which);
+    return;
+  }
+  const renameAt = event.target.closest('[data-loop-rename-at]');
+  if (renameAt) {
+    beginLoopRename(Number(renameAt.dataset.loopRenameAt));
+    return;
+  }
+  const removeBtn = event.target.closest('[data-loop-remove]');
+  if (removeBtn) {
+    removeLoopAt(Number(removeBtn.dataset.loopRemove));
+    return;
+  }
+  const savedRow = event.target.closest('[data-loop-saved]');
+  if (savedRow) {
+    const [start, end] = savedRow.dataset.loopSaved.split(':').map(Number);
+    const match = loopSavedCache.find(s => s.start === start && s.end === end);
+    if (match) adoptSavedLoop(match);
+    return;
+  }
+  const row = event.target.closest('[data-loop-index]');
+  if (row) { activateLoop(Number(row.dataset.loopIndex)); return; }
+
+  const action = event.target.closest('[data-loop-action]')?.dataset.loopAction;
+  if (!action) return;
+  if (action === 'exit')   { exitLoopMode(); return; }
+  if (action === 'mode')   { toggleLoopMode(); return; }
+  if (action === 'setA')   { markLoopPointA(); return; }
+  if (action === 'setB')   { markLoopPointB(); return; }
+  if (action === 'toggle') { toggleLoopActive(); return; }
+  if (action === 'save')   { beginLoopSave(); return; }
+  if (action === 'commitSave') { commitLoopSave(); return; }
+}
+
+function onLoopPanelKeydown(event) {
+  if (event.target.matches('[data-loop-rename]')) {
+    if (event.key === 'Enter') { event.preventDefault(); commitLoopRename(); }
+    if (event.key === 'Escape') { loopRenamingIndex = null; updateLoopPanel(); }
+    return;
+  }
+  if (!event.target.matches('[data-loop-name]')) return;
+  if (event.key === 'Enter') { event.preventDefault(); commitLoopSave(); }
+  if (event.key === 'Escape') { loopNamingSegment = null; updateLoopPanel(); }
+}
+
+function beginLoopSave() {
+  const seg = loopState?.segments?.[loopState.index];
+  if (!seg) return;
+  loopNamingSegment = seg;
+  updateLoopPanel();
+}
+
+function commitLoopSave() {
+  const seg = loopNamingSegment;
+  if (!seg) return;
+  const name = document.querySelector('.yt-loop-panel [data-loop-name]')?.value || '';
+  loopNamingSegment = null;
+  updateLoopPanel();
+  saveNamedLoop(seg, name);
+}
+
+// Fullscreen swaps the painted subtree — re-parent the panel or it vanishes.
+document.addEventListener('fullscreenchange', () => {
+  if (!document.querySelector('.yt-loop-panel')) return;
+  mountLoopPanel();
+  updateLoopPanel();
+  // The transition drops frames; re-arm the frame source rather than waiting
+  // for the safety net to notice.
+  if (loopState?.active) scheduleLoopFrame();
+});
 
 // ─── Revisit mode ─────────────────────────────────────────────────────────────
 function buildRevisionSegments(bookmarks) {
   const sorted = [...bookmarks].sort((a, b) => a.timestamp - b.timestamp);
   return sorted.map((b, i) => {
+    // A saved A–B loop carries its own end: the user drew that range because it
+    // is the hard part, so recall/revisit replays exactly it instead of the
+    // "until the next bookmark, max 60s" heuristic.
+    const loopEnd = typeof loopEndForBookmark === 'function' ? loopEndForBookmark(b) : null;
+    if (loopEnd !== null) return { bookmark: b, start: b.timestamp, end: loopEnd };
     const next = sorted[i + 1];
     const end  = next ? Math.min(next.timestamp, b.timestamp + 60) : b.timestamp + 60;
     return { bookmark: b, start: b.timestamp, end };
@@ -1812,6 +2692,11 @@ try {
 // Detect YouTube SPA navigation and notify the side panel
 document.addEventListener('yt-navigate-finish', () => {
   const videoId = handleVideoIdTransition('yt-navigate-finish') || getCurrentVideoIdFromLocation();
+  // A loop is scoped to one video: SPA nav means the armed segments no longer
+  // point at anything real, so tear the session down and reload this video's
+  // saved loops instead of letting the watchdog seek inside the new video.
+  if (loopState && loopState.videoId !== videoId) exitLoopMode();
+  loadSavedLoops().catch(() => {});
   if (videoId) {
     scheduleTitleRefresh([0, 250, 700, 1500, 3000], videoId);
     try {
@@ -1843,6 +2728,7 @@ window.addEventListener('pagehide', () => {
   document.removeEventListener('keydown', handleKeyboardShortcut);
   if (video) video.removeEventListener('durationchange', updateBookmarkMarkers);
   exitRevisionMode();
+  exitLoopMode();
   if (titleVideoWatchTimer) { clearInterval(titleVideoWatchTimer); titleVideoWatchTimer = null; }
   if (progressSaveTimer) { clearTimeout(progressSaveTimer); progressSaveTimer = null; }
   saveProgress(); // flush final position on page unload

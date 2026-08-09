@@ -14,6 +14,7 @@ import {
   recordAnkiExport,
 } from '../_utils/usage-caps';
 import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
+import { formatLoopRange, isLoopBookmark } from '../_utils/loop';
 import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
 import BookmarkNotes from './BookmarkNotes';
@@ -902,10 +903,13 @@ export default function DashboardContent({ collections, isPro, initialView, init
                         <div className={styles.threadContent}>
                           <div className={styles.threadMeta}>
                             <span className={styles.threadTime} style={{ color: b.color || '#006b5f', background: `${b.color || '#006b5f'}12` }}>
-                              {formatTimestamp(b.timestamp)}
+                              {/* A saved A–B loop shows the range it covers, not just its A point. */}
+                              {formatLoopRange(b) ?? formatTimestamp(b.timestamp)}
                             </span>
                             <span className={styles.threadType}>
-                              {b.description ? 'Annotated Bookmark' : 'Quick Clip'}
+                              {isLoopBookmark(b)
+                                ? 'A–B Loop'
+                                : b.description ? 'Annotated Bookmark' : 'Quick Clip'}
                             </span>
                             <div className={toolbarStyles.bookmarkActions}>
                               <OpenAtTimestampLink videoId={c.video_id} timestamp={b.timestamp} className={toolbarStyles.actionBtn} />

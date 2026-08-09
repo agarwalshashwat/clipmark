@@ -2,7 +2,7 @@
  * Tests for the packaged-content-script globals guard.
  *
  * Guards the pure logic that fails `vite build` when a classic content-script
- * helper (constants.js / recall.js / local-ai.js) gets tree-shaken to an empty
+ * helper (constants.js / recall.js / loop.js / local-ai.js) gets tree-shaken to an empty
  * chunk, stripping the globals the built content.js references bare.
  * Run: npm run test:unit
  */
@@ -22,8 +22,9 @@ describe('assertContentGlobals', () => {
     const chunkB = exposing(['localSummarizeSnippet']);
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
     const chunkD = exposing(['clipmarkReportError', 'clipmarkContentScriptVersion']);
-    const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold']);
-    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE]), true);
+    const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold', 'countSavedLoops', 'isSavedLoopCapReached']);
+    const chunkF = exposing(['advanceLoop', 'normalizeLoopSegment', 'isValidLoopSegment', 'isSameLoopSegment', 'insertLoopSegment', 'removeLoopSegment', 'updateLoopSegmentBound', 'needsOverlayRemount', 'shouldRebindVideo', 'loopEndForBookmark', 'loopSegmentsFromBookmarks', 'formatLoopClock', 'buildLoopBookmark', 'isDuplicateLoop', 'LOOP_CONSTANTS']);
+    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE, chunkF]), true);
   });
 
   it('passes on minified-style assignments (no spaces)', () => {
@@ -44,6 +45,23 @@ describe('assertContentGlobals', () => {
       'isMonthlyReviewCapReached',
       'normalizeMonthlyCounter',
       'isMonthlyReviewWarnThreshold',
+      'countSavedLoops',
+      'isSavedLoopCapReached',
+      'advanceLoop',
+      'normalizeLoopSegment',
+      'isValidLoopSegment',
+      'isSameLoopSegment',
+      'insertLoopSegment',
+      'removeLoopSegment',
+      'updateLoopSegmentBound',
+      'needsOverlayRemount',
+      'shouldRebindVideo',
+      'loopEndForBookmark',
+      'loopSegmentsFromBookmarks',
+      'formatLoopClock',
+      'buildLoopBookmark',
+      'isDuplicateLoop',
+      'LOOP_CONSTANTS',
     ]);
     assert.throws(
       () => assertContentGlobals([emptyConstantsChunk, otherChunks]),
