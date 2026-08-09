@@ -72,7 +72,7 @@ test('buildEvent produces a valid Sentry exception event', () => {
   const event = buildEvent({
     error,
     context: 'extension-background',
-    extra: { videoId: 'dQw4w9WgXcQ' },
+    extra: { videoId: 'aircAruvnKk' },
     release: 'clipmark-extension@1.0.0',
     environment: 'production',
     eventId: 'a'.repeat(32),
@@ -86,7 +86,7 @@ test('buildEvent produces a valid Sentry exception event', () => {
   assert.equal(event.exception.values[0].type, 'Error');
   assert.equal(event.exception.values[0].value, 'bookmark save failed');
   assert.equal(event.exception.values[0].stacktrace.frames.length, 1);
-  assert.equal(event.extra.videoId, 'dQw4w9WgXcQ');
+  assert.equal(event.extra.videoId, 'aircAruvnKk');
 });
 
 test('buildEvent survives non-Error throwables', () => {

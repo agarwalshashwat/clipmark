@@ -1,4 +1,5 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import { securityHeaders } from './lib/security-headers.mjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -6,40 +7,10 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  // Defined in lib/security-headers.mjs so the rules can be unit-tested without
+  // booting a server (webapp/tests/unit/headers.test.ts).
   async headers() {
-    return [
-      {
-        // Security headers for all routes
-        source: '/:path*',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        ],
-      },
-      {
-        // Allow Chrome extension to call the API.
-        // CORS wildcard is intentional: Chrome extension background scripts
-        // do not send an Origin header the same way browsers do, so restricting
-        // to a specific origin would block extension requests.
-        // Authorization header is required for Bearer token auth.
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
-        ],
-      },
-      {
-        // Allow embed pages to be used in iframes (overrides global X-Frame-Options: DENY)
-        source: '/embed/:path*',
-        headers: [
-          { key: 'X-Frame-Options', value: 'ALLOWALL' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors *" },
-        ],
-      },
-    ];
+    return securityHeaders();
   },
   images: {
     remotePatterns: [

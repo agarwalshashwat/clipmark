@@ -17,7 +17,12 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npm --prefix webapp ci
       - run: npm run test:unit
+      # webapp/tests/unit/*.test.ts — pure logic + route-handler cores. These had
+      # no CI job at all; the auth-handoff and header-posture tests added in
+      # docs/TEST-STRATEGY.md phase 1 live here, so gate on the whole suite.
+      - run: npm run test:unit:webapp
 
   design-conformance:
     name: ci-design-conformance
@@ -58,7 +63,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm --prefix webapp ci
+      - run: npm --prefix extension ci
       - run: npx playwright install --with-deps chromium
+
+      # tests/auth-bridge.spec.ts drives the PACKAGED build, the same way
+      # recall-bridge.spec.ts does — dist has to exist before it runs.
+      - name: Build packaged extension
+        run: npm --prefix extension run build
+
+      # Runs before the YouTube smoke on purpose: this spec never loads
+      # youtube.com (route-intercepted app origin only), so it is deterministic,
+      # and a network flake in the smoke step must not stop it from reporting.
+      - name: Auth handoff bridge (offline)
+        run: xvfb-run --auto-servernum npm run test:auth-bridge
+
       - run: xvfb-run --auto-servernum npm run test:yt:smoke
 
   webapp-visual-smoke:

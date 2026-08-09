@@ -1,10 +1,31 @@
-import { PRIVACY_EMAIL } from '@/app/lib/constants';
+import { APP_URL, PRIVACY_EMAIL } from '@/app/lib/constants';
 
 export const metadata = {
   title: 'Privacy Policy — ClipMark',
   description: 'How ClipMark collects, uses, and protects your data.',
   alternates: {
     canonical: '/privacy',
+  },
+  openGraph: {
+    title: 'Privacy Policy — Clipmark',
+    description: 'How Clipmark collects, uses, and protects your data.',
+    type: 'website',
+    url: '/privacy',
+    siteName: 'Clipmark',
+    images: [
+      {
+        url: `${APP_URL}/clipmark-logo.png`,
+        width: 512,
+        height: 512,
+        alt: 'Clipmark — YouTube Bookmark Extension',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy — Clipmark',
+    description: 'How Clipmark collects, uses, and protects your data.',
+    images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
 

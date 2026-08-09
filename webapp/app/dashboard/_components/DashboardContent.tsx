@@ -20,6 +20,7 @@ import GroupPickerModal from './GroupPickerModal';
 import BookmarkNotes from './BookmarkNotes';
 import { getSavedSearches, saveSavedSearch, deleteSavedSearch, type SavedSearch } from '../_utils/savedSearches';
 import type { Collection, Bookmark } from '@/lib/supabase';
+import { CHROME_STORE_URL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -779,7 +780,15 @@ export default function DashboardContent({ collections, isPro, initialView, init
             </div>
             <h3 className={styles.emptyTitle}>No collections yet</h3>
             <p className={styles.emptyText}>
-              Install the extension and bookmark moments from YouTube videos to see them here.
+              <a
+                href={CHROME_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--accent)', fontWeight: 700 }}
+              >
+                Install the extension
+              </a>
+              {' '}and bookmark moments from YouTube videos to see them here.
             </p>
           </div>
         )

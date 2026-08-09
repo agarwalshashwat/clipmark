@@ -26,13 +26,14 @@
  *
  * Requires `make ext-build` first (skips with a message otherwise).
  */
-import { test, expect, chromium, BrowserContext, Page, Worker } from '@playwright/test';
+import { test, expect, BrowserContext, Page, Worker } from '@playwright/test';
+import { TEST_VIDEO_ID, TEST_VIDEO_URL, launchExtensionContext } from './fixtures';
 import { existsSync } from 'node:fs';
 import path from 'path';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
-const VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_URL = TEST_VIDEO_URL;
+const VIDEO_ID = TEST_VIDEO_ID;
 
 const A = 30;
 const B = 40;
@@ -50,14 +51,7 @@ async function extensionServiceWorker(context: BrowserContext): Promise<Worker> 
 }
 
 async function launchPackaged(): Promise<BrowserContext> {
-  return chromium.launchPersistentContext('', {
-    headless: false, // Chrome extensions require non-headless
-    args: [
-      `--disable-extensions-except=${DIST}`,
-      `--load-extension=${DIST}`,
-      '--no-sandbox',
-    ],
-  });
+  return launchExtensionContext(DIST);
 }
 
 /** A saved loop is an ordinary bookmark carrying a `loop: { end }` range. */

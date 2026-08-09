@@ -12,15 +12,16 @@
  *
  * Run: npx playwright test --project=extension tests/loop-zip.spec.ts
  */
-import { test, expect, chromium, BrowserContext, Page, Worker } from '@playwright/test';
+import { test, expect, BrowserContext, Page, Worker } from '@playwright/test';
+import { TEST_VIDEO_ID, TEST_VIDEO_URL, launchExtensionContext } from './fixtures';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'path';
 
 const ZIP = path.resolve(__dirname, '../clipmark-extension.zip');
-const VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_URL = TEST_VIDEO_URL;
+const VIDEO_ID = TEST_VIDEO_ID;
 const A = 30;
 const B = 40;
 
@@ -55,14 +56,7 @@ test.describe('A–B loop (Chrome Web Store zip)', () => {
   });
 
   test('the shipped zip loads and loops A–B at 2x', async () => {
-    const context = await chromium.launchPersistentContext('', {
-      headless: false,
-      args: [
-        `--disable-extensions-except=${unpacked}`,
-        `--load-extension=${unpacked}`,
-        '--no-sandbox',
-      ],
-    });
+    const context = await launchExtensionContext(unpacked!);
     try {
       const worker = await extensionServiceWorker(context);
       await worker.evaluate(

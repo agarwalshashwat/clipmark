@@ -287,7 +287,7 @@ describe('formatTimestamp', () => {
 // ─── bmKey ─────────────────────────────────────────────────────────────────
 describe('bmKey', () => {
   it('prepends bm_ to videoId', () => {
-    assert.strictEqual(bmKey('dQw4w9WgXcQ'), 'bm_dQw4w9WgXcQ');
+    assert.strictEqual(bmKey('aircAruvnKk'), 'bm_aircAruvnKk');
   });
 
   it('works for any string videoId', () => {
@@ -303,15 +303,15 @@ describe('bmKey', () => {
 describe('ytWatchUrl', () => {
   it('returns a well-formed YouTube watch URL', () => {
     assert.strictEqual(
-      ytWatchUrl('dQw4w9WgXcQ'),
-      'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      ytWatchUrl('aircAruvnKk'),
+      'https://www.youtube.com/watch?v=aircAruvnKk',
     );
   });
 
   it('appends timestamp when t > 0', () => {
     assert.strictEqual(
-      ytWatchUrl('dQw4w9WgXcQ', 90),
-      'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90s',
+      ytWatchUrl('aircAruvnKk', 90),
+      'https://www.youtube.com/watch?v=aircAruvnKk&t=90s',
     );
   });
 
@@ -332,15 +332,15 @@ describe('ytWatchUrl', () => {
 describe('ytThumbnailUrl', () => {
   it('returns a well-formed thumbnail URL with default quality', () => {
     assert.strictEqual(
-      ytThumbnailUrl('dQw4w9WgXcQ'),
-      'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+      ytThumbnailUrl('aircAruvnKk'),
+      'https://i.ytimg.com/vi/aircAruvnKk/mqdefault.jpg',
     );
   });
 
   it('respects a custom quality parameter', () => {
     assert.strictEqual(
-      ytThumbnailUrl('dQw4w9WgXcQ', 'hqdefault'),
-      'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      ytThumbnailUrl('aircAruvnKk', 'hqdefault'),
+      'https://i.ytimg.com/vi/aircAruvnKk/hqdefault.jpg',
     );
   });
 
@@ -556,7 +556,7 @@ function extractVideoId(url) {
 
 describe('extractVideoId', () => {
   it('extracts videoId from a standard YouTube watch URL', () => {
-    assert.strictEqual(extractVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
+    assert.strictEqual(extractVideoId('https://www.youtube.com/watch?v=aircAruvnKk'), 'aircAruvnKk');
   });
 
   it('extracts videoId when additional query params are present', () => {
@@ -575,7 +575,7 @@ describe('extractVideoId', () => {
   });
 
   it('returns null for a youtu.be short URL (no v query param)', () => {
-    assert.strictEqual(extractVideoId('https://youtu.be/dQw4w9WgXcQ'), null);
+    assert.strictEqual(extractVideoId('https://youtu.be/aircAruvnKk'), null);
   });
 
   it('handles a URL with only the v param', () => {
@@ -597,7 +597,7 @@ function remKey(videoId) { return `rem_${videoId}`; }
 
 describe('remKey', () => {
   it('prepends rem_ to videoId', () => {
-    assert.strictEqual(remKey('dQw4w9WgXcQ'), 'rem_dQw4w9WgXcQ');
+    assert.strictEqual(remKey('aircAruvnKk'), 'rem_aircAruvnKk');
   });
 
   it('works for any string videoId', () => {

@@ -5,19 +5,26 @@ import { createServerSupabase } from '@/lib/supabase';
 import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
+import { CHROME_STORE_URL } from '@/app/lib/constants';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 import { ScrollReveal } from './ScrollReveal';
 import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
+import { WhyClipMark } from '@/app/components/WhyClipMark';
+import { buildPageMetadata } from '@/app/lib/seo';
 
-export const metadata: Metadata = {
+// Built through buildPageMetadata so the homepage's own openGraph/twitter copy
+// matches its <title> rather than inheriting the root layout's weaker generic
+// block — the share-card mismatch in docs/gtm/SEO-AUDIT.md §1.3 (quick win #4).
+export const metadata: Metadata = buildPageMetadata({
   title: 'ClipMark — Turn YouTube Into Video Flashcards You Remember',
   description: 'Bookmark the moments that matter, then let Active Recall quiz you on them before replaying the clip. Spaced review, local AI notes, and one-click export to Anki.',
+  path: '/',
   keywords: [
     'youtube bookmarks', 'video flashcards', 'active recall', 'spaced repetition',
     'anki export', 'video notes', 'study tool', 'chrome extension', 'ai summaries',
-    'timestamp bookmarks', 'second brain',
+    'timestamp bookmarks', 'remember what you watch', 'second brain',
   ],
-};
+});
 
 const FAQ_DATA = [
   {
@@ -201,7 +208,9 @@ export default async function Home({
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <a href="https://chrome.google.com/webstore" 
+            <a href={CHROME_STORE_URL}
+               target="_blank"
+               rel="noopener noreferrer"
                style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '20px 44px',
@@ -738,6 +747,11 @@ export default async function Home({
         </div>
       </section>
 
+      {/* ── Why ClipMark (differentiators) ──────────────────────────────── */}
+      {/* Sits directly above pricing on purpose: the free-tier card is the claim
+          people are most sceptical of, so the honest-limits panel lands first. */}
+      <WhyClipMark tint />
+
       {/* ── Pricing Preview ─────────────────────────────────────────────── */}
       <section id="pricing" style={{ padding: '128px 32px', background: 'white' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
@@ -789,6 +803,48 @@ export default async function Home({
               </div>
             ))}
           </div>
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
+            <a href="/faq" style={{ color: '#0D9488', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+              Read the full FAQ <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Retention cluster links ─────────────────────────────────────── */}
+      {/* Crawl path from the homepage into the retention pages — without this the
+          cluster is only reachable from the footer and the sitemap. */}
+      <section style={{ padding: '96px 32px', background: 'white' }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <span className="cm-section-label">Go Deeper</span>
+            <h2 style={{
+              fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 800, marginBottom: 16,
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: '#1A1C1D',
+            }}>
+              How remembering actually works here
+            </h2>
+            <p style={{ color: '#545f6c', maxWidth: 520, margin: '0 auto', fontSize: 16, lineHeight: 1.7 }}>
+              The retrieval loop, the review schedule, and the road out to Anki — each explained on its own page.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 16 }}>
+            {[
+              { href: '/active-recall-youtube',      icon: 'quiz',        label: 'Active recall from YouTube',  desc: 'Answer before you replay — the step rewatching skips.' },
+              { href: '/spaced-repetition-youtube',  icon: 'event_repeat', label: 'Spaced repetition for YouTube', desc: '1, 3, 7 days — doubling to 60. How to revise lectures.' },
+              { href: '/youtube-flashcards',         icon: 'style',       label: 'Turn YouTube into flashcards', desc: 'Cards whose answer is the moment, not a paraphrase.' },
+              { href: '/youtube-to-anki',            icon: 'download',    label: 'YouTube to Anki',             desc: 'Export into the deck you already run, timestamps intact.' },
+            ].map(({ href, icon, label, desc }) => (
+              <a key={href} href={href} style={{
+                display: 'block', padding: 24, borderRadius: 24, textDecoration: 'none',
+                background: '#f9f9fa', border: '1px solid #e8e8e9',
+              }}>
+                <span className="material-symbols-outlined" style={{ color: '#0D9488', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
+                <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: '#1A1C1D', marginBottom: 6, fontFamily: "var(--font-display)" }}>{label}</span>
+                <span style={{ display: 'block', fontSize: 13, color: '#545f6c', lineHeight: 1.6 }}>{desc}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -816,7 +872,9 @@ export default async function Home({
           <p style={{ fontSize: 20, color: 'var(--text-muted)', marginBottom: 48 }}>
             Turn casual watching into lifelong knowledge — build a second brain you&apos;ll actually revisit.
           </p>
-          <a href="https://chrome.google.com/webstore" 
+          <a href={CHROME_STORE_URL}
+             target="_blank"
+             rel="noopener noreferrer"
              aria-label="Install ClipMark Chrome Extension"
              style={{
             display: 'inline-block', padding: '20px 48px',

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
 import styles from './page.module.css';
 import { CopyLinkButton } from './CopyLinkButton';
-import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { APP_URL, CHROME_STORE_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTimestamp(seconds: number): string {
@@ -80,6 +80,8 @@ export async function generateMetadata(
       title: `${title} — ClipMark`,
       description: `${collection.bookmarks.length} curated moments from this video.`,
       type: 'video.other',
+      url: `/v/${shareId}`,
+      siteName: 'Clipmark',
       images: [
         {
           url: ogUrl,
@@ -307,7 +309,9 @@ export default async function SharePage(
                   timestamped highlights from any YouTube video — in one click.
                 </p>
                 <a
-                  href="https://chrome.google.com/webstore"
+                  href={CHROME_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={styles.sideBtn}
                   style={{
                     background: 'var(--accent-strong)',

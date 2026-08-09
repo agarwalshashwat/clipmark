@@ -1,5 +1,5 @@
 import React from 'react';
-import { SUPPORT_EMAIL } from '@/app/lib/constants';
+import { CHROME_STORE_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
 export function Footer() {
   return (
@@ -14,7 +14,16 @@ export function Footer() {
             <span className="footer-links-title">Product</span>
             <a href="/upgrade" className="footer-link">Pricing</a>
             <a href="/affiliate" className="footer-link">Affiliate Program</a>
-            <a href="https://chrome.google.com/webstore" className="footer-link">Chrome Extension</a>
+            <a href={CHROME_STORE_URL} target="_blank" rel="noopener noreferrer" className="footer-link">Chrome Extension</a>
+          </div>
+          <div className="footer-links-col">
+            <span className="footer-links-title">Learn</span>
+            <a href="/active-recall-youtube" className="footer-link">Active Recall from YouTube</a>
+            <a href="/spaced-repetition-youtube" className="footer-link">Spaced Repetition for YouTube</a>
+            <a href="/youtube-flashcards" className="footer-link">YouTube Flashcards</a>
+            <a href="/youtube-to-anki" className="footer-link">YouTube to Anki</a>
+            <a href="/faq" className="footer-link">FAQ</a>
+            <a href="/switch-from-videosegments" className="footer-link">Switching from VideoSegments</a>
           </div>
           <div className="footer-links-col">
             <span className="footer-links-title">Legal</span>
