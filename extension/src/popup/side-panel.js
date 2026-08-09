@@ -7,6 +7,7 @@ import {
   MAX_RECONNECT_ATTEMPTS,
   RECONNECT_DELAY,
   isExtensionContextValid,
+  buildPendingRevision,
 } from '../constants.module.js';
 import { formatLoopRange, isLoopBookmark } from '../loop.module.js';
 import {
@@ -1103,10 +1104,21 @@ async function openVideoAt(videoId, timestamp) {
   chrome.tabs.create({ url });
 }
 
-// Start Active Recall for a video from the idle screen. There is no YouTube tab
-// to message here, so this uses the same storage handoff the dashboard uses
-// (content.js picks `pendingRevision` up on player init) rather than a second
-// review implementation. Pro gating mirrors #revisit-mode-btn exactly.
+/**
+ * Start Active Recall for a video from the idle screen's due strip.
+ *
+ * Deliberately does NOT go through openVideoAt. That helper's whole job is to
+ * *play* a moment — its reused-tab branch sends `seekTo`, and content.js's
+ * seekTo handler seeks and then calls play(). Routing recall through it started
+ * the clip immediately and the prompt never got the chance to hold the frame,
+ * so the answer was spoiled before the user recalled anything.
+ *
+ * Instead this mirrors background.js's startRecallFromWebapp: message the live
+ * content script directly with `startRevision`, and let the recall engine's own
+ * pause do the work. The storage handoff is the fallback for when there is no
+ * tab, or its content script doesn't answer. Pro gating mirrors
+ * #revisit-mode-btn exactly.
+ */
 async function startRecallFromIdle(videoId, bookmarks) {
   if (!videoId) return;
   if (!(await checkPro())) {
@@ -1130,8 +1142,37 @@ async function startRecallFromIdle(videoId, bookmarks) {
   });
   if (!dueOnes.length) return;
 
-  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks: dueOnes, recall: true } });
-  await openVideoAt(videoId, dueOnes[0].timestamp);
+  const handoff = () =>
+    chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, dueOnes, true) });
+
+  try {
+    const tabs = await chrome.tabs.query({ url: '*://*.youtube.com/watch*' });
+    const existing = tabs.find(t => (t.url || '').includes(`v=${videoId}`));
+    if (existing?.id) {
+      await chrome.tabs.update(existing.id, { active: true });
+      if (existing.windowId != null) {
+        try { await chrome.windows.update(existing.windowId, { focused: true }); } catch {}
+      }
+      try {
+        await sendMessageToTab(existing.id, { action: 'startRevision', bookmarks: dueOnes, recall: true });
+        return;
+      } catch {
+        // Content script not reachable (tab still loading, or it predates the
+        // install) — reload through the storage handoff instead.
+      }
+      await handoff();
+      await chrome.tabs.reload(existing.id);
+      return;
+    }
+  } catch {
+    // tabs.query can reject if the pattern falls outside our host permissions —
+    // opening a new tab is always allowed, so just fall through.
+  }
+
+  await handoff();
+  // No `t=` deep link: the recall prompt owns the playhead, and a start time in
+  // the URL would have YouTube autoplay into the clip behind the prompt.
+  await chrome.tabs.create({ url: ytWatchUrl(videoId) });
 }
 
 // i.ytimg.com answers an unknown video id with a 120x90 grey placeholder rather

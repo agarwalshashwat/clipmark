@@ -101,6 +101,28 @@ const APP_EXPORT_PREFIX = 'clipmark';
 const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_DELAY        = 1000; // ms
 
+// ─── Active Recall handoff ──────────────────────────────────────────────────
+// When an extension page (side panel, dashboard) starts a recall session and
+// there is no reachable content script to message, it hands the session over
+// through chrome.storage.local; content.js consumes it on the next player init
+// for that video. Nothing guarantees that load ever happens though — the user
+// can close the tab, or never open the video — so an unconsumed record would
+// sit in storage indefinitely and ambush an unrelated visit to the same video
+// days later. Stamp every handoff and treat anything past the TTL as stale.
+const PENDING_REVISION_TTL_MS = 5 * 60 * 1000;
+
+function buildPendingRevision(videoId, bookmarks, recall = true, now = Date.now()) {
+  return { videoId, bookmarks, recall: !!recall, createdAt: now };
+}
+
+function isPendingRevisionExpired(pending, now = Date.now()) {
+  if (!pending) return true;
+  // Records written before createdAt existed are honoured rather than dropped,
+  // so an extension update mid-handoff doesn't swallow the user's session.
+  if (!Number.isFinite(pending.createdAt)) return false;
+  return now - pending.createdAt > PENDING_REVISION_TTL_MS;
+}
+
 // ─── String limits ──────────────────────────────────────────────────────────
 const TITLE_TRUNCATE_LENGTH      = 60;
 const TRANSCRIPT_TRUNCATE_LENGTH = 120;
@@ -131,6 +153,9 @@ if (typeof globalThis !== 'undefined') {
   globalThis.APP_EXPORT_PREFIX = APP_EXPORT_PREFIX;
   globalThis.MAX_RECONNECT_ATTEMPTS = MAX_RECONNECT_ATTEMPTS;
   globalThis.RECONNECT_DELAY = RECONNECT_DELAY;
+  globalThis.PENDING_REVISION_TTL_MS = PENDING_REVISION_TTL_MS;
+  globalThis.buildPendingRevision = buildPendingRevision;
+  globalThis.isPendingRevisionExpired = isPendingRevisionExpired;
   globalThis.TITLE_TRUNCATE_LENGTH = TITLE_TRUNCATE_LENGTH;
   globalThis.TRANSCRIPT_TRUNCATE_LENGTH = TRANSCRIPT_TRUNCATE_LENGTH;
   globalThis.FONT_FAMILY_DISPLAY = FONT_FAMILY_DISPLAY;

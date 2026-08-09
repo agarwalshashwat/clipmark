@@ -212,10 +212,28 @@ function setupBookmarkMarkers() {
   // Check if dashboard requested revision mode for this video
   const currentVideoId = new URLSearchParams(window.location.search).get('v');
   chrome.storage.local.get({ pendingRevision: null }, r => {
-    if (r.pendingRevision?.videoId === currentVideoId && r.pendingRevision.bookmarks?.length) {
+    const pending = r.pendingRevision;
+    if (pending?.videoId !== currentVideoId || !pending.bookmarks?.length) return;
+
+    // A handoff nobody consumed is not a session the user still wants — drop it
+    // rather than ambushing an unrelated visit to this video later on.
+    if (isPendingRevisionExpired(pending, Date.now())) {
       chrome.storage.local.remove('pendingRevision');
-      setTimeout(() => startRevisionMode(r.pendingRevision.bookmarks, r.pendingRevision.recall), 800);
+      return;
     }
+    chrome.storage.local.remove('pendingRevision');
+
+    // Hold the player NOW, not in 800ms. The page is mid-autoplay by this point,
+    // and waiting for marker setup to finish before pausing lets the clip — the
+    // answer — play audibly before the prompt ever mounts.
+    if (pending.recall) {
+      const v = document.querySelector('video') || video;
+      if (v) {
+        v.pause();
+        holdVideoForRecall(v);
+      }
+    }
+    setTimeout(() => startRevisionMode(pending.bookmarks, pending.recall), 800);
   });
 
   // Saved A–B loops live in the same bm_<videoId> store — load them so their
@@ -2543,7 +2561,37 @@ function updateRevisionCountdown(sec) {
 // Recall-before-reveal flow layered on Revisit Mode: prompt (description hidden)
 // → reveal & play the segment → self-grade → persist → next prompt.
 
+// ─── Recall playhead hold ────────────────────────────────────────────────────
+// While a recall prompt is up the video must stay paused on the segment's first
+// frame. Pausing once isn't enough: YouTube's own player calls play() during
+// init and after SPA navigation, well after we've paused, which would roll the
+// clip — the answer — behind the prompt. So the pause is backed by a `play`
+// listener that re-pauses and re-seeks until the user hits Reveal.
+let releaseRecallHold = null;
+
+function holdVideoForRecall(v, start = null) {
+  clearRecallHold();
+  if (!v) return;
+  const rePause = () => {
+    v.pause();
+    if (Number.isFinite(start)) v.currentTime = start;
+  };
+  v.addEventListener('play', rePause);
+  releaseRecallHold = () => {
+    v.removeEventListener('play', rePause);
+    releaseRecallHold = null;
+  };
+}
+
+function clearRecallHold() {
+  if (releaseRecallHold) releaseRecallHold();
+}
+
 function removeRecallPanels() {
+  // Panels and the hold share a lifetime: every path that tears a prompt down
+  // (Reveal, grade, exitRevisionMode) goes through here, so releasing the hold
+  // in one place keeps playRevisionSegment's play() from being fought.
+  clearRecallHold();
   document.querySelectorAll('.yt-recall-panel').forEach(el => el.remove());
 }
 
@@ -2553,13 +2601,21 @@ function showRecallPrompt(index) {
   if (!revisionState) return;
   removeRecallPanels();
   revisionState.index = index;
+  const seg   = revisionState.segments[index];
   const v = document.querySelector('video') || video;
-  if (v) v.pause();
+  if (v) {
+    // Hold AT the segment start, not merely wherever the playhead happened to
+    // be. Entry points differ — a live `startRevision` message arrives with the
+    // video anywhere — and the prompt's timestamp has to match the frame the
+    // user is about to see, or Reveal jumps somewhere else.
+    v.pause();
+    if (Number.isFinite(seg.start)) v.currentTime = seg.start;
+    holdVideoForRecall(v, seg.start);
+  }
   // Keep the revisit overlay (Prev/Next/✕/speed) present and in sync during the
   // prompt, but hide its note — the description is the answer.
   updateRevisionOverlay(true);
 
-  const seg   = revisionState.segments[index];
   const total = revisionState.segments.length;
   const tags  = seg.bookmark.tags || [];
   const panel = document.createElement('div');

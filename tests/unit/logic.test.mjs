@@ -33,6 +33,9 @@ import {
   getTagColor,
   ytWatchUrl,
   ytThumbnailUrl,
+  PENDING_REVISION_TTL_MS,
+  buildPendingRevision,
+  isPendingRevisionExpired,
 } from '../../extension/src/constants.module.js';
 
 const TRANSCRIPT_TRUNCATE_LENGTH = 120;
@@ -804,5 +807,48 @@ describe('buildRevisionSegments', () => {
     buildRevisionSegments(original);
     assert.strictEqual(original[0].timestamp, 50);
     assert.strictEqual(original[1].timestamp, 10);
+  });
+});
+
+// ─── Active Recall storage handoff (pendingRevision TTL) ─────────────────────
+// A handoff written by the side panel / dashboard is consumed by content.js on
+// the next player init for that video. If that load never happens the record
+// lingers, so it carries a timestamp and expires — otherwise an abandoned
+// "Start review" would silently hijack an unrelated visit to the video later.
+describe('pendingRevision handoff', () => {
+  const NOW = 1_700_000_000_000;
+
+  it('stamps the record with a creation time', () => {
+    const p = buildPendingRevision('abc123', [{ id: 1 }], true, NOW);
+    assert.deepEqual(p, { videoId: 'abc123', bookmarks: [{ id: 1 }], recall: true, createdAt: NOW });
+  });
+
+  it('coerces recall to a boolean', () => {
+    assert.strictEqual(buildPendingRevision('v', [], undefined, NOW).recall, true);
+    assert.strictEqual(buildPendingRevision('v', [], 0, NOW).recall, false);
+  });
+
+  it('treats a fresh handoff as live', () => {
+    const p = buildPendingRevision('v', [{ id: 1 }], true, NOW);
+    assert.strictEqual(isPendingRevisionExpired(p, NOW), false);
+    assert.strictEqual(isPendingRevisionExpired(p, NOW + PENDING_REVISION_TTL_MS), false);
+  });
+
+  it('expires a handoff older than the TTL', () => {
+    const p = buildPendingRevision('v', [{ id: 1 }], true, NOW);
+    assert.strictEqual(isPendingRevisionExpired(p, NOW + PENDING_REVISION_TTL_MS + 1), true);
+    assert.strictEqual(isPendingRevisionExpired(p, NOW + 86400000), true);
+  });
+
+  it('treats a missing record as expired', () => {
+    assert.strictEqual(isPendingRevisionExpired(null, NOW), true);
+    assert.strictEqual(isPendingRevisionExpired(undefined, NOW), true);
+  });
+
+  it('honours a legacy record with no createdAt rather than dropping it', () => {
+    // Written by a pre-TTL build that was still installed when the update
+    // landed — swallowing it would lose a session the user just asked for.
+    const legacy = { videoId: 'v', bookmarks: [{ id: 1 }], recall: true };
+    assert.strictEqual(isPendingRevisionExpired(legacy, NOW), false);
   });
 });
