@@ -67,7 +67,7 @@ and `yt-navigate-finish` handling for YouTube's SPA navigation.
 script against *real* `youtube.com` via `launchPersistentContext`.
 
 **Gap:** every one of those specs depends on live `youtube.com` rendering the same DOM structure
-and video (`dQw4w9WgXcQ`) it does today. That's real coverage, but it's also the suite's single
+and video (`TEST_VIDEO_ID` in `tests/fixtures.ts`) it does today. That's real coverage, but it's also the suite's single
 biggest source of flakiness and the reason `test:yt` is serial and ~30 minutes — there is no
 tier below it. Pure logic that content.js contains inline (marker-position math, tag-color
 lookups) is *already* extracted to the twin `constants.js`/`.module.js` and unit-tested; what
