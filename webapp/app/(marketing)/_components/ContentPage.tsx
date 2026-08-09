@@ -8,13 +8,14 @@ import { CHROME_STORE_URL } from '@/app/lib/constants';
  *
  * Styling deliberately mirrors app/(marketing)/page.tsx — inline styles, Material
  * Symbols icons, the same type scale and teal accent — rather than introducing a
- * second styling approach. These pages are content-first and can be restyled
- * against packages/design-system/tokens.css later without touching their copy.
+ * second styling approach. Every colour resolves through
+ * packages/design-system/tokens.css, so these pages follow the theme rather than
+ * carrying their own light-only palette.
  */
 
-const INK = '#1A1C1D';
-const INK_SUB = '#545f6c';
-const ACCENT_DEEP = '#0F766E';
+const INK = 'var(--text)';
+const INK_SUB = 'var(--text-muted)';
+const ACCENT_DEEP = 'var(--accent-strong)';
 
 export const PROSE: React.CSSProperties = {
   fontSize: 17,
@@ -56,7 +57,7 @@ export function PageHero({
   ctaLabel?: string;
 }) {
   return (
-    <section style={{ padding: '80px 32px 64px', background: '#ffffff' }}>
+    <section style={{ padding: '80px 32px 64px', background: 'var(--surface)' }}>
       <div style={{ maxWidth: 840, margin: '0 auto', textAlign: 'center' }}>
         <span className="cm-section-label">{label}</span>
         <h1
@@ -66,13 +67,13 @@ export function PageHero({
             lineHeight: 1.05,
             letterSpacing: '-0.035em',
             fontFamily: 'var(--font-display)',
-            color: '#0F172A',
+            color: INK,
             margin: '0 auto 24px',
           }}
         >
           {title}
         </h1>
-        <p style={{ fontSize: 19, color: '#475569', lineHeight: 1.7, margin: '0 auto 40px', maxWidth: 680 }}>
+        <p style={{ fontSize: 19, color: 'var(--text-sub)', lineHeight: 1.7, margin: '0 auto 40px', maxWidth: 680 }}>
           {intro}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -83,7 +84,7 @@ export function PageHero({
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '17px 36px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #0F766E 100%)',
+              background: 'var(--accent-strong)',
               color: 'white', borderRadius: 16, fontSize: 17, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 16px 40px rgba(13, 148, 136, 0.22)',
             }}
@@ -95,8 +96,8 @@ export function PageHero({
             href="/upgrade"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
-              padding: '17px 36px', background: 'white', border: '1px solid #E2E8F0',
-              color: '#0F172A', borderRadius: 16, fontSize: 17, fontWeight: 700, textDecoration: 'none',
+              padding: '17px 36px', background: 'var(--surface)', border: '1px solid var(--border)',
+              color: INK, borderRadius: 16, fontSize: 17, fontWeight: 700, textDecoration: 'none',
             }}
           >
             See what&apos;s free
@@ -122,7 +123,7 @@ export function Section({
   children?: React.ReactNode;
 }) {
   return (
-    <section id={id} style={{ padding: '72px 32px', background: tint ? '#fcfcfd' : '#ffffff' }}>
+    <section id={id} style={{ padding: '72px 32px', background: tint ? 'var(--bg)' : 'var(--surface)' }}>
       <div style={{ maxWidth: 840, margin: '0 auto' }}>
         {heading && <h2 style={H2}>{heading}</h2>}
         {intro && <p style={PROSE}>{intro}</p>}
@@ -141,7 +142,7 @@ export function Steps({ items }: { items: { title: string; desc: React.ReactNode
           <span
             style={{
               flexShrink: 0, width: 40, height: 40, borderRadius: 12,
-              background: 'rgba(20,184,166,0.12)', color: ACCENT_DEEP,
+              background: 'var(--accent-light)', color: ACCENT_DEEP,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14,
             }}
@@ -163,10 +164,10 @@ export function CardGrid({ items }: { items: { icon: string; title: string; desc
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
       {items.map(({ icon, title, desc }) => (
-        <div key={title} style={{ padding: 28, borderRadius: 24, background: '#f3f3f4' }}>
+        <div key={title} style={{ padding: 28, borderRadius: 24, background: 'var(--surface-alt)' }}>
           <div
             style={{
-              width: 44, height: 44, borderRadius: 12, background: INK, color: 'white',
+              width: 44, height: 44, borderRadius: 12, background: 'var(--accent-strong)', color: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
             }}
           >
@@ -195,9 +196,9 @@ export function FaqList({ items }: { items: { q: string; a: string }[] }) {
         <div
           key={q}
           style={{
-            background: 'white', padding: 28, borderRadius: 20,
-            boxShadow: '0 4px 20px rgba(26,28,29,0.04)',
-            border: '1px solid rgba(26,28,29,0.06)',
+            background: 'var(--surface)', padding: 28, borderRadius: 20,
+            boxShadow: 'var(--shadow-lg)',
+            border: '1px solid var(--border)',
           }}
         >
           <h2 style={{ ...H3, fontSize: 17 }}>{q}</h2>
@@ -220,7 +221,7 @@ export function ComparisonTable({
     padding: '14px 16px',
     fontSize: 14,
     color: INK_SUB,
-    borderTop: '1px solid #e8e8e9',
+    borderTop: '1px solid var(--border)',
     verticalAlign: 'top',
     lineHeight: 1.6,
   };
@@ -258,7 +259,7 @@ export function RelatedLinks({ links }: { links: { href: string; label: string; 
           href={href}
           style={{
             display: 'block', padding: 22, borderRadius: 20, textDecoration: 'none',
-            background: 'white', border: '1px solid #e8e8e9',
+            background: 'var(--surface)', border: '1px solid var(--border)',
           }}
         >
           <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: ACCENT_DEEP, marginBottom: 6, fontFamily: 'var(--font-display)' }}>
@@ -274,7 +275,7 @@ export function RelatedLinks({ links }: { links: { href: string; label: string; 
 /** Closing install CTA. */
 export function CtaBand({ heading, sub }: { heading: React.ReactNode; sub: React.ReactNode }) {
   return (
-    <section style={{ padding: '96px 32px', textAlign: 'center', background: '#fcfcfd' }}>
+    <section style={{ padding: '96px 32px', textAlign: 'center', background: 'var(--bg)' }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
         <h2 style={{ ...H2, fontSize: 'clamp(26px, 4vw, 40px)' }}>{heading}</h2>
         <p style={{ ...PROSE, fontSize: 17, marginBottom: 36 }}>{sub}</p>
@@ -284,16 +285,16 @@ export function CtaBand({ heading, sub }: { heading: React.ReactNode; sub: React
           rel="noopener noreferrer"
           style={{
             display: 'inline-block', padding: '18px 44px',
-            background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)',
+            background: 'var(--accent-strong)',
             color: 'white', borderRadius: 16, fontWeight: 700, fontSize: 17, textDecoration: 'none',
             boxShadow: '0 16px 44px rgba(20, 184, 166, 0.26)',
           }}
         >
           Add ClipMark to Chrome — Free
         </a>
-        {/* #64748B, not the lighter #94A3B8 used elsewhere for fine print: at 13px
-            that failed WCAG AA (2.5:1), and this line carries the free-tier promise. */}
-        <p style={{ marginTop: 20, fontSize: 13, color: '#64748B' }}>
+        {/* --text-muted, not --text-faint, for fine print: at 13px the faint step
+            fails WCAG AA, and this line carries the free-tier promise. */}
+        <p style={{ marginTop: 20, fontSize: 13, color: 'var(--text-muted)' }}>
           Free tier needs no card. Works in Chrome, Edge, and Brave.
         </p>
       </div>

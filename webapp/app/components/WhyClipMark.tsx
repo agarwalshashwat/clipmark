@@ -45,19 +45,19 @@ const STRENGTHS = [
 
 export function WhyClipMark({ tint = false }: { tint?: boolean }) {
   return (
-    <section id="why-clipmark" style={{ padding: '112px 32px', background: tint ? '#fcfcfd' : '#ffffff' }}>
+    <section id="why-clipmark" style={{ padding: '112px 32px', background: tint ? 'var(--bg)' : 'var(--surface)' }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <span className="cm-section-label">Why ClipMark</span>
           <h2
             style={{
               fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, marginBottom: 16,
-              fontFamily: 'var(--font-display)', letterSpacing: '-0.5px', color: '#1A1C1D',
+              fontFamily: 'var(--font-display)', letterSpacing: '-0.5px', color: 'var(--text)',
             }}
           >
             Four things we refuse to get wrong.
           </h2>
-          <p style={{ color: '#545f6c', maxWidth: 560, margin: '0 auto', fontSize: 16, lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-muted)', maxWidth: 560, margin: '0 auto', fontSize: 16, lineHeight: 1.7 }}>
             The player stays clear, the free tier stays honest, the permissions stay narrow, and the thing that
             makes it stick is built in.
           </p>
@@ -68,30 +68,30 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
             <div
               key={title}
               style={{
-                padding: 32, borderRadius: 28, background: 'white',
-                border: '1px solid #e8e8e9', boxShadow: '0 4px 20px rgba(26,28,29,0.04)',
+                padding: 32, borderRadius: 28, background: 'var(--surface)',
+                border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)',
               }}
             >
               <div
                 style={{
                   width: 46, height: 46, borderRadius: 14, marginBottom: 22,
-                  background: 'rgba(20,184,166,0.12)', color: '#0F766E',
+                  background: 'var(--accent-light)', color: 'var(--accent-strong)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
                 <span className="material-symbols-outlined">{icon}</span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, fontFamily: 'var(--font-display)', color: '#1A1C1D', marginTop: 0 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, fontFamily: 'var(--font-display)', color: 'var(--text)', marginTop: 0 }}>
                 {title}
               </h3>
-              <p style={{ color: '#545f6c', fontSize: 15, lineHeight: 1.75, margin: 0 }}>{body}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>{body}</p>
             </div>
           ))}
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: 40, fontSize: 14, color: '#545f6c' }}>
+        <p style={{ textAlign: 'center', marginTop: 40, fontSize: 14, color: 'var(--text-muted)' }}>
           Switching from an extension that stopped getting updates?{' '}
-          <a href="/switch-from-videosegments" style={{ color: '#0F766E', fontWeight: 700, textDecoration: 'none' }}>
+          <a href="/switch-from-videosegments" style={{ color: 'var(--accent-strong)', fontWeight: 700, textDecoration: 'none' }}>
             Read the migration guide
           </a>
           .

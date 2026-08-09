@@ -4,30 +4,30 @@ import { Metadata } from 'next';
 import { APP_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Sign In — Clipmark',
-  description: 'Sign in to Clipmark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
+  title: 'Sign In — ClipMark',
+  description: 'Sign in to ClipMark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
   alternates: {
     canonical: '/signin',
   },
   openGraph: {
-    title: 'Sign In — Clipmark',
-    description: 'Sign in to Clipmark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
+    title: 'Sign In — ClipMark',
+    description: 'Sign in to ClipMark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
     type: 'website',
     url: '/signin',
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sign In — Clipmark',
-    description: 'Sign in to Clipmark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
+    title: 'Sign In — ClipMark',
+    description: 'Sign in to ClipMark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };

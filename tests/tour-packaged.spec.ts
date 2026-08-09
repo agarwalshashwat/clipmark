@@ -18,15 +18,20 @@
  *
  * Requires `make ext-build` first (skips with a message otherwise).
  */
-import { test, expect, chromium, BrowserContext, Page, Worker } from '@playwright/test';
+import { test, expect, BrowserContext, Page, Worker } from '@playwright/test';
 import { existsSync } from 'node:fs';
 import path from 'path';
+import {
+  launchExtensionContext,
+  TEST_VIDEO_ID, TEST_VIDEO_URL,
+  TEST_VIDEO_ID_2, TEST_VIDEO_URL_2,
+} from './fixtures';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
-const VIDEO_ID = 'dQw4w9WgXcQ';
-const OTHER_VIDEO_ID = '9bZkp7q19f0';
-const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
-const OTHER_VIDEO_URL = `https://www.youtube.com/watch?v=${OTHER_VIDEO_ID}`;
+const VIDEO_ID = TEST_VIDEO_ID;
+const OTHER_VIDEO_ID = TEST_VIDEO_ID_2;
+const VIDEO_URL = TEST_VIDEO_URL;
+const OTHER_VIDEO_URL = TEST_VIDEO_URL_2;
 
 const POPOVER = '.clipmark-tour-popover';
 const PROGRESS = '.driver-popover-progress-text';
@@ -45,10 +50,7 @@ async function extensionServiceWorker(context: BrowserContext): Promise<Worker> 
 }
 
 async function launch(): Promise<BrowserContext> {
-  return chromium.launchPersistentContext('', {
-    headless: false, // Chrome extensions require non-headless
-    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox', '--mute-audio'],
-  });
+  return launchExtensionContext(DIST);
 }
 
 /** Put the profile back to "never seen the tour". */

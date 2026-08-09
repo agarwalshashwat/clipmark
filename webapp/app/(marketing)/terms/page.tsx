@@ -7,24 +7,24 @@ export const metadata = {
     canonical: '/terms',
   },
   openGraph: {
-    title: 'Terms of Service — Clipmark',
-    description: 'Terms and conditions for using Clipmark.',
+    title: 'Terms of Service — ClipMark',
+    description: 'Terms and conditions for using ClipMark.',
     type: 'website',
     url: '/terms',
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Terms of Service — Clipmark',
-    description: 'Terms and conditions for using Clipmark.',
+    title: 'Terms of Service — ClipMark',
+    description: 'Terms and conditions for using ClipMark.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };

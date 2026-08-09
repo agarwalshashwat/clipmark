@@ -81,7 +81,7 @@ export async function generateMetadata(
       description: `${collection.bookmarks.length} curated moments from this video.`,
       type: 'video.other',
       url: `/v/${shareId}`,
-      siteName: 'Clipmark',
+      siteName: 'ClipMark',
       images: [
         {
           url: ogUrl,

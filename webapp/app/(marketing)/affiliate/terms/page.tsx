@@ -7,24 +7,24 @@ export const metadata = {
     canonical: '/affiliate/terms',
   },
   openGraph: {
-    title: 'Affiliate Terms & Conditions — Clipmark',
-    description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+    title: 'Affiliate Terms & Conditions — ClipMark',
+    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
     type: 'website',
     url: '/affiliate/terms',
-    siteName: 'Clipmark',
+    siteName: 'ClipMark',
     images: [
       {
         url: `${APP_URL}/clipmark-logo.png`,
         width: 512,
         height: 512,
-        alt: 'Clipmark — YouTube Bookmark Extension',
+        alt: 'ClipMark — YouTube Bookmark Extension',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Affiliate Terms & Conditions — Clipmark',
-    description: 'Terms and conditions governing participation in the Clipmark affiliate program.',
+    title: 'Affiliate Terms & Conditions — ClipMark',
+    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };

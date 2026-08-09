@@ -146,8 +146,8 @@ export default function SwitchFromVideoSegmentsPage() {
           Sync and export are the reasons to move, but the reason to stay is the review loop. A bookmark tells you
           where something was; it does nothing about whether you remember it. ClipMark schedules the moments you saved,
           hides your note, and asks you to recall it before replaying the clip — the mechanism from{' '}
-          <a href="/active-recall-youtube" style={{ color: '#0F766E', fontWeight: 600 }}>active recall</a> and{' '}
-          <a href="/spaced-repetition-youtube" style={{ color: '#0F766E', fontWeight: 600 }}>spaced repetition</a>,
+          <a href="/active-recall-youtube" style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>active recall</a> and{' '}
+          <a href="/spaced-repetition-youtube" style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>spaced repetition</a>,
           applied to video instead of cards.
         </p>
         <p style={{ ...PROSE, marginBottom: 0 }}>

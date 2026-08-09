@@ -31,13 +31,13 @@ export async function generateMetadata(
     openGraph: {
       type: 'website',
       url: `/embed/${shareId}`,
-      siteName: 'Clipmark',
+      siteName: 'ClipMark',
       images: [
         {
           url: `${APP_URL}/clipmark-logo.png`,
           width: 512,
           height: 512,
-          alt: 'Clipmark — YouTube Bookmark Extension',
+          alt: 'ClipMark — YouTube Bookmark Extension',
         },
       ],
     },

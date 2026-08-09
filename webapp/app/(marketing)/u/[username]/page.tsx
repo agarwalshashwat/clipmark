@@ -49,7 +49,7 @@ export async function generateMetadata(
       description: `Public shared collections by @${username}. Save and organize your YouTube knowledge.`,
       type: 'profile',
       url: `/u/${username}`,
-      siteName: 'Clipmark',
+      siteName: 'ClipMark',
       username: username,
       images: [
         {

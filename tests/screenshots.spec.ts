@@ -14,14 +14,15 @@
  * Every <video> is muted and paused, and Chrome is launched with --mute-audio,
  * so a capture run is silent.
  */
-import { test, chromium, BrowserContext, Page, Worker, expect } from '@playwright/test';
+import { test, BrowserContext, Page, Worker, expect } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import path from 'path';
+import { launchExtensionContext, TEST_VIDEO_ID, TEST_VIDEO_URL } from './fixtures';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
 const OUT = path.resolve(__dirname, '../cws-screenshots/restyle');
-const VIDEO_ID = 'dQw4w9WgXcQ';
-const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
+const VIDEO_ID = TEST_VIDEO_ID;
+const VIDEO_URL = TEST_VIDEO_URL;
 
 test.skip(!process.env.CAPTURE_SCREENSHOTS, 'set CAPTURE_SCREENSHOTS=1 to capture');
 test.describe.configure({ mode: 'serial' });
@@ -102,15 +103,8 @@ test('capture the restyled surfaces', async () => {
   if (!existsSync(DIST)) test.skip(true, 'extension/dist missing — run `make ext-build`');
   mkdirSync(OUT, { recursive: true });
 
-  const context = await chromium.launchPersistentContext('', {
-    headless: false, // extensions require a headed browser
-    args: [
-      `--disable-extensions-except=${DIST}`,
-      `--load-extension=${DIST}`,
-      '--no-sandbox',
-      '--mute-audio', // belt and braces alongside the per-element muting
-      '--autoplay-policy=user-gesture-required',
-    ],
+  const context = await launchExtensionContext(DIST, {
+    args: ['--autoplay-policy=user-gesture-required'],
   });
 
   const worker = await extensionServiceWorker(context);
@@ -302,10 +296,7 @@ test('capture the restyled surfaces', async () => {
 
   // ── 10-11. The first-run tour, actually working ───────────────────────────
   // Its own profile so the tour has genuinely never been seen.
-  const tourCtx = await chromium.launchPersistentContext('', {
-    headless: false,
-    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox', '--mute-audio'],
-  });
+  const tourCtx = await launchExtensionContext(DIST);
   try {
     const tw = await extensionServiceWorker(tourCtx);
     await tw.evaluate(() => new Promise<void>((r) => chrome.storage.sync.remove('tourState', () => r())));

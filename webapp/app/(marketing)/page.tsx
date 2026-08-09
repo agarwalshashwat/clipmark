@@ -804,7 +804,7 @@ export default async function Home({
             ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <a href="/faq" style={{ color: '#0D9488', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+            <a href="/faq" style={{ color: 'var(--accent-strong)', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
               Read the full FAQ <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
             </a>
           </div>
@@ -820,11 +820,11 @@ export default async function Home({
             <span className="cm-section-label">Go Deeper</span>
             <h2 style={{
               fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 800, marginBottom: 16,
-              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: '#1A1C1D',
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--text)',
             }}>
               How remembering actually works here
             </h2>
-            <p style={{ color: '#545f6c', maxWidth: 520, margin: '0 auto', fontSize: 16, lineHeight: 1.7 }}>
+            <p style={{ color: 'var(--text-muted)', maxWidth: 520, margin: '0 auto', fontSize: 16, lineHeight: 1.7 }}>
               The retrieval loop, the review schedule, and the road out to Anki — each explained on its own page.
             </p>
           </div>
@@ -837,11 +837,11 @@ export default async function Home({
             ].map(({ href, icon, label, desc }) => (
               <a key={href} href={href} style={{
                 display: 'block', padding: 24, borderRadius: 24, textDecoration: 'none',
-                background: '#f9f9fa', border: '1px solid #e8e8e9',
+                background: 'var(--bg)', border: '1px solid var(--border)',
               }}>
-                <span className="material-symbols-outlined" style={{ color: '#0D9488', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
-                <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: '#1A1C1D', marginBottom: 6, fontFamily: "var(--font-display)" }}>{label}</span>
-                <span style={{ display: 'block', fontSize: 13, color: '#545f6c', lineHeight: 1.6 }}>{desc}</span>
+                <span className="material-symbols-outlined" style={{ color: 'var(--accent-strong)', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
+                <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 6, fontFamily: "var(--font-display)" }}>{label}</span>
+                <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{desc}</span>
               </a>
             ))}
           </div>

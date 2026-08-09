@@ -18,13 +18,14 @@
  *
  * Requires `make ext-build` first (skips with a message otherwise).
  */
-import { test, expect, chromium, BrowserContext, Page, Worker } from '@playwright/test';
+import { test, expect, BrowserContext, Page, Worker } from '@playwright/test';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'path';
 import { PAGE_AUDIT } from './helpers/page-audit';
+import { launchExtensionContext, TEST_VIDEO_ID } from './fixtures';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_ID = TEST_VIDEO_ID;
 
 async function extensionServiceWorker(context: BrowserContext): Promise<Worker> {
   const found = context.serviceWorkers().find((w) => w.url().startsWith('chrome-extension://'));
@@ -62,10 +63,7 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
   let extensionId: string;
 
   test.beforeAll(async () => {
-    context = await chromium.launchPersistentContext('', {
-      headless: false, // Chrome extensions require non-headless
-      args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox'],
-    });
+    context = await launchExtensionContext(DIST);
     const worker = await extensionServiceWorker(context);
     extensionId = new URL(worker.url()).host;
     await worker.evaluate(
