@@ -4,30 +4,25 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { rememberExtensionId } from '@/app/dashboard/_utils/extension';
+import { parseExtensionAuthParams } from './params';
 
 function ExtensionSuccessInner() {
   const params    = useSearchParams();
   const [status, setStatus] = useState<'sending' | 'done' | 'error'>('sending');
 
   useEffect(() => {
-    const extensionId  = params.get('extensionId');
-    const accessToken  = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    const userId       = params.get('user_id');
-    const userEmail    = params.get('user_email');
-    const isPro        = params.get('is_pro') === 'true';
-
-    if (!extensionId || !accessToken) { setStatus('error'); return; }
+    const parsed = parseExtensionAuthParams(params);
+    if (!parsed.ok) { setStatus('error'); return; }
 
     // This is the one moment Chrome tells the web app which extension it's
     // talking to — remember it so the dashboard can start Active Recall later.
-    rememberExtensionId(extensionId);
+    rememberExtensionId(parsed.extensionId);
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cr = (window as any).chrome?.runtime;
       if (cr?.sendMessage) {
-        cr.sendMessage(extensionId, { type: 'AUTH_SUCCESS', accessToken, refreshToken, userId, userEmail, isPro });
+        cr.sendMessage(parsed.extensionId, parsed.message);
       }
       setStatus('done');
       setTimeout(() => window.close(), 1800);
@@ -50,7 +45,7 @@ function ExtensionSuccessInner() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 26, color: '#14B8A6',
           }}>✓</span>
-          <p style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Signed in to Clipmark!</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Signed in to ClipMark!</p>
           <p style={{ fontSize: 13, color: '#6b7280' }}>You can close this tab and return to YouTube.</p>
         </>
       )}

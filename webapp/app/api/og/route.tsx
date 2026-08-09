@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
             fontWeight: 800,
             color: '#14B8A6',
           }}>
-            Clipmark
+            ClipMark
           </div>
 
           {/* Video Preview (if available) */}

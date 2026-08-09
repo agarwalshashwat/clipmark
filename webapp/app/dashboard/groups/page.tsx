@@ -2,7 +2,7 @@ import { createServerSupabase, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
 import GroupsContent from './GroupsContent';
 
-export const metadata = { title: 'Groups — Clipmark' };
+export const metadata = { title: 'Groups — ClipMark' };
 
 export default async function GroupsPage() {
   const supabase = await createServerSupabase();

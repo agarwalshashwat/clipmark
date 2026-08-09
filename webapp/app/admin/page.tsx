@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import AdminPanel from './_components/AdminPanel';
 
 export const metadata: Metadata = {
-  title: 'Admin — Clipmark',
+  title: 'Admin — ClipMark',
   robots: 'noindex, nofollow',
 };
 

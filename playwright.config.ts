@@ -7,6 +7,10 @@ export default defineConfig({
   workers: 1,       // serial: launchPersistentContext cannot run concurrently
   use: {
     viewport: { width: 1280, height: 800 },
+    // No test run may ever make sound. This covers every Playwright-launched
+    // browser; specs that call chromium.launchPersistentContext themselves get
+    // the same flag from tests/fixtures.ts → extensionLaunchArgs().
+    launchOptions: { args: ['--mute-audio'] },
   },
   projects: [
     {

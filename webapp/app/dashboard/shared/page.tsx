@@ -3,7 +3,7 @@ import styles from './page.module.css';
 import { DashboardCopyLinkButton } from './CopyLinkButton';
 import { APP_URL } from '@/app/lib/constants';
 
-export const metadata = { title: 'Shared Collections — Clipmark' };
+export const metadata = { title: 'Shared Collections — ClipMark' };
 
 export default async function SharedPage() {
   const supabase = await createServerSupabase();

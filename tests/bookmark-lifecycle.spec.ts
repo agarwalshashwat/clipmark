@@ -11,7 +11,7 @@
  *
  * Run: npm run test:yt -- --grep "lifecycle"
  */
-import { test, expect, TEST_VIDEO_URL } from './fixtures';
+import { test, expect, TEST_VIDEO_ID, TEST_VIDEO_TITLE, TEST_VIDEO_URL } from './fixtures';
 import {
   makeBookmark,
   seedBookmarks,
@@ -19,7 +19,7 @@ import {
   clearStoredBookmarks,
 } from './helpers';
 
-const VIDEO_ID = 'dQw4w9WgXcQ'; // extracted from TEST_VIDEO_URL
+const VIDEO_ID = TEST_VIDEO_ID; // the id inside TEST_VIDEO_URL
 
 test.describe('Bookmark lifecycle', () => {
   // ── Alt+B → storage → reload ──────────────────────────────────────────────
@@ -58,7 +58,7 @@ test.describe('Bookmark lifecycle', () => {
   test('Pre-seeded bookmark renders a marker on first load', async ({ context }) => {
     const bookmark = makeBookmark(VIDEO_ID, 45, {
       description: 'Pre-seeded test marker',
-      videoTitle:  'Rick Astley - Never Gonna Give You Up (Official Music Video)',
+      videoTitle:  TEST_VIDEO_TITLE,
     });
 
     await seedBookmarks(context, VIDEO_ID, [bookmark]);

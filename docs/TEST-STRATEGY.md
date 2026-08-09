@@ -1,6 +1,11 @@
 # ClipMark — Comprehensive Test Strategy
 
-> Status: **plan only** — no test code in this document has been written yet. This is the
+> Status: **phase 1 landed, phases 2–5 still plan only.** The phase 1 row of §6 (auth bridge +
+> CSP lock-in) is implemented — `tests/auth-bridge.spec.ts`, `tests/unit/external-messaging.test.mjs`,
+> `webapp/tests/unit/extension-success.test.ts`, `webapp/tests/unit/headers.test.ts`, and the
+> manifest additions in `tests/unit/manifest.test.mjs` — running in `ci-unit` and
+> `ci-extension-smoke`. §1.2/§3.2/§3.4's AUTH_SUCCESS gap and §5's items 1–2 are closed;
+> everything else below still describes work not yet done. This is the
 > follow-up to [`docs/TEST_PLAN_launch.md`](TEST_PLAN_launch.md), which scoped and (as of this
 > writing) has been **fully implemented**: the five launch-blocker security/payments paths
 > (RLS self-grant, `/api/share` auth, refund revocation, webhook write failures, admin
@@ -62,7 +67,7 @@ and `yt-navigate-finish` handling for YouTube's SPA navigation.
 script against *real* `youtube.com` via `launchPersistentContext`.
 
 **Gap:** every one of those specs depends on live `youtube.com` rendering the same DOM structure
-and video (`dQw4w9WgXcQ`) it does today. That's real coverage, but it's also the suite's single
+and video (`TEST_VIDEO_ID` in `tests/fixtures.ts`) it does today. That's real coverage, but it's also the suite's single
 biggest source of flakiness and the reason `test:yt` is serial and ~30 minutes — there is no
 tier below it. Pure logic that content.js contains inline (marker-position math, tag-color
 lookups) is *already* extracted to the twin `constants.js`/`.module.js` and unit-tested; what
@@ -538,7 +543,7 @@ shippable and slots into CI incrementally rather than requiring one big-bang PR.
 
 | Phase | Focus | Key items | Effort | New CI |
 |---|---|---|---|---|
-| **1** | Auth bridge + CSP lock-in | AUTH_SUCCESS unit + E2E test (§1.2/§3.4); extension-success param-parsing unit test; CSP header pure-fn extraction + test (§4.2); manifest CSP/description-length regression tests (§1.5) | **3–4 days** | Extends existing `ci-unit` + `ci-extension-smoke` — no new job |
+| **1** ✅ | Auth bridge + CSP lock-in | AUTH_SUCCESS unit + E2E test (§1.2/§3.4); extension-success param-parsing unit test; CSP header pure-fn extraction + test (§4.2); manifest CSP/description-length regression tests (§1.5) | **3–4 days** | Extends existing `ci-unit` + `ci-extension-smoke` — no new job |
 | **2** | Background logic extraction + network mocking | Extract `scheduleReminderAlarms` date math to a testable twin + unit tests (§1.2); `context.route()`-based reminder-sync mocking specs, happy + failure paths (§1.4); `CLIPMARK_REPORT_ERROR` gate test (§3.1) | **4–5 days** | Extends `ci-unit` + `ci-extension-smoke` |
 | **3** | Webapp responsiveness + cross-browser | Viewport matrix for existing visual specs (§2.2); add firefox/webkit Playwright projects for the `webapp` project only + new **non-blocking** `ci-webapp-crossbrowser` job (§2.3); dashboard optimistic-UI interaction specs (§2.1) | **1 week** | New job (non-blocking initially) |
 | **4** | UI unit-coverage extraction (incremental) | Identify + extract 2–3 pure-logic modules from `dashboard.js`/`side-panel.js` per iteration (sort/filter, group derivation, due-queue filtering) with unit tests (§1.3) — ongoing, not a single PR | **Ongoing, ~2 days per extraction batch** | Extends `ci-unit` |

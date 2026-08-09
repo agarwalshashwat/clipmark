@@ -7,10 +7,10 @@
  *
  * Run: npm run test:yt -- --grep "Content script messaging"
  */
-import { test, expect, TEST_VIDEO_URL } from './fixtures';
+import { test, expect, TEST_VIDEO_ID, TEST_VIDEO_URL } from './fixtures';
 import { makeBookmark, seedBookmarks, sendToContentScript } from './helpers';
 
-const VIDEO_ID = 'dQw4w9WgXcQ';
+const VIDEO_ID = TEST_VIDEO_ID;
 
 test.describe('Content script messaging', () => {
   // ── ping ─────────────────────────────────────────────────────────────────
