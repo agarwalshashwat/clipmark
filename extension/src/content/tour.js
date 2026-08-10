@@ -62,16 +62,41 @@ function getTourState() {
   });
 }
 
+// Set once the flag has been persisted for this page, so the several
+// acknowledgement paths below (onDestroyStarted, onDestroyed, overlay click) can
+// all call markYoutubeTourSeen defensively without spending extra
+// chrome.storage.sync writes on the same one-shot.
+let markedSeen = false;
+
 function markYoutubeTourSeen() {
+  if (markedSeen) return;
+  markedSeen = true;
   try {
     chrome.storage.sync.get({ tourState: {} }, (result) => {
-      if (chrome.runtime.lastError) return;
+      if (chrome.runtime.lastError) { markedSeen = false; return; }
       const tourState = { ...(result.tourState || {}), youtubeTour: true };
-      chrome.storage.sync.set({ tourState });
+      chrome.storage.sync.set({ tourState }, () => {
+        // A failed write must not be silent: leaving markedSeen true would make
+        // this page believe the one-shot was spent when nothing was stored, and
+        // the tour would come back on the next video with no way to stop it.
+        if (chrome.runtime.lastError) markedSeen = false;
+      });
     });
   } catch {
     /* extension context invalidated — nothing to persist to */
+    markedSeen = false;
   }
+}
+
+/**
+ * Persist "seen" if the tour genuinely reached the user.
+ *
+ * Kept as one helper because there are several places the user can end the tour
+ * and every one of them has to store the flag — the bug this closes was one of
+ * those paths silently not storing it.
+ */
+function markSeenIfShown() {
+  if (shouldMarkTourSeen({ stepShown, abandonedForNavigation })) markYoutubeTourSeen();
 }
 
 function buildSteps(hasBookmark) {
@@ -199,6 +224,10 @@ async function startYoutubeTour() {
 
     stepShown = false;
     abandonedForNavigation = false;
+    // A fresh run gets a fresh chance to persist the one-shot (the previous run
+    // on this page may have been torn down by an SPA navigation before it
+    // counted as seen).
+    markedSeen = false;
 
     tourInstance = driver({
       showProgress: true,
@@ -210,17 +239,42 @@ async function startYoutubeTour() {
       overlayClickBehavior: (_el, _step, opts) => {
         // Don't let an accidental first click kill the tour before it says anything.
         if (opts.index === 0) return;
+        // `destroy()` is driver.js's public teardown, which is `destroy(false)`
+        // internally and therefore SKIPS onDestroyStarted — so mark here rather
+        // than relying on a hook that won't run for this path.
+        markSeenIfShown();
         tourInstance?.destroy();
       },
-      // Fires per rendered step — the only proof the user was actually shown
-      // something. "Seen" is gated on it (see shouldMarkTourSeen).
+      // Proof that a coach-mark was actually painted. `onPopoverRender` fires as
+      // soon as the popover is in the DOM (~10ms after drive()), whereas
+      // `onHighlighted` is the END of driver.js's 400ms highlight transition —
+      // and on a page as busy as a YouTube watch page that lands over a second
+      // later. Gating "shown" on onHighlighted alone meant a user who clicked ×
+      // during the fade-in — the common case, the × is right there — was
+      // recorded as having seen nothing, so the one-shot flag was never stored
+      // and the tour returned on every single video. Both are wired up; the
+      // first to fire wins.
+      onPopoverRender: () => {
+        stepShown = true;
+      },
       onHighlighted: () => {
         stepShown = true;
+      },
+      // The only teardown hook driver.js calls unconditionally. `onDestroyed` is
+      // guarded on its `__activeElement` state, which is set at the same instant
+      // onHighlighted fires — so closing the tour before the highlight
+      // transition finished skipped onDestroyed entirely and the flag was never
+      // written. This runs for every teardown driver.js starts itself (×, Done,
+      // Esc), and completing it via destroy() re-enters as destroy(false), which
+      // skips this hook rather than looping.
+      onDestroyStarted: () => {
+        markSeenIfShown();
+        tourInstance?.destroy();
       },
       onDestroyed: () => {
         tourInstance = null;
         tourVideoId = null;
-        if (shouldMarkTourSeen({ stepShown, abandonedForNavigation })) markYoutubeTourSeen();
+        markSeenIfShown();
       },
       steps: buildSteps(bookmarkCount > 0),
     });
