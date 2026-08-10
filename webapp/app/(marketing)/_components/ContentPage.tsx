@@ -90,7 +90,7 @@ export function PageHero({
             }}
           >
             {ctaLabel}
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>arrow_forward</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 22 }}>arrow_forward</span>
           </a>
           <a
             href="/upgrade"
@@ -171,7 +171,7 @@ export function CardGrid({ items }: { items: { icon: string; title: string; desc
               display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
             }}
           >
-            <span className="material-symbols-outlined">{icon}</span>
+            <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
           </div>
           <h3 style={H3}>{title}</h3>
           <p style={{ ...PROSE, fontSize: 15, marginBottom: 0 }}>{desc}</p>

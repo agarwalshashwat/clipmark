@@ -82,7 +82,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>description</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>description</span>
           </div>
           <p style={P_STYLE}>
             These Terms of Service (&quot;Terms&quot;) govern your use of ClipMark (&quot;the Service&quot;) operated by ClipMark
@@ -92,7 +92,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>account_circle</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>account_circle</span>
           </div>
           <h2 style={H2_STYLE}>1. Use of the Service</h2>
           <p style={P_STYLE}>You may use ClipMark to:</p>
@@ -113,7 +113,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>account_box</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>account_box</span>
           </div>
           <h2 style={H2_STYLE}>2. Accounts</h2>
           <p style={P_STYLE}>
@@ -123,7 +123,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>stars</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>stars</span>
           </div>
           <h2 style={H2_STYLE}>3. Pro Subscription</h2>
           <p style={P_STYLE}>
@@ -140,7 +140,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>article</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>article</span>
           </div>
           <h2 style={H2_STYLE}>4. Your Content</h2>
           <p style={P_STYLE}>
@@ -153,7 +153,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>link</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>link</span>
           </div>
           <h2 style={H2_STYLE}>5. Third-Party Content</h2>
           <p style={P_STYLE}>
@@ -163,7 +163,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>cloud_done</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>cloud_done</span>
           </div>
           <h2 style={H2_STYLE}>6. Service Availability</h2>
           <p style={P_STYLE}>
@@ -176,7 +176,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>gavel</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>gavel</span>
           </div>
           <h2 style={H2_STYLE}>7. Limitation of Liability</h2>
           <p style={P_STYLE}>
@@ -189,7 +189,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>no_accounts</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>no_accounts</span>
           </div>
           <h2 style={H2_STYLE}>8. Termination</h2>
           <p style={P_STYLE}>
@@ -199,7 +199,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>balance</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>balance</span>
           </div>
           <h2 style={H2_STYLE}>9. Governing Law</h2>
           <p style={P_STYLE}>
@@ -209,7 +209,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>history_edu</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>history_edu</span>
           </div>
           <h2 style={H2_STYLE}>10. Changes to These Terms</h2>
           <p style={P_STYLE}>
@@ -219,7 +219,7 @@ export default function TermsPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>contact_support</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>contact_support</span>
           </div>
           <h2 style={H2_STYLE}>11. Contact</h2>
           <p style={P_STYLE}>

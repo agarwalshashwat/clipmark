@@ -79,7 +79,7 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <span className="material-symbols-outlined">{icon}</span>
+                <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, fontFamily: 'var(--font-display)', color: 'var(--text)', marginTop: 0 }}>
                 {title}

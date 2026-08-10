@@ -4,14 +4,10 @@ import styles from './upgrade.module.css';
 
 function Check() {
   return (
-    <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)', fontWeight: 700, fontSize: 20 }}>
+    <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--brand-ink)', fontWeight: 700, fontSize: 20 }}>
       check_circle
     </span>
   );
-}
-
-function ComingSoon() {
-  return <span className={styles.comingSoon}>Coming soon</span>;
 }
 
 interface Plan {
@@ -21,9 +17,38 @@ interface Plan {
   period: string;
   badge?: { label: string; color?: string };
   pro?: boolean;
+  /** Shipped benefits. These — and only these — get a checkmark. */
   features: React.ReactNode[];
+  /**
+   * Not built yet. Rendered under a separate "On the roadmap" heading with no
+   * checkmark, so nobody buying under the 7-day guarantee can read them as
+   * something they are paying for today.
+   */
+  soon?: string[];
   cta: string;
 }
+
+/**
+ * Every paid plan unlocks the *same* Pro feature set — the plans differ only in
+ * billing period and price. The Monthly card therefore lists the full set
+ * rather than a subset, so it can't be read as a cheaper, capped tier; that
+ * also keeps it consistent with the single "Pro" column in the comparison
+ * table on /upgrade.
+ */
+const PRO_CORE: string[] = [
+  'Cloud Sync across devices',
+  'Unlimited Active Recall flashcards & reviews',
+  'Unlimited Anki export',
+  'Export to Notion & Obsidian',
+  'Spaced Repetition Reminders',
+  'Unlimited Shared Collections',
+  'Priority Support',
+];
+
+const PRO_SOON: string[] = [
+  'Deep Search inside transcripts',
+  'Permanent Transcript Archiving',
+];
 
 const PLANS: Plan[] = [
   {
@@ -31,13 +56,8 @@ const PLANS: Plan[] = [
     name: 'Monthly',
     priceKey: 'monthly',
     period: '/month',
-    features: [
-      'Export to Notion & Obsidian',
-      'Review Reminders',
-      <>Deep Transcript Search <ComingSoon /></>,
-      'Unlimited Shared Pages',
-      'Priority Support',
-    ],
+    features: PRO_CORE,
+    soon: PRO_SOON,
     cta: 'Go Pro Monthly',
   },
   {
@@ -47,12 +67,11 @@ const PLANS: Plan[] = [
     period: '/year',
     pro: true,
     features: [
-      'Everything in Monthly',
-      <><strong>Unlimited Active Recall & Anki exports</strong></>,
-      'Export to Notion & Obsidian',
-      'Learning Stats',
-      'Spaced Repetition Logic',
+      <><strong>Everything in Pro Monthly</strong></>,
+      'Billed once a year at a lower effective rate',
+      'One payment instead of twelve',
     ],
+    soon: PRO_SOON,
     cta: 'Go Pro Annual',
   },
   {
@@ -62,12 +81,11 @@ const PLANS: Plan[] = [
     period: '',
     badge: { label: 'Founding Price', color: 'var(--accent-strong)' },
     features: [
-      'Everything in Pro',
-      'Own your data forever',
-      <>Lifetime Cloud Archiving <ComingSoon /></>,
-      'No recurring fees',
-      <>Early access to all labs <ComingSoon /></>,
+      <><strong>Everything in Pro</strong></>,
+      'Pay once — no recurring fees',
+      'Export your data any time',
     ],
+    soon: ['Lifetime Cloud Archiving', 'Early access to all labs'],
     cta: 'Get Lifetime Pro',
   },
 ];
@@ -117,6 +135,16 @@ export default function PlanCards({
                   <Check /> {f}
                 </div>
               ))}
+              {plan.soon && plan.soon.length > 0 && (
+                <div className={styles.soonBlock}>
+                  <p className={styles.soonHeading}>On the roadmap — not included yet</p>
+                  {plan.soon.map((f) => (
+                    <div key={f} className={styles.soonItem}>
+                      <span className={styles.comingSoon}>Coming soon</span> {f}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {variant === 'full' ? (
               <form action={createCheckoutSession} className={styles.ctaWrap}>
