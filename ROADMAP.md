@@ -340,3 +340,4 @@ Auto-seek through only the "hot points" of a long video — saving 50–75% of w
 - [ ] Testimonial carousel on /upgrade page
 - [ ] Cancel subscription UI — refund within 14 days vs. cancel-at-period-end
 - [ ] Public stats badge — embeddable "Bookmarked with Clipmark" SVG for READMEs
+- [ ] Condense Mode / skip-silence for long videos — auto-skip the no-speech stretches of multi-hour lectures (transcript/caption-gap based; a Samsung-style waveform read is blocked by DRM). Related to Phase 11 above; full item in [ClipMark-ROADMAP.md](ClipMark-ROADMAP.md) → *Planned — Product* §D
