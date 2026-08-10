@@ -11,6 +11,13 @@
  * automation, so segment ends are triggered by setting video.currentTime and
  * dispatching a synthetic 'timeupdate' — exactly what revisionTimeUpdateHandler
  * listens for. Requires `make ext-build` first (skips with a message otherwise).
+ *
+ * Interaction discipline, same as loop-packaged.spec.ts: YouTube auto-hides the
+ * player control bar, so anything injected into it is ATTACHED long before it is
+ * ever `visible`. Waiting on visibility meant waiting on YouTube's chrome and
+ * then poking the video with a coordinate hover to force it back — a real source
+ * of flake that has nothing to do with what these tests assert. Wait for
+ * attachment and drive elements with dispatchEvent, which targets them directly.
  */
 import { test, expect, BrowserContext, Worker } from '@playwright/test';
 import { TEST_VIDEO_ID, TEST_VIDEO_URL, launchExtensionContext } from './fixtures';
@@ -187,9 +194,8 @@ test.describe('Active Recall Mode (packaged dist build)', () => {
       // Content script alive in the packaged build. The built content.js uses
       // TAG_COLORS/getTagColor as bare globals, so injection + rendered markers
       // prove the constants chunk survived bundling.
-      await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 20_000 });
-      await mainVideo(page).hover({ force: true });
-      await page.locator('.yt-bookmark-markers').waitFor({ timeout: 15_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 20_000 });
+      await page.locator('.yt-bookmark-markers').waitFor({ state: 'attached', timeout: 15_000 });
       expect(await page.locator('.yt-bookmark-marker').count()).toBeGreaterThan(0);
 
       // ── Prompt: question shown, answer withheld ──────────────────────────
@@ -282,7 +288,7 @@ test.describe('Active Recall Mode (packaged dist build)', () => {
 
       const yt = await context.newPage();
       await yt.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
-      await yt.locator('.yt-bookmark-player-btn').waitFor({ timeout: 30_000 });
+      await yt.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 30_000 });
 
       // Put the playhead well away from the first segment (12s) and try to get
       // it rolling, so "paused at 12" cannot be true by accident.
@@ -381,7 +387,7 @@ test.describe('Active Recall Mode (packaged dist build)', () => {
 
       const page = await context.newPage();
       await page.goto(VIDEO_URL, { waitUntil: 'networkidle' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ timeout: 20_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 20_000 });
 
       await startRevision(worker, bookmarks); // recall omitted
       await page.locator('.yt-revision-overlay').waitFor({ timeout: 10_000 });

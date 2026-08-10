@@ -332,6 +332,26 @@ async function setTourState(partial) {
   await syncSet({ tourState: { ...current, ...partial } });
 }
 
+/**
+ * True when the profile holds a saved moment for ANY video.
+ *
+ * The coach-mark's "come back once you've saved a moment or two" copy was
+ * chosen from the CURRENT video's bookmarks alone, so it also greeted users who
+ * already had plenty saved — anyone opening the panel on a fresh video, and
+ * everyone off YouTube entirely (where videoId is null, so the list is empty by
+ * construction). Telling a returning user with moments due to come back and
+ * start is the wrong half of the tour. Scope the question to the profile.
+ */
+async function hasSavedMomentsAnywhere() {
+  try {
+    return collectStoredBookmarks(await syncGet(null)).length > 0;
+  } catch {
+    // Storage unreachable — fall back to the first-run copy rather than
+    // promising a review queue we cannot see.
+    return false;
+  }
+}
+
 async function runSidePanelTour({ force = false } = {}) {
   const tab = await getCurrentTab();
   if (!force && !shouldAutoRunSidePanelTour({ tourState: await getTourState(), activeTabUrl: tab?.url })) {
@@ -341,7 +361,7 @@ async function runSidePanelTour({ force = false } = {}) {
   const videoId = tab?.url ? extractVideoId(tab.url) : null;
   const bookmarks = videoId ? await getVideoBookmarksLocal(videoId) : [];
 
-  const steps = bookmarks.length
+  const steps = (bookmarks.length || await hasSavedMomentsAnywhere())
     ? [{
         element: '#revisit-mode-btn',
         popover: {
@@ -355,9 +375,20 @@ async function runSidePanelTour({ force = false } = {}) {
         },
       }]
     : [{
+        // Anchored to the SAME element as the has-bookmark variant on purpose.
+        // An element-less step takes driver.js's centered branch, which is
+        // positioned without any viewport clamp — under ~281px of CSS viewport
+        // height (a short window, or browser zoom past ~150%) the card grew
+        // across the 50px header and painted over the wordmark, which at
+        // z-index 50 cannot compete with the popover's 1000010. Anchoring
+        // leaves that branch entirely; tour-theme.css bounds the height as
+        // well, so neither fix is load-bearing alone.
+        element: '#revisit-mode-btn',
         popover: {
           title: 'Active Recall',
           description: "Come back here once you've saved a moment or two — Active Recall will quiz you on them before each clip plays.",
+          side: 'top',
+          align: 'center',
           popoverClass: TOUR_POPOVER_CLASS,
           doneBtnText: 'Got it',
         },
@@ -367,16 +398,52 @@ async function runSidePanelTour({ force = false } = {}) {
   // it gave up waiting for #revisit-mode-btn, which would mark the coach-mark
   // seen without ever rendering it. Only a step that actually highlighted counts.
   let stepShown = false;
-  driver({
+  // Set once the flag has been persisted for this run, so the several
+  // acknowledgement paths below can all call markSeenIfShown defensively
+  // without spending extra chrome.storage.sync writes on the same one-shot.
+  let markedSeen = false;
+
+  const markSeenIfShown = () => {
+    if (!shouldMarkTourSeen({ stepShown }) || markedSeen) return;
+    markedSeen = true;
+    // A failed write must not be silent: leaving markedSeen true would make the
+    // panel believe the one-shot was spent when nothing was stored, and the
+    // coach-mark would come back on the next open with no way to stop it.
+    // (syncGet/syncSet reject on chrome.runtime.lastError.)
+    setTourState({ sidePanelTour: true }).catch(() => { markedSeen = false; });
+  };
+
+  // Hoisted so the teardown hooks can complete the destroy they intercept.
+  let tourInstance = null;
+  tourInstance = driver({
     showButtons: ['next', 'close'],
     allowClose: true,
     waitForElement: 3000,
+    // Proof that the coach-mark was actually painted. This is the #97 fix
+    // (src/content/tour.js), which had never been ported to this file:
+    // `onHighlighted` is the END of driver.js's ~400ms highlight transition, so
+    // a user who clicked "Got it" before it finished — the common case, the
+    // button is right there — was recorded as having seen nothing. The flag was
+    // never stored and the card re-showed on every panel open, forever. Both
+    // hooks are wired up; the first to fire wins.
+    onPopoverRender: () => { stepShown = true; },
     onHighlighted: () => { stepShown = true; },
+    // The only teardown hook driver.js calls unconditionally. `onDestroyed` is
+    // guarded on its `__activeElement` state, which is set at the same instant
+    // onHighlighted fires — so dismissing before the highlight transition
+    // finished skipped onDestroyed entirely. Completing this via destroy()
+    // re-enters as destroy(false), which skips this hook rather than looping.
+    onDestroyStarted: () => {
+      markSeenIfShown();
+      tourInstance?.destroy();
+    },
     onDestroyed: () => {
-      if (shouldMarkTourSeen({ stepShown })) setTourState({ sidePanelTour: true });
+      tourInstance = null;
+      markSeenIfShown();
     },
     steps,
-  }).drive();
+  });
+  tourInstance.drive();
 }
 
 async function getVideoTitles() {

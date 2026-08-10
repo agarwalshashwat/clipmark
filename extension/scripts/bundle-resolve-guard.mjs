@@ -3,7 +3,8 @@
  * Build guard: every reference the packaged extension makes to its own files
  * must actually resolve inside the package.
  *
- * The bug class this exists for is one this repo has already shipped twice:
+ * The bug class this exists for is one this repo has already shipped three
+ * times, each time via web_accessible_resources causing a verbatim copy:
  *
  *   - dashboard.html is only reachable via web_accessible_resources, so crxjs
  *     copied it verbatim instead of treating it as an HTML entry, leaving
@@ -13,6 +14,12 @@
  *   - styles/dashboard.css is ALSO copied verbatim, and its `@import`s
  *     (design-tokens.css, fonts.css) were never copied alongside it, so that
  *     exposed stylesheet resolved to no tokens and no fonts.
+ *   - src/popup/dashboard.js was listed too, so 113KB of raw un-bundled ESM
+ *     shipped in v1.0.3 with none of its nine relative imports packaged. The
+ *     page ran the bundled chunk, so nothing looked broken; the exposed file
+ *     was simply dead weight that could never execute. Fixed by dropping it
+ *     from web_accessible_resources — an extension page's own subresources do
+ *     not need to be listed there.
  *
  * Both were invisible to the source tree and to the E2E suite; only the shipped
  * bytes show them. So this reads dist/ and nothing else.
@@ -28,7 +35,7 @@ import { argv, exit } from 'node:process';
 
 const DIST = path.resolve(argv[2] ?? fileURLToPath(new URL('../dist', import.meta.url)));
 const problems = [];
-const checked = { html: 0, css: 0, refs: 0 };
+const checked = { html: 0, css: 0, js: 0, refs: 0 };
 
 function walk(dir) {
   return readdirSync(dir).flatMap((e) => {
@@ -83,6 +90,21 @@ for (const f of files) {
     for (const m of src.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)) {
       if (!/^data:/.test(m[1])) check(f, m[1], 'url()');
     }
+  } else if (ext === '.js') {
+    // A THIRD instance of the same bug class, shipped in v1.0.3: raw ESM copied
+    // verbatim because it was listed in web_accessible_resources, whose relative
+    // imports (../loop.module.js, ../constants.module.js, …) were never bundled
+    // alongside it. 113KB of dead weight that a browser could fetch and fail to
+    // execute, while the page itself ran the bundled copy. The html/css scans
+    // above could not see it — nothing references it, which is the point.
+    checked.js += 1;
+    const src = readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/(?:^|[\s;}])(?:import|export)\s[^'"]*?from\s*["']([^"']+)["']/g)) {
+      if (m[1].startsWith('.') || m[1].startsWith('/')) check(f, m[1], 'import');
+    }
+    for (const m of src.matchAll(/(?:^|[\s;}])import\s*["']([^"']+)["']/g)) {
+      if (m[1].startsWith('.') || m[1].startsWith('/')) check(f, m[1], 'bare import');
+    }
   }
 }
 
@@ -107,7 +129,7 @@ if (!existsSync(manifestPath)) {
 }
 
 console.log(`\n── packaged bundle references ${'─'.repeat(44)}`);
-console.log(`  scanned ${checked.html} html + ${checked.css} css file(s), ${checked.refs} reference(s)`);
+console.log(`  scanned ${checked.html} html + ${checked.css} css + ${checked.js} js file(s), ${checked.refs} reference(s)`);
 if (problems.length) {
   console.log(`  ✗ FAIL — ${problems.length} unresolved reference(s):`);
   for (const p of problems) console.log(`      ${p}`);

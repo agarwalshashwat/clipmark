@@ -1634,6 +1634,9 @@ let loopLastFrameAt  = 0;     // frame-source ticks only — feeds the liveness 
 let loopSavedCache   = [];    // saved loop segments for the current video
 let loopNamingSegment = null; // segment awaiting a name in the save input
 let loopRenamingIndex = null; // session-segment index being renamed inline
+// The last playhead position the watchdog took away from the user, so an A/B
+// edit can take it back — see loopEditAnchor in src/loop.js.
+let loopLastCorrection = null; // { from: number, atMs: number } | null
 
 const LOOP_MAX_TICK_SECONDS   = 0.5;  // cap so a backgrounded tab can't inflate epsilon
 const LOOP_FRAME_STALL_MS     = 1000; // frame source considered dead after this
@@ -1674,7 +1677,7 @@ function loopTick() {
   );
 
   const before = loopState.index;
-  const { state, seek, reason } = advanceLoop(loopState, {
+  const { state, seek, reason, from, userPlaced } = advanceLoop(loopState, {
     currentTime:  v.currentTime,
     playbackRate: v.playbackRate,
     tickSeconds,
@@ -1682,6 +1685,11 @@ function loopTick() {
   loopState = state;
 
   if (seek === null) return;
+  // Hand the position back to any A/B edit that follows within the grace window
+  // — the user parked the playhead there and we are about to overwrite it. A
+  // natural wrap at B clears the record instead: past that point the user has
+  // watched the loop resume, so "here" means the live playhead.
+  loopLastCorrection = userPlaced ? { from, atMs: Date.now() } : null;
   v.currentTime = seek;
   if (v.paused) v.play().catch(() => {});
   debugLog('Loop', 'Seek', { reason, seek, rate: v.playbackRate, tickSeconds });
@@ -1777,6 +1785,7 @@ function activateLoop(index = 0) {
   state.index = Math.max(0, Math.min(index, state.segments.length - 1));
   state.active = true;
   state.pendingSeek = null;
+  loopLastCorrection = null; // arming is a fresh intent — nothing to hand back
   const v = resolveLoopVideo();
   const seg = state.segments[state.index];
   if (v && seg) {
@@ -1805,16 +1814,25 @@ function exitLoopMode() {
   loopDraftA = null;
   loopNamingSegment = null;
   loopRenamingIndex = null;
+  loopLastCorrection = null;
   document.querySelector('.yt-loop-panel')?.remove();
   renderLoopRanges();
   syncLoopButtonState();
 }
 
+// Placing a fresh A/B pair has the same quarrel with the watchdog as editing an
+// existing one, so it gets the same treatment: suspend before reading, and
+// anchor to the position the user parked at rather than to wherever the loop
+// dragged them. Marking A is also the start of a new segment, so an armed loop
+// would otherwise fight the scrub to B that has to follow.
 function markLoopPointA() {
   const v = resolveLoopVideo();
   if (!v) return;
-  ensureLoopSession();
-  loopDraftA = v.currentTime;
+  const state = ensureLoopSession();
+  if (state.active) deactivateLoop();
+  loopDraftA = loopEditAnchor(v.currentTime, loopLastCorrection, Date.now());
+  if (loopDraftA !== v.currentTime) v.currentTime = loopDraftA;
+  loopLastCorrection = null;
   updateLoopPanel();
   showSilentSaveIndicator(`A set at ${formatLoopClock(loopDraftA)} — press Alt+] to close the loop`);
 }
@@ -1827,7 +1845,9 @@ function markLoopPointB() {
     return;
   }
   const state = ensureLoopSession();
-  const pair = { a: loopDraftA, b: v.currentTime };
+  if (state.active) deactivateLoop();
+  const pair = { a: loopDraftA, b: loopEditAnchor(v.currentTime, loopLastCorrection, Date.now()) };
+  loopLastCorrection = null;
   if (!isValidLoopSegment(pair, v.duration || 0)) {
     showSilentSaveIndicator('A and B are too close together', 'error');
     return;
@@ -1889,16 +1909,27 @@ function removeLoopAt(index) {
  * later you have to scrub past the current B, and an armed watchdog yanks you
  * back to A before you can press the button. Re-arm with Loop (or Alt+L) when
  * the bounds are where you want them.
+ *
+ * Suspending has to happen BEFORE the playhead is read, and even that is not
+ * enough on its own: the watchdog gets the whole gap between the user parking
+ * the playhead and the click landing (~200ms is one full safety tick), so by
+ * the time this runs the position is already back inside the old range. That
+ * silently collapsed 0:30→0:40 into a fraction of a second — and persisted it
+ * for a saved loop. `loopEditAnchor` gives the stolen position back.
  */
 function editLoopBound(index, which) {
   const state = ensureLoopSession();
   const v = resolveLoopVideo();
   const before = state.segments[index];
   if (!v || !before) return;
+  // Suspend first — deactivateLoop() cancels both the frame callback and the
+  // 200ms safety interval, so nothing can move the playhead past this line.
   if (state.active) deactivateLoop();
 
+  const anchor = loopEditAnchor(v.currentTime, loopLastCorrection, Date.now());
+
   const previous = state.segments;
-  const next = updateLoopSegmentBound(previous, index, which, v.currentTime, v.duration || 0);
+  const next = updateLoopSegmentBound(previous, index, which, anchor, v.duration || 0);
   // updateLoopSegmentBound rebuilds the edited entry as a new object and leaves
   // every other entry by reference, so the one that isn't in the old list by
   // identity is the one we just edited — and that survives the re-sort.
@@ -1910,6 +1941,11 @@ function editLoopBound(index, which) {
 
   state.segments = next;
   state.index = next.indexOf(updated);
+  // The edit is committed, so the reclaimed position must not be reused by the
+  // next one, and the playhead is put back where the user actually left it —
+  // the net effect being that the watchdog never ran.
+  if (anchor !== v.currentTime) v.currentTime = anchor;
+  loopLastCorrection = null;
   updateLoopPanel();
   renderLoopRanges();
   if (before.id !== undefined) persistLoopEdit(before.id, updated);
@@ -2147,6 +2183,12 @@ function mountLoopPanel() {
     panel = document.createElement('div');
     panel.className = 'yt-loop-panel';
     panel.addEventListener('click', onLoopPanelClick);
+    // Suspend on the way DOWN, not on click: pointerdown precedes click by a
+    // frame, whereas the click handler runs after the watchdog has had the
+    // whole press to move the playhead. This is the primary fix for a real
+    // pointer; loopEditAnchor is the backstop for everything that reaches the
+    // handler another way (keyboard shortcuts, dispatched events).
+    panel.addEventListener('pointerdown', onLoopPanelPointerDown);
     panel.addEventListener('keydown', onLoopPanelKeydown);
     // Keep YouTube's own player shortcuts from eating what we type/press here.
     panel.addEventListener('keydown', e => e.stopPropagation());
@@ -2249,6 +2291,20 @@ function updateLoopPanel() {
 
 function escapeLoopText(text) {
   return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Pauses an armed loop the instant the user presses an A/B control, before the
+ * click that will re-anchor the bound can land. Purely a suspend — the actual
+ * edit still happens in the click handler.
+ */
+function onLoopPanelPointerDown(event) {
+  if (!loopState?.active) return;
+  const target = event.target.closest('[data-loop-edit], [data-loop-action]');
+  const action = target?.dataset?.loopAction;
+  if (!target) return;
+  if (target.dataset.loopEdit === undefined && action !== 'setA' && action !== 'setB') return;
+  deactivateLoop();
 }
 
 function onLoopPanelClick(event) {

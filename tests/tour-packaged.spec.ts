@@ -280,6 +280,139 @@ test.describe('First-run guided tour (packaged build)', () => {
     }
   });
 
+  /**
+   * ─── Sub-tour B: the Active Recall coach-mark in the side panel ───────────
+   *
+   * Same class of bug as #97 above, in a different file. side-panel.js gated
+   * its seen flag on `stepShown`, which only `onHighlighted` set — the END of
+   * driver.js's ~400ms highlight transition — and wrote it only from
+   * `onDestroyed`, which driver.js guards on internal state set at that same
+   * instant. Click "Got it" inside those 400ms (the common case: the button is
+   * right there) and NOTHING was stored, so the card came back on every single
+   * panel open, forever. The fix ports the #97 pattern verbatim.
+   *
+   * Deliberately no fade wait anywhere below — that wait is precisely what hid
+   * the bug from a suite that otherwise settles before clicking.
+   */
+  const DONE = '.driver-popover-done-btn';
+  const PANEL_HEADER = '.side-panel-header';
+
+  function panelUrl(worker: Worker): string {
+    return `chrome-extension://${new URL(worker.url()).host}/src/pages/side-panel.html`;
+  }
+
+  /** Open the panel page and return as soon as the coach-mark is on screen. */
+  async function openPanelNoFadeWait(context: BrowserContext, worker: Worker): Promise<Page> {
+    const page = await context.newPage();
+    await page.goto(panelUrl(worker));
+    await page.locator(POPOVER).waitFor({ state: 'visible', timeout: 20_000 });
+    return page;
+  }
+
+  test('dismissing the coach-mark before the fade finishes still marks it seen', async () => {
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      // Sub-tour B defers to Sub-tour A while that is still pending on a
+      // YouTube tab; the panel page is not a watch page, so it runs.
+      const page = await openPanelNoFadeWait(context, worker);
+
+      // No fade wait, no settle — the exact timing that stored nothing before.
+      await page.locator(DONE).click();
+      await expect(page.locator(POPOVER)).toHaveCount(0);
+
+      await expect
+        .poll(async () => (await tourState(worker)).sidePanelTour, { timeout: 10_000 })
+        .toBe(true);
+
+      // Reopening the panel is what the user actually does next. Before the fix
+      // the card was back here, and on every open after that.
+      const reopened = await context.newPage();
+      await reopened.goto(panelUrl(worker));
+      await reopened.waitForTimeout(4000); // well past waitForElement + drive()
+      await expect(reopened.locator(POPOVER)).toHaveCount(0);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('the coach-mark never paints over the panel header, even when short', async () => {
+    // driver.js's element-less (centered) branch is positioned with no viewport
+    // clamp, so under ~281px of CSS viewport height the card crossed the 50px
+    // header and painted over the wordmark — the popover is z-index 1000010,
+    // the header 50, so the header simply lost. Two fixes: the steps are
+    // anchored to a real element now, and tour-theme.css bounds the height.
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      const page = await context.newPage();
+      // Deliberately brutal: shorter than the unclamped card needed.
+      await page.setViewportSize({ width: 400, height: 260 });
+      await page.goto(panelUrl(worker));
+      await page.locator(POPOVER).waitFor({ state: 'visible', timeout: 20_000 });
+      // Let driver.js finish positioning before measuring.
+      await page.waitForTimeout(1200);
+
+      const overlap = await page.evaluate(
+        ([popSel, headerSel]) => {
+          const pop = document.querySelector(popSel)?.getBoundingClientRect();
+          const header = document.querySelector(headerSel)?.getBoundingClientRect();
+          if (!pop || !header) return null;
+          const vertical = Math.min(pop.bottom, header.bottom) - Math.max(pop.top, header.top);
+          const horizontal = Math.min(pop.right, header.right) - Math.max(pop.left, header.left);
+          return {
+            overlapping: vertical > 0 && horizontal > 0,
+            popTop: pop.top,
+            popBottom: pop.bottom,
+            headerBottom: header.bottom,
+            fitsViewport: pop.bottom <= window.innerHeight + 1,
+          };
+        },
+        [POPOVER, PANEL_HEADER] as const,
+      );
+
+      expect(overlap, 'popover or header missing').not.toBeNull();
+      expect(
+        overlap!.overlapping,
+        `coach-mark (${overlap!.popTop}–${overlap!.popBottom}) crosses the header (ends ${overlap!.headerBottom})`,
+      ).toBe(false);
+      expect(overlap!.fitsViewport, 'coach-mark overflows the panel viewport').toBe(true);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('a user with saved moments is not told to come back once they have saved one', async () => {
+    // The copy was chosen from the CURRENT video's bookmarks, and the panel page
+    // is not a watch page — so every returning user with a full library got the
+    // empty-state pitch.
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      await worker.evaluate(
+        ({ key, data }) => new Promise<void>((r) => chrome.storage.sync.set({ [key]: data }, () => r())),
+        {
+          key: `bm_${VIDEO_ID}`,
+          data: [{
+            id: 4001, videoId: VIDEO_ID, timestamp: 12, description: 'Already saved',
+            tags: [], color: '#3b82f6', createdAt: new Date().toISOString(),
+            videoTitle: 'Test', reviewSchedule: [1, 3, 7], lastReviewed: null,
+          }],
+        },
+      );
+
+      const page = await openPanelNoFadeWait(context, worker);
+      await expect(page.locator(POPOVER)).toContainText('Active Recall');
+      await expect(page.locator(POPOVER)).not.toContainText('Come back here once');
+      await expect(page.locator(POPOVER)).toContainText("quizzes you before each clip plays");
+    } finally {
+      await context.close();
+    }
+  });
+
   test('a fresh profile is still offered the tour exactly once', async () => {
     const context = await launch();
     try {

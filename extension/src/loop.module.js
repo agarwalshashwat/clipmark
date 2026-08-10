@@ -29,6 +29,7 @@ const LOOP_MAX_EPSILON  = 0.75;   // …nor looser, however slow the tick source
 const LOOP_ENTER_TOLERANCE = 0.5; // seconds before A the user may sit without being pulled in
 const LOOP_SEEK_SETTLE  = 0.35;   // how close to the seek target counts as "arrived"
 const LOOP_SEEK_TIMEOUT = 0.4;    // wall seconds before a never-landing seek stops blocking
+const LOOP_EDIT_GRACE   = 2;      // wall seconds an A/B edit may still reclaim a stolen playhead
 const LOOP_NAME_MAX     = 80;
 const LOOP_COLOR        = '#8b5cf6'; // violet — distinct from the default bookmark blue
 
@@ -166,9 +167,14 @@ export function removeLoopSegment(segments, index) {
  * @param {{segments: Array, index: number, mode?: string, pendingSeek?: number|null,
  *          pendingSeekSeconds?: number}} state
  * @param {{currentTime: number, playbackRate?: number, tickSeconds?: number}} tick
- * @returns {{state: object, seek: number|null, reason: string|null}}
+ * @returns {{state: object, seek: number|null, reason: string|null,
+ *            from?: number, userPlaced?: boolean}}
  *          `seek` is the position the caller must write to video.currentTime
  *          (null = do nothing this tick). `state` is always a new object.
+ *          `from` is the position being overwritten, and `userPlaced` marks it
+ *          as somewhere only a deliberate scrub could have put the playhead —
+ *          together they let the caller give that position back to an A/B edit
+ *          (see loopEditAnchor).
  */
 export function advanceLoop(state, tick) {
   const segments = Array.isArray(state?.segments) ? state.segments : [];
@@ -225,6 +231,10 @@ export function advanceLoop(state, tick) {
       state: { ...base, index: nextIndex, pendingSeek: target, pendingSeekSeconds: 0 },
       seek: target,
       reason: nextIndex === index ? 'wrap' : 'advance',
+      from: currentTime,
+      // Playback can only leave a segment by crossing B, and it is caught within
+      // one epsilon-wide window. Anything further out is a deliberate scrub.
+      userPlaced: currentTime > seg.end + epsilon,
     };
   }
 
@@ -234,10 +244,50 @@ export function advanceLoop(state, tick) {
       state: { ...base, pendingSeek: seg.start, pendingSeekSeconds: 0 },
       seek: seg.start,
       reason: 'enter',
+      from: currentTime,
+      // This branch only fires for a position playback cannot produce.
+      userPlaced: true,
     };
   }
 
   return noop();
+}
+
+/**
+ * The playhead position an A/B edit should anchor to.
+ *
+ * Editing a bound is defined as "move it to where I'm standing", and the panel
+ * promises that editing pauses the loop. But a click can only pause the loop
+ * once it has LANDED, and the watchdog runs every ~200ms — so to push B later,
+ * where the user must first scrub past the current B, the watchdog reliably
+ * yanked the playhead back to A during the gap between parking it and pressing
+ * the button. The edit then read the post-yank position and either collapsed
+ * the range to a fraction of a second or was rejected as "too short", and for a
+ * saved loop that collapse was persisted.
+ *
+ * So the watchdog hands back what it took: when it corrects a position only a
+ * deliberate scrub could have produced, it records it, and an edit arriving
+ * within `graceSeconds` anchors there instead of to the loop's own seek target.
+ * The net effect is that the watchdog never ran.
+ *
+ * The window is deliberately short, and a natural wrap at B clears the record
+ * (see loopTick): past that, the user has watched the loop resume and "here"
+ * honestly means the live playhead.
+ *
+ * @param {number} currentTime live video.currentTime
+ * @param {{from: number, atMs: number}|null} correction last user-placed position the watchdog overwrote
+ * @param {number} nowMs
+ * @param {number} [graceSeconds]
+ * @returns {number} the position to anchor the bound to
+ */
+export function loopEditAnchor(currentTime, correction, nowMs, graceSeconds = LOOP_EDIT_GRACE) {
+  if (!finite(currentTime)) return currentTime;
+  if (!correction || !finite(correction.from) || !finite(correction.atMs) || !finite(nowMs)) {
+    return currentTime;
+  }
+  const age = (nowMs - correction.atMs) / 1000;
+  if (age < 0 || age > graceSeconds) return currentTime;
+  return correction.from;
 }
 
 /**
@@ -371,6 +421,7 @@ export const LOOP_CONSTANTS = {
   LOOP_ENTER_TOLERANCE,
   LOOP_SEEK_SETTLE,
   LOOP_SEEK_TIMEOUT,
+  LOOP_EDIT_GRACE,
   LOOP_NAME_MAX,
   LOOP_COLOR,
 };

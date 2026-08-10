@@ -30,6 +30,7 @@ import {
   isLoopBookmark,
   isSameLoopSegment,
   isValidLoopSegment,
+  loopEditAnchor,
   loopEndForBookmark,
   loopSegmentsFromBookmarks,
   loopWrapEpsilon,
@@ -265,6 +266,88 @@ describe('advanceLoop at speed', () => {
     const segs = [{ start: 5, end: 5.3 }];
     const { seeks } = runLoop(session(segs), { rate: 2, tick: 0.5, ticks: 20 });
     assert.ok(seeks.length < 20, 'a wrap on literally every tick means the segment never plays');
+  });
+});
+
+// ─── Editing A/B while the loop is armed ─────────────────────────────────────
+// The shipped bug: to push B later you must first scrub PAST the current B, and
+// the watchdog yanks the playhead back to A within one 200ms safety tick — well
+// before the click on the A/B button lands. The edit then read the post-yank
+// position and collapsed 0:30→0:40 to a fraction of a second (or was rejected
+// as "too short"), and for a saved loop that collapse was persisted.
+describe('A/B edits versus the watchdog', () => {
+  it('marks a scrub past B as user-placed, so the edit can reclaim it', () => {
+    const state = session([{ start: 30, end: 40 }]);
+    const { seek, reason, from, userPlaced } =
+      advanceLoop(state, { currentTime: 55, playbackRate: 1, tickSeconds: FRAME });
+
+    assert.equal(reason, 'wrap');
+    assert.equal(seek, 30, 'the watchdog still pulls the playhead back in');
+    assert.equal(from, 55, 'and reports the position it overwrote');
+    assert.equal(userPlaced, true, 'playback cannot carry the playhead 15s past B');
+  });
+
+  it('does NOT mark a natural wrap as user-placed', () => {
+    // Crossing B by one tick is ordinary playback, not a scrub — reclaiming it
+    // would re-anchor a bound to B every time the user edited just after a wrap.
+    const state = session([{ start: 30, end: 40 }]);
+    const { reason, userPlaced } =
+      advanceLoop(state, { currentTime: 40.01, playbackRate: 1, tickSeconds: FRAME });
+
+    assert.equal(reason, 'wrap');
+    assert.equal(userPlaced, false);
+  });
+
+  it('marks a scrub back before A as user-placed too', () => {
+    const state = session([{ start: 30, end: 40 }]);
+    const { reason, from, userPlaced } =
+      advanceLoop(state, { currentTime: 5, playbackRate: 1, tickSeconds: FRAME });
+
+    assert.equal(reason, 'enter');
+    assert.equal(from, 5);
+    assert.equal(userPlaced, true);
+  });
+
+  it('anchors the edit to the stolen position, not to where the loop seeked', () => {
+    // The regression: without this the bound is read as 30 and 0:30→0:40
+    // collapses instead of becoming 0:30→0:55.
+    const correction = { from: 55, atMs: 1_000 };
+    assert.equal(loopEditAnchor(30, correction, 1_400), 55);
+  });
+
+  it('reclaims regardless of how far the playhead has since drifted', () => {
+    // The watchdog calls play() after it seeks, so the playhead is already
+    // moving again by the time the click lands. Freshness is the only test.
+    const correction = { from: 55, atMs: 1_000 };
+    assert.equal(loopEditAnchor(31.8, correction, 1_900), 55);
+  });
+
+  it('falls back to the live playhead once the grace window has passed', () => {
+    const correction = { from: 55, atMs: 1_000 };
+    const stale = 1_000 + (LOOP_CONSTANTS.LOOP_EDIT_GRACE * 1000) + 1;
+    assert.equal(loopEditAnchor(32, correction, stale), 32,
+      'past the window the user has watched the loop resume — "here" means here');
+  });
+
+  it('falls back to the live playhead with no correction on record', () => {
+    assert.equal(loopEditAnchor(32, null, 5_000), 32);
+    assert.equal(loopEditAnchor(32, { from: NaN, atMs: 5_000 }, 5_000), 32);
+    assert.equal(loopEditAnchor(32, { from: 55 }, 5_000), 32);
+  });
+
+  it('ignores a correction timestamped in the future', () => {
+    assert.equal(loopEditAnchor(32, { from: 55, atMs: 9_000 }, 5_000), 32);
+  });
+
+  it('produces the intended range end-to-end', () => {
+    // What the packaged E2E asserts, in pure form: park at 55, get yanked to 30,
+    // then edit B — the segment must become 30→55 rather than collapsing.
+    const segs = [{ start: 30, end: 40, id: 2001 }];
+    const yanked = advanceLoop(session(segs), { currentTime: 55, playbackRate: 1, tickSeconds: FRAME });
+    const anchor = loopEditAnchor(30, { from: yanked.from, atMs: 1_000 }, 1_300);
+    const next = updateLoopSegmentBound(segs, 0, 'end', anchor, 600);
+
+    assert.deepEqual(next[0], { start: 30, end: 55, id: 2001 });
   });
 });
 

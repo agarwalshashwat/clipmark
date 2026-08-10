@@ -31,6 +31,7 @@ export const REQUIRED_CONTENT_GLOBALS = [
   'gradeRecall',
   // src/loop.js
   'advanceLoop',
+  'loopEditAnchor',
   'normalizeLoopSegment',
   'isValidLoopSegment',
   'isSameLoopSegment',
