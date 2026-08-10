@@ -25,6 +25,7 @@ import {
   countEnrolledRecallSegments,
   isEnrollmentCapReached,
   isMonthlyReviewCapReached,
+  isRecallStartBlocked,
   isMonthlyAnkiExportCapReached,
   isMonthlyReviewWarnThreshold,
   countSavedLoops,
@@ -181,5 +182,53 @@ describe('isSavedLoopCapReached (free tier)', () => {
 
   it('is a standing pool, not a monthly one — no period argument exists', () => {
     assert.equal(isSavedLoopCapReached.length, 1);
+  });
+});
+
+describe('isRecallStartBlocked (shared gate for every recall entry point)', () => {
+  const usage = (count, periodStart = '2026-07') => ({ periodStart, count });
+
+  it('never blocks a Pro user, whatever the counter says', () => {
+    assert.equal(isRecallStartBlocked({ isPro: true, reviewUsage: usage(0), nowMs: NOW }), false);
+    assert.equal(isRecallStartBlocked({ isPro: true, reviewUsage: usage(FREE_RECALL_REVIEWS_PER_MONTH), nowMs: NOW }), false);
+    assert.equal(isRecallStartBlocked({ isPro: true, reviewUsage: usage(9999), nowMs: NOW }), false);
+  });
+
+  it('lets a free user through below the monthly cap', () => {
+    assert.equal(isRecallStartBlocked({ isPro: false, reviewUsage: null, nowMs: NOW }), false);
+    assert.equal(isRecallStartBlocked({ isPro: false, reviewUsage: usage(0), nowMs: NOW }), false);
+    assert.equal(
+      isRecallStartBlocked({ isPro: false, reviewUsage: usage(FREE_RECALL_REVIEWS_PER_MONTH - 1), nowMs: NOW }),
+      false,
+    );
+  });
+
+  it('blocks a free user at and above the monthly cap', () => {
+    assert.equal(
+      isRecallStartBlocked({ isPro: false, reviewUsage: usage(FREE_RECALL_REVIEWS_PER_MONTH), nowMs: NOW }),
+      true,
+    );
+    assert.equal(
+      isRecallStartBlocked({ isPro: false, reviewUsage: usage(FREE_RECALL_REVIEWS_PER_MONTH + 1), nowMs: NOW }),
+      true,
+    );
+  });
+
+  it('unblocks a free user once the period rolls over', () => {
+    const spent = usage(FREE_RECALL_REVIEWS_PER_MONTH, '2026-06'); // last month's allowance
+    assert.equal(isRecallStartBlocked({ isPro: false, reviewUsage: spent, nowMs: NOW }), false);
+  });
+
+  it('agrees with isMonthlyReviewCapReached for free users — one rule, not two', () => {
+    // The web-started path (background.js) and the extension's own UI both call
+    // this; if it ever diverged from the underlying cap, the paywall would be
+    // inconsistent by entry point again.
+    for (const count of [0, 1, 15, 29, 30, 31, 100]) {
+      assert.equal(
+        isRecallStartBlocked({ isPro: false, reviewUsage: usage(count), nowMs: NOW }),
+        isMonthlyReviewCapReached(usage(count), NOW),
+        `count=${count}`,
+      );
+    }
   });
 });

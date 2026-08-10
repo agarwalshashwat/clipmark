@@ -54,6 +54,34 @@ async function seed(worker: Worker, data: unknown[]) {
   );
 }
 
+/** Signs a user in, at the given entitlement. */
+async function seedUser(worker: Worker, isPro: boolean) {
+  await worker.evaluate(
+    (pro) => new Promise<void>(r => chrome.storage.sync.set(
+      { bmUser: { userId: 'u1', userEmail: 'u@example.com', accessToken: 't', refreshToken: 'r', isPro: pro } },
+      () => r(),
+    )),
+    isPro,
+  );
+}
+
+/**
+ * Sets this month's Active Recall review counter. The period key is computed
+ * inside the worker so it always matches the current UTC month the way
+ * usage-caps' normalizeMonthlyCounter expects — a stale key would silently
+ * reset to zero and the test would pass for the wrong reason.
+ */
+async function seedReviewCount(worker: Worker, count: number) {
+  await worker.evaluate(
+    (n) => new Promise<void>(r => {
+      const d = new Date();
+      const periodStart = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+      chrome.storage.local.set({ recallReviewUsage: { periodStart, count: n } }, () => r());
+    }),
+    count,
+  );
+}
+
 /** A page whose origin really is the app's, with a stand-in body. */
 async function openAppStandIn(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
@@ -64,11 +92,14 @@ async function openAppStandIn(context: BrowserContext): Promise<Page> {
 }
 
 function sendStartRecall(page: Page, extensionId: string, bookmarkIds?: number[]) {
-  return page.evaluate(({ id, ids }) => new Promise(resolve => {
+  // Every value the page needs must be passed in: page.evaluate ships the
+  // function source to the browser, where this module's top-level consts do
+  // not exist (a bare VIDEO_ID here throws ReferenceError in the page).
+  return page.evaluate(({ id, ids, videoId }) => new Promise(resolve => {
     const cr = (window as unknown as { chrome: { runtime: { sendMessage: (i: string, m: unknown, cb: (r: unknown) => void) => void; lastError?: { message?: string } } } }).chrome.runtime;
-    cr.sendMessage(id, { type: 'START_RECALL', videoId: VIDEO_ID, bookmarkIds: ids }, r =>
+    cr.sendMessage(id, { type: 'START_RECALL', videoId, bookmarkIds: ids }, r =>
       resolve(r ?? { ok: false, error: cr.lastError?.message }));
-  }), { id: extensionId, ids: bookmarkIds });
+  }), { id: extensionId, ids: bookmarkIds, videoId: VIDEO_ID });
 }
 
 test.describe('Active Recall bridge: web app → extension', () => {
@@ -133,6 +164,93 @@ test.describe('Active Recall bridge: web app → extension', () => {
     } finally {
       await context.close();
     }
+  });
+
+  /**
+   * The free-tier paywall on the web-started path.
+   *
+   * Active Recall started from the extension has always been capped for free
+   * users (30 reviews/month), but the web dashboard's bridge handler applied no
+   * entitlement check at all — so a free user with the extension installed had
+   * unlimited Active Recall just by starting it from the website.
+   *
+   * These assert against the SHIPPED background worker rather than the
+   * dashboard's UI, because the UI is not the gate: this exact
+   * `chrome.runtime.sendMessage` call is what a user can make straight from the
+   * console, skipping every button the page renders.
+   *
+   * All three cases stay offline — a refused session never opens a tab, and the
+   * "gate passed" cases seed no bookmarks, so they stop at `no_bookmarks`
+   * instead of loading youtube.com. That keeps this deterministic.
+   */
+  test.describe('free-tier review cap', () => {
+    const AT_CAP = 30; // FREE_RECALL_REVIEWS_PER_MONTH
+
+    test('refuses a free user who has spent this month\'s reviews, and opens no tab', async () => {
+      const context = await launchPackaged();
+      try {
+        const worker = await extensionServiceWorker(context);
+        const extensionId = new URL(worker.url()).host;
+        await seed(worker, seedData());
+        await seedUser(worker, false);
+        await seedReviewCount(worker, AT_CAP);
+
+        const app = await openAppStandIn(context);
+        const before = context.pages().length;
+
+        const res = await sendStartRecall(app, extensionId, [501, 502]) as
+          { ok: boolean; error?: string; cap?: number };
+        expect(res.ok).toBe(false);
+        expect(res.error).toBe('review_cap_reached');
+        expect(res.cap).toBe(AT_CAP);
+
+        // The refusal must happen before any hand-off: no new tab, and no
+        // pendingRevision left in storage for the next YouTube visit to pick up.
+        await app.waitForTimeout(2000);
+        expect(context.pages().length).toBe(before);
+        const pending = await worker.evaluate(() =>
+          new Promise(r => chrome.storage.local.get({ pendingRevision: null }, v => r(v.pendingRevision))));
+        expect(pending).toBeNull();
+      } finally {
+        await context.close();
+      }
+    });
+
+    test('lets a free user under the cap through the gate', async () => {
+      const context = await launchPackaged();
+      try {
+        const worker = await extensionServiceWorker(context);
+        const extensionId = new URL(worker.url()).host;
+        await seedUser(worker, false);
+        await seedReviewCount(worker, AT_CAP - 1);
+        // No bookmarks seeded: past the gate, the handler stops here rather
+        // than opening youtube.com.
+
+        const app = await openAppStandIn(context);
+        const res = await sendStartRecall(app, extensionId) as { ok: boolean; error?: string };
+        expect(res.ok).toBe(false);
+        expect(res.error).toBe('no_bookmarks'); // i.e. NOT review_cap_reached
+      } finally {
+        await context.close();
+      }
+    });
+
+    test('lets a Pro user past the same counter', async () => {
+      const context = await launchPackaged();
+      try {
+        const worker = await extensionServiceWorker(context);
+        const extensionId = new URL(worker.url()).host;
+        await seedUser(worker, true);
+        await seedReviewCount(worker, AT_CAP * 10);
+
+        const app = await openAppStandIn(context);
+        const res = await sendStartRecall(app, extensionId) as { ok: boolean; error?: string };
+        expect(res.ok).toBe(false);
+        expect(res.error).toBe('no_bookmarks'); // entitlement wins over the counter
+      } finally {
+        await context.close();
+      }
+    });
   });
 
   test('the manifest gate keeps other origins from messaging the extension', async () => {

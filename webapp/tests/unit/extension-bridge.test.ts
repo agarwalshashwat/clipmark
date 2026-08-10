@@ -136,6 +136,35 @@ describe('extension bridge: startRecallInExtension', () => {
     assert.deepEqual(await m.startRecallInExtension('aircAruvnKk'), { ok: false, error: 'no_bookmarks' });
   });
 
+  it('carries the free-tier cap refusal through intact', async () => {
+    // The extension's background worker is where the free-tier monthly review
+    // cap is enforced for web-started Active Recall (the page cannot read the
+    // review counter, and a page-side check could be skipped by messaging the
+    // bridge directly). The dashboard needs both the sentinel and the number to
+    // turn that refusal into an upgrade prompt instead of a "couldn't reach the
+    // extension" fallback.
+    installWindow({
+      runtime: {
+        sendMessage: (_i: string, _m: unknown, cb: (r: unknown) => void) =>
+          cb({ ok: false, error: 'review_cap_reached', cap: 30 }),
+      },
+    });
+    const m = await load();
+    m.rememberExtensionId(VALID_ID);
+    const res = await m.startRecallInExtension('aircAruvnKk', [1]);
+    assert.deepEqual(res, { ok: false, error: 'review_cap_reached', cap: 30 });
+    assert.equal(res.error, m.RECALL_CAP_ERROR);
+  });
+
+  it('omits cap entirely for ordinary failures', async () => {
+    installWindow({
+      runtime: { sendMessage: (_i: string, _m: unknown, cb: (r: unknown) => void) => cb({ ok: false, error: 'timeout' }) },
+    });
+    const m = await load();
+    m.rememberExtensionId(VALID_ID);
+    assert.deepEqual(await m.startRecallInExtension('aircAruvnKk'), { ok: false, error: 'timeout' });
+  });
+
   it('treats a missing response as a failure rather than success', async () => {
     installWindow({
       runtime: { sendMessage: (_i: string, _m: unknown, cb: (r?: unknown) => void) => cb(undefined) },
