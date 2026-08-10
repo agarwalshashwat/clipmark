@@ -76,9 +76,13 @@ for (const f of files) {
   const ext = path.extname(f);
   if (ext === '.html') {
     checked.html += 1;
-    // Commented-out markup is not a reference. Both extension pages carry a
-    // disabled `<!-- <script src="../popup/theme-loader.js"> -->`, and flagging
-    // it would make this guard cry wolf on a healthy build.
+    // Commented-out markup is not a reference, so strip comments before
+    // scanning — otherwise a disabled tag would make this guard cry wolf on a
+    // healthy build. (Both pages' `<script src="../popup/theme-loader.js">` is
+    // live as of v1.0.4's dark mode, and IS therefore checked: Vite does not
+    // bundle classic scripts, so a missing copy step would 404 the pre-paint
+    // resolver and pin the extension to light. See the copyPageClassicScripts
+    // plugin in vite.config.mjs.)
     const src = readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, ' ');
     for (const m of src.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)) check(f, m[1], '<script src>');
     for (const m of src.matchAll(/<link[^>]+href=["']([^"']+)["']/gi)) check(f, m[1], '<link href>');

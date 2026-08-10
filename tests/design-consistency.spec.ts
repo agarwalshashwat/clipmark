@@ -794,12 +794,23 @@ test.describe('theme resolution on the rendered surfaces', () => {
     await panel.goto(PANEL());
     await panel.locator('.sp-clip-moment-time--loop').first().waitFor({ timeout: 15_000 });
     expect(await themeOf(panel)).toBe('dark');
+    // Demand all THREE faces, then let layout settle, exactly as auditPage()
+    // does for the sibling audits. Measuring before the display face has landed
+    // changes which elements have a non-zero box, so the audit judges a
+    // different (and partly mid-layout) set of elements — this test skipped both
+    // barriers and was correspondingly flaky under load.
     await panel.evaluate(() =>
       Promise.all([
         (document as any).fonts.load("400 20px 'Material Symbols Outlined'"),
+        (document as any).fonts.load("700 16px 'Plus Jakarta Sans'"),
         (document as any).fonts.load("400 14px 'Inter'"),
       ]).then(() => (document as any).fonts.ready).then(() => undefined)
     );
+    await panel.waitForFunction(() => new Promise<boolean>((resolve) => {
+      const read = () => getComputedStyle(document.body).backgroundColor;
+      const first = read();
+      setTimeout(() => resolve(read() === first), 120);
+    }), null, { timeout: 5_000 });
     const res = await panel.evaluate(PAGE_AUDIT);
     const byRule = (r: string) => res.findings.filter((f: any) => f.rule === r);
     for (const r of ['R2', 'R3', 'R6']) {

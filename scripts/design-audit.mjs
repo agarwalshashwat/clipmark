@@ -521,13 +521,44 @@ function auditDarkCompleteness() {
     if (!/matchMedia\(\s*['"]\(prefers-color-scheme:\s*dark\)['"]\s*\)/.test(code)) {
       fail('R9', `${loader} does not read matchMedia('(prefers-color-scheme: dark)') — the system theme is not the source of truth`);
     }
-    // The pre-paint path — everything before init() is defined — must not await
-    // or read chrome.storage, both of which land after first paint.
-    const prePaint = code.slice(0, code.indexOf('function init(') >= 0 ? code.indexOf('function init(') : code.length);
-    if (/\bawait\b|chrome\.storage/.test(prePaint)) {
+    // The code that actually RUNS at load must not await or read
+    // chrome.storage, both of which land after first paint. Slicing the file at
+    // init() is not good enough: a helper defined earlier that merely MENTIONS
+    // chrome.storage is not a pre-paint read, and reported one falsely. Strip
+    // every function body so only the top-level statements remain.
+    const stripFunctionBodies = (src) => {
+      let out = '';
+      for (let i = 0; i < src.length; ) {
+        const head = /^(?:function\b[^{;]*|\([^()]*\)\s*=>\s*)\{/.exec(src.slice(i));
+        if (head) {
+          let depth = 0;
+          let j = i + head[0].length - 1;
+          for (; j < src.length; j++) {
+            if (src[j] === '{') depth++;
+            else if (src[j] === '}' && --depth === 0) { j++; break; }
+          }
+          i = j;
+          continue;
+        }
+        out += src[i++];
+      }
+      return out;
+    };
+    // The file is one big IIFE, so step inside it first — otherwise the stripper
+    // eats the whole program and every check below trivially "passes".
+    const iife = code.slice(code.indexOf('{') + 1);
+    const atLoad = stripFunctionBodies(iife);
+    if (/\bawait\b|chrome\.storage/.test(atLoad)) {
       fail('R9', `${loader} reads an async API before first paint — that is the flash the file exists to prevent`);
     }
-    if (!/localStorage/.test(prePaint)) {
+    // The resolver must stamp the attribute at load, not only from init().
+    if (!/^[\s\S]*\bapply\(\)\s*;/.test(atLoad)) {
+      fail('R9', `${loader} never calls apply() at load — data-theme would not be set before the first paint`);
+    }
+    // …and it needs a synchronous mirror of the override, or a stored
+    // light/dark pick flashes the system theme first. (Checked against the whole
+    // file: the read itself lives in a helper.)
+    if (!/localStorage/.test(code)) {
       fail('R9', `${loader} has no synchronous override cache — a stored light/dark pick would flash the system theme first`);
     }
   }
