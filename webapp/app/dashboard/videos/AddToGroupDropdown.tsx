@@ -64,7 +64,7 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
         aria-controls={menuId}
         title="Add to Group"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+        <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>
           {addingId === 'done' ? 'check_circle' : 'create_new_folder'}
         </span>
         Add
@@ -97,10 +97,10 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
                 >
                   <span className={styles.dropdownMenuItemLabel}>{g.name}</span>
                   {addingId === g.id && (
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span>
                   )}
                   {addingId === 'done' && (
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--brand-ink)' }}>check_circle</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16, color: 'var(--brand-ink)' }}>check_circle</span>
                   )}
                 </button>
               ))}
@@ -108,7 +108,7 @@ export function AddToGroupDropdown({ videoId, initialGroups }: AddToGroupProps) 
           )}
 
           <a href="/dashboard/groups" className={styles.dropdownMenuFooter}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>add</span>
             Manage Groups
           </a>
         </div>

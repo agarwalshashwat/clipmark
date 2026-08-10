@@ -89,7 +89,7 @@ export default async function VideosPage({
 
       {sorted.length === 0 ? (
         <div className={styles.empty}>
-          <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>video_library</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>video_library</span>
           <h3>No videos yet</h3>
           <p>Bookmark moments from YouTube videos to see them here.</p>
         </div>

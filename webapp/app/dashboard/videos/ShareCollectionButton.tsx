@@ -56,7 +56,7 @@ export function ShareCollectionButton({ videoId, videoTitle, bookmarks, userId }
       disabled={sharing}
       style={{ opacity: sharing ? 0.7 : 1, cursor: sharing ? 'not-allowed' : 'pointer' }}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>
         {sharing ? 'sync' : 'ios_share'}
       </span>
       {sharing ? 'Sharing...' : 'Share'}

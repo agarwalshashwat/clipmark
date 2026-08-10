@@ -29,7 +29,7 @@ export default async function AnalyticsPage() {
           <p className={styles.pageSub}>Insights into your bookmarking habits.</p>
         </div>
         <div className={styles.empty}>
-          <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>bar_chart</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>bar_chart</span>
           <h3>Analytics — Pro Feature</h3>
           <p className={styles.emptyText}>
             See which topics you save most, activity over time, and tag insights — all from your own data.
@@ -67,7 +67,7 @@ export default async function AnalyticsPage() {
           <p className={styles.pageSub}>Insights into your bookmarking habits.</p>
         </div>
         <div className={styles.empty}>
-          <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>bar_chart</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 40, color: 'rgba(0,107,95,0.3)' }}>bar_chart</span>
           <h3>No data yet</h3>
           <p>Bookmark moments from YouTube videos to see analytics here.</p>
         </div>

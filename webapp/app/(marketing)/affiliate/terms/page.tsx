@@ -72,25 +72,19 @@ export default function AffiliateTermsPage() {
       WebkitFontSmoothing: 'antialiased',
     }}>
 
-      {/* ── Nav ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 1px 0 rgba(17, 24, 39,0.06)',
-      }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a href="/" style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand-ink)', fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.5px', textDecoration: 'none' }}>
-            ClipMark
-          </a>
-          <a href="/affiliate" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none' }}>
-            ← Affiliate Program
-          </a>
-        </div>
-      </nav>
+      {/* The (marketing) layout already renders the global <Navigation /> and
+          <Footer />; this page must not stack its own copies on top of them.
+          The back-link below replaces the local nav's only unique affordance. */}
 
       {/* ── Content ── */}
       <main style={{ maxWidth: 760, margin: '0 auto', padding: '64px 32px 96px' }}>
+
+        <a href="/affiliate" style={{
+          display: 'inline-block', marginBottom: 32,
+          fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none',
+        }}>
+          ← Affiliate Program
+        </a>
 
         <h1 style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -131,7 +125,7 @@ export default function AffiliateTermsPage() {
             <li style={LI_STYLE}>Not be in breach of the main ClipMark Terms of Service or these Affiliate Terms.</li>
           </ul>
           <p style={P_STYLE}>
-            Eligible applications are reviewed automatically. ClipMark reserves the right to reject or revoke any application at its sole discretion, including where it determines that the applicant&apos;s promotional channels are unsuitable for the Program.
+            Applications are submitted by email and reviewed by the ClipMark team. ClipMark reserves the right to reject or revoke any application at its sole discretion, including where it determines that the applicant&apos;s promotional channels are unsuitable for the Program.
           </p>
           <p style={P_STYLE}>
             Approved Affiliates may not transfer, assign, or sub-license their affiliate status or Affiliate Link to any other person or entity.
@@ -146,7 +140,8 @@ export default function AffiliateTermsPage() {
           <p style={P_STYLE}>
             You earn a <strong>30% commission</strong> on the net sale amount (after any referral discount) of each Qualifying Purchase made by a Referred Customer within your Attribution Window.
             Referred Customers automatically receive a <strong>10% discount</strong> at checkout when they arrive via your Affiliate Link and the discount is applied at the payment processor level.
-            Commission is therefore calculated on the discounted price. The commission and discount rates for current plans are indicative only and may change with 30 days&apos; notice.
+            Commission is therefore calculated on the discounted price. Commission is earned <strong>once per Referred Customer</strong>, on their Qualifying Purchase — it is not a recurring or lifetime revenue share, and subsequent renewals earn nothing further.
+            The commission and discount rates for current plans are indicative only and may change with 30 days&apos; notice.
           </p>
 
           <h3 style={{ ...H2_STYLE, fontSize: 17, fontWeight: 600, marginBottom: 10 }}>3.2 Payout Schedule</h3>
@@ -311,19 +306,6 @@ export default function AffiliateTermsPage() {
         </div>
 
       </main>
-
-      {/* ── Footer ── */}
-      <footer style={{ padding: '32px', borderTop: '1px solid rgba(17, 24, 39,0.06)', background: 'var(--gray-100)' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>© {new Date().getFullYear()} ClipMark.</span>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <a href="/affiliate" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 600 }}>Affiliate Program</a>
-            <a href="/privacy" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</a>
-            <a href="/terms" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</a>
-            <a href="/" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>Home</a>
-          </div>
-        </div>
-      </footer>
 
     </div>
   );

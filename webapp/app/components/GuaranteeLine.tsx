@@ -26,7 +26,7 @@ export function GuaranteeLine({
         ...style,
       }}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: 15, color: 'var(--brand-ink)' }}>
+      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15, color: 'var(--brand-ink)' }}>
         verified_user
       </span>
       {refundDays ? `${refundDays}-day money-back guarantee` : 'Money-back guarantee'} · taxes

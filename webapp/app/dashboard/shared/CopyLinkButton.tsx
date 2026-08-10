@@ -37,7 +37,7 @@ export function DashboardCopyLinkButton({ url }: { url: string }) {
         transform: copied ? 'scale(1.02)' : 'scale(1)',
       }}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>
         {copied ? 'check_circle' : 'content_copy'}
       </span>
       {copied ? 'Copied!' : 'Copy Link'}

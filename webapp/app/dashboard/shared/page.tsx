@@ -36,7 +36,7 @@ export default async function SharedPage() {
       {collections.length === 0 ? (
         <div className={styles.empty}>
           <div className={styles.emptyIcon}>
-            <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>ios_share</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>ios_share</span>
           </div>
           <h3 className={styles.emptyTitle}>Nothing shared yet</h3>
           <p className={styles.emptyText}>
@@ -48,7 +48,7 @@ export default async function SharedPage() {
           {shared.length > 0 && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>link</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>link</span>
                 Active Shares
               </h2>
               <div className={styles.list}>
@@ -70,8 +70,16 @@ export default async function SharedPage() {
                         </p>
                         <div className={styles.urlRow}>
                           <code className={styles.urlCode}>{origin}/v/{c.id}</code>
-                          <a href={`/v/${c.id}`} target="_blank" rel="noopener noreferrer" className={styles.urlOpen}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>open_in_new</span>
+                          {/* Icon-only control: the ligature is now aria-hidden,
+                              so the name has to come from aria-label. */}
+                          <a
+                            href={`/v/${c.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.urlOpen}
+                            aria-label={`Open shared collection for "${c.video_title ?? 'Untitled Video'}" in a new tab`}
+                          >
+                            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>open_in_new</span>
                           </a>
                         </div>
                       </div>
@@ -88,7 +96,7 @@ export default async function SharedPage() {
           {unshared.length > 0 && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>lock</span>
                 Private Collections
               </h2>
               <p className={styles.sectionSub}>Share these via a public link — no viewer account needed.</p>
@@ -113,7 +121,7 @@ export default async function SharedPage() {
                     </div>
                     <div className={styles.cardActions}>
                       <a href={`/v/${c.id}`} className={styles.shareBtn}>
-                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>ios_share</span>
+                        <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>ios_share</span>
                         Share
                       </a>
                     </div>

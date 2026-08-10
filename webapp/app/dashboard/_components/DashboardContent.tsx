@@ -480,7 +480,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
       <div className={toolbarStyles.toolbar}>
         <div className={toolbarStyles.toolbarLeft}>
           <div className={toolbarStyles.searchWrap}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>search</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18, color: 'var(--text-muted)' }}>search</span>
             <input
               type="text"
               placeholder="Search bookmarks…"
@@ -490,7 +490,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
             />
             {query && (
               <button className={toolbarStyles.clearBtn} onClick={() => setQuery('')} title="Clear">
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>close</span>
               </button>
             )}
           </div>
@@ -523,14 +523,14 @@ export default function DashboardContent({ collections, isPro, initialView, init
               onClick={() => switchView('library')}
               title="Library view"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>grid_view</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>grid_view</span>
             </button>
             <button
               className={`${toolbarStyles.viewBtn} ${viewMode === 'timeline' ? toolbarStyles.viewBtnActive : ''}`}
               onClick={() => switchView('timeline')}
               title="Timeline view"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>timeline</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>timeline</span>
             </button>
           </div>
 
@@ -553,7 +553,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
               onClick={() => setExportOpen(o => !o)}
               title="Export / Import"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>more_horiz</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>more_horiz</span>
             </button>
             {exportOpen && (
               <>
@@ -776,7 +776,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
         query ? (
           <div className={styles.emptyCard}>
             <div className={styles.emptyIcon}>
-              <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>search_off</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>search_off</span>
             </div>
             <h3 className={styles.emptyTitle}>No matches found</h3>
             <p className={styles.emptyText}>Try a different search term or clear the filter.</p>
@@ -784,7 +784,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
         ) : (
           <div className={styles.emptyCard}>
             <div className={styles.emptyIcon}>
-              <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>video_call</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>video_call</span>
             </div>
             <h3 className={styles.emptyTitle}>No collections yet</h3>
             <p className={styles.emptyText}>
@@ -832,7 +832,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                     <span className={styles.videoBadge}>YouTube</span>
                   </div>
                   <div className={styles.videoPlayBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 36, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 36, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
                   </div>
                 </a>
                 <div className={styles.scrubber}>
@@ -854,7 +854,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                   {/* Plain link to the video — Active Recall lives in the extension,
                       so don't imply this starts it. */}
                   <a href={`https://www.youtube.com/watch?v=${c.video_id}`} className={styles.videoActionBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
                     Watch
                   </a>
                   <button
@@ -862,7 +862,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                     onClick={() => setGroupingVideo(c.video_id)}
                     title="Add to group"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>folder</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>folder</span>
                     Group
                   </button>
                   {/* Start Active Recall for this video at any time (not just
@@ -884,7 +884,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                     disabled={startingVideoId === c.video_id}
                     title={bridgeReady ? 'Start Active Recall in the extension' : 'Open the video to start Active Recall in the extension'}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>psychology</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>psychology</span>
                     {startingVideoId === c.video_id ? 'Starting…' : 'Recall'}
                   </button>
                 </div>
@@ -942,7 +942,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                                 onClick={() => handleDelete(c.video_id, b.id)}
                                 disabled={isPending}
                               >
-                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>delete</span>
                               </button>
                               <BookmarkNotes videoId={c.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                             </div>
@@ -998,7 +998,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                                           <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                                         </button>
                                         <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(c.video_id, b.id)} disabled={isPending}>
-                                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>delete</span>
                                         </button>
                                         <BookmarkNotes videoId={c.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                                       </div>
@@ -1019,7 +1019,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                         </div>
                         <button className={styles.expandLink} onClick={toggle}>
                           {isExpanded ? 'Show Less' : `Show ${remaining} More`}
-                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>
                             {isExpanded ? 'expand_less' : 'expand_more'}
                           </span>
                         </button>
@@ -1052,7 +1052,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
 
           <div className={styles.suggestionCard}>
             <div className={styles.suggestionIcon}>
-              <span className="material-symbols-outlined" style={{ fontSize: 28, color: 'rgba(0,107,95,0.35)' }}>video_call</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 28, color: 'rgba(0,107,95,0.35)' }}>video_call</span>
             </div>
             <h3 className={styles.suggestionTitle}>Add more variety</h3>
             <p className={styles.suggestionText}>
@@ -1124,7 +1124,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                                 <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>link</span>
                               </button>
                               <button className={`${toolbarStyles.actionBtn} ${toolbarStyles.actionBtnDanger}`} title="Delete bookmark" aria-label="Delete bookmark" onClick={() => handleDelete(group.collection.video_id, b.id)} disabled={isPending}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>delete</span>
                               </button>
                               <BookmarkNotes videoId={group.collection.video_id} bookmark={b} isPro={isPro} onUpgradeNeeded={handleNotesUpgradeNeeded} />
                             </div>

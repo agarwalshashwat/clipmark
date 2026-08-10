@@ -138,7 +138,7 @@ export default function AdminPanel() {
       <div className="cm-card" style={{ padding: '32px', marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <div className="cm-icon-badge" style={{ background: 'var(--accent-light)', color: 'var(--brand-ink)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person_search</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>person_search</span>
           </div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>User Management</h2>
         </div>
@@ -210,14 +210,14 @@ export default function AdminPanel() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div className="cm-icon-badge" style={{ background: 'var(--accent-strong)', color: 'white' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>account_circle</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>account_circle</span>
               </div>
               <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {selected.email}
               </h2>
             </div>
             <button style={{ ...btn('ghost'), padding: '6px' }} onClick={() => setSelected(null)}>
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
           </div>
 
@@ -225,7 +225,7 @@ export default function AdminPanel() {
             {/* ── Grant Pro ── */}
             <section>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <span className="material-symbols-outlined" style={{ color: 'var(--ai)', fontSize: 20 }}>card_membership</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--ai)', fontSize: 20 }}>card_membership</span>
                 <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Gifted Access</h3>
               </div>
               <div style={{ display: 'grid', gap: 12 }}>
@@ -263,7 +263,7 @@ export default function AdminPanel() {
             {/* ── Affiliate setup ── */}
             <section>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)', fontSize: 20 }}>share_reviews</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--brand-ink)', fontSize: 20 }}>share_reviews</span>
                 <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--gray-800)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Partnership Setup</h3>
               </div>
               <div style={{ display: 'grid', gap: 12 }}>
@@ -317,7 +317,7 @@ export default function AdminPanel() {
               fontSize: 14,
               border: statusMsg.startsWith('✓') ? '1px solid #10b98133' : '1px solid #ef444433'
             }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>
                 {statusMsg.startsWith('✓') ? 'check_circle' : 'error'}
               </span>
               {statusMsg}
