@@ -102,6 +102,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>Account data</strong> — your name, email address, and profile photo from Google, obtained only when you sign in with Google OAuth.</li>
             <li style={LI_STYLE}><strong>Auth tokens</strong> — OAuth access and refresh tokens, stored encrypted in your browser&apos;s Chrome storage and our secure database.</li>
             <li style={LI_STYLE}><strong>Usage data</strong> — view counts for shared collections (no personal identifying data).</li>
+            <li style={LI_STYLE}><strong>Feedback you submit</strong> — the rating and answers you send from the <a href="/feedback" style={{ color: 'var(--brand-ink)' }}>feedback form</a>, plus the name and email address only if you choose to fill them in. Both are optional; leaving them blank keeps the submission anonymous.</li>
           </ul>
           <p style={P_STYLE}>
             We do <strong>not</strong> collect browsing history, track pages outside of YouTube, or use third-party advertising trackers.
@@ -146,6 +147,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}>To provide AI-powered features (Pro tier only).</li>
             <li style={LI_STYLE}>To manage your subscription and verify Pro access.</li>
             <li style={LI_STYLE}>To communicate important account-related updates (no marketing emails without consent).</li>
+            <li style={LI_STYLE}>To read the feedback you send us, and to reply to it if you left an email address. A feedback email address is not added to any mailing list.</li>
           </ul>
           <p style={P_STYLE}>
             We do not sell your data to third parties. We do not use your data for advertising.

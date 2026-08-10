@@ -13,6 +13,7 @@ const supabase = createClient(
 // Indexable content routes, highest-intent first. Keep this in step with the
 // pages under app/(marketing)/ and with robots.ts — a path listed here must
 // not be Disallow'd there, and must carry a self-referential canonical.
+// `/feedback` is deliberately absent: it sets `robots: { index: false }`.
 const CONTENT_PATHS = [
   '/upgrade',
   '/active-recall-youtube',
