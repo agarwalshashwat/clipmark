@@ -82,6 +82,24 @@ async function openWithTour(context: BrowserContext, url = VIDEO_URL): Promise<P
   return page;
 }
 
+/**
+ * Like openWithTour, but returns the moment the popover is on screen — WITHOUT
+ * waiting for driver.js's 400ms fade-in to finish.
+ *
+ * That wait is why the v1.0.3 "tour on every video" bug got past this suite.
+ * Every other case here settles the fade first, which also happens to be when
+ * driver.js fires onHighlighted and sets the internal state onDestroyed is
+ * gated on. A real user clicks × as soon as they see it — before either — and on
+ * that path the seen flag was never stored at all.
+ */
+async function openWithTourNoFadeWait(context: BrowserContext, url = VIDEO_URL): Promise<Page> {
+  const page = await context.newPage();
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+  await page.locator(POPOVER).waitFor({ state: 'visible', timeout: 40_000 });
+  return page;
+}
+
 test.describe('First-run guided tour (packaged build)', () => {
   test.skip(!existsSync(DIST), 'extension/dist missing — run `make ext-build` first');
   // Each case launches its own Chrome with the extension and loads a real
@@ -210,6 +228,85 @@ test.describe('First-run guided tour (packaged build)', () => {
       // …and offered again on the video the user landed on.
       await page.locator(POPOVER).waitFor({ timeout: 40_000 });
       await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
+    } finally {
+      await context.close();
+    }
+  });
+
+  /**
+   * The v1.0.3 regression: the tour reappeared on EVERY fresh watch page.
+   *
+   * Root cause was entirely in the WRITE path. "Shown" was gated on driver.js's
+   * `onHighlighted`, the end of its highlight transition, which on a live
+   * YouTube page lands ~1.2s after the popover is visible; and `onDestroyed`,
+   * the only place the flag was written, is itself gated on internal state set
+   * at that same instant. Dismiss the tour inside that first second — the normal
+   * thing to do — and neither ran, so nothing was ever persisted and the
+   * one-shot never became one.
+   *
+   * Deliberately dismisses without waiting for the fade, then loads a second
+   * video as a full page load (fresh content-script instance reading storage).
+   */
+  test('dismissing during the fade-in still sticks — no tour on the next video', async () => {
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      const page = await openWithTourNoFadeWait(context);
+
+      // No fade wait, no step advance: close it the instant it appears.
+      await page.locator(CLOSE).click();
+      await expect(page.locator(POPOVER)).toHaveCount(0);
+
+      await expect
+        .poll(async () => (await tourState(worker)).youtubeTour, { timeout: 10_000 })
+        .toBe(true);
+
+      // A DIFFERENT video, loaded fresh — the content script re-evaluates and
+      // must short-circuit on the stored flag.
+      await page.goto(OTHER_VIDEO_URL, { waitUntil: 'domcontentloaded' });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.waitForTimeout(4000); // well past the anchor wait + drive()
+      await expect(page.locator(POPOVER)).toHaveCount(0);
+
+      // And a third load, to be sure it is not alternating.
+      await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.waitForTimeout(4000);
+      await expect(page.locator(POPOVER)).toHaveCount(0);
+      expect((await tourState(worker)).youtubeTour).toBe(true);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('a fresh profile is still offered the tour exactly once', async () => {
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      expect((await tourState(worker)).youtubeTour).toBeFalsy();
+
+      // (a) a genuine first-run user gets it…
+      const page = await openWithTourNoFadeWait(context);
+      await expect(page.locator(POPOVER)).toHaveCount(1);
+
+      // …(b) the controls from #93 still work on this path…
+      await page.waitForFunction(
+        (sel) => getComputedStyle(document.querySelector(sel)).opacity === '1',
+        POPOVER,
+        { timeout: 15_000 }
+      );
+      await page.locator(NEXT).click();
+      await expect(page.locator(PROGRESS)).toHaveText('2 of 3');
+      await page.locator(PREV).click();
+      await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
+
+      // …and (c) finishing it stores the one-shot.
+      await page.locator(CLOSE).click();
+      await expect
+        .poll(async () => (await tourState(worker)).youtubeTour, { timeout: 10_000 })
+        .toBe(true);
     } finally {
       await context.close();
     }
