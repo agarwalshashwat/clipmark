@@ -824,6 +824,15 @@ function initializeMessageListener() {
         sendResponse({ chapter: getCurrentChapter() });
         return;
       }
+      // The side panel implements "either-is-dark" and cannot see this page's
+      // DOM, so it asks us. YouTube sets a bare `dark` attribute on <html> when
+      // its own dark theme is on, independently of the OS. Nothing about the
+      // injected UI's own styling depends on this — it is already dark-native,
+      // docked to the black player chrome.
+      if (request.action === 'getYouTubeTheme') {
+        sendResponse({ dark: document.documentElement.hasAttribute('dark') });
+        return;
+      }
       if (request.action === 'getTranscriptSnippet') {
         const transcript = await fetchTranscript();
         const snippet = getTextAtTimestamp(transcript, request.timestamp);
@@ -2816,6 +2825,30 @@ try {
     debugLog('Init', 'Sent contentScriptReady', response);
   });
 } catch { }
+
+// Push YouTube's own theme to the side panel when the user flips it in-page.
+// Part of the "either-is-dark" panel rule; see side-panel.js's
+// refreshYouTubeTheme(). Observing one attribute on <html> is cheap — unlike the
+// title observer above, this fires only on an actual theme toggle, so it needs
+// no debounce. Nothing here changes how the injected UI paints.
+try {
+  const ytThemeObserver = new MutationObserver(() => {
+    if (!isContextValid()) {
+      ytThemeObserver.disconnect();
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage({
+        action: 'ytThemeChanged',
+        dark: document.documentElement.hasAttribute('dark'),
+      }).catch(() => {});   // no panel open — nobody is listening, which is fine
+    } catch { /* extension context invalidated after reload — ignore */ }
+  });
+  ytThemeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['dark'],
+  });
+} catch { /* observer unavailable — the panel still resolves from the system */ }
 
 // Detect YouTube SPA navigation and notify the side panel
 document.addEventListener('yt-navigate-finish', () => {

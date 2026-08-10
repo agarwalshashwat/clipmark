@@ -219,39 +219,48 @@ html[dark] .clipmark-tour-popover .driver-popover-arrow-side-right.driver-popove
   border-right-color: #1f2937;
 }
 
-/* Scoped to our own page so it cannot reach the YouTube injection. */
+/* FALLBACK ONLY — scoped to our own page so it cannot reach the YouTube
+   injection, and gated on the ABSENCE of data-theme.
+
+   Since v1.0.4 the side panel always stamps data-theme before first paint
+   (popup/theme-loader.js), and that attribute is the authoritative signal: it
+   already folds in the OS theme, YouTube's theme (the "either-is-dark" panel
+   rule) and an explicit user override. Letting a bare prefers-color-scheme
+   query also fire here would put a DARK card inside a LIGHT panel for anyone on
+   a dark OS who picked Light. html:not([data-theme]) keeps this block alive only
+   for the case where the resolver never ran at all. */
 @media (prefers-color-scheme: dark) {
-  .side-panel-root .driver-popover.clipmark-tour-popover {
+  html:not([data-theme]) .side-panel-root .driver-popover.clipmark-tour-popover {
     background: #1f2937;
     color: #f9fafb;
     border-color: rgba(20, 184, 166, 0.45);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
   }
-  .side-panel-root .clipmark-tour-popover .driver-popover-title { color: #f9fafb; }
-  .side-panel-root .clipmark-tour-popover .driver-popover-description { color: #d1d5db; }
-  .side-panel-root .clipmark-tour-popover .driver-popover-progress-text { color: #9ca3af; }
-  .side-panel-root .clipmark-tour-popover button.driver-popover-prev-btn {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-title { color: #f9fafb; }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-description { color: #d1d5db; }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-progress-text { color: #9ca3af; }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-prev-btn {
     color: #d1d5db;
     border-color: #4b5563;
   }
-  .side-panel-root .clipmark-tour-popover button.driver-popover-prev-btn:hover,
-  .side-panel-root .clipmark-tour-popover .driver-popover-footer-btn:hover {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-prev-btn:hover,
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-footer-btn:hover {
     background-color: #374151;
   }
-  .side-panel-root .clipmark-tour-popover button.driver-popover-close-btn:hover,
-  .side-panel-root .clipmark-tour-popover button.driver-popover-close-btn:focus {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-close-btn:hover,
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-close-btn:focus {
     color: #f9fafb;
   }
-  .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
     border-bottom-color: #1f2937;
   }
-  .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
     border-top-color: #1f2937;
   }
-  .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
     border-left-color: #1f2937;
   }
-  .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
     border-right-color: #1f2937;
   }
 }
