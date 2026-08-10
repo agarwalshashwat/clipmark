@@ -28,7 +28,7 @@ export function CopyLinkButton({ videoId }: { videoId: string }) {
       onClick={handleCopy}
       title={copyError ? 'Failed to copy YouTube link' : 'Copy YouTube link'}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>
         {copyError ? 'error' : copied ? 'check_circle' : 'content_copy'}
       </span>
       {copyError ? 'Copy failed' : copied ? 'Copied!' : 'Copy'}

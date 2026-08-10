@@ -57,14 +57,14 @@ const FEATURES = [
 
 function Check() {
   return (
-    <span className="material-symbols-outlined" style={{
+    <span className="material-symbols-outlined" aria-hidden="true" style={{
       color: 'var(--brand-ink)', fontWeight: 700, fontSize: 20,
     }}>check_circle</span>
   );
 }
 function Cross() {
   return (
-    <span className="material-symbols-outlined" style={{ 
+    <span className="material-symbols-outlined" aria-hidden="true" style={{ 
       color: 'var(--gray-300)', fontSize: 20 
     }}>cancel</span>
   );
@@ -165,7 +165,7 @@ export default async function UpgradePage({
         {isPro && !success && (
           <div className={styles.manageBox}>
             <div className={styles.manageHeader}>
-              <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)' }}>verified</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--brand-ink)' }}>verified</span>
               <span className={styles.manageTitle}>You&apos;re on ClipMark Pro</span>
             </div>
             {!subscriptionId ? (

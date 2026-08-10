@@ -122,7 +122,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
             </div>
           ) : (
             <div style={{ height: 180, background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 48, color: 'var(--gray-300)' }}>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 48, color: 'var(--gray-300)' }}>
                 {selectedTarget?.type === 'group' ? 'folder' : 'smart_display'}
               </span>
             </div>
@@ -138,7 +138,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
             <div className={styles.formRow}>
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>target</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>target</span>
                   Select Resource
                 </label>
                 <select
@@ -163,7 +163,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
 
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>event_repeat</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>event_repeat</span>
                   Revisit Frequency
                 </label>
                 <select
@@ -181,7 +181,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
             <div className={styles.formRow}>
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>calendar_month</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>calendar_month</span>
                   Start Date
                 </label>
                 <input
@@ -195,7 +195,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
 
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>label</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>label</span>
                   Label <span style={{ fontWeight: 500, color: 'var(--text-muted)' }}>(optional)</span>
                 </label>
                 <input
@@ -242,7 +242,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
                   <h3 className={styles.cardTitle}>{r.label || r.targetLabel}</h3>
                   <div className={styles.cardMeta}>
                     <div className={styles.freqText}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>refresh</span>
+                      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>refresh</span>
                       {FREQUENCY_OPTIONS.find(o => o.value === r.frequency)?.label ?? r.frequency}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
@@ -253,7 +253,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
                           style={{ position: 'static', opacity: 1 }}
                           title="Mark done"
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>check_circle</span>
+                          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>check_circle</span>
                         </button>
                       )}
                       <button
@@ -262,7 +262,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
                         style={{ position: 'static', opacity: 1 }}
                         title="Edit"
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>edit</span>
+                        <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>edit</span>
                       </button>
                       <button
                         className={styles.removeBtn}
@@ -270,7 +270,7 @@ export default function RemindersContent({ dueReminders, upcomingReminders, coll
                         style={{ position: 'static', opacity: 1 }}
                         title="Delete"
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
+                        <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>delete</span>
                       </button>
                     </div>
                   </div>

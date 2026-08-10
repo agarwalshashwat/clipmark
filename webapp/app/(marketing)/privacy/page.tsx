@@ -82,7 +82,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>info</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>info</span>
           </div>
           <p style={P_STYLE}>
             ClipMark (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is a YouTube bookmark manager. This policy explains
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>database</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>database</span>
           </div>
           <h2 style={H2_STYLE}>1. Data We Collect</h2>
           <p style={P_STYLE}>When you use ClipMark, we may collect the following:</p>
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>lock</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>lock</span>
           </div>
           <h2 style={H2_STYLE}>2. How We Store Your Data</h2>
           <ul style={UL_STYLE}>
@@ -122,7 +122,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>hub</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>hub</span>
           </div>
           <h2 style={H2_STYLE}>3. Third-Party Services</h2>
           <p style={P_STYLE}>ClipMark uses the following third-party services:</p>
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>play_arrow</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>play_arrow</span>
           </div>
           <h2 style={H2_STYLE}>4. How We Use Your Data</h2>
           <ul style={UL_STYLE}>
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>verified_user</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>verified_user</span>
           </div>
           <h2 style={H2_STYLE}>5. Your Rights</h2>
           <p style={P_STYLE}>You have the right to:</p>
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>history</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>history</span>
           </div>
           <h2 style={H2_STYLE}>6. Data Retention</h2>
           <p style={P_STYLE}>
@@ -182,7 +182,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>child_care</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>child_care</span>
           </div>
           <h2 style={H2_STYLE}>7. Children&apos;s Privacy</h2>
           <p style={P_STYLE}>
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>edit_note</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>edit_note</span>
           </div>
           <h2 style={H2_STYLE}>8. Changes to This Policy</h2>
           <p style={P_STYLE}>
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
 
         <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>mail</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>mail</span>
           </div>
           <h2 style={H2_STYLE}>9. Contact</h2>
           <p style={P_STYLE}>

@@ -112,7 +112,7 @@ export default async function SignInPage({
             {/* Heading */}
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
               <div className="cm-icon-badge" style={{ margin: '0 auto 24px' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>login</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>login</span>
               </div>
               <h1 style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -139,7 +139,7 @@ export default async function SignInPage({
                 display: 'flex', alignItems: 'center', gap: 10,
                 color: 'var(--danger)', fontSize: 13, fontWeight: 600,
               }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>error</span>
                 Sign-in failed — please try again.
               </div>
             )}
@@ -228,7 +228,7 @@ export default async function SignInPage({
                 gap: 8, padding: '8px 16px', background: 'var(--gray-50)', borderRadius: 999
               }}>
                 <span
-                  className="material-symbols-outlined"
+                  className="material-symbols-outlined" aria-hidden="true"
                   style={{ fontSize: 16, color: 'var(--brand-ink)' }}
                 >
                   lock
@@ -243,11 +243,11 @@ export default async function SignInPage({
             </div>
           </div>
 
+          {/* Sign-in is OAuth-only — there is no separate signup route, so
+              this used to link back to /signin. State the actual behaviour
+              instead of offering a link that goes nowhere. */}
           <p style={{ marginTop: 32, textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>
-            Don&apos;t have an account?{' '}
-            <a href="/signin" style={{ color: 'var(--brand-ink)', fontWeight: 700, textDecoration: 'none' }}>
-              Create collection
-            </a>
+            New to ClipMark? Signing in creates your account automatically — there&apos;s nothing else to fill in.
           </p>
         </div>
       </main>

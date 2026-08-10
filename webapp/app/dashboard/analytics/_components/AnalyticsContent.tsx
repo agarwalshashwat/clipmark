@@ -36,7 +36,7 @@ export default function AnalyticsContent({ heatmap, tags }: Props) {
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>
           <div className="cm-icon-badge">
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>calendar_month</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>calendar_month</span>
           </div>
           Activity — Last 14 Days
         </h2>
@@ -71,7 +71,7 @@ export default function AnalyticsContent({ heatmap, tags }: Props) {
         <section className={styles.card}>
           <h2 className={styles.cardTitle}>
             <div className="cm-icon-badge">
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>sell</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>sell</span>
             </div>
             Tag Frequency
           </h2>
