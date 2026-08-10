@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import * as Sentry from '@sentry/nextjs';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
 import { APP_URL } from '@/app/lib/constants';
 
@@ -125,8 +126,14 @@ export default async function AffiliatePage() {
   let prices = { monthly: '5', annual: '40', lifetime: '40' };
   try {
     prices = await fetchProductPrices();
-  } catch {
-    // Dodo unreachable — use fallback prices
+  } catch (err) {
+    // Dodo unreachable — use fallback prices, but page us: these numbers drive
+    // the published commission table, so quoting stale ones is worse than loud.
+    console.error('[AffiliatePage] Could not fetch Dodo prices, using defaults:', err);
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: { dodo: 'price_fetch_fallback', surface: 'affiliate' },
+    });
   }
 
   // Every plan pays the same one-time commission on the referred user's FIRST

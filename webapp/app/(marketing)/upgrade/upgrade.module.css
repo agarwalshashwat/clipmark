@@ -284,6 +284,23 @@
   font-weight: 600;
 }
 
+/* Checkout couldn't be started (see createCheckoutSession). A retryable blip,
+   not a dead end, so it uses --warning rather than --danger. */
+.bannerRetry {
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  padding: 12px 24px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
 .bannerReferral {
   background: var(--ai-light);
   border: 1px solid var(--ai-light);

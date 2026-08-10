@@ -1,6 +1,7 @@
 'use server';
 
 import DodoPayments from 'dodopayments';
+import * as Sentry from '@sentry/nextjs';
 import { unstable_cache } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase';
@@ -126,20 +127,61 @@ export async function createCheckoutSession(formData: FormData) {
     dodoDiscountCode = (affiliateProfile?.dodo_discount_code as string | null) ?? null;
   }
 
-  const session = await dodoClient().checkoutSessions.create({
-    product_cart: [{ product_id: productId, quantity: 1 }],
-    customer: {
-      email: user.email!,
-      name: user.user_metadata?.full_name ?? undefined,
-    },
-    ...(dodoDiscountCode ? { discount_code: dodoDiscountCode } : {}),
-    metadata: {
-      user_id: user.id,
-      ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
-      ...(userReferralCode ? { user_referral_code: userReferralCode } : {}),
-    },
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
-  });
+  // This is the only call here that reaches a third party, so it owns the
+  // try/catch. Anything it throws — a 403 MERCHANT_NOT_LIVE while Dodo's
+  // live-mode approval is still pending, a 5xx, a network blip, a bad key —
+  // used to propagate out of the action and render global-error.tsx, i.e. a
+  // crash screen on the one page where the user is trying to pay us. Send them
+  // back to /upgrade with a retry prompt instead.
+  //
+  // Deliberately scoped to the Dodo call: `redirect()` throws NEXT_REDIRECT to
+  // do its work, so wrapping the redirect below in the same block would swallow
+  // it and silently drop the user on a blank action response.
+  let checkoutUrl: string | null = null;
+  try {
+    const session = await dodoClient().checkoutSessions.create({
+      product_cart: [{ product_id: productId, quantity: 1 }],
+      customer: {
+        email: user.email!,
+        name: user.user_metadata?.full_name ?? undefined,
+      },
+      ...(dodoDiscountCode ? { discount_code: dodoDiscountCode } : {}),
+      metadata: {
+        user_id: user.id,
+        ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
+        ...(userReferralCode ? { user_referral_code: userReferralCode } : {}),
+      },
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
+    });
+    checkoutUrl = session.checkout_url ?? null;
+  } catch (err) {
+    // Not swallowed: every failure is logged and paged on. A checkout nobody
+    // can complete is revenue-affecting, so this is an error, not a warning.
+    // Tags carry the plan and Dodo's own status code only — no user id or
+    // email, per the no-PII policy in lib/sentry-config.ts.
+    console.error('[createCheckoutSession] Dodo checkout session failed:', err);
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: {
+        checkout: 'dodo',
+        dodo_plan: plan,
+        dodo_status: String((err as { status?: number }).status ?? 'unknown'),
+      },
+    });
+    redirect('/upgrade?checkout_error=1');
+  }
 
-  redirect(session.checkout_url!);
+  // A 2xx with no URL is the same dead end for the user, and just as worth
+  // knowing about, so it takes the same path rather than redirecting to
+  // `undefined`.
+  if (!checkoutUrl) {
+    console.error('[createCheckoutSession] Dodo returned a session with no checkout_url');
+    Sentry.captureException(new Error('Dodo checkout session returned no checkout_url'), {
+      level: 'error',
+      tags: { checkout: 'dodo', dodo_plan: plan, dodo_status: 'no_checkout_url' },
+    });
+    redirect('/upgrade?checkout_error=1');
+  }
+
+  redirect(checkoutUrl);
 }

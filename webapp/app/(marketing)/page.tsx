@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Metadata } from 'next';
+import * as Sentry from '@sentry/nextjs';
 import { createServerSupabase } from '@/lib/supabase';
 import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
@@ -118,7 +119,14 @@ export default async function Home({
   let prices: ProductPrices;
   try {
     prices = await fetchProductPrices();
-  } catch {
+  } catch (err) {
+    // See the same block on /upgrade: the fallback renders a normal-looking
+    // page, so a broken Dodo key has to page us rather than hide here.
+    console.error('[LandingPage] Could not fetch Dodo prices, using defaults:', err);
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: { dodo: 'price_fetch_fallback', surface: 'landing' },
+    });
     prices = PRICE_DEFAULTS;
   }
 
