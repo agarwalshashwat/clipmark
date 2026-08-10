@@ -12,7 +12,9 @@ const supabase = createClient(
 
 // Indexable content routes, highest-intent first. `/upgrade` is deliberately
 // absent — it is Disallow'd in robots.ts, so listing it here would contradict
-// that. Keep this in step with the pages under app/(marketing)/.
+// that, and `/feedback` is absent for the same reason: it sets
+// `robots: { index: false }`. Keep this in step with the pages under
+// app/(marketing)/.
 const CONTENT_PATHS = [
   '/active-recall-youtube',
   '/spaced-repetition-youtube',

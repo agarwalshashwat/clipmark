@@ -392,3 +392,251 @@ html.cm-js-reveal .cm-reveal--visible {
   .hero-h1 { font-size: 44px !important; }
   .hero-sub { font-size: 16px !important; }
 }
+
+/* ── Feedback form (/feedback) ─────────────────────────────────────────────── */
+/* Lives here rather than in inline styles because the form's whole job is
+   states: focus rings, invalid fields, hover on the star row, a disabled
+   submit. `:focus-visible` and `:hover` cannot be expressed inline, and a
+   keyboard user has to be able to see where they are. Every value resolves
+   through design-tokens.css so the form follows the theme. */
+.fb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.fb-field { margin-bottom: 28px; }
+.fb-field:last-of-type { margin-bottom: 0; }
+
+.fb-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.fb-optional {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 8px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.fb-hint {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.fb-input,
+.fb-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.fb-textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+.fb-input::placeholder,
+.fb-textarea::placeholder { color: var(--text-faint); }
+
+.fb-input:hover,
+.fb-textarea:hover { border-color: var(--gray-300); }
+
+.fb-input:focus-visible,
+.fb-textarea:focus-visible,
+.fb-submit:focus-visible,
+.fb-ghost:focus-visible,
+.fb-star input:focus-visible + .fb-star-glyph {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+
+.fb-input[aria-invalid='true'],
+.fb-textarea[aria-invalid='true'] { border-color: var(--danger); }
+
+.fb-count {
+  display: block;
+  text-align: right;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.fb-field-error {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--danger);
+  margin-top: 8px;
+}
+
+/* ── Star rating ───────────────────────────────────────────────────────────── */
+.fb-fieldset {
+  border: none;
+  margin: 0 0 28px;
+  padding: 0;
+}
+
+.fb-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+/* The label is the touch target (44px tall on a phone). The radio stays a real
+   radio — in the accessibility tree, arrow-key navigable — and is stretched
+   transparently over the whole label rather than shrunk to 1px: as a 1px box it
+   sat under the star SVG, so anything clicking the INPUT (rather than the label)
+   hit the SVG instead. Now the input is the hit target and the glyph is purely
+   decorative. */
+.fb-star {
+  position: relative;
+  display: inline-flex;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.fb-star input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.fb-star-glyph {
+  display: inline-flex;
+  color: var(--text-faint);
+  border-radius: var(--radius-xs);
+  transition: color 0.12s, transform 0.12s;
+}
+/* `data-on` is computed in React from the selected rating, or from the hovered
+   one while the pointer is over the row — a pure-CSS sibling trick can only
+   light stars AFTER the hovered one, which is backwards for a rating. */
+.fb-star-glyph[data-on='selected'] { color: var(--accent-strong); }
+.fb-star-glyph[data-on='hover']    { color: var(--accent); }
+.fb-star:hover .fb-star-glyph { transform: scale(1.06); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-star-glyph { transition: none; }
+  .fb-star:hover .fb-star-glyph { transform: none; }
+  .fb-submit { transition: none; }
+  .fb-submit:active:not(:disabled) { transform: none; }
+}
+
+.fb-star-caption {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-sub);
+  margin-left: 10px;
+  min-height: 22px;
+}
+
+/* ── Submit + banners ──────────────────────────────────────────────────────── */
+.fb-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.fb-submit {
+  background: var(--accent-strong);
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  border-radius: var(--radius);
+  padding: 15px 32px;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.15s;
+}
+.fb-submit:hover:not(:disabled) { background: var(--accent-hover); }
+.fb-submit:active:not(:disabled) { transform: scale(0.98); }
+.fb-submit:disabled {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.fb-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  border-radius: var(--radius);
+  padding: 13px 24px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.fb-ghost:hover { background: var(--surface-alt); color: var(--text); }
+
+.fb-note {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.fb-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  font-size: var(--text-lg);
+  line-height: 1.55;
+}
+.fb-banner-error {
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  color: var(--text);
+}
+
+/* ── Success state ─────────────────────────────────────────────────────────── */
+.fb-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--success-light);
+  color: var(--success);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 767px) {
+  .fb-card { padding: 24px 20px; }
+  .fb-submit { width: 100%; }
+  .fb-ghost { width: 100%; }
+}
