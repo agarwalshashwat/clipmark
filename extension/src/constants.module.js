@@ -40,6 +40,14 @@ export const APP_EXPORT_PREFIX = 'clipmark';
 export const MAX_RECONNECT_ATTEMPTS = 3;
 export const RECONNECT_DELAY = 1000;
 
+// ─── String limits ──────────────────────────────────────────────────────────
+// TWIN of src/constants.js's TITLE_TRUNCATE_LENGTH — keep the values equal
+// (tests/unit/constants-parity.test.mjs asserts it). Extension *pages* must
+// import this from here: constants.js is a content script the manifest injects
+// into youtube.com only, so its globalThis registration does not exist in the
+// dashboard/side-panel module graph.
+export const TITLE_TRUNCATE_LENGTH = 60;
+
 // ─── Active Recall handoff ──────────────────────────────────────────────────
 // When an extension page (side panel, dashboard) starts a recall session and
 // there is no reachable content script to message, it hands the session over

@@ -8,6 +8,7 @@ import {
   APP_EXPORT_PREFIX,
   isExtensionContextValid,
   buildPendingRevision,
+  TITLE_TRUNCATE_LENGTH,
 } from '../constants.module.js';
 import { buildAnkiTsv } from '../export-anki.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
@@ -15,7 +16,7 @@ import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import { isDueForRecall } from '../recall.module.js';
 import {
-  isMonthlyReviewCapReached,
+  isRecallStartBlocked,
   isMonthlyAnkiExportCapReached,
   normalizeMonthlyCounter,
   FREE_RECALL_REVIEWS_PER_MONTH,
@@ -1490,16 +1491,13 @@ async function updateRevisitBadge() {
 // file) — the previously inlined copy has been removed.
 
 async function startRecallForVideo(videoId) {
-  const isPro = await checkPro();
-  if (!isPro) {
-    const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
-    if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
-      showUpgradeModal({
-        feature: 'More reviews this month',
-        benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
-      });
-      return;
-    }
+  const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
+  if (isRecallStartBlocked({ isPro: await checkPro(), reviewUsage: recallReviewUsage, nowMs: Date.now() })) {
+    showUpgradeModal({
+      feature: 'More reviews this month',
+      benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+    });
+    return;
   }
   const now = Date.now();
   const dueOnes = allBookmarks

@@ -22,6 +22,12 @@ import {
   localAiAvailability,
   localSummarizeBookmarks,
   localGeneratePost,
+  // Was read as a bare global (local-ai.js is a content script the manifest
+  // injects into youtube.com only), so on this page it was always undefined —
+  // the autofill summarise step below silently fell into its catch. Same class
+  // of bug as the dashboard's TITLE_TRUNCATE_LENGTH; both are now caught by
+  // scripts/page-globals-guard.mjs.
+  localSummarizeSnippet,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
@@ -29,7 +35,7 @@ import { applyProGating } from './pro-gating.js';
 import {
   countEnrolledRecallSegments,
   isEnrollmentCapReached,
-  isMonthlyReviewCapReached,
+  isRecallStartBlocked,
   FREE_RECALL_ENROLLED_CAP,
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
@@ -102,6 +108,22 @@ function startCurrentTimeSync(tabId) {
 async function checkPro() {
   const { bmUser } = await syncGet({ bmUser: null });
   return bmUser?.isPro === true;
+}
+
+/**
+ * "May a recall session start from here?" — the shared free-tier rule
+ * (usage-caps.module.js), asked identically by both of this panel's recall
+ * entry points, the extension dashboard, and background.js's web bridge.
+ */
+async function isRecallBlockedForFreeTier() {
+  const { recallReviewUsage } = await new Promise(resolve =>
+    chrome.storage.local.get({ recallReviewUsage: null }, resolve)
+  );
+  return isRecallStartBlocked({
+    isPro: await checkPro(),
+    reviewUsage: recallReviewUsage,
+    nowMs: Date.now(),
+  });
 }
 
 // ─── Free-tier Active Recall enrollment cap ──────────────────────────────────
@@ -1121,17 +1143,12 @@ async function openVideoAt(videoId, timestamp) {
  */
 async function startRecallFromIdle(videoId, bookmarks) {
   if (!videoId) return;
-  if (!(await checkPro())) {
-    const { recallReviewUsage } = await new Promise(resolve =>
-      chrome.storage.local.get({ recallReviewUsage: null }, resolve)
-    );
-    if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
-      showUpgradeModal({
-        feature: 'More reviews this month',
-        benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
-      });
-      return;
-    }
+  if (await isRecallBlockedForFreeTier()) {
+    showUpgradeModal({
+      feature: 'More reviews this month',
+      benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+    });
+    return;
   }
 
   const dueOnes = dueBookmarksForVideo({
@@ -1798,18 +1815,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('revisit-mode-btn').addEventListener('click', async () => {
     try {
-      const isPro = await checkPro();
-      if (!isPro) {
-        const { recallReviewUsage } = await new Promise(resolve =>
-          chrome.storage.local.get({ recallReviewUsage: null }, resolve)
-        );
-        if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
-          showUpgradeModal({
-            feature: 'More reviews this month',
-            benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
-          });
-          return;
-        }
+      if (await isRecallBlockedForFreeTier()) {
+        showUpgradeModal({
+          feature: 'More reviews this month',
+          benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+        });
+        return;
       }
       const tab = await getCurrentTab();
       if (!(tab.url || '').includes('youtube.com/watch')) {

@@ -1,10 +1,15 @@
 import { readFileSync, readdirSync, copyFileSync, writeFileSync, existsSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
 import { assertProdApiBase } from './scripts/api-base-guard.mjs';
 import { assertContentGlobals } from './scripts/content-globals-guard.mjs';
+import {
+  assertNoContentGlobalLeaks,
+  collectContentScriptGlobals,
+} from './scripts/page-globals-guard.mjs';
 
 // Fail a production build if the extension is configured to talk to a local
 // dev server. Runs only on `vite build` (not `vite dev`), so localhost is still
@@ -66,6 +71,83 @@ function contentGlobalsGuard() {
   };
 }
 
+// The mirror image of the guard above: fail the build if an extension PAGE
+// bundle (dashboard, side panel) reads a name that only the youtube.com-injected
+// content scripts define. See ./scripts/page-globals-guard.mjs for the full
+// story — this plugin only walks dist/ and surfaces errors.
+function pageGlobalsGuard() {
+  return {
+    name: 'clipmark-page-globals-guard',
+    apply: 'build',
+    closeBundle() {
+      const dist = fileURLToPath(new URL('./dist', import.meta.url));
+      const src = fileURLToPath(new URL('.', import.meta.url));
+
+      // Forbidden names come from the manifest's own content_scripts list, so
+      // adding a helper there covers it here automatically.
+      let forbidden;
+      try {
+        forbidden = collectContentScriptGlobals(
+          (manifest.content_scripts ?? [])
+            .flatMap((c) => c.js ?? [])
+            .map((p) => readFileSync(path.join(src, p), 'utf8')),
+        );
+      } catch (err) {
+        this.error(`page-globals guard could not read the content scripts: ${err.message}`);
+        return;
+      }
+      if (!forbidden.length) {
+        this.error('page-globals guard derived an empty forbidden list — the manifest or the globalThis registration blocks changed shape.');
+        return;
+      }
+
+      // Every HTML document the package can actually open as a page.
+      const pageHtml = [
+        manifest.side_panel?.default_path,
+        ...(manifest.web_accessible_resources ?? []).flatMap((w) => w.resources ?? []),
+      ].filter((p) => p && p.endsWith('.html'));
+
+      const pages = [];
+      for (const rel of pageHtml) {
+        const htmlPath = path.join(dist, rel);
+        if (!existsSync(htmlPath)) {
+          this.error(`page-globals guard: ${rel} is not in dist/ — the page was never built.`);
+          return;
+        }
+        const chunks = [];
+        const seen = new Set();
+        const html = readFileSync(htmlPath, 'utf8').replace(/<!--[\s\S]*?-->/g, ' ');
+        const queue = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)]
+          .map((m) => m[1])
+          .filter((s) => !/^(https?:)?\/\//.test(s))
+          .map((s) => (s.startsWith('/') ? path.join(dist, s.slice(1)) : path.resolve(path.dirname(htmlPath), s)));
+
+        // Follow the module graph: a page's chunks import each other, and the
+        // offending reference can sit in any of them.
+        while (queue.length) {
+          const file = queue.shift();
+          if (seen.has(file) || !existsSync(file)) continue;
+          seen.add(file);
+          const source = readFileSync(file, 'utf8');
+          chunks.push({ file: path.relative(dist, file), source });
+          for (const m of source.matchAll(/\bfrom\s*["']([^"']+)["']|\bimport\s*\(?\s*["']([^"']+)["']/g)) {
+            const spec = m[1] ?? m[2];
+            if (!spec || !spec.startsWith('.')) continue;
+            queue.push(path.resolve(path.dirname(file), spec));
+          }
+        }
+        pages.push({ page: rel, chunks });
+      }
+
+      try {
+        assertNoContentGlobalLeaks(pages, forbidden);
+      } catch (err) {
+        this.error(err.message);
+      }
+    },
+  };
+}
+
 // styles/dashboard.css is listed in web_accessible_resources, so crxjs copies it
 // into dist/ verbatim — @import lines and all. Its imports (./design-tokens.css,
 // ./fonts.css) were never copied alongside it, so that exposed stylesheet has
@@ -102,7 +184,13 @@ function copyStyleImports() {
 }
 
 export default defineConfig({
-  plugins: [apiBaseGuard(), crx({ manifest }), contentGlobalsGuard(), copyStyleImports()],
+  plugins: [
+    apiBaseGuard(),
+    crx({ manifest }),
+    contentGlobalsGuard(),
+    pageGlobalsGuard(),
+    copyStyleImports(),
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: true,

@@ -15,7 +15,7 @@ import {
 } from '../_utils/usage-caps';
 import { summariseRecallDue, type RecallDueSummary } from '../_utils/recall';
 import { formatLoopRange, isLoopBookmark } from '../_utils/loop';
-import { isExtensionBridgeAvailable, startRecallInExtension } from '../_utils/extension';
+import { isExtensionBridgeAvailable, startRecallInExtension, RECALL_CAP_ERROR } from '../_utils/extension';
 import GroupPickerModal from './GroupPickerModal';
 import BookmarkNotes from './BookmarkNotes';
 import { getSavedSearches, saveSavedSearch, deleteSavedSearch, type SavedSearch } from '../_utils/savedSearches';
@@ -346,6 +346,14 @@ export default function DashboardContent({ collections, isPro, initialView, init
     setStartingVideoId(null);
     if (result.ok) {
       setCopyToast(`Active Recall started — ${result.count} ${result.count === 1 ? 'moment' : 'moments'}`);
+    } else if (result.error === RECALL_CAP_ERROR) {
+      // Not a bridge failure — the extension enforced the free-tier monthly
+      // review cap (see _utils/extension.ts). Opening the video anyway would
+      // walk the user straight back into the same refusal, so offer Pro instead.
+      const allowance = result.cap ? `all ${result.cap}` : 'all your';
+      setCopyToast(
+        `You've used ${allowance} free Active Recall reviews this month — upgrade to Pro for unlimited reviews.`
+      );
     } else {
       // Bridge failed (extension removed/updated since we cached its id) — send
       // them to the video so the session can still be started from there.
@@ -353,7 +361,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
       window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener');
       setBridgeReady(isExtensionBridgeAvailable());
     }
-    setTimeout(() => setCopyToast(''), 3000);
+    setTimeout(() => setCopyToast(''), 4000);
   }, []);
 
   // ── View toggle ─────────────────────────────────────────────────────────────
@@ -860,13 +868,19 @@ export default function DashboardContent({ collections, isPro, initialView, init
                   {/* Start Active Recall for this video at any time (not just
                       when due) — mirrors the extension's always-visible
                       .vc-revisit-btn (dashboard.js), which the web dashboard
-                      previously only surfaced for videos already due. */}
+                      previously only surfaced for videos already due.
+
+                      No `isPro` block here on purpose: Active Recall is not
+                      Pro-only in the extension, it is free up to a monthly
+                      review cap. Refusing every free user here made the web
+                      stricter than the extension in one direction while the
+                      due-strip below was wide open in the other. The single
+                      gate now lives in the extension's background worker,
+                      which is the only hop that can read the review counter
+                      and the only one a caller cannot skip. */}
                   <button
                     className={`${styles.videoActionBtn} ${styles.videoActionBtnSecondary}`}
-                    onClick={() => {
-                      if (!isPro) { showProToast('Active Recall is available on Pro.'); return; }
-                      handleStartRecall(c.video_id, sortedBookmarks.map(b => b.id));
-                    }}
+                    onClick={() => handleStartRecall(c.video_id, sortedBookmarks.map(b => b.id))}
                     disabled={startingVideoId === c.video_id}
                     title={bridgeReady ? 'Start Active Recall in the extension' : 'Open the video to start Active Recall in the extension'}
                   >
