@@ -9,6 +9,7 @@
     "test:yt": "playwright test --project=extension",
     "test:yt:smoke": "playwright test --project=extension tests/ci/extension-smoke.spec.ts",
     "test:auth-bridge": "playwright test --project=extension tests/auth-bridge.spec.ts",
+    "test:design:rendered": "playwright test --project=extension tests/design-consistency.spec.ts",
     "test:visual": "playwright test --project=webapp",
     "test:webapp:smoke": "playwright test --project=webapp tests/ci/webapp-smoke.spec.ts",
     "test:unit:webapp": "npm --prefix webapp run test:unit",
