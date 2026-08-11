@@ -7,6 +7,8 @@ import {
   ytThumbnailUrl,
   APP_EXPORT_PREFIX,
   isExtensionContextValid,
+  buildPendingRevision,
+  TITLE_TRUNCATE_LENGTH,
 } from '../constants.module.js';
 import { buildAnkiTsv } from '../export-anki.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
@@ -14,7 +16,7 @@ import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import { isDueForRecall } from '../recall.module.js';
 import {
-  isMonthlyReviewCapReached,
+  isRecallStartBlocked,
   isMonthlyAnkiExportCapReached,
   normalizeMonthlyCounter,
   FREE_RECALL_REVIEWS_PER_MONTH,
@@ -797,7 +799,7 @@ function attachEventListeners() {
         .filter(b => b.videoId === videoId)
         .sort((a, b) => a.timestamp - b.timestamp);
       if (!bookmarks.length) return;
-      await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks, recall: true } });
+      await chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, bookmarks, true) });
       chrome.tabs.create({ url: ytWatchUrl(videoId) });
     });
   });
@@ -1489,23 +1491,20 @@ async function updateRevisitBadge() {
 // file) — the previously inlined copy has been removed.
 
 async function startRecallForVideo(videoId) {
-  const isPro = await checkPro();
-  if (!isPro) {
-    const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
-    if (isMonthlyReviewCapReached(recallReviewUsage, Date.now())) {
-      showUpgradeModal({
-        feature: 'More reviews this month',
-        benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
-      });
-      return;
-    }
+  const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
+  if (isRecallStartBlocked({ isPro: await checkPro(), reviewUsage: recallReviewUsage, nowMs: Date.now() })) {
+    showUpgradeModal({
+      feature: 'More reviews this month',
+      benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
+    });
+    return;
   }
   const now = Date.now();
   const dueOnes = allBookmarks
     .filter(b => b.videoId === videoId && isDueForRecall(b, now))
     .sort((a, b) => a.timestamp - b.timestamp);
   if (!dueOnes.length) return;
-  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks: dueOnes, recall: true } });
+  await chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, dueOnes, true) });
   chrome.tabs.create({ url: ytWatchUrl(videoId) });
 }
 
@@ -2328,28 +2327,42 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refreshEntitlement();
   });
-  // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
-  // function initTheme() {
-  //   chrome.storage.local.get(['theme'], (result) => {
-  //     const theme = result.theme || 'light';
-  //     document.documentElement.setAttribute('data-theme', theme);
-  //     updateThemeIcon(theme);
-  //   });
-  // }
-  // function updateThemeIcon(theme) {
-  //   const icon = document.querySelector('.theme-icon');
-  //   if (icon) { icon.textContent = theme === 'dark' ? '🌙' : '☀️'; }
-  // }
-  // function toggleTheme() {
-  //   const current = document.documentElement.getAttribute('data-theme') || 'light';
-  //   const newTheme = current === 'light' ? 'dark' : 'light';
-  //   document.documentElement.setAttribute('data-theme', newTheme);
-  //   chrome.storage.local.set({ theme: newTheme });
-  //   updateThemeIcon(newTheme);
-  // }
-  // initTheme();
-  // const themeToggleBtn = document.getElementById('theme-toggle');
-  // if (themeToggleBtn) { themeToggleBtn.addEventListener('click', toggleTheme); }
+  // ── Theme toggle: System → Light → Dark ─────────────────────────────────────
+  // The resolver already stamped data-theme before this file ran (classic script
+  // in dashboard.html's <head>); all this does is reconcile the stored override
+  // and keep the button label honest. Three states, not a boolean, because
+  // "System" is the default and has to be expressible.
+  function updateThemeIcon(resolved, preference) {
+    const icon = document.querySelector('.theme-icon');
+    const btn = document.getElementById('theme-toggle');
+    if (icon) {
+      icon.textContent =
+        preference === 'system' ? 'brightness_auto' : resolved === 'dark' ? 'dark_mode' : 'light_mode';
+    }
+    if (btn) {
+      const label =
+        preference === 'system' ? `System theme (currently ${resolved})`
+          : preference === 'dark' ? 'Dark theme' : 'Light theme';
+      btn.title = `${label} — click to change`;
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }
+
+  function initTheme() {
+    const theme = globalThis.ClipMarkTheme;
+    if (!theme) return; // theme-loader.js failed to load; the page stays light
+    theme.subscribe(updateThemeIcon);
+    theme.init();
+    updateThemeIcon(theme.getResolved(), theme.getPreference());
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        theme.cyclePreference();
+        updateThemeIcon(theme.getResolved(), theme.getPreference());
+      });
+    }
+  }
+  initTheme();
 
   // ── Sidebar collapse ────────────────────────────────────────────────────────
   const sideNav  = document.querySelector('.bm-side-nav');

@@ -74,7 +74,7 @@ export default function BookmarkNotes({ videoId, bookmark, isPro, onUpgradeNeede
         aria-label="Extended notes"
         type="button"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+        <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>
           {hasNotes ? 'sticky_note_2' : 'note_add'}
         </span>
       </button>

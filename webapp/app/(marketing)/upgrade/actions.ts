@@ -1,11 +1,13 @@
 'use server';
 
 import DodoPayments from 'dodopayments';
+import * as Sentry from '@sentry/nextjs';
 import { unstable_cache } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
+import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
 import { type ProductPrices } from './pricing';
 
 // Lazy, memoized Dodo client. Constructing eagerly at module scope throws when
@@ -68,7 +70,7 @@ export async function cancelSubscription() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('subscription_id, subscription_started_at')
+    .select('subscription_id, subscription_started_at, pro_payment_id')
     .eq('id', user.id)
     .single();
 
@@ -81,9 +83,51 @@ export async function cancelSubscription() {
     : Infinity;
 
   if (daysSinceStart <= 7) {
-    // Within the 7-day money-back window: immediate cancellation + refund
-    await dodoClient().subscriptions.update(profile.subscription_id, { status: 'cancelled' });
-    // Webhook will fire subscription.cancelled → is_pro = false automatically
+    // Within the 7-day money-back window: refund the payment, then cancel.
+    //
+    // The refund has to be requested explicitly. Cancelling a subscription does
+    // NOT return the money — Dodo's SubscriptionUpdateParams has no refund field
+    // and refunds are a separate API. This branch used to call only `update`,
+    // so the button labelled "Cancel & Request Refund" revoked Pro and kept the
+    // customer's money, contradicting both the confirm dialog and our own terms.
+    if (!profile.pro_payment_id) {
+      // No payment on file to refund against — cancelling here would repeat the
+      // original bug in a quieter way, so stop and route them to a human.
+      Sentry.captureException(new Error('Refund-eligible cancel with no pro_payment_id on profile'), {
+        level: 'error',
+        tags: { checkout: 'dodo', dodo_action: 'refund_missing_payment_id' },
+      });
+      throw new Error(
+        `We couldn't process your refund automatically. Please email ${SUPPORT_EMAIL} and we'll sort it out right away — your subscription has not been cancelled.`,
+      );
+    }
+
+    // Refund first, cancel second. If the refund throws, the user keeps both
+    // their money and their Pro access and can retry — whereas cancelling first
+    // would strip access and leave a failed refund silent, which is exactly the
+    // failure mode worth avoiding when real money is involved.
+    await dodoClient().refunds.create({
+      payment_id: profile.pro_payment_id,
+      reason: '7-day money-back guarantee',
+    });
+
+    try {
+      await dodoClient().subscriptions.update(profile.subscription_id, { status: 'cancelled' });
+    } catch (err) {
+      // The money is already back with the customer, so this is not something
+      // to surface as a failed refund — but a live subscription that survived
+      // its own cancellation will bill them again, so it has to page someone.
+      console.error('[cancelSubscription] refund succeeded but cancel failed:', err);
+      Sentry.captureException(err, {
+        level: 'error',
+        tags: { checkout: 'dodo', dodo_action: 'cancel_after_refund_failed' },
+      });
+      throw new Error(
+        `Your refund has been issued, but we hit a problem cancelling the subscription itself. Please email ${SUPPORT_EMAIL} so we can close it out — you will not be charged again.`,
+      );
+    }
+    // Webhook will fire subscription.cancelled → is_pro = false automatically,
+    // and refund.succeeded reverses any affiliate commission for the payment.
   } else {
     // After 7 days: cancel at next billing date — user keeps Pro until period end
     await dodoClient().subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
@@ -126,20 +170,66 @@ export async function createCheckoutSession(formData: FormData) {
     dodoDiscountCode = (affiliateProfile?.dodo_discount_code as string | null) ?? null;
   }
 
-  const session = await dodoClient().checkoutSessions.create({
-    product_cart: [{ product_id: productId, quantity: 1 }],
-    customer: {
-      email: user.email!,
-      name: user.user_metadata?.full_name ?? undefined,
-    },
-    ...(dodoDiscountCode ? { discount_code: dodoDiscountCode } : {}),
-    metadata: {
-      user_id: user.id,
-      ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
-      ...(userReferralCode ? { user_referral_code: userReferralCode } : {}),
-    },
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
-  });
+  // This is the only call here that reaches a third party, so it owns the
+  // try/catch. Anything it throws — a 403 MERCHANT_NOT_LIVE while Dodo's
+  // live-mode approval is still pending, a 5xx, a network blip, a bad key —
+  // used to propagate out of the action and render global-error.tsx, i.e. a
+  // crash screen on the one page where the user is trying to pay us. Send them
+  // back to /upgrade with a retry prompt instead.
+  //
+  // Deliberately scoped to the Dodo call: `redirect()` throws NEXT_REDIRECT to
+  // do its work, so wrapping the redirect below in the same block would swallow
+  // it and silently drop the user on a blank action response.
+  let checkoutUrl: string | null = null;
+  try {
+    const session = await dodoClient().checkoutSessions.create({
+      product_cart: [{ product_id: productId, quantity: 1 }],
+      customer: {
+        email: user.email!,
+        name: user.user_metadata?.full_name ?? undefined,
+      },
+      ...(dodoDiscountCode ? { discount_code: dodoDiscountCode } : {}),
+      metadata: {
+        user_id: user.id,
+        ...(affiliateCode ? { affiliate_code: affiliateCode } : {}),
+        ...(userReferralCode ? { user_referral_code: userReferralCode } : {}),
+      },
+      // APP_URL, not the raw env var: the production NEXT_PUBLIC_APP_URL is set
+      // WITH a trailing slash, so concatenating `/dashboard` here handed Dodo a
+      // return_url of `https://…com//dashboard?success=true`. That path 308s on
+      // our side, so the payer's redirect home from checkout depended on a third
+      // party following a redirect it never needed to be given.
+      return_url: `${APP_URL}/dashboard?success=true`,
+    });
+    checkoutUrl = session.checkout_url ?? null;
+  } catch (err) {
+    // Not swallowed: every failure is logged and paged on. A checkout nobody
+    // can complete is revenue-affecting, so this is an error, not a warning.
+    // Tags carry the plan and Dodo's own status code only — no user id or
+    // email, per the no-PII policy in lib/sentry-config.ts.
+    console.error('[createCheckoutSession] Dodo checkout session failed:', err);
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: {
+        checkout: 'dodo',
+        dodo_plan: plan,
+        dodo_status: String((err as { status?: number }).status ?? 'unknown'),
+      },
+    });
+    redirect('/upgrade?checkout_error=1');
+  }
 
-  redirect(session.checkout_url!);
+  // A 2xx with no URL is the same dead end for the user, and just as worth
+  // knowing about, so it takes the same path rather than redirecting to
+  // `undefined`.
+  if (!checkoutUrl) {
+    console.error('[createCheckoutSession] Dodo returned a session with no checkout_url');
+    Sentry.captureException(new Error('Dodo checkout session returned no checkout_url'), {
+      level: 'error',
+      tags: { checkout: 'dodo', dodo_plan: plan, dodo_status: 'no_checkout_url' },
+    });
+    redirect('/upgrade?checkout_error=1');
+  }
+
+  redirect(checkoutUrl);
 }

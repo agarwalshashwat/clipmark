@@ -1,16 +1,20 @@
 import { Metadata } from 'next';
+import * as Sentry from '@sentry/nextjs';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
 import { APP_URL } from '@/app/lib/constants';
 
+const META_DESCRIPTION =
+  'Earn a one-time 30% commission on every Pro upgrade you refer. Your audience gets 10% off, and referrals are attributed for 30 days.';
+
 export const metadata: Metadata = {
   title: 'Affiliate Program — ClipMark',
-  description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the ClipMark affiliate program and monetize your audience.',
+  description: META_DESCRIPTION,
   alternates: {
     canonical: '/affiliate',
   },
   openGraph: {
     title: 'Affiliate Program — ClipMark',
-    description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the ClipMark affiliate program and monetize your audience.',
+    description: META_DESCRIPTION,
     type: 'website',
     url: '/affiliate',
     siteName: 'ClipMark',
@@ -26,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Affiliate Program — ClipMark',
-    description: 'Earn 30% revenue share on every Pro upgrade you drive. Join the ClipMark affiliate program and monetize your audience.',
+    description: META_DESCRIPTION,
     images: [`${APP_URL}/clipmark-logo.png`],
   },
 };
@@ -65,8 +69,16 @@ const FAQ_ITEMS = [
     a: 'Any active ClipMark Pro subscriber whose account is at least 30 days old. There is no minimum audience size requirement — just a genuine audience interested in productivity, YouTube, or learning.',
   },
   {
+    q: 'Is the 30% commission recurring?',
+    a: 'No. The commission is a one-time payment on a referred user’s first Pro purchase. Subscription renewals after that first payment do not generate further commissions, and there is no lifetime revenue share.',
+  },
+  {
+    q: 'Where do I see my referrals and earnings?',
+    a: 'By email. Clicks and conversions are recorded automatically on our side, but there is no self-serve affiliate dashboard yet — email affiliates@clipmark.mithahara.com and we’ll send you your current click, conversion, and commission totals.',
+  },
+  {
     q: 'How do I get paid?',
-    a: 'Commissions are paid out monthly via bank transfer or PayPal, provided your pending balance exceeds $25. Conversions are held for 30 days before becoming eligible for payout to account for refund windows.',
+    a: 'Payouts are handled manually today, by bank transfer (via Wise) or PayPal, once your eligible balance reaches $25. Conversions are held for 30 days before becoming eligible, to cover the refund window. Email affiliates@clipmark.mithahara.com to register your payout method and to request a payout.',
   },
   {
     q: 'How long does my referral cookie last?',
@@ -74,7 +86,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What counts as a conversion?',
-    a: 'A Pro upgrade (monthly, annual, or lifetime) made by a user who clicked your affiliate link within the past 30 days. Renewals on existing subscriptions do not generate additional commissions.',
+    a: 'The first Pro purchase (monthly, annual, or lifetime) made by a user who clicked your affiliate link within the past 30 days. Renewals on existing subscriptions do not generate additional commissions.',
   },
   {
     q: 'What promotional methods are not allowed?',
@@ -101,8 +113,8 @@ const STEPS = [
   },
   {
     number: '03',
-    title: 'Earn 30% on every upgrade',
-    body: 'When someone clicks your link and upgrades to Pro within 30 days, you earn 30% of the sale — automatically tracked and shown in your dashboard.',
+    title: 'Earn a one-time 30% commission',
+    body: 'When someone clicks your link and upgrades to Pro within 30 days, you earn 30% of that first sale. Conversions are tracked automatically; we email you your totals and arrange payout — there is no self-serve affiliate dashboard yet.',
     icon: 'payments',
   },
 ];
@@ -114,20 +126,29 @@ export default async function AffiliatePage() {
   let prices = { monthly: '5', annual: '40', lifetime: '40' };
   try {
     prices = await fetchProductPrices();
-  } catch {
-    // Dodo unreachable — use fallback prices
+  } catch (err) {
+    // Dodo unreachable — use fallback prices, but page us: these numbers drive
+    // the published commission table, so quoting stale ones is worse than loud.
+    console.error('[AffiliatePage] Could not fetch Dodo prices, using defaults:', err);
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: { dodo: 'price_fetch_fallback', surface: 'affiliate' },
+    });
   }
 
-  function commissionDisplay(priceStr: string, suffix: string) {
+  // Every plan pays the same one-time commission on the referred user's FIRST
+  // payment — a monthly referral does not pay 30% again each month, so the
+  // commission column never carries a "/ mo" or "/ yr" suffix.
+  function commissionDisplay(priceStr: string) {
     const net = Number(priceStr) * (1 - REFERRAL_DISCOUNT);
     const commission = net * COMMISSION_RATE;
-    return `$${commission.toFixed(2)}${suffix}`;
+    return `$${commission.toFixed(2)} one-time`;
   }
 
   const COMMISSION_ROWS = [
-    { plan: 'Monthly',  price: `$${prices.monthly} / mo`,      commission: commissionDisplay(prices.monthly,  ' / mo'),      note: 'After 10% referral discount' },
-    { plan: 'Annual',   price: `$${prices.annual} / yr`,       commission: commissionDisplay(prices.annual,   ' / yr'),       note: 'After 10% referral discount' },
-    { plan: 'Lifetime', price: `$${prices.lifetime} one-time`, commission: commissionDisplay(prices.lifetime, ' one-time'),   note: 'After 10% referral discount' },
+    { plan: 'Monthly',  price: `$${prices.monthly} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
+    { plan: 'Annual',   price: `$${prices.annual} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
+    { plan: 'Lifetime', price: `$${prices.lifetime} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
   ];
   return (
     <>
@@ -141,7 +162,7 @@ export default async function AffiliatePage() {
       }}>
         <div style={{ maxWidth: 840, margin: '0 auto', padding: '0 32px' }}>
           <div className="cm-section-label" style={{ margin: '0 auto 32px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>campaign</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>campaign</span>
             Affiliate Program
           </div>
 
@@ -152,7 +173,7 @@ export default async function AffiliatePage() {
             lineHeight: 1,
           }}>
             Share ClipMark.<br />
-            <span style={{ color: 'var(--brand-ink)' }}>Earn 30% for life.</span>
+            <span style={{ color: 'var(--brand-ink)' }}>Earn 30% per referral.</span>
           </h1>
 
           <p style={{
@@ -160,14 +181,14 @@ export default async function AffiliatePage() {
             marginBottom: 48, marginTop: 0, fontWeight: 500,
             maxWidth: 640, margin: '0 auto 48px'
           }}>
-            Help your audience become better curators. Everyone who joins through your link gets <strong>10% off</strong>, and you keep a <strong>30% cut</strong> of every sale.
+            Help your audience become better curators. Everyone who joins through your link gets <strong>10% off</strong>, and you keep a <strong>one-time 30% cut</strong> of their first Pro purchase.
           </p>
 
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {/* In-app application (webapp/app/dashboard/affiliate) is
-                temporarily on hold (see feature/dashboard-extras-hold) —
-                route applications through email in the meantime rather
-                than link to a page that doesn't exist on this branch. */}
+            {/* Applications are handled over email. The in-app version
+                (webapp/app/dashboard/affiliate) is parked on
+                feature/dashboard-extras-hold and has no route on main, so
+                the copy on this page must not promise a dashboard. */}
             <a href="mailto:affiliates@clipmark.mithahara.com?subject=Affiliate%20Program%20Application" className="cm-card" style={{
               padding: '16px 32px',
               background: 'var(--gray-900)',
@@ -176,7 +197,7 @@ export default async function AffiliatePage() {
               boxShadow: '0 10px 30px rgba(15, 23, 42, 0.15)',
               transition: 'all 0.2s'
             }}>
-              Apply via Email <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+              Apply via Email <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
             <a href="/affiliate/terms" className="cm-card" style={{
               padding: '16px 32px',
@@ -199,14 +220,14 @@ export default async function AffiliatePage() {
           gap: 24, marginBottom: 120,
         }}>
           {[
-            { value: '30%', label: 'Recurring commission on every upgrade', icon: 'payments' },
+            { value: '30%', label: 'One-time commission per referred upgrade', icon: 'payments' },
             { value: '10% off', label: 'Incentive discount for your audience', icon: 'sell' },
             { value: '30 days', label: 'Long-lasting cookie attribution', icon: 'history' },
             { value: '$25', label: 'Low minimum payout threshold', icon: 'account_balance_wallet' },
           ].map((stat) => (
             <div key={stat.label} className="cm-card" style={{ padding: '32px', textAlign: 'center' }}>
               <div className="cm-icon-badge" style={{ margin: '0 auto 20px', width: 48, height: 48 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>{stat.icon}</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>{stat.icon}</span>
               </div>
               <p style={{
                 fontSize: 36, fontWeight: 800, color: 'var(--gray-900)',
@@ -231,7 +252,7 @@ export default async function AffiliatePage() {
               <div key={step.number} className="cm-card" style={{ padding: '40px', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
                   <div className="cm-icon-badge" style={{ width: 48, height: 48 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 24 }}>{step.icon}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>{step.icon}</span>
                   </div>
                   <span style={{
                     fontSize: 12, fontWeight: 800, color: 'var(--text-muted)',
@@ -258,17 +279,21 @@ export default async function AffiliatePage() {
         <div style={SECTION}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
             <div className="cm-icon-badge">
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>table_chart</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>table_chart</span>
             </div>
             <h2 style={{ ...H2, margin: 0 }}>Commission Structure</h2>
           </div>
           <p style={{ ...P, fontSize: 16, color: 'var(--text-muted)' }}>
-            Earn <strong>30%</strong> of the net sale on every qualifying Pro upgrade. 
+            Earn a <strong>one-time 30%</strong> of the net sale on each referred user&apos;s first Pro purchase.
             Referred users get <strong>10% off</strong> automatically via your link, and commissions are calculated on the revenue after discount.
           </p>
 
+          {/* The header cells are nowrap, so this table has a ~500px min
+              width — wider than a 390px phone. Scroll it inside its own card
+              rather than letting it push the whole page sideways. */}
           <div className="cm-card" style={{ padding: 0, overflow: 'hidden', marginTop: 32 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, minWidth: 520 }}>
               <thead>
                 <tr style={{ background: 'var(--gray-50)' }}>
                   {['Plan', 'Price', 'Your Commission', 'Notes'].map((h) => (
@@ -293,9 +318,11 @@ export default async function AffiliatePage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
           <p style={{ ...P, marginTop: 24, fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
-            * Commissions from refunded purchases are automatically cancelled. Renewals on existing subscriptions do not generate new commissions.
+            * Each referred user earns you a single commission, paid on their first Pro purchase — the commission is not recurring, and
+            renewals on existing subscriptions do not generate new commissions. Commissions from refunded purchases are automatically cancelled.
           </p>
         </div>
 
@@ -303,11 +330,13 @@ export default async function AffiliatePage() {
         <div style={SECTION}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
             <div className="cm-icon-badge">
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>verified_user</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>verified_user</span>
             </div>
             <h2 style={{ ...H2, margin: 0 }}>Eligibility Requirements</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 24 }}>
+          {/* min() so the 400px track collapses on a phone instead of
+              forcing the grid wider than the viewport. */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(400px, 100%), 1fr))', gap: 24 }}>
             {[
               { icon: 'workspace_premium', title: 'Active Pro subscriber', body: 'You must have an active ClipMark Pro subscription (monthly, annual, or lifetime) to apply.' },
               { icon: 'calendar_today', title: 'Account maturity', body: 'Your ClipMark account must be at least 30 days old at the time of your application.' },
@@ -316,7 +345,7 @@ export default async function AffiliatePage() {
             ].map((item) => (
               <div key={item.title} className="cm-card" style={{ display: 'flex', gap: 20, alignItems: 'flex-start', padding: '32px' }}>
                 <div className="cm-icon-badge" style={{ flexShrink: 0 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{item.icon}</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>{item.icon}</span>
                 </div>
                 <div>
                   <p style={{ fontWeight: 800, color: 'var(--gray-900)', marginBottom: 8, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.title}</p>
@@ -331,7 +360,7 @@ export default async function AffiliatePage() {
         <div style={SECTION}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
             <div className="cm-icon-badge">
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>payments</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>payments</span>
             </div>
             <h2 style={{ ...H2, margin: 0 }}>Payouts & Terms</h2>
           </div>
@@ -339,19 +368,25 @@ export default async function AffiliatePage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 40 }}>
               {[
                 { icon: 'schedule', title: '30-day hold', body: 'Commissions are held for 30 days to cover refund windows before becoming eligible.' },
-                { icon: 'event_repeat', title: 'Monthly cycle', body: 'Eligible commissions are paid out in the first week of every month.' },
-                { icon: 'attach_money', title: '$25 threshold', body: 'Payouts are triggered automatically once you reach $25 in eligible commissions.' },
+                { icon: 'event_repeat', title: 'Monthly review', body: 'We review eligible balances each month and settle them by hand — payouts are not yet automated.' },
+                { icon: 'attach_money', title: '$25 threshold', body: 'Once your eligible commissions reach $25, email us and we’ll arrange the payout.' },
                 { icon: 'account_balance', title: 'Payout methods', body: 'We support Bank Transfer (via Wise) or PayPal for all global affiliates.' },
               ].map((item) => (
                 <div key={item.title}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'var(--brand-ink)' }}>{item.icon}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'var(--brand-ink)' }}>{item.icon}</span>
                     <span style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: 15 }}>{item.title}</span>
                   </div>
                   <p style={{ ...P, fontSize: 14, color: 'var(--text-muted)', marginBottom: 0, lineHeight: 1.6 }}>{item.body}</p>
                 </div>
               ))}
             </div>
+            <p style={{ ...P, marginTop: 32, marginBottom: 0, fontSize: 14, fontWeight: 500 }}>
+              There is no self-serve affiliate dashboard yet. Clicks, conversions and commissions are recorded automatically, but you
+              get them by asking us — email{' '}
+              <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: 'var(--brand-ink)', textDecoration: 'none', fontWeight: 700 }}>affiliates@clipmark.mithahara.com</a>{' '}
+              any time for your current totals.
+            </p>
           </div>
         </div>
 
@@ -359,7 +394,7 @@ export default async function AffiliatePage() {
         <div style={SECTION}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
             <div className="cm-icon-badge">
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>quiz</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>quiz</span>
             </div>
             <h2 style={{ ...H2, margin: 0 }}>Frequently Asked Questions</h2>
           </div>
@@ -391,7 +426,7 @@ export default async function AffiliatePage() {
 
           <h2 style={{ ...H2, fontSize: 40, color: 'white', marginBottom: 16, position: 'relative' }}>Ready to start earning?</h2>
           <p style={{ ...P, marginBottom: 48, fontSize: 18, color: 'var(--gray-300)', maxWidth: 500, margin: '0 auto 48px', position: 'relative' }}>
-            Join hundreds of creators already monetizing their curations with ClipMark.
+            The program is open to Pro subscribers. Email us and we&apos;ll set up your link.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
             {/* See the hero CTA above for why this points to email instead
@@ -403,7 +438,7 @@ export default async function AffiliatePage() {
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 12,
               transition: 'all 0.2s', border: 'none'
             }}>
-              Apply via Email <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+              Apply via Email <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
             <a href="/affiliate/terms" className="cm-card" style={{
               padding: '16px 32px',

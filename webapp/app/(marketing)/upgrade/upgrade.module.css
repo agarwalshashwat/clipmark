@@ -134,6 +134,39 @@
   margin-top: auto;
 }
 
+/* Unshipped items live below the checkmarked list, visually demoted and
+   never marked with a check — a buyer must not read them as a paid benefit. */
+.soonBlock {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.soonHeading {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.soonItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* The chip is a flex item here — keep it from being squeezed by the label. */
+.soonItem .comingSoon {
+  flex: none;
+}
+
 .comingSoon {
   display: inline-block;
   padding: 2px 8px;
@@ -248,6 +281,23 @@
   border-radius: 12px;
   text-align: center;
   margin-bottom: 32px;
+  font-weight: 600;
+}
+
+/* Checkout couldn't be started (see createCheckoutSession). A retryable blip,
+   not a dead end, so it uses --warning rather than --danger. */
+.bannerRetry {
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  padding: 12px 24px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   font-weight: 600;
 }
 

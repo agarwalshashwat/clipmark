@@ -155,7 +155,7 @@ export default async function UserProfilePage(
           {collections.length === 0 ? (
             <div className={styles.empty} style={{ textAlign: 'center', padding: '80px 0' }}>
               <div className="cm-icon-badge" style={{ margin: '0 auto 24px', width: 64, height: 64 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 32 }}>folder_off</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>folder_off</span>
               </div>
               <p style={{ fontSize: 18, color: 'var(--text-muted)', fontWeight: 600 }}>No public collections yet.</p>
             </div>
@@ -171,7 +171,7 @@ export default async function UserProfilePage(
                       className={styles.cardThumbImg}
                     />
                     <div className={styles.cardClipCount}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>bookmark</span>
+                      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>bookmark</span>
                       {c.bookmarks?.length ?? 0} clips
                     </div>
                   </div>
@@ -193,7 +193,7 @@ export default async function UserProfilePage(
                     ))}
                     <span className={styles.cardExploreLink}>
                       Explore Collection
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>arrow_forward</span>
                     </span>
                   </div>
                 </a>

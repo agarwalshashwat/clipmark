@@ -68,7 +68,19 @@ export function isExtensionBridgeAvailable(): boolean {
 
 export type StartRecallResult =
   | { ok: true; count: number }
-  | { ok: false; error: string };
+  /**
+   * `error: 'review_cap_reached'` is a deliberate refusal, not a bridge
+   * failure: the free-tier monthly Active Recall cap is enforced in the
+   * extension's background worker (the only hop a caller can't skip, and the
+   * only one that can read the entitlement + review counter). Callers must
+   * treat it as an upgrade prompt rather than falling back to opening the
+   * video, which is what every other error means. `cap` is the monthly
+   * allowance, sent so this page needn't hardcode the number.
+   */
+  | { ok: false; error: string; cap?: number };
+
+/** True when the extension refused because the free monthly review cap is spent. */
+export const RECALL_CAP_ERROR = 'review_cap_reached';
 
 /**
  * Ask the extension to start Active Recall for a video.
@@ -96,7 +108,15 @@ export async function startRecallInExtension(
         clearTimeout(timer);
         if (cr.lastError) { done({ ok: false, error: cr.lastError.message || 'send_failed' }); return; }
         const r = response as StartRecallResult | undefined;
-        done(r?.ok ? r : { ok: false, error: (r as { error?: string })?.error || 'no_response' });
+        if (r?.ok) { done(r); return; }
+        // Carry `cap` through: a refusal by the free-tier gate is meaningful to
+        // the caller, unlike the generic bridge failures around it. Only when
+        // the worker actually sent one — an explicit `cap: undefined` would
+        // show up in strict deep-equal comparisons.
+        const failed = r as { error?: string; cap?: number } | undefined;
+        done(typeof failed?.cap === 'number'
+          ? { ok: false, error: failed.error || 'no_response', cap: failed.cap }
+          : { ok: false, error: failed?.error || 'no_response' });
       });
     } catch (err) {
       clearTimeout(timer);

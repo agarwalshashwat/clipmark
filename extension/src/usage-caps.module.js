@@ -69,6 +69,24 @@ export function isMonthlyAnkiExportCapReached(stored, nowMs) {
 }
 
 /**
+ * The single "may an Active Recall session start?" rule.
+ *
+ * Every entry point must ask this and nothing else, so the answer cannot differ
+ * by where the user clicked: the side panel's Revisit button, the side panel's
+ * idle due-strip, the extension dashboard's due-strip, and — via
+ * background.js's onMessageExternal handler — Active Recall started from the
+ * WEB dashboard. That last one previously had no check on any hop, which handed
+ * free users unlimited reviews just for owning the extension.
+ *
+ * @param {{ isPro: boolean, reviewUsage: { periodStart?: string, count?: number } | null | undefined, nowMs: number }} input
+ * @returns {boolean} true when the session must be refused and Pro offered
+ */
+export function isRecallStartBlocked({ isPro, reviewUsage, nowMs }) {
+  if (isPro) return false;
+  return isMonthlyReviewCapReached(reviewUsage, nowMs);
+}
+
+/**
  * Count of saved A–B loops (across all videos).
  *
  * Loops are stored as ordinary bookmarks carrying a `loop: { end }` range —

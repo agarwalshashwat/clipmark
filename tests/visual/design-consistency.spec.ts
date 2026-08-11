@@ -27,6 +27,9 @@ const PAGES = [
   ['signin', '/signin'],
   ['privacy', '/privacy'],
   ['terms', '/terms'],
+  // noindex, but still a public page a real user is sent to — the audit is about
+  // how it looks, not whether Google reads it.
+  ['feedback', '/feedback'],
 ] as const;
 
 async function settle(page: Page) {

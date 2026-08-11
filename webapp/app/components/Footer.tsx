@@ -32,6 +32,10 @@ export function Footer() {
           </div>
           <div className="footer-links-col">
             <span className="footer-links-title">Contact</span>
+            {/* The footer is the only nav entry point for /feedback: the header
+                already carries three CTAs and a feedback link there would be
+                competing with the install button for attention. */}
+            <a href="/feedback?from=footer" className="footer-link">Send feedback</a>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="footer-link">Support Email</a>
           </div>
         </div>

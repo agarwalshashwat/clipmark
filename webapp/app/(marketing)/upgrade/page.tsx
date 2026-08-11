@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import * as Sentry from '@sentry/nextjs';
 import { createServerSupabase } from '@/lib/supabase';
 import { fetchProductPrices } from './actions';
 import { PRICE_DEFAULTS, type ProductPrices } from './pricing';
@@ -57,14 +58,14 @@ const FEATURES = [
 
 function Check() {
   return (
-    <span className="material-symbols-outlined" style={{
+    <span className="material-symbols-outlined" aria-hidden="true" style={{
       color: 'var(--brand-ink)', fontWeight: 700, fontSize: 20,
     }}>check_circle</span>
   );
 }
 function Cross() {
   return (
-    <span className="material-symbols-outlined" style={{ 
+    <span className="material-symbols-outlined" aria-hidden="true" style={{ 
       color: 'var(--gray-300)', fontSize: 20 
     }}>cancel</span>
   );
@@ -73,9 +74,12 @@ function Cross() {
 export default async function UpgradePage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string }>;
+  searchParams: Promise<{ success?: string; checkout_error?: string }>;
 }) {
-  const { success } = await searchParams;
+  // `checkout_error` is set by createCheckoutSession when Dodo refuses to open
+  // a session, so the user lands back here with a retry prompt instead of the
+  // global error boundary.
+  const { success, checkout_error: checkoutError } = await searchParams;
 
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
@@ -104,6 +108,14 @@ export default async function UpgradePage({
     prices = await fetchProductPrices();
   } catch (err) {
     console.error('[UpgradePage] Could not fetch Dodo prices, using defaults:', err);
+    // Paged on, not just logged: falling back to PRICE_DEFAULTS renders a
+    // perfectly normal-looking pricing page, which is exactly how a broken Dodo
+    // key went unnoticed before. A silent fallback here means we are quoting
+    // prices we did not read from Dodo.
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: { dodo: 'price_fetch_fallback', surface: 'upgrade' },
+    });
     prices = PRICE_DEFAULTS;
   }
   const supabaseAdmin = createClient(
@@ -145,6 +157,15 @@ export default async function UpgradePage({
           </div>
         )}
 
+        {checkoutError && (
+          <div className={styles.bannerRetry} role="alert">
+            <span className="material-symbols-outlined" aria-hidden="true">error_outline</span>
+            <span>
+              Couldn&apos;t start checkout — please try again shortly. Nothing was charged.
+            </span>
+          </div>
+        )}
+
         {referralBanner && (
           <div className={styles.bannerReferral}>
             <span style={{ fontSize: 18 }}>🎉</span>
@@ -165,7 +186,7 @@ export default async function UpgradePage({
         {isPro && !success && (
           <div className={styles.manageBox}>
             <div className={styles.manageHeader}>
-              <span className="material-symbols-outlined" style={{ color: 'var(--brand-ink)' }}>verified</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--brand-ink)' }}>verified</span>
               <span className={styles.manageTitle}>You&apos;re on ClipMark Pro</span>
             </div>
             {!subscriptionId ? (

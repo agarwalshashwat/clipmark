@@ -42,6 +42,34 @@ Verified against the live database: `pro_payment_id` present; RLS enabled on `pr
 entitlement columns (only `avatar_url`, `cancel_at_period_end`, `username`); an anonymous
 read of `schema_migrations` returns `401 permission denied`.
 
+## `017_feedback.sql` — NOT YET APPLIED (required before /feedback can store anything)
+
+Creates `public.feedback` for the `/feedback` form. The page and `/api/feedback` ship
+without it, and until the migration runs every submission fails with `save_failed` (500) —
+the form shows its error state, so nothing is silently dropped, but nothing is kept either.
+
+Apply it the usual way, locally first:
+
+```bash
+make db-migrate          # or: npm --prefix webapp run db:migrate
+```
+
+Read the results with the service role (the Supabase SQL editor / dashboard) — by design
+there is no read path for `anon` or `authenticated`:
+
+```sql
+SELECT created_at, rating, source, name, email, liked, confusing, feature_request
+  FROM public.feedback ORDER BY created_at DESC;
+```
+
+The table is deliberately **write-only for the API roles**: an anonymous `INSERT` policy
+(so a friend with no account can submit) and no `SELECT`/`UPDATE`/`DELETE` policy at all.
+That does mean the anon key can insert directly, skipping `/api/feedback`'s per-IP rate
+limit, so the policy's `WITH CHECK` — rating in range, at least one answer, `user_id`
+either NULL or the caller's own — is the real bound on what a junk row can be. If spam
+ever shows up in practice, the fix is to drop the anon INSERT policy and let the
+service-role route be the only writer.
+
 ## Accepted assumption: migrations rely on hosted Supabase's default grants
 
 These migrations **do not** explicitly `GRANT` table-level data privileges to the API

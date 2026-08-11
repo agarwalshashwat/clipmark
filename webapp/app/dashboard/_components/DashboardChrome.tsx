@@ -75,7 +75,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
         </div>
         <div className={styles.topBarRight}>
           <form className={styles.searchBox} onSubmit={handleHeaderSearch} role="search">
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-muted)' }}>search</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18, color: 'var(--text-muted)' }}>search</span>
             <input
               type="text"
               placeholder="Search your bookmarks..."
@@ -99,7 +99,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           {/* Sign-out only on desktop — tablet/mobile uses sidebar */}
           <form action="/auth/signout" method="POST" className={styles.signOutTopBarForm}>
             <button type="submit" className={styles.iconBtn} title="Sign out">
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>logout</span>
             </button>
           </form>
         </div>
@@ -112,7 +112,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
         <div className={styles.sidebarTopRow}>
           <div className={styles.sidebarBrand}>
             <div className={styles.sidebarBrandIcon}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>auto_awesome</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>auto_awesome</span>
             </div>
             <div className={styles.sidebarBrandText}>
               <p className={styles.sidebarBrandName}>The Curator</p>
@@ -120,7 +120,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             </div>
           </div>
           <button className={styles.collapseBtn} onClick={handleToggle} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>
               {collapsed ? 'chevron_right' : 'chevron_left'}
             </span>
           </button>
@@ -129,46 +129,46 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
         <nav className={styles.sideNav}>
           <p className={styles.sideNavSection}>Library</p>
           <a href="/dashboard" className={`${styles.sideNavItem} ${isActive('/dashboard') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>bookmarks</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>bookmarks</span>
             <span className={styles.sideNavItemLabel}>All Bookmarks</span>
           </a>
           <a href="/dashboard/videos" className={`${styles.sideNavItem} ${isActive('/dashboard/videos') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>video_library</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>video_library</span>
             <span className={styles.sideNavItemLabel}>Videos</span>
           </a>
           <a href="/dashboard/queue" className={`${styles.sideNavItem} ${isActive('/dashboard/queue') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>schedule</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>schedule</span>
             <span className={styles.sideNavItemLabel}>Reminders</span>
             {dueReminderCount > 0 && <span className={styles.dueBadge}>{dueReminderCount}</span>}
           </a>
           <p className={styles.sideNavSection}>Curations</p>
           <a href="/dashboard/analytics" className={`${styles.sideNavItem} ${isActive('/dashboard/analytics') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>bar_chart</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>bar_chart</span>
             <span className={styles.sideNavItemLabel}>Analytics</span>
           </a>
           <a href="/dashboard/groups" className={`${styles.sideNavItem} ${isActive('/dashboard/groups') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>folder_shared</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>folder_shared</span>
             <span className={styles.sideNavItemLabel}>Groups</span>
           </a>
           <a href="/dashboard/shared" className={`${styles.sideNavItem} ${isActive('/dashboard/shared') ? styles.sideNavItemActive : ''}`}>
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>ios_share</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>ios_share</span>
             <span className={styles.sideNavItemLabel}>Shared</span>
           </a>
           <p className={styles.sideNavSection}>Account</p>
           {!isPro ? (
             <a href="/upgrade" className={`${styles.sideNavItem} ${styles.sideNavUpgrade}`}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>auto_awesome</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>auto_awesome</span>
               <span className={styles.sideNavItemLabel}>Upgrade</span>
             </a>
           ) : (
             <a href="/upgrade" className={styles.sideNavItem}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>workspace_premium</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>workspace_premium</span>
               <span className={styles.sideNavItemLabel}>Manage Subscription</span>
             </a>
           )}
           <form action="/auth/signout" method="POST" style={{ width: '100%' }}>
             <button type="submit" className={`${styles.sideNavItem} ${styles.signOutBtn}`}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>logout</span>
               <span className={styles.sideNavItemLabel}>Sign Out</span>
             </button>
           </form>
@@ -184,20 +184,20 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
       {/* ── Mobile bottom nav ── */}
       <nav className={styles.mobileNav}>
         <a href="/dashboard" className={`${styles.mobileNavItem} ${isActive('/dashboard') ? styles.mobileNavItemActive : ''}`}>
-          <span className="material-symbols-outlined" style={{ fontSize: 22, fontVariationSettings: isActive('/dashboard') ? "'FILL' 1" : "'FILL' 0" }}>bookmarks</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 22, fontVariationSettings: isActive('/dashboard') ? "'FILL' 1" : "'FILL' 0" }}>bookmarks</span>
           <span className={styles.mobileNavLabel}>Bookmarks</span>
         </a>
         <a href="/dashboard/queue" className={`${styles.mobileNavItem} ${isActive('/dashboard/queue') ? styles.mobileNavItemActive : ''}`} style={{ position: 'relative' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 22, fontVariationSettings: isActive('/dashboard/queue') ? "'FILL' 1" : "'FILL' 0" }}>schedule</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 22, fontVariationSettings: isActive('/dashboard/queue') ? "'FILL' 1" : "'FILL' 0" }}>schedule</span>
           <span className={styles.mobileNavLabel}>Reminders</span>
           {dueReminderCount > 0 && <span className={styles.dueBadgeMobile} />}
         </a>
         <a href="/dashboard/groups" className={`${styles.mobileNavItem} ${isActive('/dashboard/groups') ? styles.mobileNavItemActive : ''}`}>
-          <span className="material-symbols-outlined" style={{ fontSize: 22 }}>folder</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 22 }}>folder</span>
           <span className={styles.mobileNavLabel}>Groups</span>
         </a>
         <a href="/upgrade" className={styles.mobileNavItem}>
-          <span className="material-symbols-outlined" style={{ fontSize: 22 }}>grade</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 22 }}>grade</span>
           <span className={styles.mobileNavLabel}>Pro</span>
         </a>
       </nav>

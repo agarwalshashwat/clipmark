@@ -6,6 +6,21 @@ export async function Navigation() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // "Go Pro" used to render unconditionally — this component knew whether you
+  // were signed in (that is what swaps Log In for Dashboard) but never whether
+  // you had already paid, so subscribers were still sold the thing they own.
+  // Pro users keep their route to billing via the Pricing link, which is the
+  // same /upgrade page and renders the manage/cancel card.
+  let isPro = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', user.id)
+      .single();
+    isPro = profile?.is_pro === true;
+  }
+
   return (
     <nav style={{
       position: 'fixed', top: 0, width: '100%', zIndex: 100,
@@ -41,17 +56,19 @@ export async function Navigation() {
               Log In
             </a>
           )}
-          <a href="/upgrade"
-             className="nav-gopro"
-             style={{
-            padding: '12px 20px',
-            background: 'transparent',
-            color: 'var(--brand-ink)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
-            border: '1px solid var(--accent)',
-            transition: 'all 0.2s ease',
-          }}>
-            ✦ Go Pro
-          </a>
+          {!isPro && (
+            <a href="/upgrade"
+               className="nav-gopro"
+               style={{
+              padding: '12px 20px',
+              background: 'transparent',
+              color: 'var(--brand-ink)', borderRadius: 14, fontSize: 14, fontWeight: 800, textDecoration: 'none',
+              border: '1px solid var(--accent)',
+              transition: 'all 0.2s ease',
+            }}>
+              ✦ Go Pro
+            </a>
+          )}
           <a href={CHROME_STORE_URL}
              target="_blank"
              rel="noopener noreferrer"

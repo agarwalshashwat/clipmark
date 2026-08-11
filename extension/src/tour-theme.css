@@ -15,6 +15,16 @@
   padding: 20px;
   max-width: 340px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* driver.js positions an element-less (centered) popover without clamping it
+     to the viewport, so in a short side panel — a narrow window, or any browser
+     zoom above ~150% — the card grew past the 50px header and painted over the
+     wordmark, which cannot compete at z-index 50 against 1000010. Bounding the
+     card and letting it scroll internally keeps it inside the panel at any
+     height; the steps are also anchored to a real element now (see
+     runSidePanelTour), so this is the belt to that pair of braces. */
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .clipmark-tour-popover .driver-popover-title {
@@ -123,4 +133,134 @@
 
 #driver-popover-content {
   z-index: 1000010 !important;
+}
+
+/* ── Dark surfaces ──────────────────────────────────────────────────────────
+   This file is shared by Sub-tour A (injected into youtube.com) and Sub-tour B
+   (the side panel), and it was light-only: a #f9fafb card with #111827 text
+   dropped onto YouTube's dark theme reads as a lightbulb.
+
+   The two surfaces carry DIFFERENT dark signals, and each selector below is
+   the exact one for its surface — no `prefers-color-scheme` on the YouTube
+   side, because an OS set to dark while YouTube is set to light would flip the
+   card to dark on a light page. `.side-panel-root` scopes the OS query to our
+   own page, where it is the honest signal.
+
+     html[dark]            — YouTube's own dark-theme attribute
+     [data-theme="dark"]   — the extension's convention (styles/design-tokens.css)
+
+   Values are the dark ramp from design-tokens.css, restated as literal hex for
+   the same reason as the rest of this file. */
+html[dark] .driver-popover.clipmark-tour-popover,
+[data-theme="dark"] .driver-popover.clipmark-tour-popover {
+  background: #1f2937;         /* --gray-800 */
+  color: #f9fafb;              /* --gray-50 — 14.9:1 */
+  border-color: rgba(20, 184, 166, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+html[dark] .clipmark-tour-popover .driver-popover-title,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-title {
+  color: #f9fafb;
+}
+
+html[dark] .clipmark-tour-popover .driver-popover-description,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-description {
+  color: #d1d5db;              /* --gray-300 — 9.4:1 on --gray-800 */
+}
+
+html[dark] .clipmark-tour-popover .driver-popover-progress-text,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-progress-text {
+  color: #9ca3af;              /* --gray-400 — 5.7:1, decorative but still AA */
+}
+
+html[dark] .clipmark-tour-popover button.driver-popover-prev-btn,
+[data-theme="dark"] .clipmark-tour-popover button.driver-popover-prev-btn {
+  color: #d1d5db;
+  border-color: #4b5563;       /* --gray-600 */
+}
+
+html[dark] .clipmark-tour-popover button.driver-popover-prev-btn:hover,
+html[dark] .clipmark-tour-popover .driver-popover-footer-btn:hover,
+[data-theme="dark"] .clipmark-tour-popover button.driver-popover-prev-btn:hover,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-footer-btn:hover {
+  background-color: #374151;   /* --gray-700 */
+}
+
+html[dark] .clipmark-tour-popover button.driver-popover-close-btn:hover,
+html[dark] .clipmark-tour-popover button.driver-popover-close-btn:focus,
+[data-theme="dark"] .clipmark-tour-popover button.driver-popover-close-btn:hover,
+[data-theme="dark"] .clipmark-tour-popover button.driver-popover-close-btn:focus {
+  color: #f9fafb;
+}
+
+html[dark] .clipmark-tour-popover .driver-popover-btn-disabled,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-btn-disabled {
+  color: #6b7280;
+  border-color: #374151;
+}
+
+/* The arrow is a CSS triangle, so it needs the card's new background on
+   whichever edge it is drawn. */
+html[dark] .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #1f2937;
+}
+html[dark] .clipmark-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #1f2937;
+}
+html[dark] .clipmark-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #1f2937;
+}
+html[dark] .clipmark-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow,
+[data-theme="dark"] .clipmark-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #1f2937;
+}
+
+/* FALLBACK ONLY — scoped to our own page so it cannot reach the YouTube
+   injection, and gated on the ABSENCE of data-theme.
+
+   Since v1.0.4 the side panel always stamps data-theme before first paint
+   (popup/theme-loader.js), and that attribute is the authoritative signal: it
+   already folds in the OS theme, YouTube's theme (the "either-is-dark" panel
+   rule) and an explicit user override. Letting a bare prefers-color-scheme
+   query also fire here would put a DARK card inside a LIGHT panel for anyone on
+   a dark OS who picked Light. html:not([data-theme]) keeps this block alive only
+   for the case where the resolver never ran at all. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .side-panel-root .driver-popover.clipmark-tour-popover {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: rgba(20, 184, 166, 0.45);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-title { color: #f9fafb; }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-description { color: #d1d5db; }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-progress-text { color: #9ca3af; }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-prev-btn {
+    color: #d1d5db;
+    border-color: #4b5563;
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-prev-btn:hover,
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-footer-btn:hover {
+    background-color: #374151;
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-close-btn:hover,
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover button.driver-popover-close-btn:focus {
+    color: #f9fafb;
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+    border-bottom-color: #1f2937;
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+    border-top-color: #1f2937;
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+    border-left-color: #1f2937;
+  }
+  html:not([data-theme]) .side-panel-root .clipmark-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+    border-right-color: #1f2937;
+  }
 }

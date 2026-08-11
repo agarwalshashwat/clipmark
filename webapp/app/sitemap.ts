@@ -10,10 +10,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Indexable content routes, highest-intent first. `/upgrade` is deliberately
-// absent — it is Disallow'd in robots.ts, so listing it here would contradict
-// that. Keep this in step with the pages under app/(marketing)/.
+// Indexable content routes, highest-intent first. Keep this in step with the
+// pages under app/(marketing)/ and with robots.ts — a path listed here must
+// not be Disallow'd there, and must carry a self-referential canonical.
+// `/feedback` is deliberately absent: it sets `robots: { index: false }`.
 const CONTENT_PATHS = [
+  '/upgrade',
   '/active-recall-youtube',
   '/spaced-repetition-youtube',
   '/youtube-flashcards',

@@ -18,12 +18,12 @@ const exposing = (names) => names.map((n) => `globalThis.${n} = ${n};`).join('\n
 
 describe('assertContentGlobals', () => {
   it('passes when all required globals are assigned across chunks', () => {
-    const chunkA = exposing(['TAG_COLORS', 'parseTags', 'stringToColor', 'getTagColor', 'FONT_FAMILY_NATIVE', 'TRANSCRIPT_TRUNCATE_LENGTH']);
+    const chunkA = exposing(['TAG_COLORS', 'parseTags', 'stringToColor', 'getTagColor', 'FONT_FAMILY_NATIVE', 'TRANSCRIPT_TRUNCATE_LENGTH', 'isPendingRevisionExpired']);
     const chunkB = exposing(['localSummarizeSnippet']);
     const chunkC = exposing(['isDueForRecall', 'gradeRecall']);
     const chunkD = exposing(['clipmarkReportError', 'clipmarkContentScriptVersion']);
     const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold', 'countSavedLoops', 'isSavedLoopCapReached']);
-    const chunkF = exposing(['advanceLoop', 'normalizeLoopSegment', 'isValidLoopSegment', 'isSameLoopSegment', 'insertLoopSegment', 'removeLoopSegment', 'updateLoopSegmentBound', 'needsOverlayRemount', 'shouldRebindVideo', 'loopEndForBookmark', 'loopSegmentsFromBookmarks', 'formatLoopClock', 'buildLoopBookmark', 'isDuplicateLoop', 'LOOP_CONSTANTS']);
+    const chunkF = exposing(['advanceLoop', 'loopEditAnchor', 'normalizeLoopSegment', 'isValidLoopSegment', 'isSameLoopSegment', 'insertLoopSegment', 'removeLoopSegment', 'updateLoopSegmentBound', 'needsOverlayRemount', 'shouldRebindVideo', 'loopEndForBookmark', 'loopSegmentsFromBookmarks', 'formatLoopClock', 'buildLoopBookmark', 'isDuplicateLoop', 'LOOP_CONSTANTS']);
     assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE, chunkF]), true);
   });
 

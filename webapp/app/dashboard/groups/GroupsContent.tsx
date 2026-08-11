@@ -77,7 +77,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
         <h2 className={styles.sectionTitle}>My Groups</h2>
         {!showForm && (
           <button className={styles.newGroupBtn} onClick={() => setShowForm(true)}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>add</span>
             New Group
           </button>
         )}
@@ -144,7 +144,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                 style={{ position: 'static', opacity: groupIdx === 0 ? 0.3 : 1 }}
                 title="Move up"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_upward</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>arrow_upward</span>
               </button>
               <button
                 className={styles.removeBtn}
@@ -153,7 +153,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                 style={{ position: 'static', opacity: groupIdx === userGroups.length - 1 ? 0.3 : 1 }}
                 title="Move down"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_downward</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>arrow_downward</span>
               </button>
               <button
                 className={styles.removeBtn}
@@ -161,7 +161,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                 style={{ position: 'static', opacity: 1 }}
                 title="Rename group"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>edit</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>edit</span>
               </button>
               <button
                 className={styles.removeBtn}
@@ -169,7 +169,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                 style={{ position: 'static', opacity: 1 }}
                 title="Delete group"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>delete</span>
               </button>
             </div>
 
@@ -182,7 +182,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                       onClick={() => handleRemoveVideo(group.id, col.id)}
                       title="Remove from group"
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                      <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14 }}>close</span>
                     </button>
                   )}
                   <Link href={`/dashboard?v=${col.video_id}`}>
@@ -220,7 +220,7 @@ export default function GroupsContent({ userGroups, autoTagGroups, allCollection
                     </>
                   ) : (
                     <button className={styles.addBtn} style={{ background: 'none', color: 'var(--text-muted)' }} onClick={() => setAddingToGroup(group.id)}>
-                      <span className="material-symbols-outlined">add_circle</span>
+                      <span className="material-symbols-outlined" aria-hidden="true">add_circle</span>
                       <span style={{ display: 'block', fontSize: 11, marginTop: 4 }}>Add Video</span>
                     </button>
                   )}

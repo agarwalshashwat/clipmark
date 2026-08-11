@@ -131,7 +131,7 @@ export function HeroDemoVideo() {
               boxShadow: '0 20px 50px rgba(13,148,136,0.45)',
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'white', marginLeft: 4 }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 40, color: 'white', marginLeft: 4 }}>
               play_arrow
             </span>
           </span>
@@ -165,7 +165,7 @@ export function HeroDemoVideo() {
             }}
             style={iconButtonStyle()}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'white' }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'white' }}>
               {playing ? 'pause' : 'play_arrow'}
             </span>
           </button>
@@ -175,7 +175,7 @@ export function HeroDemoVideo() {
             onClick={toggleMute}
             style={iconButtonStyle()}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'white' }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'white' }}>
               {muted ? 'volume_off' : 'volume_up'}
             </span>
           </button>

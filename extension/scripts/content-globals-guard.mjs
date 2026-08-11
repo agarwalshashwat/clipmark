@@ -23,6 +23,7 @@ export const REQUIRED_CONTENT_GLOBALS = [
   'getTagColor',
   'FONT_FAMILY_NATIVE',
   'TRANSCRIPT_TRUNCATE_LENGTH',
+  'isPendingRevisionExpired',
   // src/ai/local-ai.js
   'localSummarizeSnippet',
   // src/recall.js
@@ -30,6 +31,7 @@ export const REQUIRED_CONTENT_GLOBALS = [
   'gradeRecall',
   // src/loop.js
   'advanceLoop',
+  'loopEditAnchor',
   'normalizeLoopSegment',
   'isValidLoopSegment',
   'isSameLoopSegment',

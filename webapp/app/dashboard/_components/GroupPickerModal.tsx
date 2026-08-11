@@ -74,7 +74,7 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
 
         {videoTitle && (
           <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>play_circle</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>play_circle</span>
             {videoTitle}
           </p>
         )}
@@ -101,7 +101,7 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
                   fontFamily: 'inherit',
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>folder</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>folder</span>
                 {g.name}
               </button>
             ))}

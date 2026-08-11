@@ -3,8 +3,15 @@
 // The background worker owns the extension's only Sentry sender — the content
 // script forwards to it (see src/error-report-bridge.js).
 import { initErrorReporting, isOwnScript } from '../error-reporting.js';
-import { countEnrolledRecallSegments, isEnrollmentCapReached, FREE_RECALL_ENROLLED_CAP } from '../usage-caps.module.js';
+import {
+  countEnrolledRecallSegments,
+  isEnrollmentCapReached,
+  FREE_RECALL_ENROLLED_CAP,
+  isRecallStartBlocked,
+  FREE_RECALL_REVIEWS_PER_MONTH,
+} from '../usage-caps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
+import { buildPendingRevision } from '../constants.module.js';
 import {
   CONTENT_SCRIPT_MARKER,
   contentScriptMatchPatterns,
@@ -420,6 +427,32 @@ const TAG_COLORS = {
 // there for why only the ClipMark web app may talk to the extension.
 
 /**
+ * Free-tier gate for a recall session, asked here rather than in the page that
+ * requested it.
+ *
+ * This is the choke point on purpose. The web dashboard is ordinary web content
+ * — anything it checks client-side can be skipped by calling
+ * `chrome.runtime.sendMessage(extensionId, {type:'START_RECALL', …})` from the
+ * console. The background worker is the only hop the caller cannot go around,
+ * and it is also the only place that can read the entitlement and the review
+ * counter (both live in extension storage, which the page cannot touch). So the
+ * web dashboard's own check is presentation; THIS is enforcement.
+ *
+ * The rule itself is the shared one from usage-caps.module.js, so a session
+ * started from the web is capped exactly like one started from the side panel
+ * or the extension dashboard.
+ */
+async function isRecallBlockedForFreeTier() {
+  const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
+  const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
+  return isRecallStartBlocked({
+    isPro: bmUser?.isPro === true,
+    reviewUsage: recallReviewUsage,
+    nowMs: Date.now(),
+  });
+}
+
+/**
  * Start an Active Recall session for a video, driven from the web dashboard.
  *
  * The webapp sends only a videoId plus the ids it believes are due; the
@@ -428,6 +461,13 @@ const TAG_COLORS = {
  * video when the ids don't match locally (e.g. not synced down yet).
  */
 async function startRecallFromWebapp(videoId, bookmarkIds) {
+  // Before any tab is opened or any handoff is written: a free user who has
+  // spent this month's reviews gets the same refusal the extension's own UI
+  // gives, and the dashboard turns it into an upgrade prompt.
+  if (await isRecallBlockedForFreeTier()) {
+    return { ok: false, error: 'review_cap_reached', cap: FREE_RECALL_REVIEWS_PER_MONTH };
+  }
+
   const key = bmKey(videoId);
   const stored = await chrome.storage.sync.get({ [key]: [] });
   let bookmarks = stored[key] || [];
@@ -457,7 +497,7 @@ async function startRecallFromWebapp(videoId, bookmarkIds) {
     }
   }
 
-  await chrome.storage.local.set({ pendingRevision: { videoId, bookmarks, recall: true } });
+  await chrome.storage.local.set({ pendingRevision: buildPendingRevision(videoId, bookmarks, true) });
   if (existing?.id) await chrome.tabs.reload(existing.id);
   else await chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${videoId}` });
   return { ok: true, count: bookmarks.length, reusedTab: !!existing?.id };

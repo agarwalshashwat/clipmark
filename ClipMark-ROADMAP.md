@@ -94,6 +94,16 @@ Full detail, effort, architecture, and risk for each of these is in **[ClipMark-
 - **Sequencing per the brief:** win the USMLE/IMG English beachhead at flat Tier-A pricing first, then flip on PPP + Dodo/UPI when deliberately opening step 2 (global undergrad MBBS) — "build PPP in from the start so step 2 is a switch-flip, not a rebuild."
 - **Abuse guard:** verify region via card/payment-method country, not IP alone (VPN abuse risk called out explicitly).
 
+### D. Condense Mode / Skip-Silence for long videos
+
+Auto-skip or fast-forward the dead-air / no-speech stretches of long videos (multi-hour workshops, lectures) so a watch-through comes out much shorter and denser. Inspired by Samsung Voice Recorder's skip-silence, which shrinks a recording by dropping the silences. Strong fit for the study/long-lecture wedge, and adjacent to Phase 11 "Smart Watching" in [ROADMAP.md](ROADMAP.md) — that one compresses by *engagement*, this one by *speech vs. silence*.
+
+- **Feasibility: the Samsung waveform approach does not port directly.** Real-time amplitude analysis of YouTube's `<video>` element is blocked — EME/DRM plus cross-origin media mean Web Audio's `createMediaElementSource()` won't hand us samples. Any plan that assumes a waveform is dead on arrival.
+- **Feasible path — transcript/caption gaps.** Windows with no caption text ≈ no speech, so skip or speed through them. Builds on the caption data the extension already pulls for transcript auto-fill.
+- **Coarser fallbacks:** chapter-boundary skipping, or a manual "mark the boring parts" that reuses the A–B segment UI.
+- **Explicitly out of scope:** server-side audio download for offline analysis — same YouTube ToS/legal exposure as video download.
+- **Positioning:** post-launch **P2/P3**. Reuses the existing A–B loop/segment + player-control layer, so the build is incremental rather than net-new. **Needs a short feasibility spike first** — confirm Web Audio really is blocked on YouTube, and check whether caption timing granularity is precise enough to cut on.
+
 ---
 
 ## PLANNED — DISTRIBUTION / GTM

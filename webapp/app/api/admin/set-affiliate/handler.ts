@@ -9,8 +9,9 @@
  * }
  *
  * Lets admins set custom vanity codes and higher commission rates for big creator
- * partners — including non-Pro external creators who'd never clear the self-serve
- * 30-day-Pro gate in affiliate/apply/route.ts.
+ * partners. This is the only way an affiliate is created today: the self-serve
+ * apply endpoint was removed along with its (parked) dashboard form, so every
+ * application arrives by email and is granted here after review.
  */
 import type DodoPayments from 'dodopayments';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -75,8 +76,8 @@ export async function handleSetAffiliate(
       return NextResponse.json({ error: 'commissionRate must be 0–100' }, { status: 400 });
     }
     // commission_rate is stored as a fraction (0.30 = 30%), matching the
-    // self-serve default in affiliate/apply/route.ts and the webhook's
-    // `amount * commission_rate` math — this route's own input is a 0–100 percent.
+    // webhook's `amount * commission_rate` math — this route's own input is a
+    // 0–100 percent.
     updates.commission_rate = commissionRate / 100;
   }
 

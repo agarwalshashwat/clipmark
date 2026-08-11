@@ -19,6 +19,7 @@
  *   R6  no font fetched from a Google CDN at runtime
  *   R7  the dashboard and side-panel header chrome resolve to the same token
  *   R8  no var() reference to a token that is not defined
+ *   R9  every colour token has a dark override; the pre-paint path stays sync
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
@@ -419,6 +420,172 @@ function auditTokenRefs() {
   }
 }
 
+// ── R9: dark-mode completeness ───────────────────────────────────────────────
+// Every colour-bearing token defined in :root must either be overridden in
+// [data-theme="dark"] or be on an explicit allowlist. This is the rule that
+// would have caught the missing --shadow-* tokens and --secondary-hover's
+// 2.58:1 dark contrast statically, in milliseconds, instead of by eye.
+//
+// It also lints the PRE-PAINT contract: theme-loader.js must resolve the theme
+// with synchronous APIs only. The version this replaced read chrome.storage
+// asynchronously and so guaranteed the very flash its comment promised to
+// prevent; a regression back to that shape must fail the build, not ship.
+function auditDarkCompleteness() {
+  const src = read('packages/design-system/tokens.css');
+  const rootBlock = src.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1];
+  const darkBlock = src.match(/\[data-theme="dark"\]\s*\{([\s\S]*?)\n\}/)?.[1];
+  if (!rootBlock) return fail('R9', 'packages/design-system/tokens.css has no :root block');
+  if (!darkBlock) return fail('R9', 'packages/design-system/tokens.css has no [data-theme="dark"] block');
+
+  const decls = (block) =>
+    new Map([...block.matchAll(/^\s*(--[a-z0-9-]+):\s*([^;]+);/gim)].map((m) => [m[1], m[2].trim()]));
+  const light = decls(rootBlock);
+  const dark = decls(darkBlock);
+
+  // The ramps are deliberately theme-invariant: DESIGN.md is explicit that ONE
+  // gray ramp and ONE teal ramp supply both themes, and R1 enforces it. A dark
+  // override on a ramp step would be the bug, not the fix.
+  const RAMP = /^--(?:gray|teal)-\d+$/;
+  // Values that are theme-invariant by construction or by documented decision.
+  const ALLOW = new Set([
+    '--accent-soft',      // the dark-surface brand ink; it IS the dark value
+    '--ai', '--ai-strong', '--ai-soft', '--ai-light', // the violet ramp + its two surface steps
+    '--secondary', '--secondary-light',
+    '--primary-deep', '--cta', '--cta-hover',   // aliases of --accent-strong, which is a no-op in dark by design
+    '--gradient-brand', '--gradient-brand-soft', // teal fills, legible on both canvases
+    '--danger-light', '--success-light', '--warning-light', // alpha tints over a theme-aware surface
+  ]);
+  // A token is colour-bearing if its value is a colour or resolves to one.
+  const isColour = (v) =>
+    /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|linear-gradient|^transparent$/.test(v) ||
+    /var\(--(?:gray|teal|accent|ai|bg|surface|text|border|danger|success|warning|scrim|on-primary|focus-ring|secondary)/.test(v);
+
+  const missing = [];
+  for (const [name, value] of light) {
+    if (RAMP.test(name) || ALLOW.has(name)) continue;
+    if (!isColour(value)) continue;                 // type scale, radii, fonts
+    if (dark.has(name)) continue;
+    missing.push(`${name}: ${value}`);
+  }
+  if (missing.length) {
+    fail('R9', `${missing.length} colour token(s) have no [data-theme="dark"] override and are not allowlisted:`);
+    missing.forEach(note);
+  } else {
+    note(`R9: all ${[...light].filter(([n, v]) => !RAMP.test(n) && !ALLOW.has(n) && isColour(v)).length} theme-sensitive colour token(s) have a dark override`);
+  }
+
+  // Dark-mode contrast: the text ramp against the surfaces it actually sits on.
+  const resolve = (block, name, depth = 0) => {
+    const v = block.get(name);
+    if (!v || depth > 6) return null;
+    if (/^#[0-9a-fA-F]{3,6}$/.test(v)) return v;
+    const ref = v.match(/^var\((--[a-z0-9-]+)\)$/)?.[1];
+    if (!ref) return null;
+    // A dark override may point at a ramp step that only :root defines.
+    return resolve(block, ref, depth + 1) ?? resolve(light, ref, depth + 1);
+  };
+  for (const surfaceName of ['--surface', '--surface-alt']) {
+    const surface = resolve(dark, surfaceName);
+    if (!surface) continue;
+    for (const textName of ['--text', '--text-sub', '--text-muted']) {
+      const fg = resolve(dark, textName);
+      if (!fg) continue;
+      const r = contrast(fg, surface);
+      if (r < 4.5) {
+        fail('R9', `dark ${textName} (${fg}) on ${surfaceName} (${surface}) is ${r.toFixed(2)}:1 — below AA 4.5:1`);
+      }
+    }
+  }
+  // And the theme-aware brand/AI inks, which are the tokens that exist BECAUSE
+  // their light values fail on a dark canvas.
+  const canvas = resolve(dark, '--bg');
+  for (const inkName of ['--brand-ink', '--ai-ink', '--secondary-hover']) {
+    const ink = resolve(dark, inkName);
+    if (!ink || !canvas) continue;
+    const r = contrast(ink, canvas);
+    if (r < 4.5) fail('R9', `dark ${inkName} (${ink}) on --bg (${canvas}) is ${r.toFixed(2)}:1 — below AA 4.5:1`);
+    else note(`R9: dark ${inkName} ${ink} on ${canvas} = ${r.toFixed(2)}:1 (AA pass)`);
+  }
+
+  // The pre-paint contract.
+  const loader = 'extension/src/popup/theme-loader.js';
+  if (!existsSync(`${ROOT}/${loader}`)) {
+    fail('R9', `${loader} is missing — the extension pages have no pre-paint theme resolver`);
+  } else {
+    // stripComments() only drops WHOLE-LINE `//` comments, which is right for
+    // the colour rules (a trailing comment can still carry a real hex). Here it
+    // is wrong: a trailing `// chrome.storage.sync — …` note is prose, not a
+    // pre-paint read, and reported this very file as async. Strip trailing
+    // comments too, leaving `://` alone so URLs survive.
+    const code = read(loader).replace(/(^|[^:])\/\/.*$/gm, '$1');
+    if (!/matchMedia\(\s*['"]\(prefers-color-scheme:\s*dark\)['"]\s*\)/.test(code)) {
+      fail('R9', `${loader} does not read matchMedia('(prefers-color-scheme: dark)') — the system theme is not the source of truth`);
+    }
+    // The code that actually RUNS at load must not await or read
+    // chrome.storage, both of which land after first paint. Slicing the file at
+    // init() is not good enough: a helper defined earlier that merely MENTIONS
+    // chrome.storage is not a pre-paint read, and reported one falsely. Strip
+    // every function body so only the top-level statements remain.
+    const stripFunctionBodies = (src) => {
+      let out = '';
+      for (let i = 0; i < src.length; ) {
+        const head = /^(?:function\b[^{;]*|\([^()]*\)\s*=>\s*)\{/.exec(src.slice(i));
+        if (head) {
+          let depth = 0;
+          let j = i + head[0].length - 1;
+          for (; j < src.length; j++) {
+            if (src[j] === '{') depth++;
+            else if (src[j] === '}' && --depth === 0) { j++; break; }
+          }
+          i = j;
+          continue;
+        }
+        out += src[i++];
+      }
+      return out;
+    };
+    // The file is one big IIFE, so step inside it first — otherwise the stripper
+    // eats the whole program and every check below trivially "passes".
+    const iife = code.slice(code.indexOf('{') + 1);
+    const atLoad = stripFunctionBodies(iife);
+    if (/\bawait\b|chrome\.storage/.test(atLoad)) {
+      fail('R9', `${loader} reads an async API before first paint — that is the flash the file exists to prevent`);
+    }
+    // The resolver must stamp the attribute at load, not only from init().
+    if (!/^[\s\S]*\bapply\(\)\s*;/.test(atLoad)) {
+      fail('R9', `${loader} never calls apply() at load — data-theme would not be set before the first paint`);
+    }
+    // …and it needs a synchronous mirror of the override, or a stored
+    // light/dark pick flashes the system theme first. (Checked against the whole
+    // file: the read itself lives in a helper.)
+    if (!/localStorage/.test(code)) {
+      fail('R9', `${loader} has no synchronous override cache — a stored light/dark pick would flash the system theme first`);
+    }
+  }
+  // Both page HTMLs must load it as a CLASSIC script before their stylesheet.
+  for (const page of ['extension/src/pages/side-panel.html', 'extension/src/pages/dashboard.html']) {
+    const html = read(page);
+    const script = html.search(/<script[^>]*theme-loader\.js/);
+    const sheet = html.search(/<link[^>]*rel=["']stylesheet["']/);
+    if (script < 0) {
+      fail('R9', `${page} does not load popup/theme-loader.js — it would paint light regardless of the system theme`);
+      continue;
+    }
+    if (/<script[^>]*type=["']module["'][^>]*theme-loader\.js/.test(html)) {
+      fail('R9', `${page} loads theme-loader.js as a module — modules are deferred and paint the light theme first`);
+    }
+    if (sheet >= 0 && script > sheet) {
+      fail('R9', `${page} loads theme-loader.js AFTER its stylesheet — it must run first`);
+    }
+    // A static data-theme on <html> defeats the resolver. (data-theme-follow,
+    // which opts the panel into the "either-is-dark" rule, is a different
+    // attribute and is expected.)
+    if (/<html[^>]*\bdata-theme=/.test(html)) {
+      fail('R9', `${page} hardcodes data-theme on <html> — ship it bare and let the resolver stamp it`);
+    }
+  }
+}
+
 // ── the packaged artifact ────────────────────────────────────────────────────
 const vendorHexes = new Set();
 function auditDist() {
@@ -493,10 +660,12 @@ auditGradients();
 auditFonts();
 auditHeaderParity();
 auditTokenRefs();
+auditDarkCompleteness();
 if (AUDIT_DIST) auditDist();
 
 const RULES = ['R0 CSS parses', 'R1 one gray ramp', 'R2 AA filled CTAs', 'R3 11px floor', 'R4 wordmark',
-               'R5 gradient budget', 'R6 self-hosted fonts', 'R7 header parity', 'R8 token refs'];
+               'R5 gradient budget', 'R6 self-hosted fonts', 'R7 header parity', 'R8 token refs',
+               'R9 dark completeness'];
 if (AUDIT_DIST) RULES.push('DIST packaged artifact');
 
 console.log('\n── DESIGN.md conformance ' + '─'.repeat(48));

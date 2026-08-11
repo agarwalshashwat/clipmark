@@ -54,7 +54,7 @@ export function VideosClient({ videos, groups, userId }: VideosClientProps) {
 
       {filtered.length === 0 ? (
         <div className={styles.emptyFilter}>
-          <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>filter_list_off</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>filter_list_off</span>
           <p>No videos tagged <strong>#{activeTag}</strong></p>
         </div>
       ) : (
@@ -76,11 +76,11 @@ export function VideosClient({ videos, groups, userId }: VideosClientProps) {
                   />
                   <div className={styles.thumbOverlay} />
                   <span className={styles.badge}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 11, verticalAlign: 'middle' }}>bookmark</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 11, verticalAlign: 'middle' }}>bookmark</span>
                     {' '}{v.bookmarkCount}
                   </span>
                   <div className={styles.playBtn}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
                   </div>
                 </div>
                 <div className={styles.cardBody}>

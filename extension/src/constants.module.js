@@ -40,6 +40,36 @@ export const APP_EXPORT_PREFIX = 'clipmark';
 export const MAX_RECONNECT_ATTEMPTS = 3;
 export const RECONNECT_DELAY = 1000;
 
+// ─── String limits ──────────────────────────────────────────────────────────
+// TWIN of src/constants.js's TITLE_TRUNCATE_LENGTH — keep the values equal
+// (tests/unit/constants-parity.test.mjs asserts it). Extension *pages* must
+// import this from here: constants.js is a content script the manifest injects
+// into youtube.com only, so its globalThis registration does not exist in the
+// dashboard/side-panel module graph.
+export const TITLE_TRUNCATE_LENGTH = 60;
+
+// ─── Active Recall handoff ──────────────────────────────────────────────────
+// When an extension page (side panel, dashboard) starts a recall session and
+// there is no reachable content script to message, it hands the session over
+// through chrome.storage.local; content.js consumes it on the next player init
+// for that video. Nothing guarantees that load ever happens though — the user
+// can close the tab, or never open the video — so an unconsumed record would
+// sit in storage indefinitely and ambush an unrelated visit to the same video
+// days later. Stamp every handoff and treat anything past the TTL as stale.
+export const PENDING_REVISION_TTL_MS = 5 * 60 * 1000;
+
+export function buildPendingRevision(videoId, bookmarks, recall = true, now = Date.now()) {
+  return { videoId, bookmarks, recall: !!recall, createdAt: now };
+}
+
+export function isPendingRevisionExpired(pending, now = Date.now()) {
+  if (!pending) return true;
+  // Records written before createdAt existed are honoured rather than dropped,
+  // so an extension update mid-handoff doesn't swallow the user's session.
+  if (!Number.isFinite(pending.createdAt)) return false;
+  return now - pending.createdAt > PENDING_REVISION_TTL_MS;
+}
+
 // An extension page (side panel, dashboard) can stay open across an extension
 // reload/update — Chrome then revokes its chrome.runtime/chrome.storage
 // bindings without unloading the already-running page, so a subsequent API

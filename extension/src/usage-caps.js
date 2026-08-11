@@ -69,6 +69,15 @@ function isMonthlyAnkiExportCapReached(stored, nowMs) {
 }
 
 /**
+ * The single "may an Active Recall session start?" rule — see the module twin
+ * (usage-caps.module.js) for why every entry point must route through it.
+ */
+function isRecallStartBlocked({ isPro, reviewUsage, nowMs }) {
+  if (isPro) return false;
+  return isMonthlyReviewCapReached(reviewUsage, nowMs);
+}
+
+/**
  * Count of saved A–B loops (across all videos).
  *
  * Loops are stored as ordinary bookmarks carrying a `loop: { end }` range —
@@ -112,3 +121,4 @@ globalThis.isSavedLoopCapReached = isSavedLoopCapReached;
 globalThis.isMonthlyReviewCapReached = isMonthlyReviewCapReached;
 globalThis.isMonthlyAnkiExportCapReached = isMonthlyAnkiExportCapReached;
 globalThis.isMonthlyReviewWarnThreshold = isMonthlyReviewWarnThreshold;
+globalThis.isRecallStartBlocked = isRecallStartBlocked;

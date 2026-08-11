@@ -15,11 +15,34 @@
 import { test, expect, BrowserContext, Page, Worker } from '@playwright/test';
 import { TEST_VIDEO_ID, TEST_VIDEO_URL, launchExtensionContext } from './fixtures';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'path';
 
-const ZIP = path.resolve(__dirname, '../clipmark-extension.zip');
+const ROOT = path.resolve(__dirname, '..');
+
+/** The version this tree would build — the zip has to match it. */
+const SOURCE_VERSION: string = JSON.parse(
+  readFileSync(path.join(ROOT, 'extension/manifest.json'), 'utf8'),
+).version;
+
+/**
+ * Which zip to load.
+ *
+ * `make ext-zip` writes clipmark-extension.zip, but the artifact that actually
+ * goes to the Web Store is cut by hand as clipmark-extension-<version>.zip — so
+ * the unversioned name sat stale in the tree for two releases while this spec
+ * happily loaded it and reported green. Prefer the versioned artifact for the
+ * version this tree builds, and fall back to the Makefile's name.
+ */
+function resolveZip(): string | null {
+  const versioned = path.join(ROOT, `clipmark-extension-${SOURCE_VERSION}.zip`);
+  if (existsSync(versioned)) return versioned;
+  const generic = path.join(ROOT, 'clipmark-extension.zip');
+  return existsSync(generic) ? generic : null;
+}
+
+const ZIP = resolveZip();
 const VIDEO_URL = TEST_VIDEO_URL;
 const VIDEO_ID = TEST_VIDEO_ID;
 const A = 30;
@@ -41,7 +64,7 @@ test.describe('A–B loop (Chrome Web Store zip)', () => {
   let unpacked: string | null = null;
 
   test.beforeAll(() => {
-    if (!existsSync(ZIP)) return;
+    if (!ZIP) return;
     unpacked = mkdtempSync(path.join(tmpdir(), 'clipmark-zip-'));
     execFileSync('unzip', ['-q', ZIP, '-d', unpacked]);
   });
@@ -51,8 +74,33 @@ test.describe('A–B loop (Chrome Web Store zip)', () => {
   });
 
   test.beforeEach(() => {
-    test.skip(!existsSync(ZIP), 'clipmark-extension.zip missing — run `make ext-zip` first');
+    test.skip(!ZIP, `no clipmark-extension zip for v${SOURCE_VERSION} — run \`make ext-zip\` first`);
     test.setTimeout(120_000);
+  });
+
+  /**
+   * Loading a stale zip is worse than not running: it reports the LAST release
+   * as green while the current tree is untested. This spec did exactly that for
+   * two versions. Assert the artifact is the one this tree builds, and fail
+   * loudly — never skip — when it is not.
+   */
+  test('the zip under test is the one this tree builds', () => {
+    const zipManifest = JSON.parse(
+      readFileSync(path.join(unpacked!, 'manifest.json'), 'utf8'),
+    );
+    expect(
+      zipManifest.version,
+      `${path.basename(ZIP!)} is a stale artifact (v${zipManifest.version}); ` +
+        `this tree builds v${SOURCE_VERSION} — re-run \`make ext-zip\``,
+    ).toBe(SOURCE_VERSION);
+
+    // The v1.0.3 dead-weight regression: raw un-bundled ESM shipped because it
+    // was listed in web_accessible_resources. Nothing loads it, so only the
+    // shipped bytes show it.
+    expect(
+      existsSync(path.join(unpacked!, 'src/popup/dashboard.js')),
+      'raw un-bundled dashboard.js is back in the package',
+    ).toBe(false);
   });
 
   test('the shipped zip loads and loops A–B at 2x', async () => {

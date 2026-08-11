@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Metadata } from 'next';
+import * as Sentry from '@sentry/nextjs';
 import { createServerSupabase } from '@/lib/supabase';
 import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
@@ -118,7 +119,14 @@ export default async function Home({
   let prices: ProductPrices;
   try {
     prices = await fetchProductPrices();
-  } catch {
+  } catch (err) {
+    // See the same block on /upgrade: the fallback renders a normal-looking
+    // page, so a broken Dodo key has to page us rather than hide here.
+    console.error('[LandingPage] Could not fetch Dodo prices, using defaults:', err);
+    Sentry.captureException(err, {
+      level: 'error',
+      tags: { dodo: 'price_fetch_fallback', surface: 'landing' },
+    });
     prices = PRICE_DEFAULTS;
   }
 
@@ -179,7 +187,7 @@ export default async function Home({
             fontWeight: 600, fontSize: 13, marginBottom: 32,
             border: '1px solid rgba(20,184,166,0.15)'
           }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>verified</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>verified</span>
             The Second Brain for YouTube Professionals
           </div>
 
@@ -219,7 +227,7 @@ export default async function Home({
               boxShadow: '0 20px 50px rgba(13, 148, 136, 0.25)',
               transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}>
-              Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" style={{ fontSize: 24 }}>arrow_forward</span>
+              Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
             <a href="#pricing"
               style={{
@@ -228,13 +236,13 @@ export default async function Home({
               color: 'var(--gray-900)', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 24, color: 'var(--brand-ink)' }}>bolt</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24, color: 'var(--brand-ink)' }}>bolt</span>
               See Pricing
             </a>
           </div>
 
           <p style={{ marginTop: 24, fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16, opacity: 0.7 }}>shield_with_heart</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16, opacity: 0.7 }}>shield_with_heart</span>
             Privacy First: AI processing (Gemini Nano) happens 100% on your device.
           </p>
 
@@ -261,7 +269,7 @@ export default async function Home({
               display: 'flex', alignItems: 'center', gap: 12,
               animation: 'float 5.5s ease-in-out infinite reverse'
             }}>
-              <span className="material-symbols-outlined" style={{ color: 'var(--secondary)', fontSize: 20 }}>history</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--secondary)', fontSize: 20 }}>history</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Skip the fluff, play only the gems</span>
             </div>
 
@@ -297,7 +305,7 @@ export default async function Home({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(186,26,26,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger)', flexShrink: 0 }}>
-                  <span className="material-symbols-outlined">timer_off</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">timer_off</span>
                 </div>
                 <div>
                   <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>Passive Consumption (Bad)</h4>
@@ -306,7 +314,7 @@ export default async function Home({
               </div>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-deep)', flexShrink: 0 }}>
-                  <span className="material-symbols-outlined">bolt</span>
+                  <span className="material-symbols-outlined" aria-hidden="true">bolt</span>
                 </div>
                 <div>
                   <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>The ClipMark System (Pro)</h4>
@@ -336,7 +344,7 @@ export default async function Home({
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', color: 'var(--primary-deep)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 32 }}>arrow_forward</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>arrow_forward</span>
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
                   <div style={{ color: 'var(--primary-deep)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The ClipMark Way</div>
@@ -424,7 +432,7 @@ export default async function Home({
             ].map(({ icon, title, desc }) => (
               <div key={title} style={{ padding: 28, borderRadius: 24, background: 'white', border: '1px solid var(--gray-200)' }}>
                 <div className="cm-icon-badge" style={{ marginBottom: 20 }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 26 }}>{icon}</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 26 }}>{icon}</span>
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 800, marginBottom: 10, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>{title}</h3>
                 <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>{desc}</p>
@@ -468,14 +476,14 @@ export default async function Home({
                 'Export from the extension or the web dashboard',
               ].map(item => (
                 <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, color: 'var(--gray-900)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'var(--brand-ink)', flexShrink: 0 }}>check_circle</span>
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'var(--brand-ink)', flexShrink: 0 }}>check_circle</span>
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
             <a href="/upgrade" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--brand-ink)', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
               See what else Pro unlocks
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>arrow_forward</span>
             </a>
           </div>
 
@@ -525,7 +533,7 @@ export default async function Home({
             {/* Developers */}
             <div style={{ padding: 32, borderRadius: 32, background: 'var(--gray-100)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--gray-900)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined">code</span>
+                <span className="material-symbols-outlined" aria-hidden="true">code</span>
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Builder</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
@@ -540,7 +548,7 @@ export default async function Home({
             {/* Founders */}
             <div style={{ padding: 32, borderRadius: 32, background: 'var(--gray-100)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent-strong)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined">rocket_launch</span>
+                <span className="material-symbols-outlined" aria-hidden="true">rocket_launch</span>
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Founder</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
@@ -555,7 +563,7 @@ export default async function Home({
             {/* Serious Learners */}
             <div style={{ padding: 32, borderRadius: 32, background: 'var(--gray-100)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--ai)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined">psychology</span>
+                <span className="material-symbols-outlined" aria-hidden="true">psychology</span>
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Serious Learner</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
@@ -592,7 +600,7 @@ export default async function Home({
                     borderRadius: 16,
                     boxShadow: active ? '0 0 30px rgba(115,46,228,0.20)' : 'none',
                   }}>
-                    <span className="material-symbols-outlined" style={{ color: 'var(--ai)', fontSize: 22, flexShrink: 0 }}>{icon}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--ai)', fontSize: 22, flexShrink: 0 }}>{icon}</span>
                     <div>
                       <p style={{ fontWeight: 700, marginBottom: 3, fontSize: 15 }}>{title}</p>
                       <p style={{ fontSize: 12, color: active ? 'var(--gray-300)' : 'var(--gray-400)' }}>{desc}</p>
@@ -624,7 +632,7 @@ export default async function Home({
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 color: 'var(--ai-soft)', fontWeight: 700, fontSize: 16, textDecoration: 'none',
               }}>
-                Explore Pro Features <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_forward</span>
+                Explore Pro Features <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>arrow_forward</span>
               </a>
             </div>
           </div>
@@ -686,7 +694,7 @@ export default async function Home({
               <ScrollReveal key={num} delayMs={i * 150}>
                 <div className="cm-card">
                   <div className="cm-icon-badge">
-                    <span className="material-symbols-outlined" style={{ fontSize: 32 }}>{icon}</span>
+                    <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>{icon}</span>
                   </div>
                   <span className="cm-step-tag">Step {num}</span>
                   <h4 style={{
@@ -715,7 +723,7 @@ export default async function Home({
                     textDecoration: 'none'
                   }}
                   >
-                    Learn more <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                    Learn more <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>arrow_forward</span>
                   </a>
                 </div>
               </ScrollReveal>
@@ -739,7 +747,7 @@ export default async function Home({
               { icon: 'cloud_sync',      label: 'Cloud Sync', color: 'var(--brand-ink)' },
             ].map(({ icon, label, color }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 16, color: 'var(--gray-900)' }}>
-                <span className="material-symbols-outlined" style={{ color }}>{icon}</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ color }}>{icon}</span>
                 {label}
               </div>
             ))}
@@ -771,7 +779,7 @@ export default async function Home({
           <GuaranteeLine refundDays={7} style={{ marginTop: 24 }} />
           <div style={{ textAlign: 'center', marginTop: 24 }}>
             <a href="/upgrade" style={{ color: 'var(--brand-ink)', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
-              Compare all plans <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
+              Compare all plans <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
             </a>
           </div>
         </div>
@@ -805,7 +813,7 @@ export default async function Home({
           </div>
           <div style={{ textAlign: 'center', marginTop: 32 }}>
             <a href="/faq" style={{ color: 'var(--accent-strong)', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
-              Read the full FAQ <span className="material-symbols-outlined" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
+              Read the full FAQ <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
             </a>
           </div>
         </div>
@@ -839,7 +847,7 @@ export default async function Home({
                 display: 'block', padding: 24, borderRadius: 24, textDecoration: 'none',
                 background: 'var(--bg)', border: '1px solid var(--border)',
               }}>
-                <span className="material-symbols-outlined" style={{ color: 'var(--accent-strong)', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--accent-strong)', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
                 <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 6, fontFamily: "var(--font-display)" }}>{label}</span>
                 <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{desc}</span>
               </a>
@@ -854,7 +862,7 @@ export default async function Home({
         {/* Founder Quote (Item 33) */}
         <div style={{ maxWidth: 640, margin: '0 auto 80px', padding: 48, background: 'white', borderRadius: 32, border: '1px solid var(--gray-200)', position: 'relative' }}>
           <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', width: 64, height: 64, background: 'var(--accent-strong)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 24px rgba(20,184,166,0.2)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 32 }}>person</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>person</span>
           </div>
           <p style={{ fontSize: 18, fontStyle: 'italic', color: 'var(--gray-900)', lineHeight: 1.6, marginBottom: 24, fontWeight: 500 }}>
             &ldquo;I built ClipMark because I was tired of re-watching the same 3-hour podcasts just to find that one 30-second gem I forgot to write down. YouTube is a goldmine, but only if you have a way to mine it.&rdquo;
