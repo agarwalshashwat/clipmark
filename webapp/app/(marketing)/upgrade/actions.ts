@@ -73,7 +73,12 @@ export async function fetchProductPrices(): Promise<ProductPrices> {
  * A returned value crosses the boundary intact.
  */
 export type CancelResult =
-  | { ok: true; refunded: boolean }
+  /**
+   * `refund: 'manual'` means the cancellation went through but Dodo could not
+   * fund the refund, so a human has to issue it from the Dodo dashboard. The
+   * caller must say so — the user is owed money and cannot tell from the UI.
+   */
+  | { ok: true; refund: 'issued' | 'manual' | 'none' }
   | { ok: false; message: string };
 
 export async function cancelSubscription(): Promise<CancelResult> {
@@ -121,68 +126,82 @@ export async function cancelSubscription(): Promise<CancelResult> {
       };
     }
 
-    // Refund first, cancel second. If the refund fails, the user keeps both
-    // their money and their Pro access and can retry — whereas cancelling first
-    // would strip access and leave a failed refund silent, which is exactly the
-    // failure mode worth avoiding when real money is involved.
+    // Try the refund first, but do not let an unfundable one block the
+    // cancellation — see the INSUFFICIENT_WALLET_FUNDS note below.
+    let refund: 'issued' | 'manual' = 'issued';
     try {
       await dodoClient().refunds.create({
         payment_id: profile.pro_payment_id,
         reason: '7-day money-back guarantee',
       });
     } catch (err) {
-      // Dodo funds refunds from the merchant wallet, so this fails with 409
-      // INSUFFICIENT_WALLET_FUNDS whenever the balance has not yet settled —
-      // which for a young account is most of the time, and is not something the
-      // customer can see, fix, or wait out on their own. Left unhandled it
-      // surfaced as a bare 500, so the person trying to get their money back
-      // learned nothing and nobody was paged.
+      // Dodo pays refunds out of the merchant wallet's *available* balance, not
+      // by reversing the original charge. Funds take ~21-25 days to settle and
+      // only pay out above a $50 threshold, so for a young account a refund
+      // requested inside the 7-day window fails with 409
+      // INSUFFICIENT_WALLET_FUNDS as a matter of course, not as an anomaly.
       //
-      // The subscription is deliberately left alone: cancelling here would
-      // strip access while still owing them money, with no record anywhere that
-      // the debt exists. They keep what they paid for until a human closes it.
+      // That is recoverable — the refund can be issued by hand from the Dodo
+      // dashboard — so it must not block the cancellation. Cancelling needs no
+      // balance and always works, and skipping it would leave a subscription
+      // live that bills the customer again next month while they are already
+      // owed a refund. So: cancel now, flag the refund for a human, and tell
+      // the user plainly that money is still owed to them.
+      //
+      // Any other refund failure is unexplained, so it stops here instead.
       const dodoCode = (err as { error?: { code?: string } })?.error?.code;
-      console.error('[cancelSubscription] Dodo refund failed:', err);
+      const unfunded = dodoCode === 'INSUFFICIENT_WALLET_FUNDS';
+      console.error(`[cancelSubscription] Dodo refund failed (code=${dodoCode ?? 'unknown'}):`, err);
       Sentry.captureException(err, {
         level: 'error',
         tags: {
           checkout: 'dodo',
-          dodo_action: 'refund_failed',
+          dodo_action: unfunded ? 'refund_needs_manual_processing' : 'refund_failed',
           dodo_error_code: String(dodoCode ?? 'unknown'),
           dodo_status: String((err as { status?: number }).status ?? 'unknown'),
         },
+        // Dodo's own opaque payment id, so whoever picks up the alert can issue
+        // the refund from the dashboard without another lookup. No PII, per
+        // lib/sentry-config.ts.
+        extra: { payment_id: profile.pro_payment_id },
       });
-      return {
-        ok: false,
-        message: `We couldn't complete your refund automatically, so we've left your subscription active rather than cancel it while you're still owed money. Our team has been alerted — email ${SUPPORT_EMAIL} and we'll finish this by hand.`,
-      };
+
+      if (!unfunded) {
+        return {
+          ok: false,
+          message: `We couldn't complete your refund, so we've left your subscription active rather than cancel it while you're still owed money. Our team has been alerted — email ${SUPPORT_EMAIL} and we'll finish this by hand.`,
+        };
+      }
+      refund = 'manual';
     }
 
     try {
       await dodoClient().subscriptions.update(profile.subscription_id, { status: 'cancelled' });
     } catch (err) {
-      // The money is already back with the customer, so this is not something
-      // to surface as a failed refund — but a live subscription that survived
-      // its own cancellation will bill them again, so it has to page someone.
-      console.error('[cancelSubscription] refund succeeded but cancel failed:', err);
+      console.error('[cancelSubscription] cancel failed after refund step:', err);
       Sentry.captureException(err, {
         level: 'error',
         tags: { checkout: 'dodo', dodo_action: 'cancel_after_refund_failed' },
+        extra: { payment_id: profile.pro_payment_id, refund },
       });
       return {
         ok: false,
-        message: `Your refund has been issued, but we hit a problem cancelling the subscription itself. Please email ${SUPPORT_EMAIL} so we can close it out — you will not be charged again.`,
+        message: refund === 'issued'
+          ? `Your refund has been issued, but we hit a problem cancelling the subscription itself. Please email ${SUPPORT_EMAIL} so we can close it out — you will not be charged again.`
+          : `We hit a problem cancelling your subscription. Please email ${SUPPORT_EMAIL} and we'll cancel it and refund you by hand.`,
       };
     }
-    // Webhook will fire subscription.cancelled → is_pro = false automatically,
-    // and refund.succeeded reverses any affiliate commission for the payment.
-    return { ok: true, refunded: true };
+    // Webhook will fire subscription.cancelled → is_pro = false automatically.
+    // When the refund lands — whether from the call above or issued by hand
+    // later — refund.succeeded reverses any affiliate commission and referral
+    // reward for the payment.
+    return { ok: true, refund };
   }
 
   // After 7 days: cancel at next billing date — user keeps Pro until period end
   await dodoClient().subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
   await supabase.from('profiles').update({ cancel_at_period_end: true }).eq('id', user.id);
-  return { ok: true, refunded: false };
+  return { ok: true, refund: 'none' };
 }
 
 export async function createCheckoutSession(formData: FormData) {

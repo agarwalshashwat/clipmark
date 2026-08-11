@@ -2,12 +2,14 @@
 
 import { useState, useTransition } from 'react';
 import { cancelSubscription } from './actions';
+import { SUPPORT_EMAIL } from '@/app/lib/constants';
 import { useRouter } from 'next/navigation';
 
 export default function CancelSubscriptionButton({ isRefundEligible }: { isRefundEligible: boolean }) {
   const [confirming, setConfirming] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const router = useRouter();
 
   const label = isRefundEligible ? 'Cancel & Request Refund' : 'Cancel Subscription';
@@ -24,6 +26,17 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
           setConfirming(false);
           return;
         }
+        if (result.refund === 'manual') {
+          // Cancelled, but the customer is still owed money. Refreshing here
+          // would swap this card for the free-plan view and the fact that a
+          // refund is outstanding would vanish with it, so hold the notice on
+          // screen instead and let them navigate away themselves.
+          setNotice(
+            `Your subscription is cancelled. Your refund has to be processed by hand, so it isn't instant — we've been alerted and will issue it shortly. If you haven't seen it within a few days, email ${SUPPORT_EMAIL} and quote this page.`,
+          );
+          setConfirming(false);
+          return;
+        }
         router.refresh();
       } catch {
         // Genuinely unexpected (network drop, redacted crash) — the action
@@ -33,6 +46,17 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
       }
     });
   };
+
+  // Terminal state: cancelled, refund outstanding. Deliberately not dismissible
+  // and rendered in place of the button — the user has money owed to them and
+  // nothing else on the page says so.
+  if (notice) {
+    return (
+      <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)', margin: 0, textAlign: 'center' }}>
+        {notice}
+      </p>
+    );
+  }
 
   if (confirming) {
     return (

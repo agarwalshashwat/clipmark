@@ -37,7 +37,7 @@ covers only what's left, which only Ash can do.
 | `subscription.renewed` | `is_pro=true`, `subscription_period_end`, `cancel_at_period_end=false` | No new affiliate/referral bookkeeping — this isn't a new conversion. |
 | `subscription.cancelled` | `is_pro=false` unless an active gifted-Pro window covers the user, `subscription_id=null`, `subscription_period_end=null` | |
 | `subscription.expired` | Same as `subscription.cancelled` | |
-| `refund.succeeded` | Cancels any pending affiliate commission for that `payment_id`; revokes `is_pro` **only for a lifetime purchase matched by `pro_payment_id`**; reverses any referral reward it earned | See gap below — this branch does **not** look up subscriptions. |
+| `refund.succeeded` | Cancels any pending affiliate commission for that `payment_id`; revokes `is_pro` and clears `pro_payment_id` for the profile matched by `pro_payment_id`; reverses any referral reward it earned | Matches **subscriptions too** — see below. Does **not** clear `subscription_id` or cancel the subscription at Dodo. |
 
 All six writes are idempotent against Dodo redelivery of the *same* event:
 entitlement fields are overwritten with the same absolute values each time,
@@ -48,22 +48,61 @@ lower-priority gap) — it isn't needed for correctness today because every
 write above is naturally idempotent, but it remains a nice-to-have for a
 future pass if new non-idempotent side effects are ever added to this handler.
 
-### ⚠️ Gap found — confirm during the E2E test below
+### ✅ Resolved — the "subscription refund won't revoke Pro" gap was not real
 
-`refund.succeeded` revokes Pro **only** by matching `pro_payment_id`, which is
-set exclusively by `payment.succeeded` (the one-time/lifetime flow). If Ash
-refunds a **Monthly or Annual subscription's payment** from the Dodo
-dashboard, `refund.succeeded` fires but finds no matching profile — Pro stays
-granted. The code comment in `handler.ts` says "subscription refunds are
-handled by `subscription.cancelled`/`subscription.expired`", i.e. this
-relies on Dodo *also* firing one of those two events when a subscription
-payment is refunded.
+This doc previously warned that `refund.succeeded` matches only `pro_payment_id`,
+which was assumed to be set exclusively by the one-time/lifetime flow — so a
+refunded **subscription** payment would find no profile and leave Pro granted.
 
-**This is unverified — it depends on Dodo's own behavior, not this
-codebase.** The E2E plan below (buy Monthly, refund it) is exactly the test
-that proves or disproves it. If Pro is *not* revoked after the refund, this
-is the first place to look — see "If the refund doesn't revoke Pro" at the
-bottom of the E2E section.
+**That assumption was wrong, verified against production on 2026-08-11.**
+`payment.succeeded` also fires for a subscription's *initial charge*, and its
+handler sets `pro_payment_id` unconditionally. A live Monthly purchase produced
+all three events within 180ms:
+
+```
+subscription.renewed  → renewed subscription  user=<uuid> sub=sub_…
+payment.succeeded     → granted pro           user=<uuid> payment=pay_…   ← sets pro_payment_id
+subscription.active   → activated subscription user=<uuid> plan=monthly sub=sub_…
+```
+
+So refunding a subscription payment **does** revoke Pro: `refund.succeeded`
+matches the profile by `pro_payment_id`, sets `is_pro=false`, clears
+`pro_payment_id`, and reverses any affiliate commission and referral reward.
+
+### ⚠️ The real gap: a refund alone does not stop the billing
+
+`refund.succeeded` never touches `subscription_id` and never cancels anything at
+Dodo. Refunding **without** also cancelling leaves the subscription live, so the
+next `subscription.renewed` sets `is_pro=true` again — a refunded customer
+silently becomes a paying one.
+
+**Always cancel the subscription as well as refunding it.** The in-app
+"Cancel & Request Refund" flow does this for you (it cancels first, precisely so
+this cannot happen). When issuing a refund by hand from the Dodo dashboard for
+any other reason, cancel the subscription in the same sitting.
+
+### Refunds need a funded wallet — expect to do them by hand at first
+
+Dodo pays refunds from the merchant wallet's **available balance**, not by
+reversing the original charge. Funds take ~21–25 days to settle and only pay out
+above a **$50** threshold, so an early refund request fails with:
+
+```
+409 { code: "INSUFFICIENT_WALLET_FUNDS" }
+```
+
+This is normal for a young account, not an incident. `cancelSubscription` treats
+it as recoverable: it **still cancels** the subscription (which needs no
+balance), tells the customer their refund is being processed by hand, and raises
+a Sentry issue tagged `dodo_action: refund_needs_manual_processing` carrying the
+`payment_id` in `extra`.
+
+**Runbook when that alert fires:**
+1. Take the `payment_id` from the Sentry issue.
+2. Refund it from the Dodo dashboard (Live mode).
+3. No further action — the subscription is already cancelled, and
+   `refund.succeeded` clears `pro_payment_id` and reverses affiliate/referral
+   credit when it lands.
 
 ---
 
