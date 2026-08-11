@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — ClipMark</title>
+    <!-- Classic script, FIRST in <head>: it stamps data-theme before the
+         stylesheet below paints. Must not become type="module" — modules are
+         deferred and would paint the light theme first. No data-theme-follow
+         on <html> here: the dashboard follows the OS only. -->
+    <script src="../popup/theme-loader.js"></script>
     <!-- Fonts are self-hosted from assets/fonts via styles/fonts.css, which
          dashboard.css imports — no runtime request to a font CDN. -->
     <link rel="stylesheet" href="../../styles/dashboard.css">
-    <!-- <script src="../popup/theme-loader.js"></script> -->
 </head>
 <body class="bookmarks-page">
 
@@ -32,9 +36,12 @@
                 <span class="material-symbols-outlined header-search-icon">search</span>
                 <input type="text" id="search-input" placeholder="Search your stream..." class="toolbar-search header-search-input">
             </div>
-            <!-- <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme">
-                <span class="theme-icon material-symbols-outlined">light_mode</span>
-            </button> -->
+            <!-- Three-state: System → Light → Dark. dashboard.js writes the title
+                 and the icon ligature from the resolved theme, so the markup
+                 carries the "System" default rather than a light/dark boolean. -->
+            <button id="theme-toggle" class="theme-toggle" title="System theme — click to change" aria-label="System theme — click to change">
+                <span class="theme-icon material-symbols-outlined">brightness_auto</span>
+            </button>
             <div id="user-chip" class="user-chip" style="display:none;"></div>
             <button id="sync-btn" class="sync-btn" title="Sync all bookmarks with cloud" style="display:none;">
                 <span class="material-symbols-outlined sync-btn-icon" style="font-size:16px;vertical-align:middle;">sync</span>

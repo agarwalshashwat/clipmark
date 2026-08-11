@@ -494,3 +494,334 @@ test.describe('DESIGN.md conformance on the rendered surfaces', () => {
   });
 });
 
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THEME RESOLUTION — the behaviour added in v1.0.4's dark-mode work.
+
+   The block above proves the dark RULES hold; it gets there by setting
+   `data-theme` by hand. Nothing proved the extension ever sets that attribute
+   itself, which was the actual bug: a near-complete dark palette and 88 dark CSS
+   rules that were unreachable because all three theme switches were commented
+   out and `theme-loader.js` read chrome.storage asynchronously.
+
+   This context runs with the OS set to dark (`colorScheme: 'dark'`), so the
+   assertions below are about resolution, live updates, the stored override and
+   the pre-paint contract — none of which the hand-set audits can see.
+   ───────────────────────────────────────────────────────────────────────────── */
+test.describe('theme resolution on the rendered surfaces', () => {
+  test.skip(!existsSync(DIST), 'extension/dist missing — run `make ext-build` first');
+
+  let context: BrowserContext;
+  let extensionId: string;
+
+  const PANEL = () => `chrome-extension://${extensionId}/src/pages/side-panel.html`;
+  const DASH = () => `chrome-extension://${extensionId}/src/pages/dashboard.html`;
+
+  /** Records what `data-theme` was at the first animation frame — which fires
+   *  BEFORE the first paint — and counts any correction made after it. A
+   *  resolver that reads storage asynchronously scores 'UNSET' here; that is the
+   *  flash. */
+  const firstPaintProbe = () => {
+    const w = window as any;
+    w.__firstPaintTheme = 'UNSET';
+    w.__correctionsAfterPaint = 0;
+    let painted = false;
+    requestAnimationFrame(() => {
+      painted = true;
+      w.__firstPaintTheme = document.documentElement.getAttribute('data-theme') ?? 'MISSING';
+    });
+    const observe = () => {
+      if (!document.documentElement) return;
+      new MutationObserver(() => { if (painted) w.__correctionsAfterPaint++; })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    };
+    observe();
+  };
+
+  async function themeOf(page: Page) {
+    return page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  }
+
+  /** Clear any stored override so each test starts from the 'system' default. */
+  async function resetPreference(worker: Worker) {
+    await worker.evaluate(() => new Promise<void>((resolve) => {
+      // @ts-expect-error — chrome is the extension's own global here
+      chrome.storage.sync.remove('theme', () => chrome.storage.local.remove('theme', () => resolve()));
+    }));
+  }
+
+  test.beforeAll(async () => {
+    context = await launchExtensionContext(DIST, { colorScheme: 'dark' });
+    const worker = await extensionServiceWorker(context);
+    extensionId = new URL(worker.url()).host;
+    await worker.evaluate(
+      ([key, bookmarks]) => new Promise<void>((resolve) =>
+        // @ts-expect-error — chrome is the extension's own global here
+        chrome.storage.sync.set({
+          [key as string]: bookmarks,
+          tourState: { youtubeTour: true, sidePanelTour: true, recallCoachMark: true },
+        }, () => resolve())
+      ),
+      [`bm_${VIDEO_ID}`, seedBookmarks()] as const
+    );
+  });
+
+  test.afterAll(async () => { await context?.close(); });
+
+  test('a dark OS resolves both surfaces to dark with nothing stored', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+
+    for (const [name, url] of [['side panel', PANEL()], ['dashboard', DASH()]] as const) {
+      const page = await context.newPage();
+      await page.goto(url);
+      await page.waitForLoadState('domcontentloaded');
+      expect(await themeOf(page), `${name}: a dark OS must resolve to dark with no stored preference`)
+        .toBe('dark');
+      // And the canvas actually paints dark — the attribute is only useful if
+      // the token block responds to it in the PACKAGED stylesheet.
+      const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      const [r, g, b] = bg.match(/\d+/g)!.map(Number);
+      expect((r + g + b) / 3, `${name}: body still painted light (${bg})`).toBeLessThan(60);
+      await page.close();
+    }
+  });
+
+  test('the theme is correct at first paint, and never corrected after it', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+
+    for (const [name, url] of [['side panel', PANEL()], ['dashboard', DASH()]] as const) {
+      const page = await context.newPage();
+      await page.addInitScript(firstPaintProbe);
+      await page.goto(url);
+      await page.waitForLoadState('load');
+      const probe = await page.evaluate(() => ({
+        atFirstPaint: (window as any).__firstPaintTheme,
+        corrections: (window as any).__correctionsAfterPaint,
+      }));
+      expect(probe.atFirstPaint,
+        `${name}: data-theme was not set before the first paint — that is a flash`).toBe('dark');
+      expect(probe.corrections,
+        `${name}: data-theme was rewritten after the first paint — the correction is visible`).toBe(0);
+      await page.close();
+    }
+  });
+
+  test('an OS theme change flips both surfaces live, with no reload', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+
+    for (const [name, url] of [['side panel', PANEL()], ['dashboard', DASH()]] as const) {
+      const page = await context.newPage();
+      await page.goto(url);
+      expect(await themeOf(page), `${name}: should start dark`).toBe('dark');
+      await page.emulateMedia({ colorScheme: 'light' });
+      await expect.poll(() => themeOf(page),
+        { message: `${name}: did not follow the OS to light without a reload` }).toBe('light');
+      await page.emulateMedia({ colorScheme: 'dark' });
+      await expect.poll(() => themeOf(page),
+        { message: `${name}: did not follow the OS back to dark` }).toBe('dark');
+      await page.close();
+    }
+  });
+
+  test('an explicit override beats the OS, and survives an OS change', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+    await worker.evaluate(() => new Promise<void>((resolve) => {
+      // @ts-expect-error — chrome is the extension's own global here
+      chrome.storage.sync.set({ theme: 'light' }, () => resolve());
+    }));
+
+    const page = await context.newPage();
+    await page.goto(PANEL());
+    // The override lives in chrome.storage.sync, which cannot be read pre-paint,
+    // so the first frame is the system theme and the resolver corrects it. That
+    // is the one documented exception to the no-flash rule; the localStorage
+    // mirror closes it from the SECOND open onward, which is asserted below.
+    await expect.poll(() => themeOf(page),
+      { message: 'the stored light override did not beat the dark OS' }).toBe('light');
+    await page.emulateMedia({ colorScheme: 'light' });
+    expect(await themeOf(page), 'an explicit override must ignore the OS').toBe('light');
+    await page.emulateMedia({ colorScheme: 'dark' });
+    expect(await themeOf(page), 'an explicit override must ignore the OS').toBe('light');
+    await page.close();
+
+    // Second open: the mirror is warm, so the override is now correct at the
+    // first paint too.
+    const again = await context.newPage();
+    await again.addInitScript(firstPaintProbe);
+    await again.goto(PANEL());
+    await again.waitForLoadState('load');
+    expect(await again.evaluate(() => (window as any).__firstPaintTheme),
+      'the localStorage mirror should pre-paint the override on a later open').toBe('light');
+    await again.close();
+
+    // …and clearing the override must actually return to following the OS.
+    // The mirror is a CACHE of chrome.storage.sync, not a second source of
+    // truth: the first cut of the resolver kept honouring a stale mirror after
+    // the stored pick was removed, which pinned the surface to an override the
+    // user no longer had.
+    await resetPreference(worker);
+    const cleared = await context.newPage();
+    await cleared.goto(PANEL());
+    await expect.poll(() => themeOf(cleared),
+      { message: 'a cleared override must fall back to the OS, not to the stale mirror' })
+      .toBe('dark');
+    await cleared.close();
+  });
+
+  test('"either-is-dark": the panel matches a dark YouTube, the dashboard does not', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+
+    // A LIGHT OS is the whole point of this rule: the user darkened only
+    // YouTube, and a light panel docked beside that dark page is the eye-strain
+    // case the feature exists to fix.
+    const panel = await context.newPage();
+    await panel.emulateMedia({ colorScheme: 'light' });
+    await panel.goto(PANEL());
+    await expect.poll(() => themeOf(panel),
+      { message: 'a light OS with no stored preference should be light' }).toBe('light');
+
+    expect(await panel.evaluate(() => (globalThis as any).ClipMarkTheme.followsYouTube()),
+      'the side panel must opt into the YouTube signal').toBe(true);
+
+    await panel.evaluate(() => (globalThis as any).ClipMarkTheme.setYouTubeDark(true));
+    expect(await themeOf(panel),
+      'a dark YouTube on a light OS must still darken the panel').toBe('dark');
+
+    // …and releasing it falls back to the system theme, not to a sticky dark.
+    await panel.evaluate(() => (globalThis as any).ClipMarkTheme.setYouTubeDark(false));
+    expect(await themeOf(panel),
+      'the panel should fall back to the OS theme once YouTube is light again').toBe('light');
+    await panel.close();
+
+    // The dashboard has no page to match, so the signal must not reach it.
+    const dash = await context.newPage();
+    await dash.emulateMedia({ colorScheme: 'light' });
+    await dash.goto(DASH());
+    expect(await dash.evaluate(() => (globalThis as any).ClipMarkTheme.followsYouTube()),
+      'the dashboard must NOT follow YouTube').toBe(false);
+    await dash.evaluate(() => (globalThis as any).ClipMarkTheme.setYouTubeDark(true));
+    expect(await themeOf(dash),
+      'YouTube\'s theme must not reach the dashboard').toBe('light');
+    await dash.close();
+  });
+
+  test('the toggle button cycles System → Light → Dark and persists the pick', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+
+    const dash = await context.newPage();
+    await dash.goto(DASH());
+    await dash.locator('#theme-toggle').waitFor();
+
+    const pref = () => dash.evaluate(() => (globalThis as any).ClipMarkTheme.getPreference());
+    const icon = () => dash.locator('#theme-toggle .theme-icon').innerText();
+
+    expect(await pref(), 'the default must be "system"').toBe('system');
+    expect((await icon()).trim(), 'the default icon should read as automatic').toBe('brightness_auto');
+
+    // system → light (on a dark OS, so this is a visible override)
+    await dash.locator('#theme-toggle').click();
+    await expect.poll(pref).toBe('light');
+    expect(await themeOf(dash), 'picking Light on a dark OS must paint light').toBe('light');
+    expect((await icon()).trim()).toBe('light_mode');
+
+    // light → dark
+    await dash.locator('#theme-toggle').click();
+    await expect.poll(pref).toBe('dark');
+    expect(await themeOf(dash)).toBe('dark');
+    expect((await icon()).trim()).toBe('dark_mode');
+
+    // dark → back to system
+    await dash.locator('#theme-toggle').click();
+    await expect.poll(pref).toBe('system');
+    expect((await icon()).trim()).toBe('brightness_auto');
+
+    // A pick must reach chrome.storage.sync, and a surface open at the time must
+    // follow it without a reload — that is the storage.onChanged path.
+    const panel = await context.newPage();
+    await panel.goto(PANEL());
+    expect(await themeOf(panel)).toBe('dark');
+    await dash.locator('#theme-toggle').click();               // → light
+    await expect.poll(() => themeOf(panel),
+      { message: 'a pick made on the dashboard did not reach the open side panel' }).toBe('light');
+    const stored = await worker.evaluate(() => new Promise<any>((resolve) => {
+      // @ts-expect-error — chrome is the extension's own global here
+      chrome.storage.sync.get(['theme'], (s) => resolve(s.theme));
+    }));
+    expect(stored, 'the pick was not persisted to chrome.storage.sync').toBe('light');
+
+    await panel.close();
+    await dash.close();
+    await resetPreference(worker);
+  });
+
+  test('an explicit override migrates from storage.local to storage.sync', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+    // The shape a pre-1.0.4 profile would have: the old switch wrote local.
+    await worker.evaluate(() => new Promise<void>((resolve) => {
+      // @ts-expect-error — chrome is the extension's own global here
+      chrome.storage.local.set({ theme: 'light' }, () => resolve());
+    }));
+
+    const page = await context.newPage();
+    await page.goto(PANEL());
+    await expect.poll(() => themeOf(page),
+      { message: 'the legacy storage.local pick was not honoured' }).toBe('light');
+
+    const after = await worker.evaluate(() => new Promise<any>((resolve) => {
+      // @ts-expect-error — chrome is the extension's own global here
+      chrome.storage.sync.get(['theme'], (s) => chrome.storage.local.get(['theme'], (l) =>
+        resolve({ sync: s.theme, local: l.theme })));
+    }));
+    expect(after.sync, 'the pick should have been migrated into storage.sync').toBe('light');
+    expect(after.local, 'the legacy storage.local key should have been cleared').toBeUndefined();
+
+    await page.close();
+    await resetPreference(worker);
+  });
+
+  test('the resolver-driven dark panel passes the same rendered audit', async () => {
+    const worker = await extensionServiceWorker(context);
+    await resetPreference(worker);
+    const panel = await context.newPage();
+    await panel.setViewportSize({ width: 420, height: 920 });
+    await panel.goto(PANEL());
+    await panel.locator('.sp-clip-moment-time--loop').first().waitFor({ timeout: 15_000 });
+    expect(await themeOf(panel)).toBe('dark');
+    // Demand all THREE faces, then let layout settle, exactly as auditPage()
+    // does for the sibling audits. Measuring before the display face has landed
+    // changes which elements have a non-zero box, so the audit judges a
+    // different (and partly mid-layout) set of elements — this test skipped both
+    // barriers and was correspondingly flaky under load.
+    await panel.evaluate(() =>
+      Promise.all([
+        (document as any).fonts.load("400 20px 'Material Symbols Outlined'"),
+        (document as any).fonts.load("700 16px 'Plus Jakarta Sans'"),
+        (document as any).fonts.load("400 14px 'Inter'"),
+      ]).then(() => (document as any).fonts.ready).then(() => undefined)
+    );
+    await panel.waitForFunction(() => new Promise<boolean>((resolve) => {
+      const read = () => getComputedStyle(document.body).backgroundColor;
+      const first = read();
+      setTimeout(() => resolve(read() === first), 120);
+    }), null, { timeout: 5_000 });
+    const res = await panel.evaluate(PAGE_AUDIT);
+    const byRule = (r: string) => res.findings.filter((f: any) => f.rule === r);
+    for (const r of ['R2', 'R3', 'R6']) {
+      if (byRule(r).length) {
+        console.log(`\n[side panel (system dark)] ${r}:\n` +
+          byRule(r).map((f: any) => `    ${f.el} — ${f.detail}`).join('\n'));
+      }
+    }
+    expect(byRule('R6'), 'icon ligatures failed to resolve in system dark').toEqual([]);
+    expect(byRule('R3'), 'text below the 11px floor in system dark').toEqual([]);
+    expect(byRule('R2'), 'computed contrast below AA in system dark').toEqual([]);
+    await panel.close();
+  });
+});

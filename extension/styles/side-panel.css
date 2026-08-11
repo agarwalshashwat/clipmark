@@ -1161,8 +1161,12 @@ body {
 }
 
 .soft-paywall-btn {
-  background: white;
-  color: var(--brand-ink);
+  /* This button sits on .soft-paywall-cta's teal gradient in BOTH themes, so the
+     plate stays light — --on-primary is white either way. The text must NOT use
+     --brand-ink: that flips to teal-400 in dark, which is ~1.9:1 on this white
+     plate. --accent-strong is teal-700 in both themes (5.47:1 on white). */
+  background: var(--on-primary);
+  color: var(--accent-strong);
   border: none;
   border-radius: 8px;
   padding: 8px 18px;

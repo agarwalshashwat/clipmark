@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ClipMark",
   "short_name": "ClipMark",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Capture YouTube timestamps, quiz yourself with spaced-repetition Active Recall, and export straight to Anki.",
   "permissions": [
     "storage",
@@ -21,7 +21,6 @@
     {
       "resources": [
         "src/pages/dashboard.html",
-        "src/popup/dashboard.js",
         "styles/dashboard.css"
       ],
       "matches": ["*://www.youtube.com/*", "https://clipmark.mithahara.com/*"]

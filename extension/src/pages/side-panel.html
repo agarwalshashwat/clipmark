@@ -1,13 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- data-theme-follow="youtube" opts this surface into the "either-is-dark"
+     panel rule: dark when the OS is dark OR the YouTube tab is dark. The
+     dashboard omits it and follows the OS alone. Read by theme-loader.js at
+     head-parse time, which is why it lives on <html> and not on <body>. -->
+<html lang="en" data-theme-follow="youtube">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClipMark</title>
+  <!-- Classic script, FIRST in <head>: it stamps data-theme before the
+       stylesheet below paints. Must not become type="module" — modules are
+       deferred and would paint the light theme first. -->
+  <script src="../popup/theme-loader.js"></script>
   <!-- Fonts are self-hosted from assets/fonts via styles/fonts.css, which
        side-panel.css imports — no runtime request to a font CDN. -->
   <link rel="stylesheet" href="../../styles/side-panel.css">
-  <!-- <script src="../popup/theme-loader.js"></script> -->
 </head>
 <body class="side-panel-root">
 
@@ -30,9 +37,12 @@
       <button id="replay-tour-btn" class="sp-icon-btn" title="Replay guided tour">
         <span class="material-symbols-outlined">help</span>
       </button>
-      <!-- <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme">
-        <span class="theme-icon">☀️</span>
-      </button> -->
+      <!-- Three-state: System → Light → Dark. side-panel.js writes the title and
+           the icon ligature from the resolved theme, so the markup carries the
+           "System" default rather than a light/dark boolean. -->
+      <button id="theme-toggle" class="sp-icon-btn theme-toggle" title="System theme — click to change" aria-label="System theme — click to change">
+        <span class="theme-icon material-symbols-outlined">brightness_auto</span>
+      </button>
     </div>
   </header>
 

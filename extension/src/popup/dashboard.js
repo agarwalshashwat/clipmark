@@ -2327,28 +2327,42 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refreshEntitlement();
   });
-  // ── Theme Toggle (hidden) ────────────────────────────────────────────────────
-  // function initTheme() {
-  //   chrome.storage.local.get(['theme'], (result) => {
-  //     const theme = result.theme || 'light';
-  //     document.documentElement.setAttribute('data-theme', theme);
-  //     updateThemeIcon(theme);
-  //   });
-  // }
-  // function updateThemeIcon(theme) {
-  //   const icon = document.querySelector('.theme-icon');
-  //   if (icon) { icon.textContent = theme === 'dark' ? '🌙' : '☀️'; }
-  // }
-  // function toggleTheme() {
-  //   const current = document.documentElement.getAttribute('data-theme') || 'light';
-  //   const newTheme = current === 'light' ? 'dark' : 'light';
-  //   document.documentElement.setAttribute('data-theme', newTheme);
-  //   chrome.storage.local.set({ theme: newTheme });
-  //   updateThemeIcon(newTheme);
-  // }
-  // initTheme();
-  // const themeToggleBtn = document.getElementById('theme-toggle');
-  // if (themeToggleBtn) { themeToggleBtn.addEventListener('click', toggleTheme); }
+  // ── Theme toggle: System → Light → Dark ─────────────────────────────────────
+  // The resolver already stamped data-theme before this file ran (classic script
+  // in dashboard.html's <head>); all this does is reconcile the stored override
+  // and keep the button label honest. Three states, not a boolean, because
+  // "System" is the default and has to be expressible.
+  function updateThemeIcon(resolved, preference) {
+    const icon = document.querySelector('.theme-icon');
+    const btn = document.getElementById('theme-toggle');
+    if (icon) {
+      icon.textContent =
+        preference === 'system' ? 'brightness_auto' : resolved === 'dark' ? 'dark_mode' : 'light_mode';
+    }
+    if (btn) {
+      const label =
+        preference === 'system' ? `System theme (currently ${resolved})`
+          : preference === 'dark' ? 'Dark theme' : 'Light theme';
+      btn.title = `${label} — click to change`;
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }
+
+  function initTheme() {
+    const theme = globalThis.ClipMarkTheme;
+    if (!theme) return; // theme-loader.js failed to load; the page stays light
+    theme.subscribe(updateThemeIcon);
+    theme.init();
+    updateThemeIcon(theme.getResolved(), theme.getPreference());
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        theme.cyclePreference();
+        updateThemeIcon(theme.getResolved(), theme.getPreference());
+      });
+    }
+  }
+  initTheme();
 
   // ── Sidebar collapse ────────────────────────────────────────────────────────
   const sideNav  = document.querySelector('.bm-side-nav');

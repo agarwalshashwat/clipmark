@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, copyFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, copyFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
@@ -183,6 +183,64 @@ function copyStyleImports() {
   };
 }
 
+// The pre-paint theme resolver is a CLASSIC <script src> in the <head> of both
+// page HTMLs — it has to be, because a type="module" script is deferred and
+// would let the light theme paint first, and MV3's CSP forbids inlining it.
+// Vite only bundles module scripts: it leaves a classic src attribute verbatim
+// and emits nothing, so the packaged pages 404'd on it while `vite dev` (which
+// serves the source tree) worked fine. Same dev-vs-dist trap the twin-file
+// convention exists for. Copy the file, then ASSERT every classic script tag in
+// every packaged page resolves — so the next one to go missing fails the build
+// instead of silently pinning the extension to light mode.
+function copyPageClassicScripts() {
+  return {
+    name: 'clipmark-copy-page-classic-scripts',
+    apply: 'build',
+    closeBundle() {
+      const dist = fileURLToPath(new URL('./dist', import.meta.url));
+      const src = fileURLToPath(new URL('.', import.meta.url));
+
+      const pageHtml = [
+        manifest.side_panel?.default_path,
+        ...(manifest.web_accessible_resources ?? []).flatMap((w) => w.resources ?? []),
+      ].filter((p) => p && p.endsWith('.html'));
+
+      let copied = 0;
+      for (const rel of pageHtml) {
+        const htmlPath = path.join(dist, rel);
+        if (!existsSync(htmlPath)) continue; // pageGlobalsGuard already reports this
+        const html = readFileSync(htmlPath, 'utf8').replace(/<!--[\s\S]*?-->/g, ' ');
+        for (const m of html.matchAll(/<script(?![^>]*\btype=["']module["'])[^>]*\bsrc=["']([^"']+)["']/gi)) {
+          const ref = m[1];
+          // Vite rewrites everything it owns to a root-absolute /assets/ URL;
+          // anything still relative is a file it left for us to ship.
+          if (/^(https?:)?\/\//.test(ref) || ref.startsWith('/')) continue;
+          const from = path.resolve(path.dirname(path.join(src, rel)), ref);
+          const to = path.resolve(path.dirname(htmlPath), ref);
+          if (!existsSync(from)) {
+            this.error(`${rel} loads <script src="${ref}">, which does not exist in the source tree.`);
+            return;
+          }
+          mkdirSync(path.dirname(to), { recursive: true });
+          copyFileSync(from, to);
+          copied += 1;
+          if (!existsSync(to)) {
+            this.error(`${rel} loads <script src="${ref}">, which is not in the package — the page would 404 on it.`);
+            return;
+          }
+        }
+      }
+      if (!copied) {
+        this.error(
+          'No classic page script was packaged. side-panel.html and dashboard.html ' +
+            'must each load ../popup/theme-loader.js before their stylesheet, or the ' +
+            'extension paints light regardless of the system theme.',
+        );
+      }
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     apiBaseGuard(),
@@ -190,6 +248,7 @@ export default defineConfig({
     contentGlobalsGuard(),
     pageGlobalsGuard(),
     copyStyleImports(),
+    copyPageClassicScripts(),
   ],
   build: {
     outDir: 'dist',

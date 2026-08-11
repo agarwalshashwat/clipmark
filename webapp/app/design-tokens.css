@@ -65,7 +65,9 @@
      any AI label/glyph rather than picking -strong or -soft by hand. */
   --ai-ink:          var(--ai-strong);
 
-  /* Legacy names for the same violet. */
+  /* Legacy names for the same violet. --secondary-hover is theme-aware for the
+     same reason --ai-ink is: -strong is the light-surface step and measures
+     2.58:1 on the dark canvas, so dark flips it to -soft. */
   --secondary:       var(--ai);
   --secondary-hover: var(--ai-strong);
   --secondary-light: var(--ai-light);
@@ -133,10 +135,24 @@
   --radius-full: 9999px;
 
   /* ── Shadows ───────────────────────────────────────────────────────────────── */
+  /* These alphas are tuned for a LIGHT canvas; the dark block below deepens
+     every one of them, because a 0.08-alpha black shadow is invisible against
+     #0a0a0f. --elevation-rim is the dark-mode companion: on a dark canvas a
+     1px top rim-light reads as elevation far better than a shadow does, so it
+     is transparent in light and a faint white in dark. */
   --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow:       0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-lg:    0 4px 16px rgba(0, 0, 0, 0.12);
   --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --elevation-rim: transparent;
+
+  /* ── Overlay / focus ───────────────────────────────────────────────────────── */
+  /* --scrim replaces eight hand-rolled modal backdrops that had drifted to four
+     different alphas (.7/.72/.7/.45). --on-primary is the foreground ON a filled
+     CTA — white in both themes, since the fill stays teal-700 either way. */
+  --scrim:      rgba(17, 24, 39, 0.5);
+  --on-primary: #ffffff;
+  --focus-ring: var(--accent-strong);
 
   /* ── Light Theme (default) ─────────────────────────────────────────────────── */
   /* Each step is chosen so it clears WCAG AA (4.5:1) against BOTH --bg (gray-50)
@@ -175,9 +191,14 @@
      so the primary button needs no theme variant. Brand *text* does. */
   --accent-strong: var(--teal-700);
   --accent-hover:  var(--teal-800);
-  --accent-light:  rgba(20, 184, 166, 0.12);
+  /* 12% teal over #0a0a0f is almost invisible — a tint that reads on white
+     needs more of itself on a near-black canvas. */
+  --accent-light:  rgba(20, 184, 166, 0.18);
   --brand-ink:     var(--teal-400);
   --ai-ink:        var(--ai-soft);
+  /* --ai-strong (#7c3aed) is 2.58:1 on the dark canvas — an AA failure wherever
+     this legacy alias lands as a foreground. Follow --ai-ink onto -soft. */
+  --secondary-hover: var(--ai-soft);
 
   --danger:        #f87171;
   --danger-light:  rgba(248, 113, 113, 0.12);
@@ -210,6 +231,19 @@
 
   --kbd-bg:     var(--gray-800);
   --kbd-border: var(--gray-700);
+
+  /* Deeper alphas so elevation still reads against #0a0a0f, plus the rim-light
+     that does the real work in dark. The extension CSS hand-rolled
+     rgba(0,0,0,0.3/0.4) in three places precisely because these were missing. */
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow:       0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg:    0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.7);
+  --elevation-rim: rgba(255, 255, 255, 0.06);
+
+  --scrim:      rgba(0, 0, 0, 0.72);
+  --on-primary: #ffffff;
+  --focus-ring: var(--accent-soft);
 }
 
 /* ── Base Styles ─────────────────────────────────────────────────────────────── */

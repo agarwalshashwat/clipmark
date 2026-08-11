@@ -332,6 +332,26 @@ async function setTourState(partial) {
   await syncSet({ tourState: { ...current, ...partial } });
 }
 
+/**
+ * True when the profile holds a saved moment for ANY video.
+ *
+ * The coach-mark's "come back once you've saved a moment or two" copy was
+ * chosen from the CURRENT video's bookmarks alone, so it also greeted users who
+ * already had plenty saved — anyone opening the panel on a fresh video, and
+ * everyone off YouTube entirely (where videoId is null, so the list is empty by
+ * construction). Telling a returning user with moments due to come back and
+ * start is the wrong half of the tour. Scope the question to the profile.
+ */
+async function hasSavedMomentsAnywhere() {
+  try {
+    return collectStoredBookmarks(await syncGet(null)).length > 0;
+  } catch {
+    // Storage unreachable — fall back to the first-run copy rather than
+    // promising a review queue we cannot see.
+    return false;
+  }
+}
+
 async function runSidePanelTour({ force = false } = {}) {
   const tab = await getCurrentTab();
   if (!force && !shouldAutoRunSidePanelTour({ tourState: await getTourState(), activeTabUrl: tab?.url })) {
@@ -341,7 +361,7 @@ async function runSidePanelTour({ force = false } = {}) {
   const videoId = tab?.url ? extractVideoId(tab.url) : null;
   const bookmarks = videoId ? await getVideoBookmarksLocal(videoId) : [];
 
-  const steps = bookmarks.length
+  const steps = (bookmarks.length || await hasSavedMomentsAnywhere())
     ? [{
         element: '#revisit-mode-btn',
         popover: {
@@ -355,9 +375,20 @@ async function runSidePanelTour({ force = false } = {}) {
         },
       }]
     : [{
+        // Anchored to the SAME element as the has-bookmark variant on purpose.
+        // An element-less step takes driver.js's centered branch, which is
+        // positioned without any viewport clamp — under ~281px of CSS viewport
+        // height (a short window, or browser zoom past ~150%) the card grew
+        // across the 50px header and painted over the wordmark, which at
+        // z-index 50 cannot compete with the popover's 1000010. Anchoring
+        // leaves that branch entirely; tour-theme.css bounds the height as
+        // well, so neither fix is load-bearing alone.
+        element: '#revisit-mode-btn',
         popover: {
           title: 'Active Recall',
           description: "Come back here once you've saved a moment or two — Active Recall will quiz you on them before each clip plays.",
+          side: 'top',
+          align: 'center',
           popoverClass: TOUR_POPOVER_CLASS,
           doneBtnText: 'Got it',
         },
@@ -367,16 +398,52 @@ async function runSidePanelTour({ force = false } = {}) {
   // it gave up waiting for #revisit-mode-btn, which would mark the coach-mark
   // seen without ever rendering it. Only a step that actually highlighted counts.
   let stepShown = false;
-  driver({
+  // Set once the flag has been persisted for this run, so the several
+  // acknowledgement paths below can all call markSeenIfShown defensively
+  // without spending extra chrome.storage.sync writes on the same one-shot.
+  let markedSeen = false;
+
+  const markSeenIfShown = () => {
+    if (!shouldMarkTourSeen({ stepShown }) || markedSeen) return;
+    markedSeen = true;
+    // A failed write must not be silent: leaving markedSeen true would make the
+    // panel believe the one-shot was spent when nothing was stored, and the
+    // coach-mark would come back on the next open with no way to stop it.
+    // (syncGet/syncSet reject on chrome.runtime.lastError.)
+    setTourState({ sidePanelTour: true }).catch(() => { markedSeen = false; });
+  };
+
+  // Hoisted so the teardown hooks can complete the destroy they intercept.
+  let tourInstance = null;
+  tourInstance = driver({
     showButtons: ['next', 'close'],
     allowClose: true,
     waitForElement: 3000,
+    // Proof that the coach-mark was actually painted. This is the #97 fix
+    // (src/content/tour.js), which had never been ported to this file:
+    // `onHighlighted` is the END of driver.js's ~400ms highlight transition, so
+    // a user who clicked "Got it" before it finished — the common case, the
+    // button is right there — was recorded as having seen nothing. The flag was
+    // never stored and the card re-showed on every panel open, forever. Both
+    // hooks are wired up; the first to fire wins.
+    onPopoverRender: () => { stepShown = true; },
     onHighlighted: () => { stepShown = true; },
+    // The only teardown hook driver.js calls unconditionally. `onDestroyed` is
+    // guarded on its `__activeElement` state, which is set at the same instant
+    // onHighlighted fires — so dismissing before the highlight transition
+    // finished skipped onDestroyed entirely. Completing this via destroy()
+    // re-enters as destroy(false), which skips this hook rather than looping.
+    onDestroyStarted: () => {
+      markSeenIfShown();
+      tourInstance?.destroy();
+    },
     onDestroyed: () => {
-      if (shouldMarkTourSeen({ stepShown })) setTourState({ sidePanelTour: true });
+      tourInstance = null;
+      markSeenIfShown();
     },
     steps,
-  }).drive();
+  });
+  tourInstance.drive();
 }
 
 async function getVideoTitles() {
@@ -425,6 +492,39 @@ function sendMessageToTab(tabId, message) {
       }
     });
   });
+}
+
+/* ─── "either-is-dark": ask the active tab whether YouTube is in dark theme ────
+ *
+ * The panel is docked beside the page but cannot see its DOM, so the content
+ * script reads `<html dark>` for us. The panel then goes dark when the SYSTEM is
+ * dark OR YouTube is dark — a user who darkens only YouTube on a light OS still
+ * gets a matching panel, which is the eye-strain case this whole feature exists
+ * for. The resolution itself lives in theme-loader.js; this only reports.
+ *
+ * Off YouTube there is nothing to match, so we report false and fall back to the
+ * system theme. On a messaging failure (tab predates the install, page still
+ * loading) we keep the last-known value rather than flashing the panel.
+ */
+async function refreshYouTubeTheme() {
+  const theme = globalThis.ClipMarkTheme;
+  if (!theme || !theme.followsYouTube()) return;
+  let tab;
+  try {
+    tab = await getCurrentTab();
+  } catch {
+    return;
+  }
+  if (!tab || !(tab.url || '').includes('youtube.com')) {
+    theme.setYouTubeDark(false);
+    return;
+  }
+  try {
+    const r = await sendMessageToTab(tab.id, { action: 'getYouTubeTheme' });
+    theme.setYouTubeDark(!!(r && r.dark));
+  } catch {
+    /* no content script on that tab yet — keep the cached value */
+  }
 }
 
 async function waitForContentScript(tabId, maxRetries = MAX_RECONNECT_ATTEMPTS, delay = RECONNECT_DELAY) {
@@ -1627,27 +1727,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     stopCommentSync();
   });
 
-  // Theme toggle (hidden)
-  // function initTheme() {
-  //   chrome.storage.local.get(['theme'], (result) => {
-  //     const theme = result.theme || 'light';
-  //     document.documentElement.setAttribute('data-theme', theme);
-  //     updateThemeIcon(theme);
-  //   });
-  // }
-  // function updateThemeIcon(theme) {
-  //   const icon = document.querySelector('.theme-icon');
-  //   if (icon) { icon.textContent = theme === 'dark' ? '🌙' : '☀️'; }
-  // }
-  // function toggleTheme() {
-  //   const current = document.documentElement.getAttribute('data-theme') || 'light';
-  //   const newTheme = current === 'light' ? 'dark' : 'light';
-  //   document.documentElement.setAttribute('data-theme', newTheme);
-  //   chrome.storage.local.set({ theme: newTheme });
-  //   updateThemeIcon(newTheme);
-  // }
-  // initTheme();
-  // document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+  // ── Theme toggle: System → Light → Dark ─────────────────────────────────────
+  // data-theme is already stamped (theme-loader.js, classic script in this
+  // page's <head>). This reconciles the stored override, keeps the button label
+  // honest, and feeds the resolver YouTube's own theme — see refreshYouTubeTheme.
+  function updateThemeIcon(resolved, preference) {
+    const icon = document.querySelector('.theme-icon');
+    const btn = document.getElementById('theme-toggle');
+    if (icon) {
+      icon.textContent =
+        preference === 'system' ? 'brightness_auto' : resolved === 'dark' ? 'dark_mode' : 'light_mode';
+    }
+    if (btn) {
+      const label =
+        preference === 'system' ? `System theme (currently ${resolved})`
+          : preference === 'dark' ? 'Dark theme' : 'Light theme';
+      btn.title = `${label} — click to change`;
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }
+
+  function initTheme() {
+    const theme = globalThis.ClipMarkTheme;
+    if (!theme) return; // theme-loader.js failed to load; the panel stays light
+    theme.subscribe(updateThemeIcon);
+    theme.init();
+    updateThemeIcon(theme.getResolved(), theme.getPreference());
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        theme.cyclePreference();
+        updateThemeIcon(theme.getResolved(), theme.getPreference());
+      });
+    }
+    refreshYouTubeTheme();
+  }
+  initTheme();
 
   // Tab switching: Bookmarks / Comments
   document.getElementById('tab-bookmarks').addEventListener('click', () => {
@@ -1891,6 +2006,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!isExtensionContextValid()) return;
     debugLog('Tabs', 'Tab activated, reloading bookmarks');
     scheduleBookmarksReload(0);
+    // Switching tabs can move the panel from a dark YouTube to a light one, or
+    // off YouTube entirely — re-resolve the panel theme against the new tab.
+    refreshYouTubeTheme().catch(() => {});
   });
 });
 
@@ -1903,5 +2021,13 @@ chrome.runtime.onMessage.addListener((msg) => {
     getCurrentTab()
       .then(tab => refreshTitleFromContentScript(tab?.id, msg.videoId))
       .catch(() => {});
+    // YouTube is an SPA and its theme survives navigation, but the content
+    // script is re-initialised — re-read rather than trust the cache.
+    refreshYouTubeTheme().catch(() => {});
+  }
+  // The user toggled YouTube's own theme while the panel was open.
+  if (msg.action === 'ytThemeChanged') {
+    debugLog('Theme', 'YouTube theme changed', { dark: msg.dark });
+    globalThis.ClipMarkTheme?.setYouTubeDark(!!msg.dark);
   }
 });
