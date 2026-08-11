@@ -77,6 +77,14 @@ jobs:
       - name: Auth handoff bridge (offline)
         run: xvfb-run --auto-servernum npm run test:auth-bridge
 
+      # design-audit.mjs checks the SOURCE and the shipped bytes; this checks what
+      # the browser actually computes — the only gate that can see a token that
+      # resolves wrong, a theme that never reaches <html>, or a card painted light
+      # on a dark canvas. Also offline (chrome-extension:// pages only), so it runs
+      # before the YouTube smoke for the same reason auth-bridge does.
+      - name: Rendered DESIGN.md + theme conformance (offline)
+        run: xvfb-run --auto-servernum npm run test:design:rendered
+
       - run: xvfb-run --auto-servernum npm run test:yt:smoke
 
   webapp-visual-smoke:
