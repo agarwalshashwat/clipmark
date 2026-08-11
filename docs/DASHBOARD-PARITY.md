@@ -1,563 +1,324 @@
-# Dashboard Feature Parity — Extension vs Web
+# Dashboard Feature Parity — Web vs Extension
 
-Source of truth: the **extension dashboard** (`extension/src/popup/dashboard.js`,
-`extension/src/pages/dashboard.html`, `extension/src/pages/dashboard.entry.js`,
-`extension/styles/dashboard.css`). It is frozen (already submitted to the Chrome
-Web Store) and read-only for this effort. All changes happen on the **web
-dashboard** (`webapp/app/dashboard/**`).
+**Audited against `origin/main` @ `b4fb4db`** (post-#93 design-system restyle,
+post-#88 A–B multi-segment loops). This supersedes the version written during
+PR #76, which described a one-directional "sync the web dashboard up to the
+frozen extension" effort. That framing no longer holds: both surfaces have
+moved since, and each now leads the other in different places.
 
-Legend: ✅ full parity · 🟡 partial / different implementation · ❌ missing ·
-➕ web-only extra (not in extension).
+**Surfaces compared**
 
-## 1. Views / navigation structure
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| All Bookmarks (cards view) | ✅ `#subnav-all` | ✅ `/dashboard` | ✅ |
-| Timeline view | ✅ alternating left/right entries, month headers | 🟡 single-column entries, month headers | 🟡 cosmetic layout difference only, same capability |
-| Videos view | ✅ plain clickable grid → filters into cards view | 🟡 `/dashboard/videos`, richer (see §9) | 🟡 |
-| Reminders (revisit queue) | ✅ `#subnav-revisit` | ✅ `/dashboard/queue` | ✅ create form fixed in Iteration 2, content-preview panel still missing (see §4) |
-| Groups | ✅ `#subnav-groups-side` | ✅ `/dashboard/groups` | ✅ rename/reorder added in Iteration 8; extra "smart tag" group type kept & documented, see §7 |
-| Analytics | ✅ Pro-gated | ✅ `/dashboard/analytics` — Pro-gated as of Iteration 3 | ✅ |
-| Shared (read-only list) | ✅ `#subnav-shared-side`, list only | ✅ `/dashboard/shared` | ✅ |
-| Referral ("Refer & Earn") | ❌ not present | ➕ `/dashboard/referral` | ➕ extra |
-| Affiliate program | ❌ not present | ➕ `/dashboard/affiliate` | ➕ extra |
-| Sidebar collapse (persisted) | ✅ | ✅ | ✅ |
-| Mobile bottom nav (Bookmarks/Reminders/Groups/Pro) | ✅ | ✅ | ✅ |
-| Header search box | ✅ synced w/ toolbar search, filters live | 🟡 fixed in Iteration 7 — submits on Enter to `/dashboard?q=...` rather than live-syncing (see Iteration Log for why) | 🟡 functional, not live-synced |
-| Sign-in / sign-out / user chip / avatar | ✅ | ✅ (webapp uses real Supabase auth instead of extension OAuth handoff — expected difference) | ✅ |
-| Upgrade CTA (header + sidebar) | ✅ | ✅ | ✅ |
-
-## 2. Bookmark cards (fields & actions)
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| Thumbnail, title, YouTube link | ✅ | ✅ | ✅ |
-| Scrubber track w/ per-bookmark dots | ✅ | ✅ (simplified positions) | ✅ |
-| Bookmark count / added-date meta | ✅ | ✅ | ✅ |
-| Per-bookmark: timestamp badge, note, tags | ✅ | ✅ | ✅ |
-| Per-bookmark: copy link | ✅ | ✅ | ✅ |
-| Per-bookmark: jump/open at timestamp | ✅ | ✅ | ✅ |
-| Per-bookmark: delete | ✅ | ✅ | ✅ |
-| Per-bookmark: **Extended Notes (Pro)** — textarea, autosave, saved indicator | ✅ | ✅ added in Iteration 5 (`BookmarkNotes.tsx`) | ✅ |
-| Bulk-select checkboxes + bulk delete | ✅ | ✅ | ✅ |
-| Collapse/expand after N bookmarks | ✅ (3) | ✅ (4) | ✅ (threshold differs, not a capability gap) |
-| Pill row of all timestamps | ✅ | ✅ | ✅ |
-| "Group" button (add to group) | ✅ floating picker w/ multi-checkbox + inline create-new-group | 🟡 modal, single-select add + inline create (added Iteration 8); still no multi-checkbox membership toggle | 🟡 mostly closed, see §7 |
-| "Recall" button (start Active Recall for this video, any time) | ✅ always visible on every card, Pro-gated w/ free-review-cap check | ✅ added in Iteration 7 (no free-review-cap — see §3 asymmetry note) | 🟡 present, cap asymmetry documented |
-| Featured-card highlighting | ✅ (most-bookmarked video) | ✅ added in Iteration 9 | ✅ |
-| Card size toggle (L/M/S) | ✅ | ✅ | ✅ |
-
-## 3. Active Recall / due queue
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| Due-strip banner (count + per-video chips + start button) | ✅ | ✅ | ✅ |
-| Start recall for a *due* video | ✅ opens YT tab w/ pendingRevision | ✅ via extension bridge (`_utils/extension.ts`) when available, else opens the video | ✅ |
-| Start recall for *any* video (not just due) | ✅ per-card "Recall" button | ✅ added in Iteration 7 (see §2) | ✅ |
-| Free-tier monthly review cap enforcement | ✅ enforced in `dashboard.js` before starting | ⚠️ **architectural gap, not fixable from web alone**: the free-tier cap is only checked in the extension's own UI, not wherever a recall session actually starts, so a session started via the web dashboard isn't capped the same way. This is an extension-side enforcement gap (frozen for this effort) — tracked as a follow-up issue rather than fixed here. | ❌ noted asymmetry, tracked separately (see Iteration Log) |
-| Recall grading / quiz UI | Extension only (by design — needs the YouTube player) | N/A (web correctly does not attempt this) | ✅ by design |
-
-## 4. Reminders / Revisit
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| List due + upcoming reminders | ✅ | ✅ | ✅ |
-| Target type: specific video vs group | ✅ tabs | 🟡 single `<select>` w/ optgroups instead of tabs — acceptable UI variant | ✅ |
-| Frequency: once/daily/weekly/biweekly/monthly | ✅ matches `revisit_reminders.frequency` enum | ✅ **fixed in Iteration 2** — was previously sending a numeric `frequency_days` the server never read and no `next_due_at`, so every submit threw. Now sends the correct enum + ISO date. | ✅ |
-| Start date picker | ✅ | ✅ added in Iteration 2 | ✅ |
-| Optional label | ✅ | ✅ added in Iteration 2 | ✅ |
-| Content preview panel (thumbnail/title/tags) | ✅ | ❌ still not present — left as-is, see Iteration 2's log entry | ❌ gap |
-| Edit existing reminder in place | ✅ | ✅ added in Iteration 2 (delete + recreate, same as the extension's own edit flow) | ✅ |
-| Mark due reminder "Done" (advances/deletes) | ✅ | ✅ added in Iteration 2 (action already existed, had no caller) | ✅ |
-| Pro-gating | Enforced server-side only (`/api/reminders`); dashboard UI itself has no client-side Pro check | ✅ `loadRemindersQueue` blocks non-Pro server-side, redirects to `/upgrade` | ✅ (web is arguably stricter/better UX here) |
-| Due-count badge in nav | ✅ | ✅ | ✅ |
-
-## 5. Exports
-
-| Format | Extension | Web | Status |
-|---|---|---|---|
-| JSON | ✅ free | ✅ free | ✅ |
-| CSV | ✅ free | ✅ free | ✅ |
-| Markdown | ✅ free | ✅ free | ✅ |
-| Anki (.txt TSV) | ✅ free-cap (1/mo) then Pro | ✅ free-cap (1/mo) then Pro — `_utils/usage-caps.ts` twin | ✅ |
-| Obsidian (.md) | ✅ Pro | ✅ added in Iteration 4, notes included as of Iteration 5 | ✅ |
-| Notion CSV | ✅ Pro | ✅ added in Iteration 4, notes included as of Iteration 5 | ✅ |
-| Reading List (.txt) | ✅ Pro | ✅ added in Iteration 4, notes included as of Iteration 5 | ✅ |
-| Import JSON | ✅ | ✅ | ✅ |
-
-## 6. Analytics
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| Pro gating | ✅ shows upgrade CTA for free users | ✅ fixed in Iteration 3 | ✅ |
-| 14-day activity heatmap | ✅ | ✅ | ✅ |
-| Tag breakdown (count + bar) | ✅ + video count per tag | ✅ fixed in Iteration 3 | ✅ |
-| Empty state | ✅ | ✅ | ✅ |
-
-## 7. Groups
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| Manual named groups (create/add video/remove video/delete) | ✅ | ✅ | ✅ |
-| Rename group | ✅ inline contentEditable | ✅ added in Iteration 8 (prompt-based) | ✅ |
-| Reorder groups (move up/down, persisted) | ✅ | ✅ added in Iteration 8 (new `groups.position` column, migration not yet applied — see Iteration Log) | ✅ |
-| Auto Groups (read-only, derived from all tags incl. "untagged") | ✅ | ✅ ("All Tags" section, "Untagged" label) | ✅ |
-| "Smart (Tag Based)" persisted group type, bound to one tag, listed under "My Groups" | ❌ not present — extension's only tag-based view is the read-only Auto Groups section | ➕ present (`groups.type = 'tag'`) | ➕ extra, **entangled with the core (shared component, shared DB table, shared actions) — not cleanly relocatable to the hold branch without a schema/behavior change to already-existing user data.** Judgment call: documented here rather than removed; see Iteration Log. |
-| Floating group-picker w/ inline "+ new group" creation | ✅ | ✅ added in Iteration 8 | 🟡 create works; no membership checkboxes/toggle yet (see Iteration Log) |
-
-## 8. Shared collections
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| List already-shared collections (view count, bookmark count, copy link, open) | ✅ read-only | ✅ (`/dashboard/shared`) plus a "Private Collections" section listing not-yet-shared videos | ✅ (web's extra "Private Collections" section is a harmless read-only convenience over the same data, not a new capability) |
-| Create a new share from the dashboard | ❌ not present (sharing is initiated from the extension's on-page popup, out of scope for this comparison) | ➕ `ShareCollectionButton` on `/dashboard/videos` | ➕ extra — **see §9, judgment call: kept** |
-
-## 9. Videos view
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| Grid of video cards (thumbnail, count, tags, relative time) | ✅ | ✅ | ✅ |
-| Click card → filter into All Bookmarks | ✅ | 🟡 card links straight to YouTube instead; filtering by tag happens in-page instead | 🟡 different but equivalent-ish interaction model |
-| Tag filter bar | ❌ | ➕ | ➕ extra |
-| Sort select (recently updated / most bookmarks / oldest) | ❌ | ➕ | ➕ extra |
-| Per-card Share button (creates a new share) | ❌ | ➕ (`ShareCollectionButton`) | ➕ extra |
-| Per-card Copy Link button | ❌ | ➕ | ➕ extra |
-| Per-card Add-to-Group dropdown | ❌ (grouping is done from the main cards view, not Videos view) | ➕ | ➕ extra, duplicates capability already available elsewhere |
-
-**Judgment call on §8/§9 extras:** these are woven into the video-card component
-and reuse the same `groups`/`collections` server actions and DB tables as the
-core (parity) features. They are not cleanly separable into their own
-directory the way `referral/` and `affiliate/` are, and removing them would
-delete working, already-shipped functionality (sharing-from-Videos-page) with
-no clean rollback path via `git checkout <branch> -- <paths>`. Per the task's
-instruction to use judgment rather than force a narrow definition, these are
-left in place and documented rather than relocated. `referral/` and
-`affiliate/` — full standalone routes with their own dedicated DB tables,
-zero overlap with bookmark/group/reminder data — are relocated (§10).
-
-## 10. Web-only extras relocated to `feature/dashboard-extras-hold`
-
-| Item | Path(s) | Reason |
+| | Web dashboard | Extension "local" dashboard |
 |---|---|---|
-| Referral program ("Refer & Earn") | `webapp/app/dashboard/referral/page.tsx`, sidebar link in `DashboardChrome.tsx` | Not present in extension; standalone route + own DB tables (`profiles.referral_code`, `referrals`) |
-| Affiliate program | `webapp/app/dashboard/affiliate/page.tsx`, `affiliate/AffiliateApplyForm.tsx`, sidebar link in `DashboardChrome.tsx` | Not present in extension; standalone route + own DB tables (`profiles.is_affiliate`/`affiliate_code`, `affiliate_applications`, `affiliate_clicks`, `affiliate_conversions`) |
+| Entry | `clipmark.mithahara.com/dashboard` | `chrome-extension://…/src/pages/dashboard.html` |
+| Code | [`webapp/app/dashboard/**`](../webapp/app/dashboard) | [`extension/src/popup/dashboard.js`](../extension/src/popup/dashboard.js) (2 639 lines), [`extension/src/pages/dashboard.html`](../extension/src/pages/dashboard.html), `extension/styles/dashboard.css` |
+| Data source | Supabase (`user_bookmarks`, `groups`, `revisit_reminders`, `collections`) | `chrome.storage.sync` (`bm_*`, `vgroups`, `savedSearches`), with `/api/*` for reminders/shared/groups |
 
-## 11. Settings
+**Legend**
 
-Extension has no dedicated "Settings" view/tab (account actions — sign
-in/out, sync, upgrade — live in the header/sidebar, not a separate page). Web
-has an orphaned `webapp/app/dashboard/_components/SettingsContent.module.css`
-with **no corresponding component** — dead CSS, not a feature gap either way.
-Left alone (out of scope: removing dead CSS is a candidate for a follow-up
-cleanup, not a parity concern).
+- ✅ **in sync** — same capability on both surfaces (implementation may differ).
+- ⚠️ **intentional divergence** — deliberate, with a reason recorded.
+- ❌ **real gap** — one surface can do something the other can't, and that
+  wasn't a decision anyone made.
 
-## 12. Empty states
-
-| View | Extension | Web | Status |
-|---|---|---|---|
-| No bookmarks yet | ✅ | ✅ | ✅ |
-| No search matches | ✅ | ✅ | ✅ |
-| No groups yet | ✅ | ✅ | ✅ |
-| No reminders yet | ✅ | ✅ (blocked-by-Pro redirect doubles as this) | ✅ |
-| No shared collections yet | ✅ | ✅ | ✅ |
-| No analytics data yet | ✅ | ✅ | ✅ |
-
-## 13. Filters / Search
-
-| Capability | Extension | Web | Status |
-|---|---|---|---|
-| Live text search over description/title/tags | ✅ (header + toolbar inputs, kept in sync) | ✅ (toolbar input) | ✅ |
-| Header search box | ✅ synced w/ toolbar | 🟡 fixed in Iteration 7, see §1 | 🟡 functional, not live-synced |
-| Sort (newest/oldest/by timestamp) | ✅ | ✅ | ✅ |
-| Saved Searches / filters (Pro) — save current query+sort as a named, reusable pill | ✅ | ✅ added in Iteration 6 | ✅ |
+**Headline:** the two dashboards agree on the *shape* of the product — every
+top-level view exists on both, and the whole export/notes/saved-search/groups
+surface is genuinely at parity. Where they diverge, it clusters in three
+places: **A–B loop rendering** (web only shows a loop's range in one of five
+render sites), **Active Recall entitlement** (the web path has no Pro check
+anywhere along it), and **extension Reminders**, whose create form currently
+throws before it renders. Across 115 compared capabilities: **63 ✅ · 32 ⚠️ ·
+20 ❌** — and 10 of the 20 gaps are the loop-rendering and scrubber clusters,
+i.e. two fixes, not twenty.
 
 ---
 
-## Iteration Log
+## 1. Navigation & shell
 
-### Iteration 0 (this document)
-Read both dashboards in full (`dashboard.js` 2637 lines, `dashboard.html`,
-`dashboard.entry.js`, skimmed `dashboard.css` section headers) and every file
-under `webapp/app/dashboard/`. Built the matrix above. Key findings ranked by
-severity:
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| All Bookmarks | [`DashboardChrome.tsx:64`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L64), [`:131`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L131) | [`dashboard.html:22`](../extension/src/pages/dashboard.html#L22), [`:69`](../extension/src/pages/dashboard.html#L69); [`dashboard.js:2529`](../extension/src/popup/dashboard.js#L2529) | ✅ |
+| Videos | [`DashboardChrome.tsx:135`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L135) → `/dashboard/videos` | [`dashboard.html:73`](../extension/src/pages/dashboard.html#L73); [`renderVideosView` `dashboard.js:2015`](../extension/src/popup/dashboard.js#L2015) | ✅ |
+| Reminders | [`DashboardChrome.tsx:67`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L67), [`:139`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L139) | [`dashboard.html:23`](../extension/src/pages/dashboard.html#L23), [`:77`](../extension/src/pages/dashboard.html#L77) | ✅ |
+| Analytics | [`DashboardChrome.tsx:145`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L145) | [`dashboard.html:83`](../extension/src/pages/dashboard.html#L83) | ✅ |
+| Groups | [`DashboardChrome.tsx:149`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L149) | [`dashboard.html:87`](../extension/src/pages/dashboard.html#L87) | ✅ |
+| Shared | [`DashboardChrome.tsx:153`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L153) → own route | [`dashboard.html:91`](../extension/src/pages/dashboard.html#L91) → inline [`renderSharedView:2084`](../extension/src/popup/dashboard.js#L2084); header link [`:27`](../extension/src/pages/dashboard.html#L27) goes to the website | ✅ |
+| Sidebar collapse, persisted | [`DashboardChrome.tsx:44-54`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L44) | [`dashboard.js:2368-2375`](../extension/src/popup/dashboard.js#L2368) | ✅ same `sidebarCollapsed` localStorage key |
+| Mobile bottom nav (Bookmarks/Reminders/Groups/Pro) | [`DashboardChrome.tsx:185-203`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L185) | [`dashboard.html:185-202`](../extension/src/pages/dashboard.html#L185) | ✅ |
+| Due-reminder badge in nav | [`layout.tsx:17-22`](../webapp/app/dashboard/layout.tsx#L17) (direct count query) | [`dashboard.js:1463-1485`](../extension/src/popup/dashboard.js#L1463) (via `/api/reminders`) | ✅ |
+| Upgrade CTA, header + sidebar | [`DashboardChrome.tsx:88-91`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L88), [`:158-168`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L158) | [`dashboard.html:49`](../extension/src/pages/dashboard.html#L49), [`:96`](../extension/src/pages/dashboard.html#L96); label flips at [`dashboard.js:2247-2251`](../extension/src/popup/dashboard.js#L2247) | ✅ both flip to "Manage Subscription"/"✦ Pro" for Pro |
+| Header search box | [`DashboardChrome.tsx:77-87`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L77) — submits on Enter to `/dashboard?q=…`, picked up as `initialQuery` ([`page.tsx:13`](../webapp/app/dashboard/page.tsx#L13), [`DashboardContent.tsx:234-239`](../webapp/app/dashboard/_components/DashboardContent.tsx#L234)) | [`dashboard.js:2425-2440`](../extension/src/popup/dashboard.js#L2425) — live two-way sync with the toolbar input | ⚠️ web's toolbar query is local React state on purpose; live URL sync would refetch `collections` from Supabase per keystroke |
+| Sign in / sign out / identity | Real Supabase session; [`layout.tsx:9`](../webapp/app/dashboard/layout.tsx#L9) redirects to `/signin`, avatar + sign-out at [`DashboardChrome.tsx:93-104`](../webapp/app/dashboard/_components/DashboardChrome.tsx#L93) | OAuth handoff into `chrome.storage.sync.bmUser`; [`dashboard.js:2227-2270`](../extension/src/popup/dashboard.js#L2227) | ⚠️ different auth models by construction; both surface the same three affordances |
+| Entitlement freshness | `is_pro` read server-side on every request ([`layout.tsx:13`](../webapp/app/dashboard/layout.tsx#L13)) | Cached in `bmUser.isPro`, re-checked against `/api/me` on focus, throttled 60 s ([`dashboard.js:106-135`](../extension/src/popup/dashboard.js#L106)) | ⚠️ consequence of local-first storage |
+| Manual "sync with cloud" button | — (the web *is* the cloud) | [`dashboard.html:39`](../extension/src/pages/dashboard.html#L39); [`syncAllWithCloud:2272-2320`](../extension/src/popup/dashboard.js#L2272) | ⚠️ intentional |
+| Referral ("Refer & Earn") | Not in `webapp/app/dashboard/**` — parked on `feature/dashboard-extras-hold` | Not present | ⚠️ intentional divergence, parked |
+| Affiliate program | Dashboard route parked on `feature/dashboard-extras-hold`; public page still lives at `webapp/app/(marketing)/affiliate/` | Not present | ⚠️ intentional divergence, parked |
 
-1. **P0 bug**: the web Reminders "Schedule Reminder" form sends fields
-   (`frequency_days`, no `next_due_at`) that don't match what
-   `queue/actions.ts::createReminder` reads or what the `revisit_reminders`
-   schema requires — the form is currently non-functional.
-2. Analytics has no Pro gate on web (free feature parity regression /
-   monetization gap vs. extension).
-3. Missing Pro export formats: Obsidian, Notion CSV, Reading List.
-4. Missing Extended Notes (Pro) per-bookmark feature entirely.
-5. Missing Saved Searches/filters (Pro) entirely.
-6. Missing a persistent, always-available "Recall" trigger per video card
-   (web only surfaces recall for videos already due).
-7. Header search input in `DashboardChrome` is inert (no state wiring).
-8. Groups missing rename + reorder.
-9. Referral and Affiliate are confirmed web-only extras with no extension
-   equivalent — slated for relocation to `feature/dashboard-extras-hold`.
-10. Videos-view extras (tag filter, sort, share/copy/group-add buttons) and
-    the Groups "smart tag group" type are also web-only, but judged too
-    entangled with core, already-shipped, data-bearing functionality to
-    relocate safely — documented instead of removed (see §8/§9).
+## 2. Bookmark library — cards / grid view
 
-No code changes yet in this iteration beyond this document.
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| Video-grouped cards | [`DashboardContent.tsx:798-1051`](../webapp/app/dashboard/_components/DashboardContent.tsx#L798) | [`dashboard.js:424-599`](../extension/src/popup/dashboard.js#L424) | ✅ |
+| Thumbnail, title, YouTube link | [`:815-829`](../webapp/app/dashboard/_components/DashboardContent.tsx#L815) | [`:471-481`](../extension/src/popup/dashboard.js#L471) | ✅ |
+| Bookmark count + added-date meta | [`:882-886`](../webapp/app/dashboard/_components/DashboardContent.tsx#L882) | [`:505-509`](../extension/src/popup/dashboard.js#L505) | ✅ |
+| Stats bar (bookmarks / videos / tags / last saved) | [`:689-712`](../webapp/app/dashboard/_components/DashboardContent.tsx#L689) | [`renderStatsBar:304-333`](../extension/src/popup/dashboard.js#L304) | ✅ |
+| Featured-card highlight (most bookmarks, >1 video) | [`:802-807`](../webapp/app/dashboard/_components/DashboardContent.tsx#L802) | [`:443-445`](../extension/src/popup/dashboard.js#L443) | ✅ |
+| Card size toggle L/M/S, persisted | [`:368-373`](../webapp/app/dashboard/_components/DashboardContent.tsx#L368) (`dash_cardSize`) | [`:2491-2497`](../extension/src/popup/dashboard.js#L2491) (`bm_cardSize`) | ✅ |
+| Collapse after N bookmarks | 4 ([`:890`](../webapp/app/dashboard/_components/DashboardContent.tsx#L890), [`:948`](../webapp/app/dashboard/_components/DashboardContent.tsx#L948)) | 3 (`COLLAPSE_AFTER`, [`:464`](../extension/src/popup/dashboard.js#L464)) | ✅ threshold only |
+| Per-bookmark: copy link | [`:916-923`](../webapp/app/dashboard/_components/DashboardContent.tsx#L916) | [`:532`](../extension/src/popup/dashboard.js#L532), [`:811-819`](../extension/src/popup/dashboard.js#L811) | ✅ |
+| Per-bookmark: open at timestamp | [`OpenAtTimestampLink:39-52`](../webapp/app/dashboard/_components/DashboardContent.tsx#L39) | [`:533`](../extension/src/popup/dashboard.js#L533), [`jumpToVideo:963`](../extension/src/popup/dashboard.js#L963) | ✅ |
+| Per-bookmark: delete | [`:924-932`](../webapp/app/dashboard/_components/DashboardContent.tsx#L924) | [`:534`](../extension/src/popup/dashboard.js#L534), [`:833-852`](../extension/src/popup/dashboard.js#L833) | ✅ |
+| Per-bookmark: tags with per-tag colour | [`:937-943`](../webapp/app/dashboard/_components/DashboardContent.tsx#L937) | [`:525-529`](../extension/src/popup/dashboard.js#L525) | ✅ |
+| Extended Notes (Pro) | [`BookmarkNotes.tsx`](../webapp/app/dashboard/_components/BookmarkNotes.tsx) + server-side `is_pro` re-check in [`actions.ts:49-59`](../webapp/app/dashboard/actions.ts#L49) | [`:531`](../extension/src/popup/dashboard.js#L531), [`:855-943`](../extension/src/popup/dashboard.js#L855), client-side gate only | ✅ web is stricter, same UX (debounce, blur/Ctrl+Enter save, Esc) |
+| "Group" button on card | [`:852-859`](../webapp/app/dashboard/_components/DashboardContent.tsx#L852) → [`GroupPickerModal`](../webapp/app/dashboard/_components/GroupPickerModal.tsx) | [`:493-495`](../extension/src/popup/dashboard.js#L493) → [`showGroupPicker:1187`](../extension/src/popup/dashboard.js#L1187) | ✅ button; see §7 for the picker's contents |
+| "Recall" button on card | [`:864-875`](../webapp/app/dashboard/_components/DashboardContent.tsx#L864), `isPro` gate | [`:490-492`](../extension/src/popup/dashboard.js#L490), [`:785-803`](../extension/src/popup/dashboard.js#L785), `checkPro()` gate | ✅ |
+| "Watch" button | [`:848-851`](../webapp/app/dashboard/_components/DashboardContent.tsx#L848) | — (the thumbnail is the link) | ⚠️ web extra, harmless |
+| Upsell "Add more variety" card in the grid | [`:1039-1048`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1039) | — | ⚠️ web extra |
+| Scrubber with per-bookmark markers | [`:830-844`](../webapp/app/dashboard/_components/DashboardContent.tsx#L830) — markers spaced by **array index** (`(i / (n-1)) * 90 + 5`) | [`buildTimeline:336-343`](../extension/src/popup/dashboard.js#L336) — positioned by `timestamp / trackMax`, `trackMax` from stored `videoDurations` | ❌ the web scrubber conveys no real position; three clips at 0:05/0:07/58:00 render evenly spaced |
+| Scrubber end labels (`00:00` … duration) | — | [`:484-487`](../extension/src/popup/dashboard.js#L484) | ❌ minor |
+| Duration badge on the thumbnail | — | [`:476`](../extension/src/popup/dashboard.js#L476) | ❌ minor |
+| Marker tooltip contents | timestamp only ([`:839`](../webapp/app/dashboard/_components/DashboardContent.tsx#L839)) | range/timestamp + note ([`:340`](../extension/src/popup/dashboard.js#L340)) | ❌ minor |
+| "⋮ More options" button | — | [`:501-503`](../extension/src/popup/dashboard.js#L501) — rendered and styled, **no click handler anywhere** | ⚠️ dead control on the extension side |
+| Bookmark-action buttons / bulk bar / toast are styled | ❌ see §12 | ✅ | ❌ web renders these unstyled in production |
 
-### Iteration 1 — relocate referral/affiliate extras
-Confirmed (via `DashboardChrome.tsx`, the extension's `dashboard.html` Account
-section, and both features' dedicated DB tables/API routes) that referral and
-affiliate are genuinely web-only with zero extension equivalent.
+## 3. Timeline view
 
-- Branched `feature/dashboard-extras-hold` off `main`, copied
-  `webapp/app/dashboard/referral/` and `webapp/app/dashboard/affiliate/`
-  there unchanged (content was still identical to `main` at that point),
-  and added `docs/DASHBOARD-EXTRAS-HOLD.md` documenting what's held and how
-  to restore it.
-- On `sync/dashboard-parity`: deleted `webapp/app/dashboard/referral/` and
-  `webapp/app/dashboard/affiliate/`, removed their sidebar entries from
-  `DashboardChrome.tsx`, and dropped the now-unused `isAffiliate` prop from
-  `DashboardChrome`/`layout.tsx` (including the `profiles.is_affiliate`
-  column from the layout's query) since it had no remaining consumer.
-- **Known follow-up, intentionally not fixed here**: the public marketing
-  page `app/(marketing)/affiliate/page.tsx` links to `/dashboard/affiliate`
-  in two CTAs. That page is outside `webapp/app/dashboard/**` (out of this
-  sync's scope) and still exists on `main`; once this branch merges those
-  links 404 until the affiliate program is reintroduced from the hold
-  branch. Flagged in the PR description rather than patched here to avoid
-  an unrelated-file edit.
-- Verified: `cd webapp && npx tsc --noEmit` clean, `npm run test:unit:webapp`
-  96/96 passing (no test referenced the removed pages).
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| Timeline view exists | [`:1054-1127`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1054) | [`renderTimelineView:682-758`](../extension/src/popup/dashboard.js#L682) | ✅ |
+| Month grouping headers | [`:1059-1062`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1059) | [`:712-716`](../extension/src/popup/dashboard.js#L712) | ✅ |
+| Layout | single column, day marker + one card per (day × video), clips nested | alternating left/right entries, one card per bookmark | ⚠️ cosmetic; same information |
+| Copy link / open / delete per clip | [`:1107-1116`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1107) | [`:735-739`](../extension/src/popup/dashboard.js#L735) | ✅ |
+| Extended Notes in timeline | [`:1115`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1115) | — (only in cards view) | ⚠️ web extra |
+| Bulk-select checkboxes in timeline | [`:1091-1097`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1091) | — the delegate at [`:821-831`](../extension/src/popup/dashboard.js#L821) toggles `.tl-entry`, but [`:728-740`](../extension/src/popup/dashboard.js#L728) renders no checkbox | ⚠️ **web leads** |
 
-### Iteration 2 — fix the broken Reminders create/edit form (P0)
-Rewrote `webapp/app/dashboard/queue/RemindersContent.tsx`:
+## 4. A–B loop range display
 
-- Fixed the field mismatch: the form now submits `frequency` (the
-  `once|daily|weekly|biweekly|monthly` enum the schema/API actually expect,
-  replacing the old numeric `frequency_days` that was silently dropped) and
-  `next_due_at` (previously never sent at all, despite being `NOT NULL`).
-  This is what made "Schedule Reminder" throw on every submit before this
-  change.
-- Added the two fields the extension's create form has and web's didn't:
-  a Start Date picker and an optional Label input (both already
-  supported by `queue/actions.ts::createReminder` and the
-  `revisit_reminders` schema — only the UI was missing them).
-- Added Edit-in-place (populates the form from an existing reminder;
-  submitting deletes the old row and creates the new one, mirroring the
-  extension's own edit flow in `dashboard.js`, since there's no dedicated
-  update action) and wired up `markReminderDone` — it already existed in
-  `queue/actions.ts` but had no caller anywhere in the UI.
-- Fixed the reminder-card CSS classes to the ones actually defined in
-  `page.module.css` (`cardTitle`/`cardMeta`/`freqText` — the old code
-  referenced `targetName`/`meta`/`freq`, which don't exist in that module and
-  silently rendered unstyled).
-- Not done (still a gap vs. extension, lower priority): the extension's
-  tabbed Target Type UI and the live content-preview panel that updates as
-  the target-type tab changes. Kept the existing select+optgroup approach,
-  which already correctly encodes target type per option.
+Loops are created and driven only in the extension's content script (the web
+can't touch the YouTube player) — that part is ⚠️ intentional. What both
+dashboards *should* do identically is render a saved loop as its **range**
+(`0:42 → 1:15`) rather than just its A point. The web has the helper
+([`_utils/loop.ts`](../webapp/app/dashboard/_utils/loop.ts), twin-tested against
+`extension/src/loop.module.js` by `webapp/tests/unit/loop-parity.test.ts`) and
+calls it in exactly one of five places.
 
-Verified: `cd webapp && npx tsc --noEmit` clean, `npm run test:unit:webapp`
-96/96 passing. Not visually verified in a browser — the dashboard is
-auth-gated (redirects to `/signin` without a real Supabase session) and no
-local Supabase project is configured in this environment; reasoned from
-source and the schema/migration file instead.
+| Render site | Web | Extension | Status |
+|---|---|---|---|
+| Card thread rows (first N) | [`:907`](../webapp/app/dashboard/_components/DashboardContent.tsx#L907) `formatLoopRange(b) ?? …` | [`:522`](../extension/src/popup/dashboard.js#L522) | ✅ |
+| Collapsed / overflow rows | [`:976`](../webapp/app/dashboard/_components/DashboardContent.tsx#L976) — plain `formatTimestamp` | [`:555`](../extension/src/popup/dashboard.js#L555) | ❌ |
+| Timestamp pill row | [`:1031`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1031) — plain `formatTimestamp` | [`:589`](../extension/src/popup/dashboard.js#L589) | ❌ |
+| Timeline clip rows | [`:1104`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1104) — plain `formatTimestamp` | [`:731`](../extension/src/popup/dashboard.js#L731) | ❌ |
+| Scrubber marker tooltip | [`:839`](../webapp/app/dashboard/_components/DashboardContent.tsx#L839) — plain `formatTimestamp` | [`:340`](../extension/src/popup/dashboard.js#L340) | ❌ |
+| "A–B Loop" type label | [`:910-912`](../webapp/app/dashboard/_components/DashboardContent.tsx#L910), first-N rows only; overflow rows at [`:979`](../webapp/app/dashboard/_components/DashboardContent.tsx#L979) fall back to "Annotated Bookmark"/"Quick Clip" | `vc-vt-time--loop` modifier applied in both row sets | ❌ |
+| Loop creation / editing / playback | — | content script | ⚠️ intentional |
 
-### Iteration 3 — Pro-gate Analytics + per-tag video count
-`webapp/app/dashboard/analytics/page.tsx` had no Pro check at all, unlike
-`dashboard.js::renderAnalyticsView` which shows an upgrade CTA in place of the
-view for free users — a real monetization-parity gap, not just cosmetic.
+Net effect: a user who saves five loops on one video sees the first four as
+ranges in the web card, the fifth as a bare A point, and all five as bare A
+points in the pill row and in the timeline.
 
-- Added a server-side `profiles.is_pro` check; free users now see an
-  "Analytics — Pro Feature" card with an Upgrade to Pro CTA, matching the
-  extension's copy and behavior, instead of the full analytics view.
-- Added the per-tag video count the extension shows
-  (`${vids} video${vids !== 1 ? 's' : ''}`) — `AnalyticsContent.tsx`'s tag
-  rows previously showed only the bookmark count and a bar, no video count.
-  Computed via a `Set<videoId>` per tag in `page.tsx`, threaded through a new
-  `videoCount` field on `TagStat`, rendered via a new `.tagVideoCount` class
-  in `page.module.css`.
+## 5. Search, sort & saved filters
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
-Not visually verified in a browser (same auth-gating caveat as Iteration 2).
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| Live text search over title / note / tags | [`:476-487`](../webapp/app/dashboard/_components/DashboardContent.tsx#L476), [`:290-311`](../webapp/app/dashboard/_components/DashboardContent.tsx#L290) | [`:2434-2440`](../extension/src/popup/dashboard.js#L2434), [`applyFiltersAndSort:263-270`](../extension/src/popup/dashboard.js#L263) | ✅ |
+| Clear-search button | [`:483-487`](../webapp/app/dashboard/_components/DashboardContent.tsx#L483) | — | ⚠️ web extra |
+| Sort: newest / oldest / by timestamp | [`:499-507`](../webapp/app/dashboard/_components/DashboardContent.tsx#L499) | [`dashboard.html:125-129`](../extension/src/pages/dashboard.html#L125), [`:272-276`](../extension/src/popup/dashboard.js#L272) | ✅ |
+| Save current query+sort as a named pill (Pro) | [`_utils/savedSearches.ts`](../webapp/app/dashboard/_utils/savedSearches.ts) (localStorage), UI at [`:266-286`](../webapp/app/dashboard/_components/DashboardContent.tsx#L266), [`:640-663`](../webapp/app/dashboard/_components/DashboardContent.tsx#L640) | [`:192-243`](../extension/src/popup/dashboard.js#L192) (`chrome.storage.sync`), UI at [`:2443-2451`](../extension/src/popup/dashboard.js#L2443) | ⚠️ same feature; extension's saved filters follow the user across devices, web's are per-browser |
+| "⊕ Save" appears only when a query is active | [`:489-498`](../webapp/app/dashboard/_components/DashboardContent.tsx#L489) | [`updateSaveFilterBtn:772-775`](../extension/src/popup/dashboard.js#L772) | ✅ |
+| Drill into a single video (filter the library to it) | ❌ — `/dashboard` reads only `view`/`success`/`q` ([`page.tsx:11`](../webapp/app/dashboard/page.tsx#L11)), yet Groups links to `/dashboard?v=…` ([`GroupsContent.tsx:188`](../webapp/app/dashboard/groups/GroupsContent.tsx#L188), [`:249`](../webapp/app/dashboard/groups/GroupsContent.tsx#L249)) | `filterVideoId` ([`:259-261`](../extension/src/popup/dashboard.js#L259)), set by clicking a Videos-view card ([`:2068-2075`](../extension/src/popup/dashboard.js#L2068)) | ❌ web has no per-video drilldown, and the Groups thumbnails link to a param nothing reads |
 
-### Iteration 4 — add missing Pro export formats
-Added `exportObsidian`, `exportNotionCSV`, `exportReadingList` to
-`DashboardContent.tsx`, porting the extension's exporters
-(`dashboard.js::exportObsidian/exportNotionCSV/exportReadingList`) line for
-line, adapted to operate on the web's `Collection[]` shape instead of the
-extension's flat `allBookmarks` + `videoTitles` map. Wired three new buttons
-into the export popover's existing "Pro" section, reusing the same
-`exportBtn`/`exportProTag` classes the Anki button already uses. Unlike
-Anki (1 free export/month), these three are Pro-only with no free
-allowance, matching the extension's `checkPro()` gate with no usage cap —
-free users get a toast ("... is available on Pro.") instead of a download.
+## 6. Reminders / revisit queue
 
-**Known gap carried forward**: the extension's exporters also include each
-bookmark's Extended Notes text (`b.notes`) in the Obsidian/Notion output.
-The web side has no Extended Notes feature yet (see Iteration 5), so these
-three new exporters currently emit an empty Notes column / omit the notes
-blockquote. Once Extended Notes lands on web, these three functions need a
-follow-up pass to include it — noted here so it isn't forgotten.
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| List due + upcoming | [`RemindersContent.tsx:231-281`](../webapp/app/dashboard/queue/RemindersContent.tsx#L231) — one merged "Active Queue" | [`:1988-2006`](../extension/src/popup/dashboard.js#L1988) — separate "Due Now" and "Active Schedule" sections | ⚠️ presentation |
+| Target type: video vs group | `<select>` with optgroups ([`:144-161`](../webapp/app/dashboard/queue/RemindersContent.tsx#L144)) | two tabs ([`:1716-1727`](../extension/src/popup/dashboard.js#L1716)) | ⚠️ UI variant, same encoding |
+| Frequency enum (once/daily/weekly/biweekly/monthly) | [`:35-41`](../webapp/app/dashboard/queue/RemindersContent.tsx#L35) | [`:1736-1742`](../extension/src/popup/dashboard.js#L1736) | ✅ |
+| Start-date picker | [`:187-193`](../webapp/app/dashboard/queue/RemindersContent.tsx#L187) | [`:1746`](../extension/src/popup/dashboard.js#L1746) | ✅ both post 09:00 local |
+| Optional label | [`:201-208`](../webapp/app/dashboard/queue/RemindersContent.tsx#L201) | [`:1750`](../extension/src/popup/dashboard.js#L1750) | ✅ |
+| Content-preview panel | thumbnail + title ([`:110-133`](../webapp/app/dashboard/queue/RemindersContent.tsx#L110)) | thumbnail + title + **tags** + a distinct group-target preview ([`:1680-1707`](../extension/src/popup/dashboard.js#L1680), [`updatePreview:1618-1649`](../extension/src/popup/dashboard.js#L1618)) | ⚠️ web now has the panel (this row was stale in the old doc); tags still missing |
+| Pre-fill from the active YouTube tab | — (no tab access) | [`:1805-1812`](../extension/src/popup/dashboard.js#L1805) | ⚠️ intentional |
+| Edit in place | [`:98-104`](../webapp/app/dashboard/queue/RemindersContent.tsx#L98) | [`:1949-1971`](../extension/src/popup/dashboard.js#L1949) | ✅ both delete-then-recreate |
+| Mark done | [`:94-96`](../webapp/app/dashboard/queue/RemindersContent.tsx#L94), [`:249-258`](../webapp/app/dashboard/queue/RemindersContent.tsx#L249) | [`markDone:1894-1906`](../extension/src/popup/dashboard.js#L1894) | ✅ |
+| Delete | [`:267-274`](../webapp/app/dashboard/queue/RemindersContent.tsx#L267) | [`:1972-1984`](../extension/src/popup/dashboard.js#L1972) | ✅ |
+| "Revisit ↗" straight to the video on a due card | — | [`:1941`](../extension/src/popup/dashboard.js#L1941) | ❌ the whole point of a due reminder is one click to the video |
+| Thumbnail on the reminder card | — | [`:1925-1927`](../extension/src/popup/dashboard.js#L1925) | ❌ minor |
+| Pro gating | Server-side: [`queue/data.ts:38`](../webapp/app/dashboard/queue/data.ts#L38) → redirect `/upgrade` before any row is read | None in the UI; the form renders for free users and `/api/reminders` 403s on submit ([`api/reminders/route.ts:47`](../webapp/app/api/reminders/route.ts#L47)) | ⚠️ **web leads** — same entitlement, better UX |
+| **Create form renders at all** | ✅ | ❌ **broken** — [`dashboard.js:1657`](../extension/src/popup/dashboard.js#L1657) reads the bare global `TITLE_TRUNCATE_LENGTH`, which is only ever assigned by [`constants.js:134`](../extension/src/constants.js#L134), a script the manifest injects **only into youtube.com** ([`manifest.json` `content_scripts`](../extension/manifest.json)). The dashboard page loads `dashboard.entry.js` → `constants.module.js`, which doesn't export it, and `vite.config.mjs` has no `define`. Any user with ≥1 titled bookmark hits a `ReferenceError` inside `buildCreateForm()`, so the Reminders view stops after its header. | ❌ see §13 |
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
-Not visually verified in a browser (same auth-gating caveat).
+## 7. Groups
 
-### Iteration 5 — add Extended Notes (Pro)
-The extension's per-bookmark Extended Notes (`.vc-notes-btn`/`.vc-notes-panel`
-in `dashboard.js`) had no web equivalent at all. No schema change was
-needed — bookmarks are stored as JSONB, so `notes` is just a new optional
-key.
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| Create a named group | [`GroupsContent.tsx:48-53`](../webapp/app/dashboard/groups/GroupsContent.tsx#L48), [`:86-129`](../webapp/app/dashboard/groups/GroupsContent.tsx#L86) | [`:1284-1289`](../extension/src/popup/dashboard.js#L1284) | ✅ |
+| Rename | [`:63-67`](../webapp/app/dashboard/groups/GroupsContent.tsx#L63) (`prompt`) | [`:1347-1367`](../extension/src/popup/dashboard.js#L1347) (inline `contentEditable`) | ✅ |
+| Delete | [`:55-58`](../webapp/app/dashboard/groups/GroupsContent.tsx#L55) | [`:1370-1374`](../extension/src/popup/dashboard.js#L1370) | ✅ |
+| Reorder up / down, persisted | [`:69-71`](../webapp/app/dashboard/groups/GroupsContent.tsx#L69) → `reorderGroup`, needs `groups.position` | [`:1377-1392`](../extension/src/popup/dashboard.js#L1377) (array swap in `chrome.storage.sync`) | ⚠️ web depends on [`migrations/015_groups_position.sql`](../webapp/migrations/015_groups_position.sql); until it's applied, [`groups/page.tsx:45-52`](../webapp/app/dashboard/groups/page.tsx#L45) falls back to `created_at` order and reorder silently no-ops |
+| Add a video to a group | [`:202-228`](../webapp/app/dashboard/groups/GroupsContent.tsx#L202) + [`GroupPickerModal`](../webapp/app/dashboard/_components/GroupPickerModal.tsx) | [`:1217-1221`](../extension/src/popup/dashboard.js#L1217) | ✅ |
+| Remove a video from a group | [`:180-187`](../webapp/app/dashboard/groups/GroupsContent.tsx#L180) (custom groups only) | [`:1395-1400`](../extension/src/popup/dashboard.js#L1395), plus un-checking in the picker | ✅ |
+| Inline "new group" inside the picker | [`GroupPickerModal.tsx:37-51`](../webapp/app/dashboard/_components/GroupPickerModal.tsx#L37) | [`:1223-1233`](../extension/src/popup/dashboard.js#L1223) | ✅ |
+| Picker shows **which groups this video is already in**, toggleable | ❌ single-select "add to one group" ([`GroupPickerModal.tsx:88-107`](../webapp/app/dashboard/_components/GroupPickerModal.tsx#L88)) | ✅ checkboxes pre-checked from `videoIds` ([`:1200-1204`](../extension/src/popup/dashboard.js#L1200)) | ❌ web can't see or revoke membership from the card |
+| Auto / tag-derived groups, read-only | "All Tags" incl. `Untagged` ([`page.tsx:73-87`](../webapp/app/dashboard/groups/page.tsx#L73)) | "Auto Groups" incl. `untagged` ([`:1405-1459`](../extension/src/popup/dashboard.js#L1405)) | ✅ |
+| Persisted "Smart (Tag Based)" group type | [`GroupsContent.tsx:88-103`](../webapp/app/dashboard/groups/GroupsContent.tsx#L88), [`page.tsx:59-63`](../webapp/app/dashboard/groups/page.tsx#L59) | — | ⚠️ web-only; shares the `groups` table and existing user rows, kept deliberately (see PR #76) |
+| Group video card click target | `/dashboard?v=…` ([`:188`](../webapp/app/dashboard/groups/GroupsContent.tsx#L188)) — param is never read | YouTube ([`:1322-1326`](../extension/src/popup/dashboard.js#L1322)) | ❌ dead link, see §5 |
+| "No groups yet" empty state | — (only a "no bookmarks yet" state) | [`:1295-1304`](../extension/src/popup/dashboard.js#L1295) | ❌ minor |
 
-- Added `notes?: string` to the `Bookmark` interface in `lib/supabase.ts`.
-- Added `updateBookmarkNotes(videoId, bookmarkId, notes)` to
-  `dashboard/actions.ts`. The extension only gates notes client-side
-  (chrome.storage.sync has no server round-trip to enforce against); since
-  the webapp's version does go through a server action, it also re-checks
-  `profiles.is_pro` server-side — consistent with how this codebase already
-  treats other server-callable Pro features (e.g.
-  `queue/data.ts::loadRemindersQueue`), so a free user can't bypass the
-  UI gate by calling the action directly.
-- New `_components/BookmarkNotes.tsx`: a small client component (button +
-  collapsible textarea, 800ms debounced autosave, save-on-blur/Ctrl+Enter,
-  Esc to close) reused across all three bookmark-row render sites in
-  `DashboardContent.tsx` (library view's visible + collapsed/overflow
-  rows, and the timeline view's clip rows) instead of tripling the logic.
-  New `.notesBtn`/`.notesPanel`/`.notesTextarea`/`.notesHint` classes added
-  to `toolbar.module.css`.
-- Free users get the same upgrade-toast pattern already used for the
-  Anki-cap and new Pro exports ("Extended Notes is available on Pro.")
-  instead of the panel opening.
-- Closed the gap flagged in Iteration 4: `exportCSV`, `exportMarkdown`,
-  `exportObsidian`, `exportNotionCSV`, and `exportReadingList` now all
-  include the notes text/column, matching the extension's exporters
-  exactly (`b.notes` was previously only ever an empty placeholder in the
-  three new Pro exporters, and entirely absent from CSV/Markdown).
+## 8. Active Recall entry points
 
-**Found in passing, not fixed here (flagged as a separate background
-task)**: `DashboardContent.tsx` references several `toolbarStyles.*` classes
-(`actionBtn`, `actionBtnDanger`, `bookmarkActions`, `threadItemHover`,
-`checkbox`, `bulkBar`, `copyToast`, etc.) that don't exist anywhere in
-`toolbar.module.css` or any other stylesheet — confirmed via
-`grep -rn "\.actionBtn\b" webapp/app/dashboard`, zero matches. CSS modules
-silently resolve unknown keys to `undefined`, so these buttons/rows/toasts
-render with no class at all in production today. This predates this sync
-effort and is a styling bug, not a feature-parity gap, so it's out of scope
-here — spawned as its own background task rather than folded into this PR.
-The new `BookmarkNotes` component intentionally uses its own, properly
-defined classes rather than the broken ones.
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| Due-for-recall strip (count + per-video chips) | [`:717-764`](../webapp/app/dashboard/_components/DashboardContent.tsx#L717), fed by [`summariseRecallDue`](../webapp/app/dashboard/_utils/recall.ts) | [`renderRecallDueStrip:1512-1550`](../extension/src/popup/dashboard.js#L1512) | ✅ |
+| Due-check logic | [`_utils/recall.ts:29`](../webapp/app/dashboard/_utils/recall.ts#L29) | `recall.module.js` | ✅ twin-tested (`recall-parity.test.ts`) |
+| Start recall for a *due* video | [`:736`](../webapp/app/dashboard/_components/DashboardContent.tsx#L736) → [`startRecallInExtension`](../webapp/app/dashboard/_utils/extension.ts) → `START_RECALL` bridge; falls back to opening the video | [`startRecallForVideo:1491-1510`](../extension/src/popup/dashboard.js#L1491) | ✅ capability |
+| — **Pro check on that path** | ❌ **none anywhere**: the chip handler has no gate, and [`background.js:430-464`](../extension/src/background/background.js#L430) `startRecallFromWebapp` doesn't check `isPro` either | ✅ `checkPro()` at [`:1492`](../extension/src/popup/dashboard.js#L1492) | ❌ **free users can start Active Recall from the web dashboard** |
+| — Free monthly review cap | ❌ not checked, not incremented | ✅ `isMonthlyReviewCapReached` at [`:1494-1501`](../extension/src/popup/dashboard.js#L1494) | ❌ |
+| Start recall for *any* video, from the card | [`:864-875`](../webapp/app/dashboard/_components/DashboardContent.tsx#L864), `isPro` gate, no cap | [`:785-803`](../extension/src/popup/dashboard.js#L785), `checkPro()`, no cap | ✅ symmetric (neither caps this path) |
+| Grading / quiz UI | — | content script, needs the player | ⚠️ intentional |
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
-Not visually verified in a browser (same auth-gating caveat).
+## 9. Analytics
 
-### Iteration 6 — add Saved Searches / filters (Pro)
-Ported the extension's Saved Searches (`dashboard.js`'s
-`getSavedSearches`/`saveSavedSearch`/`deleteSavedSearch`/
-`renderSavedFilterPills`, backed by `chrome.storage.sync`) to the web
-dashboard. The webapp has no per-user `chrome.storage.sync` equivalent for
-this kind of lightweight, device-local UI preference, so it uses
-`localStorage` — the same trade-off already made for `dash_cardSize` in
-`DashboardContent.tsx` and for the Anki export usage cap in `_utils/
-usage-caps.ts`.
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| Pro gate with upgrade CTA | [`analytics/page.tsx:24-49`](../webapp/app/dashboard/analytics/page.tsx#L24) (server-side) | [`renderAnalyticsView:602-613`](../extension/src/popup/dashboard.js#L602) (client-side) | ✅ |
+| 14-day activity heatmap | [`:78-91`](../webapp/app/dashboard/analytics/page.tsx#L78) | [`:629-649`](../extension/src/popup/dashboard.js#L629) | ✅ |
+| Tag breakdown: count + bar + per-tag video count | [`:93-108`](../webapp/app/dashboard/analytics/page.tsx#L93) | [`:617-627`](../extension/src/popup/dashboard.js#L617), [`:662-675`](../extension/src/popup/dashboard.js#L662) | ✅ |
+| Number of tags shown | top 20 (`.slice(0, 20)`, [`:108`](../webapp/app/dashboard/analytics/page.tsx#L108)) | all | ⚠️ minor |
+| Empty state | whole-page "No data yet" ([`:62-76`](../webapp/app/dashboard/analytics/page.tsx#L62)) | tag-section-only note ([`:660`](../extension/src/popup/dashboard.js#L660)) | ✅ |
 
-- New `_utils/savedSearches.ts`: `getSavedSearches`/`saveSavedSearch`/
-  `deleteSavedSearch`, `localStorage`-backed, same shape as the extension's
-  (`{ id, name, query, sort }`).
-- `DashboardContent.tsx`: a "⊕ Save" button appears next to the search box
-  whenever there's a query (matching the extension's
-  `updateSaveFilterBtn`), Pro-gated via the same upgrade-toast pattern used
-  for Extended Notes. Saved filters render as removable pills below the
-  toolbar; clicking a pill restores its query + sort order, matching the
-  extension's `renderSavedFilterPills` click handler exactly.
-- Refactored the ad hoc "Extended Notes is available on Pro" toast from
-  Iteration 5 into a small shared `showProToast(message)` helper, reused by
-  both Extended Notes and Saved Searches instead of duplicating the
-  set-then-timeout pattern a second time.
-- New `.savedFiltersRow`/`.savedFilterPill`/`.savedFilterPillName`/
-  `.savedFilterPillDel` classes in `toolbar.module.css`.
+## 10. Exports & import
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96 passing.
-Not visually verified in a browser (same auth-gating caveat).
+| Format | Web | Extension | Status |
+|---|---|---|---|
+| JSON (free) | [`:113-120`](../webapp/app/dashboard/_components/DashboardContent.tsx#L113) | [`:978-980`](../extension/src/popup/dashboard.js#L978) | ✅ |
+| CSV (free) | [`:122-139`](../webapp/app/dashboard/_components/DashboardContent.tsx#L122) | [`:982-993`](../extension/src/popup/dashboard.js#L982) | ✅ same columns incl. Notes |
+| Markdown (free) | [`:141-155`](../webapp/app/dashboard/_components/DashboardContent.tsx#L141) | [`:995-1015`](../extension/src/popup/dashboard.js#L995) | ✅ |
+| Anki TSV, 1 free/month then Pro | [`:564-579`](../webapp/app/dashboard/_components/DashboardContent.tsx#L564) + [`_utils/usage-caps.ts`](../webapp/app/dashboard/_utils/usage-caps.ts) | [`exportAnki:1060-1082`](../extension/src/popup/dashboard.js#L1060) + `usage-caps.module.js` | ✅ twin-tested |
+| Obsidian (Pro) | [`:164-178`](../webapp/app/dashboard/_components/DashboardContent.tsx#L164) | [`:1017-1038`](../extension/src/popup/dashboard.js#L1017) | ✅ |
+| Notion CSV (Pro) | [`:181-197`](../webapp/app/dashboard/_components/DashboardContent.tsx#L181) | [`:1040-1058`](../extension/src/popup/dashboard.js#L1040) | ✅ |
+| Reading List (Pro) | [`:200-212`](../webapp/app/dashboard/_components/DashboardContent.tsx#L200) | [`:1084-1102`](../extension/src/popup/dashboard.js#L1084) | ✅ |
+| Extended Notes included in exports | ✅ | ✅ | ✅ |
+| Pro-refusal UX | inline toast ([`:588-591`](../webapp/app/dashboard/_components/DashboardContent.tsx#L588)) | `showUpgradeModal` ([`:1019`](../extension/src/popup/dashboard.js#L1019)) | ⚠️ cosmetic |
+| Import JSON | expects `[{ videoId, bookmarks: [...] }]` ([`:428-447`](../webapp/app/dashboard/_components/DashboardContent.tsx#L428)) | expects a **flat** `[bookmark, …]` array ([`importBookmarks:1105-1143`](../extension/src/popup/dashboard.js#L1105)) | ❌ **the two export formats aren't cross-importable** — each side round-trips itself, but an extension export dropped into the web importer yields "No valid bookmarks found", and a web export dropped into the extension is filtered out by its `b.timestamp != null` check and reports "No new bookmarks to import" |
 
-### Iteration 7 — persistent per-card Recall button + fix the dead header search
-Two independent fixes this round:
+## 11. Shared collections & Videos view
 
-**Persistent "Recall" button.** The extension's video card always shows a
-"Recall" button (Pro-gated, starts Active Recall over every bookmark on that
-video, any time) — the web dashboard only ever surfaced recall for videos
-already *due*, via the due-strip banner. Added a third button to each video
-card's action row (alongside the existing Watch/Group buttons) that reuses
-the existing `handleStartRecall`/`_utils/extension.ts` bridge plumbing the
-due-strip already had, passing every bookmark id for that video (sorted by
-timestamp) instead of just the due ones — matching
-`dashboard.js`'s `.vc-revisit-btn` handler exactly. Free users get the same
-upgrade-toast pattern as Extended Notes/Saved Searches.
-**Deliberately not added**: a client-side free-tier review-count cap. The
-extension's own cap only works because the review session *and* the
-counter live in the same place (the extension); a web-side counter would
-gate the button click but not the session itself, since the extension-side
-entry point a web-triggered session goes through (frozen for this effort)
-doesn't check any cap — already documented in §3 as an out-of-scope
-asymmetry and filed as a follow-up issue. Adding a cosmetic-only counter
-that doesn't actually limit anything seemed worse than the status quo, so
-it was left out; noted here for visibility rather than silently skipped.
+| Capability | Web | Extension | Status |
+|---|---|---|---|
+| List shared collections (title, views, bookmark count) | [`shared/page.tsx:48-86`](../webapp/app/dashboard/shared/page.tsx#L48) | [`renderSharedView:2084-2170`](../extension/src/popup/dashboard.js#L2084) | ✅ |
+| Copy share link / open | [`:73-80`](../webapp/app/dashboard/shared/page.tsx#L73) | [`:2153-2154`](../extension/src/popup/dashboard.js#L2153) | ✅ |
+| "Private Collections" (not yet shared) section | [`:88-124`](../webapp/app/dashboard/shared/page.tsx#L88) | — | ⚠️ web extra over the same data |
+| Create a share from the dashboard | [`ShareCollectionButton`](../webapp/app/dashboard/videos/ShareCollectionButton.tsx) on `/dashboard/videos` | — (sharing starts from the on-page popup) | ⚠️ web extra |
+| Videos grid: thumbnail, count, tags, relative time | [`VideosClient.tsx:61-116`](../webapp/app/dashboard/videos/VideosClient.tsx#L61) | [`:2043-2078`](../extension/src/popup/dashboard.js#L2043) | ✅ |
+| Card click behaviour | opens YouTube ([`:64-69`](../webapp/app/dashboard/videos/VideosClient.tsx#L64)) | filters the library to that video ([`:2068-2075`](../extension/src/popup/dashboard.js#L2068)) | ⚠️ different model (and see §5 — web has no filtered view to go to) |
+| Tag filter bar | [`:35-53`](../webapp/app/dashboard/videos/VideosClient.tsx#L35) | — | ⚠️ web extra |
+| Sort select | [`VideosSortSelect`](../webapp/app/dashboard/videos/VideosSortSelect.tsx) | — | ⚠️ web extra |
+| Per-card share / copy link / add-to-group | [`:101-111`](../webapp/app/dashboard/videos/VideosClient.tsx#L101) | — | ⚠️ web extra |
+| Clip time-range on the card | [`page.tsx:65-67`](../webapp/app/dashboard/videos/page.tsx#L65) | — | ⚠️ web extra |
 
-**Header search.** `DashboardChrome`'s header search box rendered a bare
-`<input>` with no `value`/`onChange` — inert, confirmed in Iteration 0.
-True live sync with the toolbar search (like the extension's two synced
-inputs) isn't feasible without either lifting `query` into the URL (which
-would trigger a full server refetch of `collections` from Supabase on every
-keystroke — the toolbar search is deliberately local React state to avoid
-exactly that) or introducing a cross-tree client store, which would be an
-unrelated architecture change. Instead: the header search is now a
-real, working "jump to All Bookmarks filtered by this query" affordance —
-controlled input, submits on Enter (`router.push('/dashboard?q=...')`),
-picked up by `DashboardContent` as its initial query via a new
-`initialQuery` prop threaded through `dashboard/page.tsx`'s `searchParams`.
-No per-keystroke navigation, so no server round-trip cost.
+## 12. Styling defect on the web side
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
-passing, and a full `cd webapp && npx next build` (with placeholder env
-vars matching `tests/unit/fixtures/env-setup.mjs`, gitignored `.env.local`,
-not committed) completed successfully end to end — confirms `/dashboard`,
-`/dashboard/queue`, `/dashboard/groups`, `/dashboard/analytics`,
-`/dashboard/videos`, `/dashboard/shared` all still build, and
-`/dashboard/referral`/`/dashboard/affiliate` are correctly gone from the
-route list. Still not visually verified in a running browser session
-(would need a seeded local Supabase project for real auth).
+`DashboardContent.tsx` references fourteen `toolbarStyles.*` keys that are not
+defined in [`toolbar.module.css`](../webapp/app/dashboard/_components/toolbar.module.css)
+or anywhere else under `webapp/app`:
 
-### Iteration 8 — Groups: rename, reorder, and inline group creation
-Three Groups gaps closed, one genuine schema change required (written, not
-applied — see below):
+```
+actionBtn  actionBtnDanger  bookmarkActions  threadItemHover  threadItemSelected
+checkbox   bulkBar  bulkCount  bulkDeleteBtn  bulkCancelBtn
+copyToast  pendingBar  entryCardHover  entrySelected
+```
 
-- **New migration** `webapp/migrations/015_groups_position.sql`: adds
-  `groups.position INTEGER NOT NULL DEFAULT 0` (idempotent
-  `ADD COLUMN IF NOT EXISTS`), backfills existing rows into a stable order
-  matching what the UI already showed (newest-first by `created_at`), and
-  adds a supporting index. The extension's Groups view persists a
-  reorderable array (`vgroups` in `chrome.storage.sync`); the web `groups`
-  table had no equivalent column, only implicit `created_at` ordering — so
-  reordering wasn't just a missing button, it needed a place to store the
-  order. **Not applied to any database** — written per the constraint
-  against touching prod or any DB but a local one; the owner applies it via
-  `make db-migrate` after review.
-- `groups/actions.ts`: added `renameGroup` (prompt-based, mirroring the
-  extension's inline contentEditable rename with a simpler but equally
-  capable UI — same pattern already accepted for target-type tabs vs
-  select in Reminders) and `reorderGroup(groupId, 'up'|'down')` (swaps
-  `position` with the adjacent group, mirroring the extension's array-swap
-  move-up/move-down). `createGroup` now assigns new groups the next
-  position (end of the list, matching the extension's array-push
-  behavior) and returns the new row's `id`.
-- `groups/GroupsContent.tsx`: added move-up/move-down/rename buttons per
-  group row (disabled at list boundaries), wired to the new actions.
-- `groups/page.tsx`: orders by `position` then `created_at` instead of
-  `created_at` alone.
-- `_components/GroupPickerModal.tsx`: added an inline "New group…" input +
-  create button, mirroring the extension's floating group picker
-  (`dashboard.js`'s `showGroupPicker`), which lets you create a group and
-  immediately add the current video to it without leaving to
-  `/dashboard/groups` first. `createGroup` now also revalidates
-  `/dashboard` (previously only `/dashboard/groups`) so this shows up
-  without a hard reload.
-- **Still not done** (lower priority, deferred): the extension's picker
-  also shows checkboxes indicating which groups a video is *already* in
-  and lets you toggle membership (add/remove) for several groups in one
-  sitting. The web picker only ever adds to one group per open (removal
-  already exists, just on the `/dashboard/groups` page instead) — the
-  picker would need the parent page to compute per-video group membership
-  and pass it down, which touches `dashboard/page.tsx`'s data-fetching;
-  left as a known remaining gap rather than expanding this iteration's
-  diff further.
+CSS Modules resolve unknown keys to `undefined`, so in production the
+per-bookmark action row, the selection checkboxes, the bulk-delete bar, the
+copy/upgrade toast and the pending indicator all render with **no class at
+all**. This was first noted during PR #76 (Iteration 5) as out of scope and
+survived the #93 restyle; it is the reason several rows in §2 read "❌" even
+though the underlying behaviour is present. Counted once, here, rather than
+per affected row. ❌
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
-passing, `npx next build` (placeholder env) succeeds. The migration's DDL
-and backfill were also smoke-tested against a real, disposable Postgres
-container (a minimal stand-in for `public.groups`, seeded with 4 rows at
-different `created_at` values) — confirmed the `ADD COLUMN`/backfill/index
-run cleanly, the backfill orders newest-first as intended, and re-running
-the whole migration a second time is a true no-op (same resulting
-positions, per the repo's idempotency convention). That test database was
-never anything but a scratch container — the migration was **not** applied
-to any project's real Supabase instance, local or otherwise, per the task's
-constraints; the owner should run `make db-migrate` against their own local
-DB first, per the repo's own migration policy, before this ships.
+## 13. Biggest real gaps, ranked
 
-### Iteration 9 — featured-card highlight + full matrix re-audit
-Small cosmetic fix plus an honesty pass over the whole matrix before
-wrapping up:
+1. **Extension Reminders create form throws before rendering.**
+   [`dashboard.js:1657`](../extension/src/popup/dashboard.js#L1657) uses the
+   bare global `TITLE_TRUNCATE_LENGTH`; it is only assigned by
+   [`constants.js:134`](../extension/src/constants.js#L134), which the manifest
+   injects solely as a youtube.com content script. The dashboard page's ESM
+   graph (`dashboard.entry.js` → `dashboard.js` → `constants.module.js`) never
+   defines it and `vite.config.mjs` has no `define` shim. The `.map()` callback
+   only runs when the user has at least one bookmark carrying a `videoTitle`,
+   i.e. effectively every real user. This is the same class of bug the
+   twin-file convention in `CLAUDE.md` exists to prevent, and the guard in
+   `extension/scripts/content-globals-guard.mjs` doesn't cover page scripts.
+   *Reasoned from source; not reproduced against a packaged build here.*
+   **Extension needs to catch up** (import the constant, or inline the 60).
+2. **Active Recall started from the web has no entitlement check.** Neither the
+   due-strip chip ([`DashboardContent.tsx:736`](../webapp/app/dashboard/_components/DashboardContent.tsx#L736))
+   nor the bridge handler ([`background.js:430`](../extension/src/background/background.js#L430))
+   checks `is_pro` or touches the free monthly review counter, while the
+   extension's own equivalent does both ([`dashboard.js:1491-1510`](../extension/src/popup/dashboard.js#L1491)).
+   A free user with the extension installed gets unlimited Active Recall by
+   starting it from the website. The old doc framed this as a "cap asymmetry";
+   it's broader than that — there's no Pro gate at all on that path.
+   **Both surfaces need work**; the durable fix belongs in the bridge handler,
+   which is the single choke point.
+3. **A–B loop ranges only render in one of five web render sites** (§4). Loops
+   are the newest headline feature; on the web they're mostly indistinguishable
+   from ordinary bookmarks. The helper already exists and is twin-tested — this
+   is four one-line changes. **Web needs to catch up.**
+4. **The web scrubber is decorative.** Markers are spaced by array index
+   ([`:833`](../webapp/app/dashboard/_components/DashboardContent.tsx#L833)),
+   not by position in the video, so it silently misrepresents where clips sit.
+   The extension positions by `timestamp / duration` and labels both ends.
+   The web has no `videoDurations` equivalent, so closing this properly means
+   persisting duration alongside bookmarks. **Web needs to catch up.**
+5. **Fourteen undefined CSS-module classes on the web** (§12) leave the bulk
+   bar, toasts and every per-bookmark action button unstyled in production.
+   **Web needs to catch up.**
+6. **Exports aren't cross-importable** (§10). Two different JSON shapes for the
+   same "export/import your bookmarks" feature; a user moving between surfaces
+   gets a confusing "no valid bookmarks" either way. **Either surface can
+   lead** — the smaller change is teaching each importer to accept both shapes.
+7. **Group membership is invisible from a web bookmark card** (§7). The
+   extension's picker shows and toggles every group a video belongs to; the web
+   modal only ever adds to one, and removal is only possible on
+   `/dashboard/groups`. **Web needs to catch up.**
+8. **`/dashboard?v=…` is a dead parameter** (§5, §7). The Groups page links
+   every video thumbnail to it and nothing reads it, so the click lands on an
+   unfiltered dashboard. Either implement the drilldown (restoring the
+   extension's Videos-card behaviour) or point the links at YouTube.
+   **Web needs to catch up.**
+9. **No "Revisit ↗" on a due reminder card on the web** (§6) — the extension
+   gives a due reminder a one-click path to the video; the web makes you find
+   it. **Web needs to catch up.**
 
-- Added the featured-card highlight (the video with the most bookmarks
-  gets a highlighted border, only when there's more than one video) —
-  mirrors the extension's `.vc-card--featured`. New `.videoCardFeatured`
-  class in `page.module.css`, computed the same way as `dashboard.js`'s
-  `featuredKey`.
-- **Re-read every row of the matrix against the current code** rather than
-  trusting earlier per-iteration notes, and found several rows were stale
-  — they still said ❌/gap for things Iterations 2 and 8 had already
-  fixed (Reminders' frequency/date/label/edit/mark-done fields all said
-  ❌ even though Iteration 2 added them; the Groups "Group" button row and
-  the top-level §1 summary rows for Reminders/Groups hadn't been updated
-  after Iterations 2 and 8 either). Corrected all of them. This is
-  exactly the kind of drift the task warned about ("don't paper over a
-  gap by narrowing the matrix's definition") — in this case the error ran
-  the other way, under-crediting fixes already made, but the same
-  discipline applies: the matrix has to reflect the code, not a
-  once-true snapshot.
+## 14. Deliberate divergences worth keeping (summary)
 
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
-passing, `npx next build` (placeholder env) succeeds. Not visually
-verified in a browser (same auth-gating caveat as every prior iteration).
+- **Auth model** — Supabase session vs. OAuth-handoff token in
+  `chrome.storage.sync`; the extension additionally needs a manual cloud-sync
+  button and a throttled `/api/me` entitlement refresh.
+- **Header search** — web navigates on submit rather than live-syncing, to
+  avoid a Supabase refetch per keystroke.
+- **Saved searches storage** — `chrome.storage.sync` (cross-device) vs.
+  `localStorage` (per-browser).
+- **Player-bound features** — loop creation/playback and Active Recall grading
+  live only in the content script; the web reports state and hands off.
+- **Reminders Pro gating** — web blocks the page server-side, the extension
+  lets the form render and fails at the API. Web's behaviour is better; this is
+  a divergence, not a gap.
+- **Referral / affiliate dashboard pages** — parked on
+  `feature/dashboard-extras-hold`, absent from both surfaces. The public
+  marketing page `webapp/app/(marketing)/affiliate/` still exists.
+- **Web-only conveniences** — Videos-view tag filter and sort, per-card
+  share/copy/add-to-group, share creation, the "Private Collections" section,
+  the persisted "Smart (Tag Based)" group type, timeline bulk-select and
+  timeline Extended Notes.
 
-### Post-PR follow-ups (requested during review of #76)
+---
 
-Two fixes requested after the PR was opened, landed as separate commits on
-this same branch:
-
-1. **Dead affiliate link.** `webapp/app/(marketing)/affiliate/page.tsx`'s
-   two "Join Program" CTAs pointed at `/dashboard/affiliate`, which 404s on
-   this branch (moved to `feature/dashboard-extras-hold`). Repointed both
-   to `mailto:affiliates@clipmark.mithahara.com` (an entry point that page
-   already used elsewhere), relabeled "Apply via Email", and fixed the
-   "Apply in your dashboard" workflow step's copy to match. Verified by
-   grepping the compiled `next build` output for the marketing page: zero
-   remaining `dashboard/affiliate` references, one `Apply via Email`.
-
-2. **De-risked migration 015 + added a pre-migration fallback.** Re-verified
-   `migrations/015_groups_position.sql` against a fresh scratch Postgres
-   container (not any project database): confirmed it's idempotent
-   (identical positions after running it twice, no row duplication) and
-   non-destructive (all pre-existing columns/rows untouched, only `position`
-   added and backfilled). Also empirically confirmed, against that same
-   scratch container, *why* a pre-migration environment needed a code
-   fallback: `SELECT ... ORDER BY position` and `INSERT ... position` both
-   fail outright with `column "position" does not exist` when the column
-   isn't there yet. supabase-js/PostgREST doesn't throw on this — it
-   returns `{ data: null, error }` — so none of `groups/actions.ts` or
-   `groups/page.tsx` would literally crash, but two of the three call sites
-   were silently swallowing that error in a *worse* way than a crash:
-   - `groups/page.tsx`'s "My Groups" query ordered by `position` first;
-     with no `position` column the whole query fails and `groupsData`
-     becomes `null` → the page would render **zero** user-created groups,
-     even though the underlying rows are untouched. Added a fallback: on
-     error, re-query ordered by `created_at` only (the pre-Iteration-8
-     behavior), so groups still show up, just unordered by any custom
-     position, until the migration runs.
-   - `createGroup`'s insert included `position`; pre-migration that insert
-     fails entirely (no row created at all), but the action didn't check
-     for the error, so callers (`GroupsContent`, `GroupPickerModal`) would
-     think the group was created when nothing happened. Added a fallback:
-     on insert error, retry without `position`, and only throw if that
-     retry also fails.
-   - `reorderGroup` already effectively no-op'd on this error via an
-     existing `if (!groups) return` guard — left that behavior as the
-     intentional fallback (reorder is unavailable pre-migration, not
-     broken) and added an explicit error check + warning log for clarity/
-     consistency with the other two fixes.
-
-   The migration itself was **not applied to any database** — the
-   verification container was scratch/disposable only, discarded
-   immediately after (`docker rm -f`), and no `make db-migrate` was run
-   against any local or hosted Supabase project.
-
-Verified: `npx tsc --noEmit` clean, `npm run test:unit:webapp` 96/96
-passing, `npx next build` succeeds.
+*Method: every row was read off the code on `b4fb4db` — the full 2 639 lines of
+`extension/src/popup/dashboard.js` and `dashboard.html`, and every file under
+`webapp/app/dashboard/`. No row was carried over from the PR #76 version
+without re-checking; several ("content preview panel missing", "recall cap
+asymmetry") were wrong by the time this pass ran. Nothing was verified in a
+running browser — both dashboards are auth-gated and the extension one needs a
+packaged build — so the two runtime claims (§13 items 1 and 2) are derived from
+source and marked as such.*
