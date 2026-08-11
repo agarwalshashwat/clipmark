@@ -15,10 +15,20 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
   const handleCancel = () => {
     startTransition(async () => {
       try {
-        await cancelSubscription();
+        // Read the returned result rather than relying on a thrown message:
+        // Next redacts Server Action errors in production, so anything thrown
+        // reached this catch as a generic string with the real reason stripped.
+        const result = await cancelSubscription();
+        if (!result.ok) {
+          setError(result.message);
+          setConfirming(false);
+          return;
+        }
         router.refresh();
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      } catch {
+        // Genuinely unexpected (network drop, redacted crash) — the action
+        // returns its known failures instead of throwing them.
+        setError('Something went wrong. Please try again.');
         setConfirming(false);
       }
     });

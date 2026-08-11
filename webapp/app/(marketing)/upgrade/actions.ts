@@ -63,10 +63,25 @@ export async function fetchProductPrices(): Promise<ProductPrices> {
   return getCachedProductPrices();
 }
 
-export async function cancelSubscription() {
+/**
+ * Result of a cancellation attempt.
+ *
+ * Returned rather than thrown because Next redacts Server Action errors in
+ * production: the client gets a generic message plus a digest, never the text
+ * we wrote. Every carefully-worded `throw new Error(...)` in here was therefore
+ * invisible to the person it was written for — they saw "an error occurred".
+ * A returned value crosses the boundary intact.
+ */
+export type CancelResult =
+  | { ok: true; refunded: boolean }
+  | { ok: false; message: string };
+
+export async function cancelSubscription(): Promise<CancelResult> {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  if (!user) {
+    return { ok: false, message: 'Your session has expired. Please sign in again and retry.' };
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -75,7 +90,10 @@ export async function cancelSubscription() {
     .single();
 
   if (!profile?.subscription_id) {
-    throw new Error('No active subscription found. Lifetime access cannot be cancelled here.');
+    return {
+      ok: false,
+      message: 'No active subscription found. Lifetime access cannot be cancelled here.',
+    };
   }
 
   const daysSinceStart = profile.subscription_started_at
@@ -97,19 +115,48 @@ export async function cancelSubscription() {
         level: 'error',
         tags: { checkout: 'dodo', dodo_action: 'refund_missing_payment_id' },
       });
-      throw new Error(
-        `We couldn't process your refund automatically. Please email ${SUPPORT_EMAIL} and we'll sort it out right away — your subscription has not been cancelled.`,
-      );
+      return {
+        ok: false,
+        message: `We couldn't process your refund automatically. Please email ${SUPPORT_EMAIL} and we'll sort it out right away — your subscription has not been cancelled.`,
+      };
     }
 
-    // Refund first, cancel second. If the refund throws, the user keeps both
+    // Refund first, cancel second. If the refund fails, the user keeps both
     // their money and their Pro access and can retry — whereas cancelling first
     // would strip access and leave a failed refund silent, which is exactly the
     // failure mode worth avoiding when real money is involved.
-    await dodoClient().refunds.create({
-      payment_id: profile.pro_payment_id,
-      reason: '7-day money-back guarantee',
-    });
+    try {
+      await dodoClient().refunds.create({
+        payment_id: profile.pro_payment_id,
+        reason: '7-day money-back guarantee',
+      });
+    } catch (err) {
+      // Dodo funds refunds from the merchant wallet, so this fails with 409
+      // INSUFFICIENT_WALLET_FUNDS whenever the balance has not yet settled —
+      // which for a young account is most of the time, and is not something the
+      // customer can see, fix, or wait out on their own. Left unhandled it
+      // surfaced as a bare 500, so the person trying to get their money back
+      // learned nothing and nobody was paged.
+      //
+      // The subscription is deliberately left alone: cancelling here would
+      // strip access while still owing them money, with no record anywhere that
+      // the debt exists. They keep what they paid for until a human closes it.
+      const dodoCode = (err as { error?: { code?: string } })?.error?.code;
+      console.error('[cancelSubscription] Dodo refund failed:', err);
+      Sentry.captureException(err, {
+        level: 'error',
+        tags: {
+          checkout: 'dodo',
+          dodo_action: 'refund_failed',
+          dodo_error_code: String(dodoCode ?? 'unknown'),
+          dodo_status: String((err as { status?: number }).status ?? 'unknown'),
+        },
+      });
+      return {
+        ok: false,
+        message: `We couldn't complete your refund automatically, so we've left your subscription active rather than cancel it while you're still owed money. Our team has been alerted — email ${SUPPORT_EMAIL} and we'll finish this by hand.`,
+      };
+    }
 
     try {
       await dodoClient().subscriptions.update(profile.subscription_id, { status: 'cancelled' });
@@ -122,17 +169,20 @@ export async function cancelSubscription() {
         level: 'error',
         tags: { checkout: 'dodo', dodo_action: 'cancel_after_refund_failed' },
       });
-      throw new Error(
-        `Your refund has been issued, but we hit a problem cancelling the subscription itself. Please email ${SUPPORT_EMAIL} so we can close it out — you will not be charged again.`,
-      );
+      return {
+        ok: false,
+        message: `Your refund has been issued, but we hit a problem cancelling the subscription itself. Please email ${SUPPORT_EMAIL} so we can close it out — you will not be charged again.`,
+      };
     }
     // Webhook will fire subscription.cancelled → is_pro = false automatically,
     // and refund.succeeded reverses any affiliate commission for the payment.
-  } else {
-    // After 7 days: cancel at next billing date — user keeps Pro until period end
-    await dodoClient().subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
-    await supabase.from('profiles').update({ cancel_at_period_end: true }).eq('id', user.id);
+    return { ok: true, refunded: true };
   }
+
+  // After 7 days: cancel at next billing date — user keeps Pro until period end
+  await dodoClient().subscriptions.update(profile.subscription_id, { cancel_at_next_billing_date: true });
+  await supabase.from('profiles').update({ cancel_at_period_end: true }).eq('id', user.id);
+  return { ok: true, refunded: false };
 }
 
 export async function createCheckoutSession(formData: FormData) {
