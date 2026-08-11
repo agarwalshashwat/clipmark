@@ -265,26 +265,34 @@ Move beyond local-only storage to enable cross-device sync, video insights, and 
 | **Server (Sync Engine)** | Persistence, backup, cross-device | Supabase PostgreSQL |
 | **Analytics Engine** | Insights, heatmaps, engagement data | PostgreSQL aggregations + Redis cache |
 
-**Sync Strategy:**
+**Sync Strategy** (as shipped in Phase 10a — see `docs/SYNC-ENGINE.md` for the full design record):
 - Client writes locally first (instant feedback)
-- Background sync every 30s when online
-- Server timestamp wins conflicts
-- Offline queue syncs when connection restored
+- Event-driven push + pull-on-open + 5-min background pull (the 30s poll was
+  rejected against MV3's worker lifecycle — rationale in SYNC-ENGINE.md §6)
+- Per-bookmark last-write-wins with tombstoned deletions; whole-state races
+  arbitrated by a server-side revision compare-and-swap (409 → re-merge)
+- Durable offline queue in `chrome.storage.local`, drains with backoff
 
 ### 8.1 Checklist
-- [ ] Design & migrate database schema (bookmarks, video_analytics, user_video_sessions)
-- [ ] Build sync API endpoints (`/api/sync/bookmarks`, `/api/bookmarks/*`)
-- [ ] Implement conflict resolution logic (server timestamp wins)
-- [ ] Build SyncEngine class in background worker
-- [ ] Add offline queue for failed syncs
-- [ ] Migrate existing users (one-time: chrome.storage → server)
+**Phase 10a — sync (✅ shipped):**
+- [x] Sync data model: tombstones in the bookmarks JSONB + `revision` counter (migration 018)
+- [x] Sync API: `/api/bookmarks` GET/PUT with `baseRevision` CAS, `includeDeleted`, tombstone validation
+- [x] Conflict resolution (per-bookmark LWW + revision CAS; deletions propagate instead of resurrecting)
+- [x] SyncEngine in the background worker — sole owner of sync traffic; duplicated panel/dashboard copies deleted
+- [x] Durable offline queue with exponential backoff (survives MV3 worker eviction)
+- [x] Migrate existing users (one-time idempotent backfill: chrome.storage → server, per account)
+- [x] Sync status indicator in side panel (synced / pending / offline / error, engine-driven)
+- [x] Cross-device semantics tested at the deterministic layers (merge unit tests, CAS/RLS integration
+      tests, packaged-dist engine exercise); a live 2-profile E2E was evaluated and documented as
+      not-deterministic-enough to commit (SYNC-ENGINE.md §8)
+
+**Phase 10b — analytics (🔲 not started):**
+- [ ] `video_analytics` / `user_video_sessions` schema
 - [ ] Build insights dashboard UI (`/dashboard/insights`)
   - Global stats card (total bookmarks, videos, avg per video, most active day)
   - Tag frequency chart + tag co-occurrence
   - Watch pattern heatmap (day × hour)
   - Top videos by bookmark count
-- [ ] Add sync status indicator in side panel
-- [ ] Cross-device testing (2+ Chrome profiles)
 
 **Estimated Effort:** 3–4 weeks
 
