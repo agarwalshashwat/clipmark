@@ -63,7 +63,7 @@ export default function CancelSubscriptionButton({ isRefundEligible }: { isRefun
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
         <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0, textAlign: 'center' }}>
           {isRefundEligible
-            ? 'Are you sure? Your Pro access will be revoked immediately and a refund will be processed.'
+            ? "Are you sure? Your Pro access will be revoked immediately and we'll refund your payment — occasionally that has to be done by hand, so it may not be instant."
             : 'Are you sure? Your Pro access will continue until the billing period ends, after which AI features and shared collections will be deactivated.'}
         </p>
         <div style={{ display: 'flex', gap: 10 }}>

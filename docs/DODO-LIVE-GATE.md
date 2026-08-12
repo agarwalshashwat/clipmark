@@ -69,17 +69,29 @@ So refunding a subscription payment **does** revoke Pro: `refund.succeeded`
 matches the profile by `pro_payment_id`, sets `is_pro=false`, clears
 `pro_payment_id`, and reverses any affiliate commission and referral reward.
 
-### ⚠️ The real gap: a refund alone does not stop the billing
+### 🚨 THE RULE: refunding a Pro customer is always TWO actions
 
-`refund.succeeded` never touches `subscription_id` and never cancels anything at
-Dodo. Refunding **without** also cancelling leaves the subscription live, so the
-next `subscription.renewed` sets `is_pro=true` again — a refunded customer
-silently becomes a paying one.
+> **A refund does not cancel anything. Every hand-issued refund for a
+> subscriber must be paired with a cancellation, in the same sitting.**
+>
+> 1. **Refund** the payment in the Dodo dashboard (Live mode).
+> 2. **Cancel the subscription** in the Dodo dashboard — a separate action.
+>
+> Do step 2 even if step 1 appears to have "closed" the subscription in the UI.
+> If you only have time for one, do **step 2 first**: an uncancelled
+> subscription charges the customer again, whereas an unpaid refund is at least
+> recorded and recoverable (see the ledger below).
 
-**Always cancel the subscription as well as refunding it.** The in-app
-"Cancel & Request Refund" flow does this for you (it cancels first, precisely so
-this cannot happen). When issuing a refund by hand from the Dodo dashboard for
-any other reason, cancel the subscription in the same sitting.
+Why this is on you rather than on the code: `refund.succeeded` never touches
+`subscription_id` and never cancels anything at Dodo. Refunding **without** also
+cancelling leaves the subscription live, so the next `subscription.renewed` sets
+`is_pro=true` again — the customer you just refunded silently goes back to being
+a paying one, and nothing in the logs looks wrong.
+
+The in-app "Cancel & Request Refund" flow already does both for you, and cancels
+first precisely so this cannot happen. The rule above is for every refund issued
+by hand from the dashboard for any other reason — support requests, chargeback
+avoidance, goodwill, test purchases.
 
 ### Refunds need a funded wallet — expect to do them by hand at first
 
@@ -93,16 +105,42 @@ above a **$50** threshold, so an early refund request fails with:
 
 This is normal for a young account, not an incident. `cancelSubscription` treats
 it as recoverable: it **still cancels** the subscription (which needs no
-balance), tells the customer their refund is being processed by hand, and raises
-a Sentry issue tagged `dodo_action: refund_needs_manual_processing` carrying the
-`payment_id` in `extra`.
+balance), tells the customer their refund is being processed by hand, and records
+the obligation in **two** places:
 
-**Runbook when that alert fires:**
-1. Take the `payment_id` from the Sentry issue.
-2. Refund it from the Dodo dashboard (Live mode).
-3. No further action — the subscription is already cancelled, and
-   `refund.succeeded` clears `pro_payment_id` and reverses affiliate/referral
-   credit when it lands.
+- a Sentry issue tagged `dodo_action: refund_needs_manual_processing`, carrying
+  the `payment_id` in `extra` — the alert; and
+- a row in **`public.pending_refunds`** — the ledger, which is what you should
+  actually work from. Sentry issues get resolved, auto-archive after 30 days, or
+  are simply missed; a row with `resolved_at IS NULL` doesn't.
+
+**The standing query — run this periodically, not just when an alert fires.**
+In the Supabase SQL editor (the table is service-role only, so the dashboard or
+a service-role client is the only way in):
+
+```sql
+SELECT payment_id, user_id, amount_cents, reason, created_at
+FROM public.pending_refunds
+WHERE resolved_at IS NULL
+ORDER BY created_at;
+```
+
+**Runbook for each row (or when the Sentry alert fires):**
+1. Take the `payment_id`.
+2. Refund it from the Dodo dashboard (Live mode). The subscription was already
+   cancelled by the in-app flow, so **this is the one case where the two-action
+   rule above is already half-done** — but confirm the subscription really is
+   cancelled before you close it out.
+3. No further action. When `refund.succeeded` lands, the webhook clears
+   `pro_payment_id`, reverses affiliate/referral credit, **and stamps
+   `resolved_at` on the ledger row** — so the row falls out of the query above
+   on its own. If it doesn't, the refund never actually landed.
+
+> **`pending_refunds` requires migration `018_pending_refunds.sql`**, which is
+> authored but **not yet applied to production**. Until it's applied the code
+> fails soft: the insert is skipped with a `[pending-refunds] table missing`
+> warning in the Vercel logs and the Sentry alert is the only record, exactly as
+> before. Apply it with `make db-migrate` (see `migrations/README.md`).
 
 ---
 
@@ -213,11 +251,14 @@ troubleshooting further — don't leave a live charge open while debugging.
 
 4. In the Dodo dashboard (Live mode), find the subscription/payment from C1
    and issue a **refund**.
-5. Also consider whether Dodo's refund flow additionally requires you to
-   **cancel the subscription** as a separate action — Dodo's UI may or may
-   not do this automatically as part of "refund". If there's a separate
-   cancel action, do it too, since that's the mechanism this codebase relies
-   on to revoke access for a subscription refund (see the gap noted above).
+5. **Then cancel the subscription** — a separate action in the Dodo dashboard.
+   This is not optional and not conditional on what the refund UI appears to
+   have done: see "🚨 THE RULE" above. A refund alone leaves the subscription
+   live, and the next `subscription.renewed` re-grants Pro to an account you
+   just refunded.
+6. If the refund fails with `INSUFFICIENT_WALLET_FUNDS`, that's expected on a
+   young account — see the funded-wallet section above. Cancel anyway (step 5),
+   and work the refund off `pending_refunds` once the wallet settles.
 
 **PASS — what to check, within a few minutes of the refund:**
 - **Vercel logs**, filtered on `dodo-webhook`: expect to see **both**
@@ -236,11 +277,28 @@ troubleshooting further — don't leave a live charge open while debugging.
 
 ### If the refund doesn't revoke Pro
 
-If you see the `refund.succeeded` log line but `is_pro` stays `true` and no
-`subscription.cancelled`/`subscription.expired` line ever appears — that
-confirms the gap flagged above: Dodo refunded the payment but did not cancel
-the subscription, and this handler's `refund.succeeded` branch only revokes
-lifetime purchases (matched by `pro_payment_id`), not subscriptions.
+Check the *revoke* log line first — `refund.succeeded` matches subscriptions as
+well as lifetime purchases (verified in production, see above), so you should
+see:
+
+```
+[dodo-webhook] revoked pro user=<uuid> reason=refund payment=<pay_id> retained_via_gift=false
+```
+
+Work down these causes in order:
+
+1. **`retained_via_gift=true`** — not a bug. An active gifted-Pro window
+   (creator seed or referral reward) covers the account independently of the
+   payment, so `is_pro` correctly stays `true`. Check
+   `is_gifted_pro` / `gifted_pro_expires_at` on the profile.
+2. **No `revoked pro … reason=refund` line at all** — the `payment_id` in the
+   refund event matched no profile's `pro_payment_id`. Compare the two directly;
+   the likeliest cause is that the account's `pro_payment_id` was cleared or
+   overwritten by a later purchase.
+3. **Revoked, then Pro came back** — you refunded without cancelling. Look for a
+   later `renewed subscription` line: the live subscription billed again and
+   re-granted Pro. This is the failure mode "🚨 THE RULE" exists to prevent.
+   Cancel the subscription now.
 
 **Immediate rollback (do this regardless of root cause):** manually set
 `is_pro=false`, `subscription_id=null` for that one test account directly in
@@ -248,14 +306,10 @@ Supabase Table Editor. This is a single test account, not a real customer,
 so a direct edit is safe here — do **not** do this for a real customer
 dispute without separately confirming the refund was legitimate.
 
-**Follow-up (code change, not this doc):** if this reproduces, the fix is to
-also revoke Pro in the `refund.succeeded` branch when the refunded
-`payment_id` matches an active subscription's underlying payment — the same
-place is currently only being looked up by `pro_payment_id`. That's a real
-code change for a follow-up PR, not something to patch live; flag it back to
-engineering with the exact Dodo event payload you saw (redact the card/buyer
-details, keep the event `type` and ids) so the fix can be built against real
-Dodo semantics instead of guessed ones.
+**If none of the three fit,** flag it back to engineering with the exact Dodo
+event payload you saw (redact the card/buyer details, keep the event `type` and
+ids) so the fix can be built against real Dodo semantics instead of guessed
+ones.
 
 ---
 
