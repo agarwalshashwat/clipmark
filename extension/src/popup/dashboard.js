@@ -786,11 +786,19 @@ function attachEventListeners() {
 
   document.querySelectorAll('.vc-revisit-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const isPro = await checkPro();
-      if (!isPro) {
+      // The shared gate, not a bare checkPro(): Active Recall is NOT Pro-only —
+      // the pricing page sells it as free up to FREE_RECALL_REVIEWS_PER_MONTH
+      // reviews a month, unlimited on Pro. This call site was missed when the
+      // rule was unified, so it kept hard-refusing every free user with an
+      // "unlock it with Pro" modal for a feature they are entitled to, while
+      // the due-strip button three functions down (startRecallForVideo) and
+      // both side-panel entry points already honoured the cap. Same rule
+      // everywhere, so the answer cannot differ by where the user clicked.
+      const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
+      if (isRecallStartBlocked({ isPro: await checkPro(), reviewUsage: recallReviewUsage, nowMs: Date.now() })) {
         showUpgradeModal({
-          feature: 'Active Recall Mode',
-          benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
+          feature: 'More reviews this month',
+          benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
         });
         return;
       }
