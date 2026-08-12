@@ -6,8 +6,10 @@ import { unstable_cache } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerSupabase } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/clients';
 import { redirect } from 'next/navigation';
 import { APP_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { recordPendingRefund } from '@/app/lib/pending-refunds';
 import { type ProductPrices } from './pricing';
 
 // Lazy, memoized Dodo client. Constructing eagerly at module scope throws when
@@ -172,6 +174,20 @@ export async function cancelSubscription(): Promise<CancelResult> {
           message: `We couldn't complete your refund, so we've left your subscription active rather than cancel it while you're still owed money. Our team has been alerted — email ${SUPPORT_EMAIL} and we'll finish this by hand.`,
         };
       }
+
+      // Write the obligation somewhere queryable. The Sentry issue above is an
+      // alert, not a ledger — resolve it, let it auto-archive, or simply miss
+      // it, and nothing left in the system knows this customer is owed money.
+      // A row in pending_refunds survives all three. Deliberately not awaited
+      // for its result: recordPendingRefund never throws and returns false if
+      // it couldn't write (e.g. migration 018 not applied yet), in which case
+      // the Sentry alert is the backstop it has always been.
+      await recordPendingRefund(getSupabaseAdmin(), {
+        paymentId: profile.pro_payment_id,
+        userId: user.id,
+        reason: 'insufficient_wallet_funds',
+      });
+
       refund = 'manual';
     }
 
