@@ -25,11 +25,18 @@ moved since, and each now leads the other in different places.
 top-level view exists on both, and the whole export/notes/saved-search/groups
 surface is genuinely at parity. Where they diverge, it clusters in three
 places: **A–B loop rendering** (web only shows a loop's range in one of five
-render sites), **Active Recall entitlement** (the web path has no Pro check
-anywhere along it), and **extension Reminders**, whose create form currently
-throws before it renders. Across 115 compared capabilities: **63 ✅ · 32 ⚠️ ·
-20 ❌** — and 10 of the 20 gaps are the loop-rendering and scrubber clusters,
-i.e. two fixes, not twenty.
+render sites), **Active Recall entitlement**, and **extension Reminders**,
+whose create form threw before it rendered. Across 115 compared capabilities:
+**63 ✅ · 32 ⚠️ · 20 ❌** — and 10 of the 20 gaps are the loop-rendering and
+scrubber clusters, i.e. two fixes, not twenty.
+
+> **⚠️ Staleness warning — read §13 before acting on any ❌ in this file.**
+> The two runtime defects this pass called out (§13 items 1 and 2) were fixed
+> by **#96 (`5410d51`)** and are no longer live; §8 and §13 have been corrected
+> in place. Every other row still reflects `b4fb4db` and has **not** been
+> re-verified since. This file is a point-in-time audit, not a live dashboard —
+> re-check against source before filing anything from it. It has already
+> produced two false P1 reports by being read as current.
 
 ---
 
@@ -71,7 +78,7 @@ i.e. two fixes, not twenty.
 | Per-bookmark: tags with per-tag colour | [`:937-943`](../webapp/app/dashboard/_components/DashboardContent.tsx#L937) | [`:525-529`](../extension/src/popup/dashboard.js#L525) | ✅ |
 | Extended Notes (Pro) | [`BookmarkNotes.tsx`](../webapp/app/dashboard/_components/BookmarkNotes.tsx) + server-side `is_pro` re-check in [`actions.ts:49-59`](../webapp/app/dashboard/actions.ts#L49) | [`:531`](../extension/src/popup/dashboard.js#L531), [`:855-943`](../extension/src/popup/dashboard.js#L855), client-side gate only | ✅ web is stricter, same UX (debounce, blur/Ctrl+Enter save, Esc) |
 | "Group" button on card | [`:852-859`](../webapp/app/dashboard/_components/DashboardContent.tsx#L852) → [`GroupPickerModal`](../webapp/app/dashboard/_components/GroupPickerModal.tsx) | [`:493-495`](../extension/src/popup/dashboard.js#L493) → [`showGroupPicker:1187`](../extension/src/popup/dashboard.js#L1187) | ✅ button; see §7 for the picker's contents |
-| "Recall" button on card | [`:864-875`](../webapp/app/dashboard/_components/DashboardContent.tsx#L864), `isPro` gate | [`:490-492`](../extension/src/popup/dashboard.js#L490), [`:785-803`](../extension/src/popup/dashboard.js#L785), `checkPro()` gate | ✅ |
+| "Recall" button on card | [`DashboardContent.tsx`](../webapp/app/dashboard/_components/DashboardContent.tsx) — no `isPro` block, by design | [`.vc-revisit-btn`](../extension/src/popup/dashboard.js) — shared `isRecallStartBlocked` gate | ✅ both cap-gated; see §8 |
 | "Watch" button | [`:848-851`](../webapp/app/dashboard/_components/DashboardContent.tsx#L848) | — (the thumbnail is the link) | ⚠️ web extra, harmless |
 | Upsell "Add more variety" card in the grid | [`:1039-1048`](../webapp/app/dashboard/_components/DashboardContent.tsx#L1039) | — | ⚠️ web extra |
 | Scrubber with per-bookmark markers | [`:830-844`](../webapp/app/dashboard/_components/DashboardContent.tsx#L830) — markers spaced by **array index** (`(i / (n-1)) * 90 + 5`) | [`buildTimeline:336-343`](../extension/src/popup/dashboard.js#L336) — positioned by `timestamp / trackMax`, `trackMax` from stored `videoDurations` | ❌ the web scrubber conveys no real position; three clips at 0:05/0:07/58:00 render evenly spaced |
@@ -170,9 +177,9 @@ points in the pill row and in the timeline.
 | Due-for-recall strip (count + per-video chips) | [`:717-764`](../webapp/app/dashboard/_components/DashboardContent.tsx#L717), fed by [`summariseRecallDue`](../webapp/app/dashboard/_utils/recall.ts) | [`renderRecallDueStrip:1512-1550`](../extension/src/popup/dashboard.js#L1512) | ✅ |
 | Due-check logic | [`_utils/recall.ts:29`](../webapp/app/dashboard/_utils/recall.ts#L29) | `recall.module.js` | ✅ twin-tested (`recall-parity.test.ts`) |
 | Start recall for a *due* video | [`:736`](../webapp/app/dashboard/_components/DashboardContent.tsx#L736) → [`startRecallInExtension`](../webapp/app/dashboard/_utils/extension.ts) → `START_RECALL` bridge; falls back to opening the video | [`startRecallForVideo:1491-1510`](../extension/src/popup/dashboard.js#L1491) | ✅ capability |
-| — **Pro check on that path** | ❌ **none anywhere**: the chip handler has no gate, and [`background.js:430-464`](../extension/src/background/background.js#L430) `startRecallFromWebapp` doesn't check `isPro` either | ✅ `checkPro()` at [`:1492`](../extension/src/popup/dashboard.js#L1492) | ❌ **free users can start Active Recall from the web dashboard** |
-| — Free monthly review cap | ❌ not checked, not incremented | ✅ `isMonthlyReviewCapReached` at [`:1494-1501`](../extension/src/popup/dashboard.js#L1494) | ❌ |
-| Start recall for *any* video, from the card | [`:864-875`](../webapp/app/dashboard/_components/DashboardContent.tsx#L864), `isPro` gate, no cap | [`:785-803`](../extension/src/popup/dashboard.js#L785), `checkPro()`, no cap | ✅ symmetric (neither caps this path) |
+| — **Entitlement check on that path** | ✅ via the bridge: [`startRecallFromWebapp`](../extension/src/background/background.js) asks the shared gate before opening a tab or writing a handoff, and returns `review_cap_reached` | ✅ [`startRecallForVideo`](../extension/src/popup/dashboard.js) asks the same gate | ✅ fixed in #96 — one rule, `isRecallStartBlocked` |
+| — Free monthly review cap | ✅ enforced in the extension's background worker (the only hop a caller can't skip); the dashboard renders the refusal as an upgrade prompt | ✅ same rule | ✅ |
+| Start recall for *any* video, from the card | [`DashboardContent.tsx`](../webapp/app/dashboard/_components/DashboardContent.tsx) — no `isPro` block, by design | [`.vc-revisit-btn` handler](../extension/src/popup/dashboard.js) — shared gate | ✅ symmetric (both cap-gated, neither Pro-only) |
 | Grading / quiz UI | — | content script, needs the player | ⚠️ intentional |
 
 ## 9. Analytics
@@ -237,29 +244,37 @@ per affected row. ❌
 
 ## 13. Biggest real gaps, ranked
 
-1. **Extension Reminders create form throws before rendering.**
-   [`dashboard.js:1657`](../extension/src/popup/dashboard.js#L1657) uses the
-   bare global `TITLE_TRUNCATE_LENGTH`; it is only assigned by
-   [`constants.js:134`](../extension/src/constants.js#L134), which the manifest
-   injects solely as a youtube.com content script. The dashboard page's ESM
-   graph (`dashboard.entry.js` → `dashboard.js` → `constants.module.js`) never
-   defines it and `vite.config.mjs` has no `define` shim. The `.map()` callback
-   only runs when the user has at least one bookmark carrying a `videoTitle`,
-   i.e. effectively every real user. This is the same class of bug the
-   twin-file convention in `CLAUDE.md` exists to prevent, and the guard in
-   `extension/scripts/content-globals-guard.mjs` doesn't cover page scripts.
-   *Reasoned from source; not reproduced against a packaged build here.*
-   **Extension needs to catch up** (import the constant, or inline the 60).
-2. **Active Recall started from the web has no entitlement check.** Neither the
-   due-strip chip ([`DashboardContent.tsx:736`](../webapp/app/dashboard/_components/DashboardContent.tsx#L736))
-   nor the bridge handler ([`background.js:430`](../extension/src/background/background.js#L430))
-   checks `is_pro` or touches the free monthly review counter, while the
-   extension's own equivalent does both ([`dashboard.js:1491-1510`](../extension/src/popup/dashboard.js#L1491)).
-   A free user with the extension installed gets unlimited Active Recall by
-   starting it from the website. The old doc framed this as a "cap asymmetry";
-   it's broader than that — there's no Pro gate at all on that path.
-   **Both surfaces need work**; the durable fix belongs in the bridge handler,
-   which is the single choke point.
+1. ~~**Extension Reminders create form throws before rendering.**~~
+   **FIXED in #96** (`5410d51`), before this doc's own audit base shipped —
+   both items 1 and 2 below were repaired by that PR, and this section was left
+   stale. Anyone re-auditing from this file rather than from source will
+   re-report them; they are no longer live. For the record: `dashboard.js` read
+   a bare `TITLE_TRUNCATE_LENGTH` that only the youtube.com content script
+   defines. It now imports the value from `constants.module.js`, and
+   `extension/scripts/page-globals-guard.mjs` — the page-script mirror of
+   `content-globals-guard.mjs`, whose absence is what let this ship — fails the
+   build if any page chunk reads a content-script-only global. That guard runs
+   on every PR (`ci-design-conformance` and `ci-extension-smoke` both do a
+   production `ext-build`), and `tests/dashboard-reminders-packaged.spec.ts`
+   asserts the form renders against the packaged artifact.
+2. ~~**Active Recall started from the web has no entitlement check.**~~
+   **FIXED in #96.** Note the framing here was also wrong on the product rule:
+   Active Recall is *not* Pro-only. The pricing page sells it as free up to 25
+   enrolled cards and 30 reviews a month, unlimited on Pro, so the correct gate
+   is the monthly review cap, not `is_pro` — and there is no server-side
+   boundary to hang one on, because a recall session is a `chrome.runtime`
+   message from the page to the extension and never touches an API route. The
+   rule now lives in one function, `isRecallStartBlocked`
+   (`usage-caps.module.js`), which `startRecallFromWebapp` asks before opening
+   a tab or writing a handoff — the background worker being the only hop a
+   caller cannot skip. `tests/recall-bridge.spec.ts` covers a capped free user
+   (refused, no tab opened), a free user under the cap, and a Pro user past the
+   counter. The web dashboard's per-card button correspondingly dropped its
+   `isPro` block, which had been stricter than the extension.
+   *A fifth entry point was missed by #96 and is fixed separately: the*
+   *extension dashboard's own `.vc-revisit-btn` kept a bare `checkPro()`*
+   *hard-block, paywalling a free-tier feature. `tests/unit/recall-gate-coverage.test.mjs`*
+   *now asserts every recall-start site consults the shared gate.*
 3. **A–B loop ranges only render in one of five web render sites** (§4). Loops
    are the newest headline feature; on the web they're mostly indistinguishable
    from ordinary bookmarks. The helper already exists and is twin-tested — this
@@ -322,3 +337,10 @@ asymmetry") were wrong by the time this pass ran. Nothing was verified in a
 running browser — both dashboards are auth-gated and the extension one needs a
 packaged build — so the two runtime claims (§13 items 1 and 2) are derived from
 source and marked as such.*
+
+*Addendum (2026-08-13): both of those source-derived claims were checked against
+a running packaged build and are fixed — see the staleness warning at the top.
+The lesson worth keeping is the one the method note half-anticipated: an
+unverified source-derived claim in a dated audit reads as a live bug forever.
+Both were re-reported as P1s from this file after they had been fixed. Rows
+marked ❌ here are claims about `b4fb4db`, not about `main`.*
