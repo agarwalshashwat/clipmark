@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
+import { SiteAnalytics } from './components/SiteAnalytics';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
 
 const plusJakarta = Plus_Jakarta_Sans({ 
@@ -112,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );

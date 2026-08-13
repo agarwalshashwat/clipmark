@@ -76,7 +76,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 0 }}>
-            Last updated: March 25, 2026 • We respect your data.
+            Last updated: August 14, 2026 • We respect your data.
           </p>
         </div>
 
@@ -133,6 +133,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like summarization and tag suggestions are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
             <li style={LI_STYLE}><strong>Dodo Payments</strong> — for Pro subscriptions. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
             <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel&apos;s Privacy Policy</a>.</li>
+            <li style={LI_STYLE}><strong>Vercel Web Analytics</strong> — aggregate visitor counts for this website only (which pages were viewed, and the referrer, country, browser and device type). It sets <strong>no cookies</strong> and assigns you no cross-site identifier, which is why this site shows no cookie banner. It does not run on the extension, and it is not used on <code>/embed/</code> pages that other sites frame. See <a href="https://vercel.com/docs/analytics/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel Web Analytics&apos; privacy documentation</a>.</li>
           </ul>
         </div>
 
