@@ -23,7 +23,8 @@
 -- already learns their own status from the cancellation UI.
 --
 -- Idempotent (IF NOT EXISTS / DROP POLICY IF EXISTS), like every migration here.
--- NOT YET APPLIED TO PRODUCTION — see migrations/README.md.
+-- Applied to production 2026-08-13 — see migrations/README.md (including why this one's
+-- schema_migrations timestamp is earlier than the DDL that actually created the table).
 
 CREATE TABLE IF NOT EXISTS public.pending_refunds (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
