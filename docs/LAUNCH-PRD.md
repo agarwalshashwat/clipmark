@@ -11,6 +11,12 @@ so there is exactly one place to fix when it changes.
 > worktree. No production database, Web Store listing, or webhook config was touched.
 > Rows marked **owner-reported** are things the repo cannot prove (Web Store review state,
 > dashboards) — they come from Ash and are trusted as stated.
+>
+> Claims were then re-derived from source a **second** time, independently, on the same
+> commit. Rows marked ⚠ are where that pass disagreed with the brief or with this doc's
+> first draft — mostly claims that are *narrower than they sound* (the recall schedule,
+> reminders, dark mode). Each ⚠ exists to stop a specific unhonest line reaching the
+> posting kit; don't strip them without re-reading the code they cite.
 
 **Update rule:** re-verify the [Current state](#2-current-state-snapshot) and
 [Checklist](#4-pre-launch-checklist--live-tracker) sections against `main` whenever you touch
@@ -46,25 +52,33 @@ detail; this section owns the one-liner only.
 |---|---|
 | Bookmark exact moments, tag with `#word`, group by video | `extension/src/content/content.js`, `chrome.storage.sync` (`bm_{videoId}`) |
 | **A–B multi-segment loops** — define A/B, loop in-session, save named loops that become recall cards | `extension/src/loop.js` (+ `.module.js` twin), shipped v1.0.3 |
-| **Spaced recall that pauses the video and prompts you** | `extension/src/recall.js` (+ `.module.js` twin) — SM-2-lite, scheduled on the bookmark itself |
-| **Anki export** | `extension/src/popup/dashboard.js`, `webapp/app/dashboard/_utils/anki.ts` |
-| Revisit reminders | `rem_{videoId}` in sync storage; `public.revisit_reminders` when signed in |
-| System-synced dark mode | `extension/src/popup/theme-loader.js` (`prefers-color-scheme`), `webapp/app/components/ThemeProvider.tsx` |
+| **Spaced recall that pauses the video and prompts you** | `extension/src/recall.js` (+ `.module.js` twin), scheduled on the bookmark itself. Interval is `min(lastInterval * 2, 60)` days, with an "again" reset. ⚠ **Do not call this SM-2, SM-2-lite or FSRS** — it is a doubling schedule with a 60-day ceiling, and #109's honest-claims register forbids the comparison. Say what it does instead; it's a good story on its own |
+| **Anki export** | `extension/src/export-anki.module.js` + `extension/src/popup/dashboard.js`; webapp copy in `webapp/app/dashboard/_utils/anki.ts`. The two are kept in step by `webapp/tests/unit/anki-parity.test.ts` — **edit both or that test fails**, which is the only enforcement there is |
+| Revisit reminders | `rem_{videoId}` in sync storage; `public.revisit_reminders` when signed in; `chrome.alarms` + `chrome.notifications` driven from `extension/src/background/background.js`. ⚠ **Scheduled review reminders are Pro** — the FAQ lists them under what Pro adds, so never pitch them as a free-tier feature |
+| System-synced dark mode | `extension/src/popup/theme-loader.js` (`prefers-color-scheme`, resolved pre-paint; `system` also follows YouTube's own theme). ⚠ **Unclaimable until the *published* listing carries it** — see W0 in §4 |
 
 ### Business model — freemium, Pro via Dodo Payments (Merchant of Record)
+
+**$7.99/mo · $59.99/yr · $99.99 lifetime** (`webapp/app/(marketing)/upgrade/pricing.ts`).
+
+**Capture, loops, recall and Anki export all work with no ClipMark account.** Only cloud sync
+and shared collections need one. Good for adoption — and, per §3, precisely why we cannot
+currently measure most of our own users.
 
 Free caps are the med/exam-pivot set in `extension/src/usage-caps.js`. **Quote these exactly** —
 marketing copy that rounds them is a claim we can't stand behind:
 
 | Free tier | Cap |
 |---|---|
-| Active Recall reviews | **30 / month** |
+| *Bookmarks, notes, tags, groups, JSON/CSV/Markdown export* | **never capped** |
+| Active Recall reviews | **30 / month** (warns at 24) |
 | Active Recall enrolled segments | **25**, standing (not monthly) |
 | Anki export | **1 / month** |
 | Saved A–B loops | **3**, standing |
 | *Defining and looping A–B in-session* | **never capped** — this is the acquisition hook |
 
-Pro is unlimited on all four. **Active Recall is not Pro-only** — the free tier is the
+Pro removes all four caps and adds cloud sync, scheduled review reminders, and
+Obsidian/Notion **export** (never call it "sync"). **Active Recall is not Pro-only** — the free tier is the
 30-reviews/month cap, and every entry point must gate through `isRecallStartBlocked(...)`,
 never a bare `checkPro()`. That distinction is what PR #111 fixed; don't reintroduce it.
 
@@ -141,20 +155,31 @@ argued about. Revise them once real data exists rather than defending them.
 | **M6** | **D1 retention** | Installs active (≥1 bookmark, loop or review) the next day | 25% | — |
 | **M7** | **D7 retention** | Installs active in days 5–7 | — | **15%** |
 | **M8** | **Crash/error rate** | Sentry issues per 100 installs | < 2 | < 2 |
+| **M9** | **First listing reviews** | Count and average on the CWS listing | ≥ 3 at ≥ 4.0 | ≥ 5 |
+| **M10** | **Listing conversion rate** | installs ÷ listing impressions, CWS dashboard | ≥ 8% | ≥ 8% |
+| **M11** | **Uninstall rate** | uninstalls ÷ installs | — | **< 25%** by day 7 |
 
 **M3 is the one that matters most.** M2 says the capture step works — any bookmarking
 extension clears that bar. M3 says the *retention loop* — the actual wedge in §1 — got used.
 If M2 is healthy and M3 is near zero, the product works and the positioning doesn't, and the
 fix is onboarding/copy, not features.
 
+**M9–M11 are worth their own line because they need no instrumentation we don't have.** They
+read straight off the CWS dashboard and they're diagnostic in a way M1 isn't: a low **M10**
+means traffic arrived and the *listing* lost it (assets and copy, not the push); a high **M11**
+means the install happened and the *product* lost them (the pitch overpromised); and **M9** is
+both a health signal and a hard gate on paid — the listing had **zero** reviews on 2026-08-12,
+and paid spend into zero social proof is the most reliable way to waste it (see D4).
+
 ### Where to watch them — and the honest gap
 
 | Signal | Instrument | Available now? |
 |---|---|---|
-| M1 installs, uninstalls, listing impressions → install rate | **Chrome Web Store developer dashboard** | ✅ |
+| M1 installs, plus M9 reviews / M10 listing conversion / M11 uninstall rate | **Chrome Web Store developer dashboard** (M9 also on the public listing) | ✅ |
 | M5 conversions, revenue, refunds | **Dodo Payments dashboard** + `public.profiles.is_pro` | ✅ |
 | M4 sign-ins, and M2/M3/M6/M7 **for signed-in users only** | **Supabase SQL** — `profiles`, `user_bookmarks`, `collections`, `revisit_reminders` | ✅ |
 | M8 crashes | **Sentry** — `clipmark-web` + `clipmark-extension` projects | ✅ |
+| **Qualitative themes** — why people installed, what confused them, what they wanted | `public.feedback` (the `/feedback` page, PR #98) + support mailbox + listing reviews | ✅ |
 | Website visitors, install-CTA click-through | *nothing* | ❌ — pre-launch win #2 |
 | M2/M3/M6/M7 **for users who never sign in** | *nothing* | ❌ — extension analytics, PR #113, held |
 
@@ -173,6 +198,11 @@ fix is onboarding/copy, not features.
 Sentry does **not** capture Dodo webhook signature or write failures (the handler catches its
 own errors) — **Vercel function logs are the only place those appear.** See `docs/LAUNCH-GATES.md` §1.
 
+**At 100 installs, the qualitative row above is likely to teach us more than every number in
+the table.** Five people telling us what they expected and didn't get is more actionable than
+a conversion rate with a denominator of 100. Target **≥ 5 substantive responses** and treat
+reading them as a launch deliverable, not an afterthought.
+
 ---
 
 ## 4. Pre-launch checklist — live tracker
@@ -181,16 +211,20 @@ Legend: ✅ done · 🟡 in progress / partial · ⬜ not started · ⏳ waiting
 
 | # | Item | Status | Owner | Notes |
 |---|---|---|---|---|
+| **W0** | **Read the *published* listing version off the CWS dashboard** | ⬜ **do this first** | Ash | A 60-second check that can invalidate copy. The live listing read **v1.0.3** on 2026-08-12 (#109 Day-0 gate item 0.1) while `main` was already ahead — whether 1.0.4 ever cleared review is not knowable from the repo. **Until the published version is ≥ 1.0.4, every dark-mode line in the posting kit is unpublishable**, and #109 tags each one. Doing this after the copy is scheduled is how an unhonest claim ships |
 | **W1** | **Install CTAs → real listing URL** | ✅ **done** | — | Landed in `2f60a56`. `CHROME_STORE_URL` in `webapp/app/lib/constants.ts` is the single source of truth, consumed by `Navigation`, `Footer`, `DashboardContent`, `ContentPage`, the marketing landing page (×2), `/v/[shareId]`, and the JSON-LD `installUrl`. **Residual:** confirm the item id is the real one once the listing is public — see D1. One constant to change if it isn't |
 | **W2** | **Website visitor analytics** | ⬜ **not started** | Eng | No analytics dependency or script in the webapp (`webapp/package.json` has none; no Plausible/Umami/GA/Vercel Analytics references). Needs a vendor decision. Distinct from W2's cousin, the *extension* analytics of PR #113 |
 | **W3** | **Custom 404** | ⬜ **not started** | Eng | No `webapp/app/not-found.tsx`. Only `global-error.tsx` (a crash boundary, a different thing) — a bad inbound link during launch hits Next's stock 404 with no nav and no install CTA |
 | **W4** | **Proper OG card + favicon** | 🟡 **partial** | Eng | `layout.tsx` uses the 512×512 `/clipmark-logo.png` for `og:image`, `twitter:image`, `icon`, `shortcut` *and* `apple` — a square logo in a `summary_large_image` slot crops badly on X/LinkedIn/Slack. Needs a 1200×630 card and a real icon set. Note `webapp/app/api/og/route.tsx` already renders dynamic OG images for share pages — the generator exists, the site-wide card doesn't use it |
 | **W5** | **v1.0.5 Web Store approval** | ⏳ **waiting on Google** | Google | Submitted, auto-publishes on approval. **Blocks the whole push** — nothing posts before the listing is live |
-| **W6** | **GTM kit ready to execute** | ✅ **written**, held | Ash | PR #109 — posting kit, launch plan, paid plan. Blocked on D3/D4 before anything goes out |
+| **W6** | **GTM kit ready to execute** | ✅ **written**, held | Ash | PR #109 — posting kit, launch plan, paid plan. Before anything goes out it needs **D4** (paid budget), **D5** (voice), **D6** (accounts) and **D7** (Reddit scope) answered, plus the W0 dark-mode check and the §8 honest-claims pass |
 
-**Critical path: W5 → W1 residual → W6.** W2/W3/W4 are cheap, independent, and do not block
-posting — but every hour of launch traffic that lands before W2 is traffic we can never
+**Critical path: W0 → W5 → W1 residual → W6.** W2/W3/W4 are cheap, independent, and do not
+block posting — but every hour of launch traffic that lands before W2 is traffic we can never
 attribute. **Sequencing recommendation: land W2 before the push**, W3/W4 alongside it.
+
+W0 sits first because it's free and it gates *copy*, not code: if the published listing is
+behind `main`, the fix isn't engineering, it's deleting claims from the posting kit.
 
 None of W1–W4 are in `docs/gtm/PARKED-BACKLOG.md` — they postdate that audit. This table is
 their tracker.
@@ -227,9 +261,10 @@ Nothing below can be decided from the repo. Each blocks something concrete.
 | **D1** | **The exact Chrome Web Store listing URL.** Code currently hardcodes item id `iboippnihpcnnglgboaiedaiimbiolgg`. Confirm this resolves to the public listing once v1.0.5 is approved | W1 residual, every install CTA, JSON-LD `installUrl`, posting kit links | Open the URL the moment the listing goes live. If wrong, it's a **one-constant fix** in `webapp/app/lib/constants.ts` + redeploy. Verify before posting anything — a dead install link on launch day costs the whole push |
 | **D2** | **Extension analytics: opt-in or opt-out?** | PR #113 unblocks; all signed-out activation/retention measurement | Spec recommends **opt-out + honor DNT/GPC**. Opt-in yields a 5–20% enthusiast-skewed sample that is arguably worse than no data because it gets believed. EU/ePrivacy counterweight and a rotating-install-id middle ground are written up in the spec |
 | **D3** | **Which events ship in v1?** | Same as D2 | Spec recommends **7 events**, no video-level dimension at all (a hashed `video_id` is not anonymisation — YouTube ids are an enumerable set, so a hash is a lookup table). Zero video data is also what keeps the CWS "Web history" box legitimately unchecked |
-| **D4** | **Paid-ads budget** — or none at all for launch | PR #109's paid plan; which of the $10/$25/$50-a-day scenarios to run | Genuinely optional. Organic-only is a valid launch. If spending, the plan has CAC arithmetic worked for each tier — pick one, don't improvise |
+| **D4** | **Paid-ads budget** — or none at all for launch | PR #109's paid plan; which of the $10/$25/$50-a-day scenarios to run | **Read `paid-plan.md` §1 and §4 before deciding — it reaches an uncomfortable conclusion about its own subject.** At a ~$40 blended first payment against 2026 education-vertical CPCs of ~$4.81–$6.23, CAC misses the payback ceiling by roughly **10–30×**, and the doc says so rather than presenting a flattering model. Its recommendation: **$10/day as a keyword-and-message *learning* budget, not an acquisition channel** — plus two channels it thinks beat all three named ones, **YouTube in-stream placement targeting** (our audience is definitionally on YouTube, and the three cuts are already rendered) and **free CWS listing optimisation**. Also note paid is effectively gated on social proof, and the listing has **zero reviews** (§3, M9). Organic-only is a fully valid launch |
 | **D5** | **Posting voice — founder or brand?** | Every line of the posting kit; PH maker comment, Show HN tone, X thread voice | **Founder.** Show HN and Product Hunt both reward a named human; a brand voice reads as astroturf on both |
 | **D6** | **Which accounts actually exist?** X/Twitter, Product Hunt, LinkedIn, Reddit (with enough karma to post), IndieHackers, TikTok | The 2-day timeline — several channels have day-of account-age or karma gates | Audit today, not on launch morning. Reddit karma minimums and new-account filters cannot be fixed on the day. The site links `@clipmarkapp` on X — confirm that handle is ours and live |
+| **D7** | **Reddit scope: accept the narrow 2-day window, or override it?** #109 §7.1 deliberately **excludes** r/medicalschoolanki, r/step1, r/step2, r/usmle, r/medicalschool, r/Mcat, r/productivity, r/GetStudying, r/studytips and all Discords | The Reddit half of the posting kit — which is also its highest-intent half | **Accept the narrow window.** Those excluded subs are the best-matched audience for the wedge, which is exactly why `community-engagement-plan.md` commits to weeks of genuine participation before posting there, and calls a ban the highest-severity GTM failure available. Treat them as a multi-week post-launch play, not launch inventory. Either way, the **mandatory 5-minute manual rules check per sub** still applies — no sub's rule text could be read when the kit was written (reddit.com was blocked in that environment), so every sub is tagged verified/unverified and the section is built as a decision tree, not an instruction |
 
 **D2 and D3 are time-sensitive in a way the others aren't.** They gate PR #113, and the launch
 cohort's behaviour is only capturable while it happens. Answering them after launch means the
