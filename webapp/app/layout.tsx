@@ -8,6 +8,7 @@
 
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
@@ -112,6 +113,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        {/* Site-visitor analytics (page views / referrers), NOT the extension's
+            feature-usage telemetry. Cookieless and no client identifier is
+            stored, so it needs no consent banner under GDPR/ePrivacy — that is
+            the reason it was picked over GA4, which does set cookies and would
+            drag a banner onto every page.
+
+            The <script> only loads on Vercel deployments, and data only starts
+            flowing once Web Analytics is enabled for the project in the Vercel
+            dashboard (Project → Analytics → Enable). Until then this renders a
+            no-op: nothing to configure in code, no env var, and local `next dev`
+            deliberately sends nothing. */}
+        <Analytics />
       </body>
     </html>
   );
