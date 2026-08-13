@@ -139,7 +139,15 @@ npm ci && npm --prefix extension ci && npm --prefix webapp ci
 
 `webapp/` matters even for an extension cut: `scripts/design-audit.mjs` resolves `postcss` from `webapp/node_modules`, and its R0 rule **fails rather than skips** when it can't. Without the install, a missing dependency looks like a real design regression. `cut-release.sh` checks for this in preflight and tells you.
 
-Confirm `main` is green on all five CI jobs for the commit you're cutting (`ci-unit`, `ci-design-conformance`, `ci-extension-smoke`, `ci-webapp-visual-smoke`, `ci-integration`). Then walk [`RELEASE-RUNBOOK.md` §5](RELEASE-RUNBOOK.md)'s pre-release checklist — in particular that any migration this release depends on is **already applied to production**, and that the relevant part of [`CHECKLIST.md`](../CHECKLIST.md) has been smoke-tested by hand. The packaged and rendered Playwright specs are **not all in CI** — a green PR does not mean they ran, so run the layers your batch touched locally.
+Confirm `main` is green on all five CI jobs for the commit you're cutting (`ci-unit`, `ci-design-conformance`, `ci-extension-smoke`, `ci-webapp-visual-smoke`, `ci-integration`). Then walk [`RELEASE-RUNBOOK.md` §5](RELEASE-RUNBOOK.md)'s pre-release checklist — in particular that any migration this release depends on is **already applied to production**, and that the relevant part of [`CHECKLIST.md`](../CHECKLIST.md) has been smoke-tested by hand.
+
+**A green PR does not mean the packaged specs ran.** CI gates 4 of the 20 Playwright specs. Every `tests/*-packaged.spec.ts` and `tests/loop-zip.spec.ts` — the ones that load the built artifact rather than the source tree, and therefore the ones most relevant to a release — runs **only locally**:
+
+```bash
+npx playwright test --project=extension tests/loop-packaged.spec.ts    # etc.
+```
+
+Run the packaged specs covering what's in this batch before cutting. The guards in step 3 catch a *missing* file in the package; only these catch a package that installs and then misbehaves.
 
 ### Step 1 — Preview the cut
 
