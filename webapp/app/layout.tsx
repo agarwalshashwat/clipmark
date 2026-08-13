@@ -8,6 +8,7 @@
 
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
@@ -112,6 +113,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        {/* Vercel Web Analytics — visitor/page-view counts for the marketing site.
+            Cookieless and aggregate-only, so it needs no consent banner, and it is
+            unrelated to the extension's own feature-usage instrumentation.
+
+            No data flows until Analytics is switched on for the project in the
+            Vercel dashboard (Project → Analytics → Enable); off, the script is a
+            no-op. It also only reports from Vercel deployments — `next dev` and
+            `next start` runs are ignored, so a local build showing nothing is
+            expected, not a misconfiguration. */}
+        <Analytics />
       </body>
     </html>
   );
