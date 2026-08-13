@@ -20,6 +20,8 @@ export const metadata: Metadata = buildPageMetadata({
   title: 'ClipMark — Turn YouTube Into Video Flashcards You Remember',
   description: 'Bookmark the moments that matter, then let Active Recall quiz you on them before replaying the clip. Spaced review, local AI notes, and one-click export to Anki.',
   path: '/',
+  cardTitle: 'Turn YouTube Into Video Flashcards You Remember',
+  cardSubtitle: 'Save the moment. Get quizzed on it. Export the deck to Anki.',
   keywords: [
     'youtube bookmarks', 'video flashcards', 'active recall', 'spaced repetition',
     'anki export', 'video notes', 'study tool', 'chrome extension', 'ai summaries',

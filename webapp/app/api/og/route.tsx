@@ -3,11 +3,30 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+/**
+ * Social card renderer, 1200x630. Two shapes off one template:
+ *
+ *   ?title=…&count=N[&videoId=…]   collection card — the share surfaces pass a
+ *                                  bookmark count and a YouTube thumbnail.
+ *   ?title=…&subtitle=…            marketing card — every static route via
+ *                                  buildPageMetadata() in app/lib/seo.ts.
+ *
+ * `count` is read as "absent means don't claim a number". It used to default to
+ * '0', which was harmless while only the share pages called this route, but any
+ * marketing page reusing it would have rendered "0 Bookmarks Curated" under its
+ * own headline.
+ *
+ * Satori resolves no CSS custom properties, so every colour here is a literal —
+ * they are still held to the ClipMark ramps by scripts/design-audit.mjs (R1),
+ * which lists this file as literal-only rather than exempt.
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const title = searchParams.get('title') || 'YouTube Timestamp Bookmarks';
-    const count = searchParams.get('count') || '0';
+    const rawCount = searchParams.get('count');
+    const count = rawCount !== null && rawCount !== '' ? rawCount : null;
+    const subtitle = searchParams.get('subtitle');
     const videoId = searchParams.get('videoId');
 
     // Fallback image if YouTube thumbnail doesn't respond
@@ -79,7 +98,9 @@ export async function GET(req: NextRequest) {
             maxWidth: '900px',
           }}>
             <div style={{
-              fontSize: '48px',
+              // A thumbnail already takes 360px of the 630, so a long collection
+              // title has to sit on a smaller type size to stay inside the card.
+              fontSize: videoId ? '48px' : '60px',
               fontWeight: 800,
               color: 'white',
               lineHeight: 1.2,
@@ -87,16 +108,29 @@ export async function GET(req: NextRequest) {
             }}>
               {title}
             </div>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: 600,
-              color: '#9ca3af',   // gray-400 (was the slate ramp)
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <span style={{ color: '#2dd4bf' }}>{count}</span> Bookmarks Curated
-            </div>
+            {subtitle && (
+              <div style={{
+                fontSize: '26px',
+                fontWeight: 500,
+                color: '#d1d5db',   // gray-300
+                lineHeight: 1.45,
+                marginBottom: count !== null ? '18px' : '0',
+              }}>
+                {subtitle}
+              </div>
+            )}
+            {count !== null && (
+              <div style={{
+                fontSize: '24px',
+                fontWeight: 600,
+                color: '#9ca3af',   // gray-400 (was the slate ramp)
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}>
+                <span style={{ color: '#2dd4bf' }}>{count}</span> Bookmarks Curated
+              </div>
+            )}
           </div>
         </div>
       ),

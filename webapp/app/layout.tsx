@@ -12,6 +12,15 @@ import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
+import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from './lib/seo';
+
+// Fallback card for routes that set no openGraph of their own — the dashboard,
+// /signin, /feedback. Marketing routes build their own through
+// buildPageMetadata(); see the note there on why this must not be inherited.
+const ROOT_OG_IMAGE = buildOgImageUrl({
+  title: 'YouTube Timestamp Bookmarks',
+  subtitle: 'Save the moment, get quizzed on it, export the deck to Anki.',
+});
 
 const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -33,11 +42,11 @@ export const metadata: Metadata = {
   title: 'ClipMark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
-  icons: {
-    icon: '/clipmark-logo.png',
-    shortcut: '/clipmark-logo.png',
-    apple: '/clipmark-logo.png',
-  },
+  // No `icons` block: app/favicon.ico and app/apple-icon.png are file-convention
+  // icons that Next links automatically, and an explicit `icons` here would
+  // override them. The old block pointed all three at /clipmark-logo.png — a
+  // 154 kB 450x450 PNG served as the favicon, while /favicon.ico (which every
+  // browser requests regardless) 404'd. See webapp/scripts/generate-icons.py.
   alternates: {
     canonical: '/',
   },
@@ -52,10 +61,10 @@ export const metadata: Metadata = {
     siteName: 'ClipMark',
     images: [
       {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
+        url: ROOT_OG_IMAGE,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: 'ClipMark — YouTube Timestamp Bookmarks',
       },
     ],
   },
@@ -63,7 +72,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ClipMark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
-    images: [`${APP_URL}/clipmark-logo.png`],
+    images: [ROOT_OG_IMAGE],
   },
 };
 
