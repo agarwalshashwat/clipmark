@@ -24,24 +24,10 @@
 
 import { Analytics } from '@vercel/analytics/next';
 
-/**
- * /embed/* is rendered inside *other people's* pages — X-Frame-Options is
- * deliberately ALLOWALL there (see lib/security-headers.mjs). Those iframe
- * impressions are not site visits, and counting them would silently inflate
- * every top-line visitor number with third-party embed traffic. Drop them.
- *
- * Matched on the event's own URL rather than usePathname() because the event is
- * what actually gets sent, and a pageview fires for the embed route before any
- * client navigation would update a hook-derived path.
- */
-function isEmbedView(url: string): boolean {
-  try {
-    // Events carry an absolute URL; the base is a formality for relative ones.
-    return new URL(url, 'https://clipmark.mithahara.com').pathname.startsWith('/embed/');
-  } catch {
-    return false;
-  }
-}
+// Matched on the event's own URL rather than usePathname() because the event is
+// what actually gets sent, and the pageview fires for the embed route before any
+// client navigation would update a hook-derived path.
+import { isEmbedView } from '../lib/analytics-filter';
 
 export function SiteAnalytics() {
   return <Analytics beforeSend={(event) => (isEmbedView(event.url) ? null : event)} />;
