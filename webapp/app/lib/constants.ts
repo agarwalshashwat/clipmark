@@ -12,10 +12,20 @@ export const APP_NAME      = 'ClipMark';
 export const APP_URL       = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com')
   .replace(/\/+$/, '');
 
-// Canonical Chrome Web Store listing. The item id is permanent — it survives
-// listing updates and stays valid once the listing is public — so it is safe to
-// hardcode. Single source of truth for every "Add to Chrome" / install CTA.
+// Canonical Chrome Web Store listing — verified live and publicly reachable.
+// The item id is permanent: it survives listing updates and store-listing edits,
+// so it is safe to hardcode as the default.
+//
+// Single source of truth for every "Add to Chrome" / install CTA. Nothing in the
+// webapp should ever link to `chrome.google.com/webstore` (the store *root*, a
+// generic search page) — import this instead. `tests/unit/install-cta.test.ts`
+// fails the build if a bare store-root link reappears.
+//
+// The NEXT_PUBLIC_ override exists so a preview deploy can point CTAs at a draft
+// or region-specific listing without a code change. It is inlined at build time
+// (like every NEXT_PUBLIC_ var), so changing it needs a redeploy, not a restart.
 export const CHROME_STORE_URL =
+  (process.env.NEXT_PUBLIC_CHROME_STORE_URL || '').trim() ||
   'https://chromewebstore.google.com/detail/clipmark/iboippnihpcnnglgboaiedaiimbiolgg';
 
 export const SUPPORT_EMAIL = 'support@clipmark.mithahara.com';
