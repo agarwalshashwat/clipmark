@@ -76,8 +76,10 @@ describe('buildPageMetadata', () => {
 
   it('emits a twitter block explicitly, using the same card', () => {
     const ogImage = (meta.openGraph?.images as { url: string }[])[0].url;
-    assert.equal(meta.twitter?.card, 'summary_large_image');
-    assert.deepEqual(meta.twitter?.images, [ogImage]);
+    // Metadata['twitter'] is a union whose other arms have no `card`.
+    const twitter = meta.twitter as { card: string; images: string[] };
+    assert.equal(twitter.card, 'summary_large_image');
+    assert.deepEqual(twitter.images, [ogImage]);
   });
 
   it('uses ogTitle for the card and title for the SERP', () => {
@@ -138,11 +140,13 @@ describe('favicon set', () => {
 
   it('every icon the layout declares actually exists', () => {
     const layout = readFileSync(join(WEBAPP_DIR, 'app/layout.tsx'), 'utf8');
-    const icons = layout
-      .slice(layout.indexOf('icons:'), layout.indexOf('alternates:'))
-      .matchAll(/url: '(\/[^']+)'/g);
+    const block = layout.slice(layout.indexOf('icons:'), layout.indexOf('alternates:'));
 
-    const declared = [...icons].map((m) => m[1]);
+    // exec loop rather than [...matchAll()] — the tsconfig target here predates
+    // iterating an iterator with spread.
+    const declared: string[] = [];
+    const re = /url: '(\/[^']+)'/g;
+    for (let m = re.exec(block); m !== null; m = re.exec(block)) declared.push(m[1]);
     assert.ok(declared.length >= 4, `expected the icon block to be found, saw ${declared.length}`);
 
     for (const url of declared) {
