@@ -1,39 +1,18 @@
 import { Metadata } from 'next';
 import * as Sentry from '@sentry/nextjs';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
-import { APP_URL } from '@/app/lib/constants';
+import { buildPageMetadata } from '@/app/lib/seo';
 
 const META_DESCRIPTION =
   'Earn a one-time 30% commission on every Pro upgrade you refer. Your audience gets 10% off, and referrals are attributed for 30 days.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Affiliate Program — ClipMark',
   description: META_DESCRIPTION,
-  alternates: {
-    canonical: '/affiliate',
-  },
-  openGraph: {
-    title: 'Affiliate Program — ClipMark',
-    description: META_DESCRIPTION,
-    type: 'website',
-    url: '/affiliate',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Affiliate Program — ClipMark',
-    description: META_DESCRIPTION,
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/affiliate',
+  ogTitle: 'Earn 30% on every referral',
+  ogSubtitle: 'One-time 30% commission on every Pro upgrade. Your audience gets 10% off.',
+});
 
 const H2 = {
   fontFamily: "var(--font-display)",

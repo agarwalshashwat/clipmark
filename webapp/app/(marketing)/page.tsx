@@ -25,6 +25,11 @@ export const metadata: Metadata = buildPageMetadata({
     'anki export', 'video notes', 'study tool', 'chrome extension', 'ai summaries',
     'timestamp bookmarks', 'remember what you watch', 'second brain',
   ],
+  // The <title> carries the "ClipMark — " prefix for the SERP; the card already
+  // shows the wordmark above the headline, so repeating it there wastes the
+  // largest line on the card and pushes the real claim onto a third row.
+  ogTitle: 'Turn YouTube into flashcards you remember',
+  ogSubtitle: 'Bookmark the moment that matters, then let Active Recall quiz you on it before the replay.',
 });
 
 const FAQ_DATA = [

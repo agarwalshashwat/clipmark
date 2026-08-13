@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { supabase, type Profile, type Collection } from '@/lib/supabase';
 import styles from './page.module.css';
 import { APP_URL } from '@/app/lib/constants';
+import { ogImageUrl } from '@/app/lib/seo';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -35,8 +36,14 @@ export async function generateMetadata(
   const profile = await getProfile(username);
   if (!profile) return { title: 'User not found — ClipMark' };
 
-  const baseUrl = APP_URL;
-  const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(`@${username}'s Profile`)}&count=0`;
+  // A subtitle rather than `count=0`, which rendered a literal
+  // "0 Bookmarks Curated" on every profile card regardless of what the profile
+  // actually holds. The card has no per-profile total to show here, so it says
+  // what the page is instead of asserting a number that is always wrong.
+  const ogUrl = ogImageUrl(
+    `@${username} on ClipMark`,
+    'Public collections of timestamped YouTube moments.',
+  );
 
   return {
     title: `@${username} — ClipMark`,

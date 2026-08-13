@@ -12,6 +12,16 @@ import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
 import { SiteAnalytics } from './components/SiteAnalytics';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
+import { ogImageUrl } from './lib/seo';
+
+/**
+ * Fallback card for any route that doesn't build its own metadata. Marketing
+ * routes go through buildPageMetadata and get a card carrying their own title.
+ */
+const ROOT_OG_IMAGE = ogImageUrl(
+  'Turn YouTube into flashcards you remember',
+  'Bookmark the moment that matters, then let Active Recall quiz you on it.',
+);
 
 const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -33,11 +43,12 @@ export const metadata: Metadata = {
   title: 'ClipMark — YouTube Timestamp Bookmarks',
   description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights — free Chrome extension for students, developers, and creators.',
   keywords: ['youtube bookmarks', 'youtube timestamp', 'youtube notes', 'chrome extension', 'ai summarizer', 'spaced repetition', 'study help'],
-  icons: {
-    icon: '/clipmark-logo.png',
-    shortcut: '/clipmark-logo.png',
-    apple: '/clipmark-logo.png',
-  },
+  // No `icons` block on purpose. It used to point all three slots at the raw
+  // 450x450 clipmark-logo.png — an oversized, non-square-standard tile that
+  // browsers downscaled per-request, while /favicon.ico itself 404'd. Icons now
+  // come from the app/ file conventions (favicon.ico, icon.png, apple-icon.png),
+  // which Next fingerprints and emits at the correct declared sizes. Declaring
+  // `icons` here as well would re-add the duplicate <link>s those replace.
   alternates: {
     canonical: '/',
   },
@@ -50,12 +61,16 @@ export const metadata: Metadata = {
     type: 'website',
     url: APP_URL,
     siteName: 'ClipMark',
+    // A generated 1200x630 card, not the square logo. The old value advertised
+    // clipmark-logo.png as 512x512 when the file is actually 450x450 — and a
+    // square in a summary_large_image slot is letterboxed into grey bars by X
+    // and LinkedIn regardless of the declared size.
     images: [
       {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
+        url: ROOT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'ClipMark — YouTube Timestamp Bookmarks',
       },
     ],
   },
@@ -63,7 +78,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ClipMark — YouTube Timestamp Bookmarks',
     description: 'Bookmark YouTube moments, get AI summaries, and revisit key insights. Free Chrome extension.',
-    images: [`${APP_URL}/clipmark-logo.png`],
+    images: [ROOT_OG_IMAGE],
   },
 };
 

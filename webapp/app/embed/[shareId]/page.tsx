@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { supabase, type Collection, type Bookmark } from '@/lib/supabase';
-import { APP_URL } from '@/app/lib/constants';
+import { ogImageUrl } from '@/app/lib/seo';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -32,11 +32,14 @@ export async function generateMetadata(
       type: 'website',
       url: `/embed/${shareId}`,
       siteName: 'ClipMark',
+      // Was the square clipmark-logo.png declared as 512x512, which the file
+      // has never been (it is 450x450). A generated 1200x630 card is the right
+      // aspect for every scraper that reads this.
       images: [
         {
-          url: `${APP_URL}/clipmark-logo.png`,
-          width: 512,
-          height: 512,
+          url: ogImageUrl('Timestamped YouTube moments', 'Shared with ClipMark.'),
+          width: 1200,
+          height: 630,
           alt: 'ClipMark — YouTube Bookmark Extension',
         },
       ],

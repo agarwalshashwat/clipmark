@@ -1,33 +1,13 @@
-import { APP_URL, SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
+import { SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
+import { buildPageMetadata } from '@/app/lib/seo';
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: 'Terms of Service — ClipMark',
   description: 'Terms and conditions for using ClipMark.',
-  alternates: {
-    canonical: '/terms',
-  },
-  openGraph: {
-    title: 'Terms of Service — ClipMark',
-    description: 'Terms and conditions for using ClipMark.',
-    type: 'website',
-    url: '/terms',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Terms of Service — ClipMark',
-    description: 'Terms and conditions for using ClipMark.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/terms',
+  ogTitle: 'Terms of Service',
+  ogSubtitle: 'Terms and conditions for using ClipMark.',
+});
 
 const SECTION_STYLE = {
   marginBottom: 48,
