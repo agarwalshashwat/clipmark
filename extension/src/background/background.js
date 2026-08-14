@@ -12,6 +12,10 @@ import {
 } from '../usage-caps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
 import { buildPendingRevision } from '../constants.module.js';
+// config.js is a plain script (no import/export) that only sets
+// globalThis.API_BASE — safe to import here for its side effect even though
+// the service worker has no HTML host to load it as a classic <script>.
+import '../config.js';
 import {
   CONTENT_SCRIPT_MARKER,
   contentScriptMatchPatterns,
@@ -559,7 +563,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 // ─── Reminder Alarms ──────────────────────────────────────────────────────────
-const REMINDERS_API = 'https://clipmark.mithahara.com/api/reminders';
+const REMINDERS_API = `${globalThis.API_BASE || 'https://clipmark.mithahara.com'}/api/reminders`;
 const REMINDER_HORIZON_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 async function scheduleReminderAlarms() {
