@@ -324,9 +324,25 @@
   z-index: 0;
 }
 
+/* The "Four things we refuse to get wrong" grid (components/WhyClipMark.tsx).
+   Pinned to two columns rather than auto-fitting, because that section always
+   holds exactly four cards: `repeat(auto-fit, minmax(320px, 1fr))` fitted three
+   per row inside the 1080px container (3×320 + 2×24 = 1008 ≤ 1080, where four
+   would need 1352) and left the fourth card orphaned alone on a second row.
+   minmax(0, 1fr) rather than 1fr so a long unbroken word can't push a track
+   wider than its share. */
+.cm-why-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
 @media (max-width: 768px) {
   .cm-timeline-line { display: none; }
   .cm-card { padding: 32px 24px; }
+  /* Same breakpoint as .pricing-grid, so both card sections go single-column at
+     the same width. */
+  .cm-why-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
