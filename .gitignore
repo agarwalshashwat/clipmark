@@ -77,3 +77,4 @@ tests/visual/__snapshots__/
 extension/dist/
 screenshots/
 clipmark-extension-*.zip
+docs/.sync-notes.md

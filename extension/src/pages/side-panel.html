@@ -27,6 +27,13 @@
       <span class="sp-logo-text">ClipMark</span>
     </div>
     <div class="side-panel-header-actions">
+      <!-- Cloud-sync status, driven by the background SyncEngine's real state
+           (SYNC_STATUS_CHANGED broadcasts). Hidden for signed-out/free users —
+           sync isn't part of their plan, so there is nothing to report. -->
+      <div id="sync-status" class="sync-status" role="status" style="display:none;">
+        <span class="sync-status-dot" aria-hidden="true"></span>
+        <span class="sync-status-label"></span>
+      </div>
       <div id="user-chip" class="user-chip" style="display:none;"></div>
       <button id="signin-btn" class="sp-icon-btn signin-btn" title="Sign in to sync across devices" style="display:none;">
         <span class="material-symbols-outlined" style="font-size:18px;">person</span>

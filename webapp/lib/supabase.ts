@@ -20,6 +20,9 @@ export interface Bookmark {
   // Extended Notes (Pro). Written by either surface, synced verbatim into
   // the bookmarks JSONB — absent unless the user has added notes.
   notes?: string;
+  // Last-mutation stamp (Phase 10a sync) — used by the sync engine's
+  // per-bookmark last-write-wins merge. Absent on rows written before it.
+  updatedAt?: string;
   // Saved A–B loop. Present only on loop records: `timestamp` is the A point
   // and `loop.end` is B, so a loop is an ordinary bookmark with a range rather
   // than a separate entity. Written by the extension (src/loop.js) and synced

@@ -12,6 +12,7 @@ import {
 } from '../usage-caps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
 import { buildPendingRevision } from '../constants.module.js';
+import { initSyncEngine } from '../sync/sync-engine.js';
 import {
   CONTENT_SCRIPT_MARKER,
   contentScriptMatchPatterns,
@@ -22,6 +23,10 @@ import {
 } from './install-injection.js';
 
 const errorReporter = initErrorReporting('extension-background');
+
+// Cloud sync lives here in the worker (docs/SYNC-ENGINE.md). Registered at
+// evaluation time, as MV3 requires for its storage/alarm/message listeners.
+initSyncEngine();
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const TAG_COLORS = {
