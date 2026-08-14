@@ -131,11 +131,36 @@ describe('favicon set', () => {
       ['apple-touch-icon.png', 180],
       ['icon-192.png', 192],
       ['icon-512.png', 512],
+      ['icon-maskable-512.png', 512],
     ] as const) {
       const file = join(PUBLIC_DIR, name);
       assert.ok(existsSync(file), `public/${name} is missing`);
       assert.deepEqual(pngSize(file), [size, size], `${name} should be ${size}x${size}`);
     }
+  });
+
+  it('keeps the maskable icon on its own manifest entry', async () => {
+    // `purpose: 'any maskable'` on a single icon makes Android apply the
+    // adaptive crop to artwork with no safe zone, clipping the mark.
+    const manifest = (await import('../../app/manifest')).default();
+    const icons = manifest.icons ?? [];
+
+    const maskable = icons.filter((i) => i.purpose === 'maskable');
+    const plain = icons.filter((i) => i.purpose === 'any');
+
+    assert.equal(maskable.length, 1, 'expected exactly one maskable icon');
+    assert.ok(plain.length >= 2, 'expected the 192 and 512 icons to stay purpose: any');
+    assert.ok(
+      !icons.some((i) => String(i.purpose ?? '').includes(' ')),
+      'no icon may claim both purposes at once',
+    );
+  });
+
+  it('does not claim to be an installable PWA', () => {
+    // There is no service worker behind an offline claim, and an install prompt
+    // for the site competes with the Chrome Web Store CTA that actually matters.
+    const src = readFileSync(join(WEBAPP_DIR, 'app/manifest.ts'), 'utf8');
+    assert.match(src, /display: 'browser'/);
   });
 
   it('every icon the layout declares actually exists', () => {
