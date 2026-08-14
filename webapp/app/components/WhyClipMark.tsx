@@ -63,7 +63,11 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+        {/* Two columns, not auto-fit: there are always exactly four cards, and an
+            auto-fitted track put three on the first row and orphaned the fourth.
+            Grid definition lives in globals.css (.cm-why-grid) because the
+            single-column collapse needs a media query. */}
+        <div className="cm-why-grid">
           {STRENGTHS.map(({ icon, title, body }) => (
             <div
               key={title}
