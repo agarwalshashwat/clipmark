@@ -19,10 +19,15 @@ so there is exactly one place to fix when it changes.
 > posting kit; don't strip them without re-reading the code they cite.
 >
 > **Third pass, 2026-08-14** — §4 was re-verified after the website-wins work was reported
-> complete. **It is not on `main`.** One of the four (W1) was already done; the other three
-> exist in *three competing open draft PRs* and nothing is merged — see
-> [§4](#4-pre-launch-checklist--live-tracker) and **W6**. The listing URL, previously an open
+> complete. At that point it was *not* on `main`: one of the four (W1) was already done and the
+> other three existed in three competing open draft PRs. The listing URL, previously an open
 > decision, **is resolved** and has been dropped from §6.
+>
+> **Fourth pass, 2026-08-14** — **W2–W4 are now on `main`.** The consolidation call in W6 was
+> made: **PR #120 was the keeper and is merged** (`a3a9d3c`); **#118 and #119 are closed as
+> superseded**. W6 is therefore done. One piece of W2 still needs Ash and is not a code change:
+> Vercel Web Analytics must be **enabled in the Vercel dashboard**, or the component mounts and
+> silently no-ops.
 
 **Update rule:** re-verify the [Current state](#2-current-state-snapshot) and
 [Checklist](#4-pre-launch-checklist--live-tracker) sections against `main` whenever you touch
@@ -118,7 +123,7 @@ never a bare `checkPro()`. That distinction is what PR #111 fixed; don't reintro
 | Item | State |
 |---|---|
 | v1.0.5 Web Store approval | Waiting on Google. Nothing to do but watch |
-| The 4 website pre-launch wins | **1 of 4 on `main`** (W1). The other three are **written three times over** in PRs #118 / #119 / #120 — all open, all held as drafts. **Pick one and land it** — see [§4](#4-pre-launch-checklist--live-tracker) W6 |
+| The 4 website pre-launch wins | **4 of 4 on `main`.** W1 landed earlier in `2f60a56`; W2–W4 landed via the consolidated **PR #120** (`a3a9d3c`), with #118 / #119 closed as superseded. Remaining: enable Vercel Web Analytics in the dashboard (Ash) — see [§4](#4-pre-launch-checklist--live-tracker) |
 | GTM launch kit | Written, **held** — PR #109, Ash executes by hand |
 | Release-train process | Written, **held** — PR #114 |
 | Extension feature-usage analytics | Spec only, **held** on open decisions — PR #113 |
@@ -186,7 +191,7 @@ and paid spend into zero social proof is the most reliable way to waste it (see 
 | M4 sign-ins, and M2/M3/M6/M7 **for signed-in users only** | **Supabase SQL** — `profiles`, `user_bookmarks`, `collections`, `revisit_reminders` | ✅ |
 | M8 crashes | **Sentry** — `clipmark-web` + `clipmark-extension` projects | ✅ |
 | **Qualitative themes** — why people installed, what confused them, what they wanted | `public.feedback` (the `/feedback` page, PR #98) + support mailbox + listing reviews | ✅ |
-| Website visitors, install-CTA click-through | *nothing on `main`* | ❌ — **W2**. Built in all three website-wins PRs (Vercel Web Analytics), none landed; also needs the dashboard toggle flipped |
+| Website visitors, install-CTA click-through | Vercel Web Analytics, on `main` via #120 | 🟡 — **W2**. Code landed (`a3a9d3c`); still needs the **Vercel dashboard toggle flipped** (Ash) before any data is collected |
 | M2/M3/M6/M7 **for users who never sign in** | *nothing* | ❌ — extension analytics, PR #113, held |
 
 > **The gap, stated plainly:** ClipMark works fully signed-out. Cloud tables only see
@@ -219,23 +224,26 @@ Legend: ✅ done · 🟡 in progress / partial · ⬜ not started · ⏳ waiting
 |---|---|---|---|---|
 | **W0** | **Read the *published* listing version off the CWS dashboard** | ⬜ **do this first** | Ash | A 60-second check that can invalidate copy. The live listing read **v1.0.3** on 2026-08-12 (#109 Day-0 gate item 0.1) while `main` was already ahead — whether 1.0.4 ever cleared review is not knowable from the repo. **Until the published version is ≥ 1.0.4, every dark-mode line in the posting kit is unpublishable**, and #109 tags each one. Doing this after the copy is scheduled is how an unhonest claim ships |
 | **W1** | **Install CTAs → real listing URL** | ✅ **done, on `main`** | — | Landed in `2f60a56`. `CHROME_STORE_URL` in `webapp/app/lib/constants.ts` is the single source of truth, consumed by `Navigation`, `Footer`, `DashboardContent`, `ContentPage`, the marketing landing page (×2), `/v/[shareId]`, and the JSON-LD `installUrl`. The item id **`iboippnihpcnnglgboaiedaiimbiolgg`** was independently fetched and confirmed live by two of the three PRs below — **this is no longer an open question** |
-| **W2** | **Website visitor analytics** | 🟡 **built ×3, not landed** | Eng | Still absent from `main` — `webapp/package.json` has no analytics dependency and no Plausible/Umami/GA/Vercel script. Implemented in all three PRs below (each picks **Vercel Web Analytics**). ⚠ Vercel Web Analytics also needs a **one-click enable in the Vercel dashboard** (Ash) or the component mounts and silently no-ops. Distinct from the *extension* analytics of PR #113 |
-| **W3** | **Custom 404** | 🟡 **built ×3, not landed** | Eng | Still absent from `main` — no `webapp/app/not-found.tsx`, only `global-error.tsx` (a crash boundary, a different thing). A bad inbound link during launch still hits Next's stock 404 with no nav and no install CTA |
-| **W4** | **Proper OG card + favicon** | 🟡 **built ×3, not landed** | Eng | `main` still uses the 512×512 `/clipmark-logo.png` for `og:image`, `twitter:image`, `icon`, `shortcut` *and* `apple` — a square logo in a `summary_large_image` slot crops badly on X/LinkedIn/Slack. All three PRs add a 1.91:1 card and a real icon set |
+| **W2** | **Website visitor analytics** | ✅ **landed on `main`** (⚠ needs dashboard enable) | Ash | Landed via **#120** (`a3a9d3c`): `@vercel/analytics` in `webapp/package.json`, mounted through `app/components/SiteAnalytics.tsx` with `app/lib/analytics-filter.ts`. ⚠ Vercel Web Analytics still needs a **one-click enable in the Vercel dashboard** (Ash) or the component mounts and silently no-ops — **the only part of W2 still outstanding**. Distinct from the *extension* analytics of PR #113 |
+| **W3** | **Custom 404** | ✅ **landed on `main`** | — | Landed via **#120** (`a3a9d3c`): `webapp/app/not-found.tsx` plus per-route `error.tsx` boundaries (`u/[username]`, `v/[shareId]`, `embed/[shareId]`) sharing `app/components/RouteError.tsx`. A bad inbound link now gets branded nav and an install CTA instead of Next's stock 404 |
+| **W4** | **Proper OG card + favicon** | ✅ **landed on `main`** | — | Landed via **#120** (`a3a9d3c`): a 1.91:1 card through `app/api/og/route.tsx` + `app/lib/seo.ts`, and a real icon set (`favicon.ico`, `apple-touch-icon.png`, `icon-192`, `icon-512`, `icon-maskable-512`) wired via `app/manifest.ts`, replacing the square 512×512 logo that cropped badly on X/LinkedIn/Slack |
 | **W5** | **v1.0.5 Web Store approval** | ⏳ **waiting on Google** | Google | Submitted, auto-publishes on approval. **Blocks the whole push** — nothing posts before the listing is live |
-| **W6** | **Consolidate the website-wins PRs to one** | ⬜ **needs a call** | Eng | **#118, #119 and #120 are three independent implementations of W1–W4**, opened within 12 minutes of each other, all held as drafts, all touching `layout.tsx` / `lib/seo.ts` / `api/og/route.tsx`. They will conflict. **Pick one, close the other two** — do not try to merge them together. Selection notes below |
+| **W6** | ~~**Consolidate the website-wins PRs to one**~~ | ✅ **done** | — | The call was made: **#120 was the keeper and is merged** (`a3a9d3c`); **#118 and #119 are closed as superseded**. They were three independent implementations of W1–W4 opened within 12 minutes of each other, all touching `layout.tsx` / `lib/seo.ts` / `api/og/route.tsx`; only one was landed, never merged together. Selection rationale kept below for the record |
 | **W7** | **GTM kit ready to execute** | ✅ **written**, held | Ash | PR #109 — posting kit, launch plan, paid plan. Before anything goes out it needs **D3** (paid budget), **D4** (voice), **D5** (accounts) and **D6** (Reddit scope) answered, plus the W0 dark-mode check and the honest-claims pass |
 
-**Critical path: W0 → W5 → W6 → W7.** W2/W3/W4 do not block posting — but every hour of launch
-traffic that lands before W2 is traffic we can never attribute, and they are now *written*, so
-the only thing between them and `main` is W6. **Land one of the three PRs before the push.**
+**Critical path: W0 → W5 → W7.** W6 is done and W2–W4 are on `main`, so the website wins no
+longer sit between us and the push. The one residual on W2 is Ash flipping the **Vercel Web
+Analytics** toggle — until that's on, launch traffic still isn't attributable.
 
 W0 sits first because it's free and it gates *copy*, not code: if the published listing is
 behind `main`, the fix isn't engineering, it's deleting claims from the posting kit.
 
-### W6 — choosing between #118, #119 and #120
+### W6 — choosing between #118, #119 and #120 (resolved: #120 landed)
 
-All three are **open drafts** of similar size (~1.1–1.2k added lines, 26–33 files) and all three
+> **Resolved 2026-08-14.** #120 was the keeper and is merged (`a3a9d3c`); #118 and #119 are
+> closed as superseded. The reasoning below is kept as the record of why.
+
+All three were **open drafts** of similar size (~1.1–1.2k added lines, 26–33 files) and all three
 independently reached the same two conclusions: the install-CTA finding was **already fixed on
 `main`**, and the listing URL is **real and live**. That agreement is the useful signal here —
 it's why W1 is closed and why the old D1 is gone.
@@ -273,7 +281,7 @@ their tracker.
 | **Release runbook** (current, on `main`) | `docs/RELEASE-RUNBOOK.md` | Live |
 | **Extension feature-usage analytics spec** | `docs/analytics/FEATURE-ANALYTICS-SPEC.md` — **PR #113** | Open, **held on D1–D2** |
 | **Parked backlog** — 34 post-launch items | `docs/gtm/PARKED-BACKLOG.md` — PR #108 | ✅ Merged, living doc |
-| **Website pre-launch wins (W2–W4)** — analytics, custom 404, OG card + favicons | **PRs #118, #119, #120** — three competing implementations | All open drafts. **Land one, close two** — see §4 W6 |
+| **Website pre-launch wins (W2–W4)** — analytics, custom 404, OG card + favicons | **PR #120**, merged (`a3a9d3c`) | ✅ Landed; #118 / #119 closed as superseded. Only residual: enable Vercel Web Analytics in the dashboard (Ash) — see §4 W2 |
 | Chrome Web Store listing copy + fields | `docs/gtm/chrome-web-store-listing{,-FIELDS}.md` | Live |
 | Launch day runbook / go-no-go / policy | `docs/release/LAUNCH_DAY_RUNBOOK.md`, `LAUNCH_GO_NO_GO_CHECKLIST.md`, `RELEASE_POLICY.md` | Live |
 | Owner-only setup gates (Dodo webhook, CWS) | `docs/LAUNCH-GATES.md`, `docs/OWNER_SETUP_CHECKLIST.md` | Live |
