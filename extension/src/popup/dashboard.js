@@ -11,6 +11,12 @@ import {
   TITLE_TRUNCATE_LENGTH,
 } from '../constants.module.js';
 import { buildAnkiTsv } from '../export-anki.module.js';
+import {
+  getValidToken,
+  resolveAccessToken,
+  TOKEN_NO_SESSION,
+  TOKEN_SESSION_EXPIRED,
+} from '../auth-token.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
@@ -33,35 +39,6 @@ const logger = createDevLogger('Dashboard');
 // Logs to the console for local debugging; initErrorReporting above is what
 // forwards the same failures to Sentry in a packaged build.
 installGlobalErrorLogging('Dashboard');
-
-// Returns a fresh access token, auto-refreshing via /api/refresh if expired.
-async function getValidToken() {
-  const { bmUser } = await new Promise(resolve =>
-    chrome.storage.sync.get({ bmUser: null }, resolve)
-  );
-  if (!bmUser?.accessToken) return null;
-  try {
-    const payload = JSON.parse(atob(bmUser.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (payload.exp * 1000 > Date.now() + 60_000) return bmUser.accessToken;
-  } catch { /* fall through to refresh */ }
-  if (!bmUser.refreshToken) return null;
-  try {
-    const res = await fetch(`${API_BASE}/api/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: bmUser.refreshToken }),
-    });
-    if (!res.ok) return null;
-    const { access_token, refresh_token } = await res.json();
-    await new Promise(resolve =>
-      chrome.storage.sync.set({ bmUser: { ...bmUser, accessToken: access_token, refreshToken: refresh_token } }, resolve)
-    );
-    return access_token;
-  } catch {
-    logger.warn('Auth refresh failed in getValidToken');
-    return null;
-  }
-}
 
 function bmKey(videoId) { return `bm_${videoId}`; }
 
@@ -2257,9 +2234,11 @@ async function loadAuthState() {
         bmUser.isPro ? 'Manage Subscription' : 'Upgrade';
     }
 
-    // Silently validate/refresh token — sign out if session is fully expired
-    const token = await getValidToken();
-    if (!token) {
+    // Silently validate/refresh token — sign out only when the session is
+    // genuinely gone, not when the refresh merely failed to reach the server
+    // (see resolveAccessToken).
+    const { reason } = await resolveAccessToken();
+    if (reason === TOKEN_SESSION_EXPIRED || reason === TOKEN_NO_SESSION) {
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
     }

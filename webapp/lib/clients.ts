@@ -17,6 +17,10 @@ export function getSupabaseAdmin(): SupabaseClient {
   return (_admin ??= createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    // Stateless, for the reasons spelled out over the anon singleton in
+    // lib/supabase.ts — a memoized server client must never hold or
+    // background-refresh session state.
+    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
   ));
 }
 
