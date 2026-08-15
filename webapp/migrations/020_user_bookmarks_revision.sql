@@ -1,4 +1,9 @@
--- 018_user_bookmarks_revision.sql
+-- 020_user_bookmarks_revision.sql
+--
+-- Numbered 020, not 018: 018 was taken by 018_pending_refunds.sql and 019 by
+-- the uninstall-feedback survey, both of which landed on main while this branch
+-- was open. 019 is deliberately skipped here — it belongs to that other change,
+-- not to a gap in this one.
 -- Per-row optimistic concurrency for cloud bookmark sync (Phase 10a).
 --
 -- Adds a `revision` counter to public.user_bookmarks. Every write bumps it by

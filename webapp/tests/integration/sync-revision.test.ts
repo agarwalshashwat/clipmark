@@ -2,7 +2,7 @@
  * Sync-engine revision integration tests (Phase 10a) — compare-and-swap
  * conflicts, revision monotonicity, legacy-PUT interop, and tombstone
  * round-trips against the real local-Supabase DB. Requires migration
- * 018_user_bookmarks_revision.sql to be applied (the harness migrates before
+ * 020_user_bookmarks_revision.sql to be applied (the harness migrates before
  * running). getAuthedUser is built from each user's real JWT so RLS applies.
  */
 import { describe, it } from 'node:test';

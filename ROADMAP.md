@@ -275,7 +275,7 @@ Move beyond local-only storage to enable cross-device sync, video insights, and 
 
 ### 8.1 Checklist
 **Phase 10a — sync (✅ shipped):**
-- [x] Sync data model: tombstones in the bookmarks JSONB + `revision` counter (migration 018)
+- [x] Sync data model: tombstones in the bookmarks JSONB + `revision` counter (migration 020)
 - [x] Sync API: `/api/bookmarks` GET/PUT with `baseRevision` CAS, `includeDeleted`, tombstone validation
 - [x] Conflict resolution (per-bookmark LWW + revision CAS; deletions propagate instead of resurrecting)
 - [x] SyncEngine in the background worker — sole owner of sync traffic; duplicated panel/dashboard copies deleted

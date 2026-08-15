@@ -48,7 +48,7 @@ array per row. Two extensions, both inside the JSON:
   A deletion is an event; the tombstone is how other devices learn it
   happened instead of resurrecting the bookmark.
 
-One schema change (migration `018_user_bookmarks_revision.sql`): a
+One schema change (migration `020_user_bookmarks_revision.sql`): a
 **`revision BIGINT NOT NULL DEFAULT 1`** column, bumped by one on every write,
 used for optimistic concurrency (§4). Existing rows backfill to 1 via the
 default and keep working untouched.
@@ -280,6 +280,6 @@ first-contact rule and mock at the local-webapp layer, not the SW fetch layer.
 | Status chip | `side-panel.html` / `side-panel.css` / `side-panel.js` (`initSyncStatus`) |
 | Server handler (CAS, tombstone validation, includeDeleted) | `webapp/app/api/bookmarks/handler.ts` |
 | Webapp tombstone helpers | `webapp/lib/bookmarks.ts` |
-| Migration | `webapp/migrations/018_user_bookmarks_revision.sql` |
+| Migration | `webapp/migrations/020_user_bookmarks_revision.sql` |
 | Unit tests | `tests/unit/sync-core.test.mjs`, `webapp/tests/unit/bookmarks-revision.test.ts`, `bookmarks-live-filter.test.ts` |
 | Integration tests | `webapp/tests/integration/sync-revision.test.ts`, `rls-user-bookmarks.test.ts` |
