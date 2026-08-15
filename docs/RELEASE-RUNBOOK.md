@@ -2,6 +2,8 @@
 
 **Purpose:** the practical, repeatable playbook for shipping updates **after launch** — webapp, extension, and database migrations. This is not the one-time launch plan (`docs/release/LAUNCH_PLAN.md`, `LAUNCH_DAY_RUNBOOK.md`, `LAUNCH_GO_NO_GO_CHECKLIST.md`, `RELEASE_POLICY.md` cover that). This doc is what you follow for the 50th release, not the first.
 
+> **Cadence, hotfix criteria and the cut tooling now live in [`docs/RELEASE-PROCESS.md`](RELEASE-PROCESS.md).** That doc decides *when* a release ships and *what qualifies* to skip the queue (the extension ships on a fortnightly Tuesday train; the webapp stays continuous), and `scripts/cut-release.sh` automates §3's Step 1 and Step 2 below with added artifact verification. This runbook remains authoritative on the **mechanics** — dashboard fields, review timing, auto-update behaviour, staged rollout, Sentry monitoring, migrations — and RELEASE-PROCESS.md defers to it throughout. Where the two overlap on *scheduling*, RELEASE-PROCESS.md wins.
+
 **Companion docs:** [`docs/DEPLOYMENTS.md`](DEPLOYMENTS.md) (environments + migration mechanics in full detail — this runbook summarizes the release-flow parts and defers to it for the how), [`docs/release/RELEASE_POLICY.md`](release/RELEASE_POLICY.md) (branch/merge/rollback *rules*), [`CHECKLIST.md`](../CHECKLIST.md) (manual extension regression checklist), [`docs/gtm/chrome-web-store-listing-FIELDS.md`](gtm/chrome-web-store-listing-FIELDS.md) (store listing copy).
 
 ---

@@ -1,0 +1,141 @@
+# Release train — pre-built extension package, always ready, never auto-published.
+#
+# Builds main's extension package on the train's weekly beat and parks it as a
+# DRAFT GitHub Release, so an installable, fully-verified zip always exists —
+# for a hotfix that needs to move fast, for handing a tester a build, and as a
+# standing proof that main still packages cleanly.
+#
+# Deliberate boundaries (docs/RELEASE-PROCESS.md §7):
+#   - It runs `scripts/cut-release.sh --no-bump`: the SAME code path as a real
+#     cut, so this workflow cannot drift from the local one. --no-bump means it
+#     never touches a version number, so it can never start a release by itself.
+#   - It NEVER uploads to the Chrome Web Store. No store credential exists in
+#     this repo or in its Actions secrets, by design — the upload is a manual
+#     owner step, because it triggers Google review and force-updates every user.
+#   - The release stays a DRAFT prerelease under a rolling, deliberately
+#     non-semver tag. A draft is not what you upload: the store package is cut
+#     from the TAGGED commit by a human running cut-release.sh with a bump type.
+name: Release Train (draft build)
+
+on:
+  schedule:
+    # 13:00 UTC Tuesday — the train's day. The CUT is fortnightly and human;
+    # this build is weekly on purpose, so the off-week run is a free "does main
+    # still package?" check rather than dead time. No cron parity math needed.
+    - cron: '0 13 * * 2'
+  workflow_dispatch:
+
+# Never run two of these against the same rolling draft at once.
+concurrency:
+  group: release-train-draft
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  draft-build:
+    name: build + park draft
+    runs-on: ubuntu-latest
+    # Forks inherit the workflow but not the intent (or the write scope).
+    if: github.repository == 'agarwalshashwat/clipmark'
+    permissions:
+      # Only this job gets write, and only to create the draft release below.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      # extension/ — the build itself.
+      - run: npm --prefix extension ci
+      # webapp/ — scripts/design-audit.mjs resolves postcss from there, and its
+      # R0 rule FAILS rather than skips when postcss is missing.
+      - run: npm --prefix webapp ci
+
+      # --no-bump runs its own preflight (tools, git state, deps) before building.
+      - name: Build, verify and package
+        run: ./scripts/cut-release.sh --no-bump
+
+      - name: Collect artifact facts
+        id: facts
+        run: |
+          set -euo pipefail
+          version="$(jq -r .version extension/manifest.json)"
+          zip="release-artifacts/clipmark-extension-${version}.zip"
+          test -f "$zip" || { echo "::error::$zip was not produced"; exit 1; }
+          {
+            echo "version=$version"
+            echo "zip=$zip"
+            echo "sha=$(cut -d' ' -f1 < "${zip}.sha256")"
+            echo "built=$(date -u '+%Y-%m-%d %H:%M UTC')"
+          } >> "$GITHUB_OUTPUT"
+
+      # Keep exactly one rolling draft rather than accumulating one per week.
+      # This only ever deletes a DRAFT this workflow created under its own
+      # non-semver tag; it can't touch a published ext-vX.Y.Z release. Drafts
+      # carry no git tag until published, so there is no tag to clean up.
+      - name: Replace the previous rolling draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view ext-build-latest --json isDraft --jq .isDraft 2>/dev/null | grep -qx true; then
+            gh release delete ext-build-latest --yes
+            echo "deleted the previous rolling draft"
+          else
+            echo "no previous rolling draft (or it is not a draft) — nothing to delete"
+          fi
+
+      - name: Park the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.facts.outputs.version }}
+          Z: ${{ steps.facts.outputs.zip }}
+          SHA256: ${{ steps.facts.outputs.sha }}
+          BUILT: ${{ steps.facts.outputs.built }}
+          # Release notes render at /<owner>/<repo>/releases/..., so a relative
+          # path would not resolve — link absolutely.
+          DOC_URL: ${{ github.server_url }}/${{ github.repository }}/blob/main/docs/RELEASE-PROCESS.md
+        run: |
+          set -euo pipefail
+          cat > notes.md <<EOF
+          **Pre-built extension package from \`main\`. Not a release.**
+
+          | | |
+          |---|---|
+          | manifest version | \`$V\` |
+          | commit | \`${{ github.sha }}\` |
+          | built | $BUILT |
+          | sha256 | \`$SHA256\` |
+
+          Produced by \`scripts/cut-release.sh --no-bump\`, so it has passed the
+          same gates a real cut does: the version-sync test, the in-build guards,
+          \`bundle-resolve-guard\` against both \`dist/\` and the extracted zip,
+          the DESIGN.md dist audit, \`unzip -t\`, and the in-zip manifest check.
+
+          ### What this is for
+          Load it unpacked to test, or hand it to a tester. It is the standing
+          proof that \`main\` still packages cleanly.
+
+          ### What this is NOT
+          Do **not** upload this to the Chrome Web Store. Version \`$V\` is
+          whatever \`main\` currently carries — it has not been bumped, so the
+          store would reject it as non-increasing. A store package is cut by a
+          human from a tagged commit: see
+          [\`docs/RELEASE-PROCESS.md\`]($DOC_URL) §5.
+          EOF
+
+          gh release create ext-build-latest "$Z" "${Z}.sha256" \
+            --draft \
+            --prerelease \
+            --target main \
+            --title "main build $V ($BUILT)" \
+            --notes-file notes.md
+          echo "::notice::Parked draft build $V — NOT published to the Chrome Web Store."

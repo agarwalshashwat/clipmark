@@ -92,10 +92,20 @@
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */
+/* Every colour here has to come from a SEMANTIC token (--surface, --border,
+   --text…), not from the raw ramp. The ramp scales are fixed values with no dark
+   override — `--gray-100` is #f3f4f6 in both themes — so a rule that reaches for
+   one is pinned to its light-mode appearance forever. That is exactly how this
+   footer ended up rendering as a white slab under a dark page: a literal
+   #ffffff background plus a --gray-100 border, on a surface whose text tokens
+   were flipping correctly around them.
+   Nothing token-level was wrong, which is why R9 (dark-mode completeness) passed
+   throughout — it checks that the tokens have dark values, not that a rule used
+   one. */
 .footer {
   padding: 80px 0 48px;
-  border-top: 1px solid var(--gray-100);
-  background: #ffffff;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .footer-container {
@@ -119,7 +129,10 @@
   font-size: 20px;
   font-weight: 800;
   font-family: var(--font-plus-jakarta);
-  color: var(--gray-900);
+  /* --gray-900 (#111827) is also the dark-mode --surface, so fixing only the
+     background would have painted the wordmark in the background colour and made
+     it disappear. --text is the same #111827 in light and inverts with the theme. */
+  color: var(--text);
   letter-spacing: -0.5px;
 }
 
@@ -511,6 +524,83 @@ html.cm-js-reveal .cm-reveal--visible {
   border: none;
   margin: 0 0 28px;
   padding: 0;
+}
+
+/* ── One-tap choice list (the /uninstall reason picker) ────────────────────── */
+/* Same construction as .fb-star: the label is the touch target, the radio stays
+   a real radio (arrow-key navigable, announced as a radio group) and is
+   stretched transparently across the label rather than hidden, so a click that
+   lands on the input still selects the option it looks like. */
+.fb-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .fb-choices { grid-template-columns: 1fr; }
+}
+
+.fb-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.fb-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.fb-choice:hover { border-color: var(--gray-300); }
+
+.fb-choice[data-selected='true'] {
+  border-color: var(--accent-strong);
+  background: var(--accent-light);
+  font-weight: 600;
+}
+
+/* Decorative: the radio itself is transparent above it, so this only ever
+   mirrors state. */
+.fb-choice-dot {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-300);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.fb-choice[data-selected='true'] .fb-choice-dot {
+  border-color: var(--accent-strong);
+  box-shadow: inset 0 0 0 4px var(--accent-strong);
+}
+
+.fb-choice input:focus-visible + .fb-choice-dot {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-choice,
+  .fb-choice-dot { transition: none; }
 }
 
 .fb-stars {
