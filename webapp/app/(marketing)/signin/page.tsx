@@ -1,36 +1,14 @@
 import { createServerSupabase } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { APP_URL } from '@/app/lib/constants';
+import { buildPageMetadata } from '@/app/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Sign In — ClipMark',
   description: 'Sign in to ClipMark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
-  alternates: {
-    canonical: '/signin',
-  },
-  openGraph: {
-    title: 'Sign In — ClipMark',
-    description: 'Sign in to ClipMark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
-    type: 'website',
-    url: '/signin',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Sign In — ClipMark',
-    description: 'Sign in to ClipMark to sync your YouTube bookmarks, Active Recall decks, and shared collections across every device.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/signin',
+  ogTitle: 'Sign In',
+});
 
 /**
  * Password sign-in is a TESTING affordance, not a product feature.

@@ -1,33 +1,13 @@
-import { APP_URL, LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
+import { LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Affiliate Terms & Conditions — ClipMark',
   description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
-  alternates: {
-    canonical: '/affiliate/terms',
-  },
-  openGraph: {
-    title: 'Affiliate Terms & Conditions — ClipMark',
-    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
-    type: 'website',
-    url: '/affiliate/terms',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Affiliate Terms & Conditions — ClipMark',
-    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/affiliate/terms',
+  ogTitle: 'Affiliate Terms & Conditions',
+});
 
 const SECTION_STYLE = {
   marginBottom: 48,
