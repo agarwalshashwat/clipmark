@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseAdmin, createStatelessAuthClient } from '@/lib/clients';
+import { mintExtensionSession } from './extension-session';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -37,9 +39,29 @@ export async function GET(request: NextRequest) {
           .eq('id', data.session.user.id)
           .single();
 
+        // Mint the extension a session in its OWN refresh-token family rather
+        // than handing it the website's session verbatim — see
+        // mintExtensionSession for why sharing one family signed users out of
+        // one surface or the other on almost every refresh. A mint failure
+        // (e.g. the email provider rejecting generateLink) falls back to the
+        // old shared-session behavior rather than failing sign-in outright —
+        // still a working handoff, just with the failure mode this replaces.
+        const minted = await mintExtensionSession(
+          getSupabaseAdmin(),
+          createStatelessAuthClient(),
+          data.session.user.email ?? '',
+        ).catch(err => {
+          console.error('mintExtensionSession failed, falling back to a shared session', err);
+          return null;
+        });
+        const extSession = minted ?? {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+        };
+
         const p = new URLSearchParams({
-          access_token:  data.session.access_token,
-          refresh_token: data.session.refresh_token,
+          access_token:  extSession.accessToken,
+          refresh_token: extSession.refreshToken,
           user_id:       data.session.user.id,
           user_email:    data.session.user.email || '',
           is_pro:        String(profile?.is_pro ?? false),

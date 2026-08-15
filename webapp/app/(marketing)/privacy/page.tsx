@@ -1,33 +1,13 @@
-import { APP_URL, PRIVACY_EMAIL } from '@/app/lib/constants';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
+import { PRIVACY_EMAIL } from '@/app/lib/constants';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Privacy Policy — ClipMark',
   description: 'How ClipMark collects, uses, and protects your data.',
-  alternates: {
-    canonical: '/privacy',
-  },
-  openGraph: {
-    title: 'Privacy Policy — ClipMark',
-    description: 'How ClipMark collects, uses, and protects your data.',
-    type: 'website',
-    url: '/privacy',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Privacy Policy — ClipMark',
-    description: 'How ClipMark collects, uses, and protects your data.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/privacy',
+  ogTitle: 'Privacy Policy',
+});
 
 const SECTION_STYLE = {
   marginBottom: 48,
@@ -103,6 +83,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>Auth tokens</strong> — OAuth access and refresh tokens, stored encrypted in your browser&apos;s Chrome storage and our secure database.</li>
             <li style={LI_STYLE}><strong>Usage data</strong> — view counts for shared collections (no personal identifying data).</li>
             <li style={LI_STYLE}><strong>Feedback you submit</strong> — the rating and answers you send from the <a href="/feedback" style={{ color: 'var(--brand-ink)' }}>feedback form</a>, plus the name and email address only if you choose to fill them in. Both are optional; leaving them blank keeps the submission anonymous.</li>
+            <li style={LI_STYLE}><strong>Uninstall feedback</strong> — if you remove the extension, Chrome opens our <a href="/uninstall" style={{ color: 'var(--brand-ink)' }}>uninstall page</a>. Answering is entirely optional. If you do, we store the reason you picked, anything you write, the version of the extension you had, and an email address only if you choose to leave one — used solely to reply to you and to decide what to fix. Nothing that identifies you is added automatically, and no account or sign-in is involved.</li>
           </ul>
           <p style={P_STYLE}>
             We do <strong>not</strong> collect browsing history, track pages outside of YouTube, or use third-party advertising trackers.
@@ -133,6 +114,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like summarization and tag suggestions are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
             <li style={LI_STYLE}><strong>Dodo Payments</strong> — for Pro subscriptions. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
             <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel&apos;s Privacy Policy</a>.</li>
+            <li style={LI_STYLE}><strong>Vercel Web Analytics</strong> — aggregate visitor counts for this website (pages viewed, referrer, country, device type). It sets no cookies, does not fingerprint you, and cannot follow you to other sites, so there is nothing here to consent to or opt out of. It does not run inside the extension and never sees your bookmarks.</li>
           </ul>
         </div>
 

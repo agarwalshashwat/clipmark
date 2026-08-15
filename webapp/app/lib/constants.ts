@@ -12,10 +12,22 @@ export const APP_NAME      = 'ClipMark';
 export const APP_URL       = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://clipmark.mithahara.com')
   .replace(/\/+$/, '');
 
-// Canonical Chrome Web Store listing. The item id is permanent — it survives
-// listing updates and stays valid once the listing is public — so it is safe to
-// hardcode. Single source of truth for every "Add to Chrome" / install CTA.
+// Canonical Chrome Web Store listing, and the single source of truth for every
+// "Add to Chrome" / install CTA on the site — never inline a store URL at a call
+// site. The item id is permanent: it survives listing updates and stays valid
+// once the listing goes public, so the fallback below is a real URL, not a
+// placeholder.
+//
+// The env var exists so the listing can be re-pointed (a replacement item, or a
+// staging/unlisted build) without a code change. It is NEXT_PUBLIC_*, so Next
+// inlines it at BUILD time — changing it in Vercel needs a redeploy, not just a
+// restart. Leave it unset to use the fallback.
+// `||` and the trim are load-bearing, not defensive noise: `??` would let an env
+// var that exists but is EMPTY (the state you get by clearing the field in the
+// Vercel UI rather than deleting the variable) through as '', turning every
+// install CTA into href="" — a button that silently reloads the page.
 export const CHROME_STORE_URL =
+  process.env.NEXT_PUBLIC_CHROME_STORE_URL?.trim() ||
   'https://chromewebstore.google.com/detail/clipmark/iboippnihpcnnglgboaiedaiimbiolgg';
 
 export const SUPPORT_EMAIL = 'support@clipmark.mithahara.com';
