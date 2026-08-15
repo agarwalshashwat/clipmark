@@ -11,6 +11,7 @@ import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 import { ScrollReveal } from './ScrollReveal';
 import { HeroDemoVideo } from '@/app/components/HeroDemoVideo';
 import { WhyClipMark } from '@/app/components/WhyClipMark';
+import { InstallCta } from '@/app/components/InstallCta';
 import { buildPageMetadata } from '@/app/lib/seo';
 
 // Built through buildPageMetadata so the homepage's own openGraph/twitter copy
@@ -195,7 +196,7 @@ export default async function Home({
             border: '1px solid rgba(20,184,166,0.15)'
           }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16 }}>verified</span>
-            The Second Brain for YouTube Professionals
+            Active recall for what you watch
           </div>
 
           {/* H1 */}
@@ -204,22 +205,24 @@ export default async function Home({
             lineHeight: 0.95, letterSpacing: '-0.05em', maxWidth: 1000, margin: '0 auto 32px',
             fontFamily: "var(--font-display)", color: 'var(--gray-900)',
           }}>
-            Stop Forgetting What You Watch —<br />
-            <em style={{ 
-              color: 'var(--accent-strong)', 
-              fontStyle: 'italic', 
+            Turn YouTube into flashcards<br />
+            <em style={{
+              color: 'var(--accent-strong)',
+              fontStyle: 'italic',
               fontWeight: 800,
               textDecoration: 'none',
               background: 'var(--gradient-brand)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               display: 'inline-block'
-            }}>Your YouTube Second Brain.</em>
+            }}>you actually remember.</em>
           </h1>
 
           {/* Subtitle */}
           <p className="hero-sub" style={{ fontSize: 21, color: 'var(--gray-600)', maxWidth: 720, margin: '0 auto 56px', lineHeight: 1.6, fontWeight: 450 }}>
-            Quit wasting time rewatching tutorials or losing gems in your watch history. Build a personal knowledge system that remembers exactly where the value is.
+            Hit <strong>Alt+B</strong> on the moment that matters. ClipMark brings it back on a spaced
+            schedule, hides your note, and asks you to recall it — before it replays the clip.
+            Free, on-device, exports to Anki.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -234,17 +237,20 @@ export default async function Home({
               boxShadow: '0 20px 50px rgba(13, 148, 136, 0.25)',
               transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}>
-              Master YouTube Now — It&apos;s Free <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>arrow_forward</span>
+              Add to Chrome — Free <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>arrow_forward</span>
             </a>
-            <a href="#pricing"
+            {/* Was "See Pricing" → #pricing. Sending a first-time visitor who does not
+                yet know what the product does straight to a price is the wrong second
+                step; the demo is. */}
+            <a href="#active-recall"
               style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '20px 44px', background: 'white', border: '1px solid var(--gray-200)',
               color: 'var(--gray-900)', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             }}>
-              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24, color: 'var(--brand-ink)' }}>bolt</span>
-              See Pricing
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24, color: 'var(--brand-ink)' }}>play_circle</span>
+              See how a review works
             </a>
           </div>
 
@@ -486,6 +492,11 @@ export default async function Home({
               </div>
             ))}
           </div>
+
+          {/* Highest-intent point on the page: the reader has just seen the actual
+              review loop demonstrated. Previously the next thing offered here was
+              "See what else Pro unlocks". */}
+          <InstallCta headline="That loop is the whole product. It&rsquo;s free to try." />
         </div>
       </section>
 
@@ -625,6 +636,19 @@ export default async function Home({
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Third and last in-body install CTA. Without it the run from the Active
+          Recall demo to WhyClipMark — Anki, personas, AI, How It Works and the
+          compatibility strip, about five screens — had no install control in the
+          body at all, only the fixed nav. */}
+      <section style={{ padding: '0 32px 32px' }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <InstallCta
+            headline="Whichever one you are, step one is the same keystroke."
+            note="Alt+B while the video plays. ClipMark asks for two hosts — youtube.com and its own sync domain — and AI notes run on Chrome's on-device model."
+          />
         </div>
       </section>
 
@@ -821,6 +845,18 @@ export default async function Home({
       {/* Sits directly above pricing on purpose: the free-tier card is the claim
           people are most sceptical of, so the honest-limits panel lands first. */}
       <WhyClipMark tint />
+
+      {/* Second in-body install CTA: the permissions and free-tier numbers in
+          WhyClipMark are the last real objection before price, so the free path
+          gets offered once more before the pricing table does its pitch. */}
+      <section style={{ padding: '0 32px 96px' }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <InstallCta
+            headline="Two permissions, real free-tier numbers, no card."
+            note="Works on Chrome, Edge and Brave. Free keeps unlimited local bookmarks, 25 Active Recall cards and 30 reviews a month."
+          />
+        </div>
+      </section>
 
       {/* ── Pricing Preview ─────────────────────────────────────────────── */}
       <section id="pricing" style={{ padding: '128px 32px', background: 'white' }}>
