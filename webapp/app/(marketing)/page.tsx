@@ -180,10 +180,14 @@ export default async function Home({
           position: 'absolute', inset: 0, zIndex: 0,
           backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(0%2C0%2C0%2C0.03)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E\")",
         }} />
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '100px 32px 0', position: 'relative', zIndex: 1, textAlign: 'center' }}>
+        {/* .hero-inner / .hero-h1 / .hero-sub carry the mobile-only overrides in
+            globals.css. The .hero-* rules already existed but matched nothing —
+            neither element had a className — so the phone layout fell back to the
+            desktop type scale and pushed the primary CTA below the 812px fold. */}
+        <div className="hero-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '100px 32px 0', position: 'relative', zIndex: 1, textAlign: 'center' }}>
 
           {/* Badge */}
-          <div style={{
+          <div className="hero-badge" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '6px 14px', borderRadius: 9999,
             background: 'rgba(20,184,166,0.10)', color: 'var(--brand-ink)',
@@ -195,7 +199,7 @@ export default async function Home({
           </div>
 
           {/* H1 */}
-          <h1 style={{
+          <h1 className="hero-h1" style={{
             fontSize: 'clamp(44px, 7.5vw, 88px)', fontWeight: 800,
             lineHeight: 0.95, letterSpacing: '-0.05em', maxWidth: 1000, margin: '0 auto 32px',
             fontFamily: "var(--font-display)", color: 'var(--gray-900)',
@@ -214,7 +218,7 @@ export default async function Home({
           </h1>
 
           {/* Subtitle */}
-          <p style={{ fontSize: 21, color: 'var(--gray-600)', maxWidth: 720, margin: '0 auto 56px', lineHeight: 1.6, fontWeight: 450 }}>
+          <p className="hero-sub" style={{ fontSize: 21, color: 'var(--gray-600)', maxWidth: 720, margin: '0 auto 56px', lineHeight: 1.6, fontWeight: 450 }}>
             Quit wasting time rewatching tutorials or losing gems in your watch history. Build a personal knowledge system that remembers exactly where the value is.
           </p>
 
@@ -311,7 +315,7 @@ export default async function Home({
                   <span className="material-symbols-outlined" aria-hidden="true">timer_off</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>Passive Consumption (Bad)</h4>
+                  <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>Passive Consumption (Bad)</h3>
                   <p style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic' }}>&ldquo;Where was that part? *scrubs timeline for 15 minutes*&rdquo;</p>
                 </div>
               </div>
@@ -320,7 +324,10 @@ export default async function Home({
                   <span className="material-symbols-outlined" aria-hidden="true">bolt</span>
                 </div>
                 <div>
-                  <h4 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>The ClipMark System (Pro)</h4>
+                  {/* Was "The ClipMark System (Pro)" — tagging the *good* half of a
+                      before/after as paid. Revisit mode and Active Recall are both
+                      on the free tier. */}
+                  <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, fontFamily: "var(--font-display)" }}>The ClipMark System</h3>
                   <p style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic' }}>&ldquo;Playing 4 peak moments in 6 minutes. System locked in.&rdquo;</p>
                 </div>
               </div>
@@ -358,20 +365,48 @@ export default async function Home({
                 </div>
               </div>
 
-              {/* Bar chart */}
+              {/* Replaces a two-bar chart that plotted "Mental Fatigue 120m" against
+                  "Knowledge Retained 6m" — two different quantities on one time axis,
+                  where the desirable outcome rendered as the 5%-height bar and so read
+                  as *less* knowledge retained. Both numbers were invented.
+
+                  What's here instead is the real review ladder from
+                  extension/src/recall.js: schedule defaults to [1, 3, 7] days, then
+                  each "Got it" pushes min(lastInterval * 2, RECALL_MAX_INTERVAL_DAYS)
+                  with the cap at 60. Nothing to measure and nothing to fabricate — it
+                  is just what the scheduler does. */}
               <div style={{ borderTop: '1px solid var(--gray-200)', paddingTop: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: 120, marginBottom: 16 }}>
-                  <div style={{ flex: 1, background: 'var(--gray-200)', height: '100%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
-                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>120m</span>
-                  </div>
-                  <div style={{ flex: 1, background: 'var(--accent)', height: '5%', borderRadius: '8px 8px 0 0', position: 'relative' }}>
-                    <span style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: 'var(--primary-deep)', whiteSpace: 'nowrap' }}>6m</span>
-                  </div>
+                <p style={{ fontWeight: 700, fontSize: 11, letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 20 }}>
+                  Every &ldquo;Got it&rdquo; pushes the next review further out
+                </p>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 96, marginBottom: 12 }}>
+                  {[
+                    { d: 1,  h: 12 },
+                    { d: 3,  h: 22 },
+                    { d: 7,  h: 34 },
+                    { d: 14, h: 50 },
+                    { d: 28, h: 68 },
+                    { d: 56, h: 88 },
+                    { d: 60, h: 100 },
+                  ].map(({ d, h }, i, arr) => (
+                    <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+                      <span style={{
+                        fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700,
+                        color: i === arr.length - 1 ? 'var(--primary-deep)' : 'var(--text-muted)',
+                        textAlign: 'center', marginBottom: 4, whiteSpace: 'nowrap',
+                      }}>{d}d</span>
+                      <div style={{
+                        height: `${h}%`, borderRadius: '6px 6px 0 0',
+                        background: 'var(--accent)',
+                        opacity: 0.35 + (0.65 * (i / (arr.length - 1))),
+                      }} />
+                    </div>
+                  ))}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 11, letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                  <span>Mental Fatigue</span>
-                  <span style={{ color: 'var(--primary-deep)' }}>Knowledge Retained</span>
-                </div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
+                  Starts at 1 / 3 / 7 days, then doubles — capped at 60. Miss one and it
+                  comes back tomorrow.
+                </p>
               </div>
             </div>
           </div>
@@ -382,13 +417,18 @@ export default async function Home({
       <section id="active-recall" style={{ padding: '128px 32px', background: 'var(--gray-50)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 72 }}>
+            {/* Active Recall is NOT Pro-gated. Free gets 25 enrolled moments and 30
+                reviews a month (extension/src/usage-caps.js), and this section used
+                to carry a PRO badge that contradicted both WhyClipMark lower down
+                this same page and /faq. Badging the one thing no competitor does as
+                paid was the single worst conversion bug on the page. */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <span className="cm-section-label" style={{ margin: 0 }}>Active Recall</span>
               <span style={{
                 padding: '3px 10px', borderRadius: 9999,
                 background: 'var(--accent-strong)',
                 color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em',
-              }}>PRO</span>
+              }}>FREE</span>
             </div>
             <h2 style={{
               fontSize: 'clamp(32px, 4.5vw, 48px)', fontWeight: 800, marginBottom: 20,
@@ -399,6 +439,10 @@ export default async function Home({
             <p style={{ fontSize: 18, color: 'var(--text-muted)', maxWidth: 620, margin: '0 auto', lineHeight: 1.7 }}>
               Rewatching feels like studying, but recognition isn&apos;t recall. ClipMark shows you the
               timestamp and hides your note — so you have to retrieve it before the clip plays.
+            </p>
+            <p style={{ fontSize: 15, color: 'var(--text-muted)', maxWidth: 620, margin: '16px auto 0', lineHeight: 1.7 }}>
+              Included free: <strong>25 moments enrolled at a time, 30 reviews a month.</strong> No card,
+              no trial clock — the same numbers printed on the pricing page.
             </p>
           </div>
 
@@ -454,11 +498,14 @@ export default async function Home({
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <span className="cm-section-label" style={{ margin: 0 }}>Works with Anki</span>
+              {/* Anki export is not Pro-only either: free is 1 export a month
+                  (FREE_ANKI_EXPORTS_PER_MONTH in extension/src/usage-caps.js),
+                  unlimited on Pro. A bare PRO badge overstated the paywall. */}
               <span style={{
                 padding: '3px 10px', borderRadius: 9999,
                 background: 'var(--accent-strong)',
                 color: 'white', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em',
-              }}>PRO</span>
+              }}>1/MO FREE</span>
             </div>
             <h2 style={{
               fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, marginBottom: 20,
@@ -473,7 +520,7 @@ export default async function Home({
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                'One-click export to an Anki-importable file (Front / Back / Tags)',
+                'One-click export to an Anki-importable file (Front / Back / Tags) — one a month free, unlimited on Pro',
                 'Every card carries a “▶ Replay the moment” link to the exact second',
                 'Your ClipMark tags come across as Anki tags',
                 'Export from the extension or the web dashboard',
@@ -540,7 +587,7 @@ export default async function Home({
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Builder</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Stop "tutorial hell." Instantly capture code snippets and architecture shifts from technical deep dives. Build a searchable library of 100+ tutorials you actually understand.
+                Stop "tutorial hell." Capture the exact second a pattern clicks, and build a searchable, taggable library of the deep dives you actually understood.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dbeafe', color: '#1d4ed8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#react</span>
@@ -555,7 +602,7 @@ export default async function Home({
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Founder</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Extract insights from 3-hour podcasts with industry leaders in seconds. Use AI to summarize key takeaways and turn them into actionable tasks for your team.
+                Pull the three moments that actually mattered out of a 3-hour founder podcast, with an on-device AI draft of each — and keep them somewhere you&apos;ll see them again.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#ffedd5', color: '#c2410c', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#strategy</span>
@@ -625,8 +672,16 @@ export default async function Home({
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, marginBottom: 32, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>
                 Effortless curation powered by Intelligence.
               </h2>
+              {/* This used to read "Our AI engine analyzes transcripts in real-time to
+                  surface the gold nuggets so you don't have to" — which claimed an
+                  engine we don't own (it is Chrome's on-device Gemini Nano, as the
+                  footnote directly below already said) and implied automatic discovery
+                  of the good bits. You choose the moment with Alt+B; the model only
+                  drafts the note for it. */}
               <p style={{ color: 'var(--gray-300)', fontSize: 18, lineHeight: 1.75, marginBottom: 16 }}>
-                Your &ldquo;Second Brain&rdquo; doesn&apos;t just store; it understands. Our AI engine analyzes transcripts in real-time to surface the gold nuggets so you don&apos;t have to.
+                You pick the moment. Chrome&apos;s on-device AI reads the transcript around it and
+                drafts the note and tags, so saving a clip costs you a keystroke instead of a
+                paragraph.
               </p>
               <p style={{ fontSize: 11, color: 'var(--gray-300)', marginBottom: 40, fontStyle: 'italic' }}>
                 * AI features use Chrome&apos;s built-in AI (Gemini Nano). Availability is subject to Google&apos;s support and may vary by Chrome version.
@@ -700,7 +755,7 @@ export default async function Home({
                     <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>{icon}</span>
                   </div>
                   <span className="cm-step-tag">Step {num}</span>
-                  <h4 style={{
+                  <h3 style={{
                     fontSize: 22,
                     fontWeight: 800,
                     marginBottom: 16,
@@ -708,7 +763,7 @@ export default async function Home({
                     color: 'var(--gray-900)'
                   }}>
                     {title}
-                  </h4>
+                  </h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: 16, lineHeight: 1.7, margin: 0 }}>{desc}</p>
 
                   <a
@@ -742,12 +797,16 @@ export default async function Home({
             Built for Your Ecosystem
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 56, opacity: 0.8 }}>
+            {/* These are file-based exports, not live integrations. /faq says so
+                explicitly ("we would rather say that plainly than call a CSV an
+                integration"), and a bare "Notion & Obsidian" here quietly undid it.
+                Cloud Sync is Pro-only, so it is labelled as such. */}
             {[
               { icon: 'brand_family',    label: 'YouTube Web', color: '#FF0000' },
               { icon: 'browser_updated', label: 'Chrome & Edge', color: '#4285F4' },
-              { icon: 'style',           label: 'Anki Export', color: 'var(--brand-ink)' },
-              { icon: 'description',     label: 'Notion & Obsidian', color: 'var(--ai)' },
-              { icon: 'cloud_sync',      label: 'Cloud Sync', color: 'var(--brand-ink)' },
+              { icon: 'style',           label: 'Anki export', color: 'var(--brand-ink)' },
+              { icon: 'description',     label: 'Notion / Obsidian export (CSV · Pro)', color: 'var(--ai)' },
+              { icon: 'cloud_sync',      label: 'Cloud sync (Pro)', color: 'var(--brand-ink)' },
             ].map(({ icon, label, color }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 16, color: 'var(--gray-900)' }}>
                 <span className="material-symbols-outlined" aria-hidden="true" style={{ color }}>{icon}</span>
