@@ -11,6 +11,12 @@ import {
 } from '../constants.module.js';
 import { formatLoopRange, isLoopBookmark } from '../loop.module.js';
 import {
+  getValidToken,
+  resolveAccessToken,
+  TOKEN_NO_SESSION,
+  TOKEN_SESSION_EXPIRED,
+} from '../auth-token.module.js';
+import {
   buildDueSummary,
   buildIdleVideoCards,
   collectStoredBookmarks,
@@ -144,35 +150,6 @@ async function resolveNewBookmarkReviewSchedule() {
   const enrolled = await countAllEnrolledRecallSegments();
   if (isEnrollmentCapReached(enrolled)) return { reviewSchedule: [], capped: true };
   return { reviewSchedule: [1, 3, 7], capped: false };
-}
-
-// Returns a fresh access token, auto-refreshing via /api/refresh if expired.
-async function getValidToken() {
-  const { bmUser } = await new Promise(resolve =>
-    chrome.storage.sync.get({ bmUser: null }, resolve)
-  );
-  if (!bmUser?.accessToken) return null;
-  try {
-    const payload = JSON.parse(atob(bmUser.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (payload.exp * 1000 > Date.now() + 60_000) return bmUser.accessToken;
-  } catch { /* fall through to refresh */ }
-  if (!bmUser.refreshToken) return null;
-  try {
-    const res = await fetch(`${API_BASE}/api/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: bmUser.refreshToken }),
-    });
-    if (!res.ok) return null;
-    const { access_token, refresh_token } = await res.json();
-    await new Promise(resolve =>
-      chrome.storage.sync.set({ bmUser: { ...bmUser, accessToken: access_token, refreshToken: refresh_token } }, resolve)
-    );
-    return access_token;
-  } catch {
-    logger.warn('Auth refresh failed in getValidToken');
-    return null;
-  }
 }
 
 // Re-checks Pro status against the server and updates the cached bmUser.isPro
@@ -1649,9 +1626,12 @@ async function loadAuthState() {
     userChip.title           = bmUser.userEmail || '';
     if (signoutBtn) signoutBtn.style.display = '';
 
-    // Silently validate/refresh token — sign out if session is fully expired
-    const token = await getValidToken();
-    if (!token) {
+    // Silently validate/refresh token — sign out only when the session is
+    // genuinely gone (server rejected it, or the record is unusable). A failed
+    // refresh used to sign the user out whether the token was dead or the
+    // network was merely down.
+    const { reason } = await resolveAccessToken();
+    if (reason === TOKEN_SESSION_EXPIRED || reason === TOKEN_NO_SESSION) {
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
     }
