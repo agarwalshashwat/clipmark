@@ -216,12 +216,12 @@
 
 /* ── Upgrade page classes ──────────────────────────────────────────────────── */
 .faq-card {
-  background: #ffffff;
-  border: 1px solid rgba(17, 24, 39,0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
 }
-.feature-row:hover { background: rgba(243,243,244,0.5); }
+.feature-row:hover { background: var(--surface-alt); }
 .ghost-btn {
   background: transparent;
   border: 2px solid var(--border);
@@ -267,7 +267,9 @@
   padding: 6px 16px;
   border-radius: 9999px;
   background: var(--accent-light);
-  color: var(--primary-deep);
+  /* --primary-deep is teal-700 in BOTH themes; --brand-ink is the same teal-700
+     in light and flips to teal-400 on dark. */
+  color: var(--brand-ink);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -277,9 +279,9 @@
 }
 
 .cm-card {
-  background: white;
+  background: var(--surface);
   border-radius: 20px;
-  border: 1px solid rgba(17, 24, 39, 0.06);
+  border: 1px solid var(--border);
   padding: 40px 32px;
   box-shadow: 0 4px 20px rgba(17, 24, 39, 0.04);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -319,7 +321,7 @@
 .cm-step-tag {
   font-size: 12px;
   font-weight: 800;
-  color: var(--gray-600);
+  color: var(--text-muted);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -333,7 +335,7 @@
   left: 10%;
   right: 10%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gray-200) 15%, var(--gray-200) 85%, transparent);
+  background: linear-gradient(90deg, transparent, var(--border) 15%, var(--border) 85%, transparent);
   z-index: 0;
 }
 
@@ -564,7 +566,7 @@ html.cm-js-reveal .cm-reveal--visible {
 /* `data-on` is computed in React from the selected rating, or from the hovered
    one while the pointer is over the row — a pure-CSS sibling trick can only
    light stars AFTER the hovered one, which is backwards for a rating. */
-.fb-star-glyph[data-on='selected'] { color: var(--accent-strong); }
+.fb-star-glyph[data-on='selected'] { color: var(--brand-ink); }
 .fb-star-glyph[data-on='hover']    { color: var(--accent); }
 .fb-star:hover .fb-star-glyph { transform: scale(1.06); }
 

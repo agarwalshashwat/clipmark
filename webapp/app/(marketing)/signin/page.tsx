@@ -83,7 +83,7 @@ export default async function SignInPage({
 
           {/* Glassmorphic card */}
           <div className="cm-card" style={{
-            background: '#ffffff',
+            background: 'var(--surface)',
             padding: '48px',
           }}>
 
@@ -94,7 +94,7 @@ export default async function SignInPage({
               </div>
               <h1 style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 32, fontWeight: 800, color: 'var(--gray-900)',
+                fontSize: 32, fontWeight: 800, color: 'var(--text)',
                 letterSpacing: '-1px', margin: '0 0 12px',
               }}>
                 Welcome Back
@@ -129,10 +129,10 @@ export default async function SignInPage({
                 style={{
                   width: '100%',
                   padding: '14px',
-                  background: 'white',
-                  border: '1px solid var(--gray-200)',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 12,
-                  color: 'var(--gray-800)',
+                  color: 'var(--text)',
                   fontSize: 15,
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -157,7 +157,7 @@ export default async function SignInPage({
 
             {/* Test-only password sign-in (see isPasswordLoginEnabled) */}
             {passwordLoginEnabled && (
-              <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed var(--gray-200)' }}>
+              <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px dashed var(--border)' }}>
                 <p style={{
                   fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
                   color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16,
@@ -170,7 +170,7 @@ export default async function SignInPage({
                     placeholder="test-monthly@clipmark.test"
                     style={{
                       width: '100%', padding: '12px 14px', borderRadius: 10,
-                      border: '1px solid var(--gray-200)', fontSize: 14, fontFamily: 'inherit',
+                      border: '1px solid var(--border)', fontSize: 14, fontFamily: 'inherit',
                     }}
                   />
                   <input
@@ -178,14 +178,14 @@ export default async function SignInPage({
                     placeholder="Password"
                     style={{
                       width: '100%', padding: '12px 14px', borderRadius: 10,
-                      border: '1px solid var(--gray-200)', fontSize: 14, fontFamily: 'inherit',
+                      border: '1px solid var(--border)', fontSize: 14, fontFamily: 'inherit',
                     }}
                   />
                   <button
                     type="submit"
                     style={{
-                      width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--gray-300)',
-                      background: 'var(--gray-50)', color: 'var(--gray-600)', fontSize: 14, fontWeight: 700,
+                      width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--border)',
+                      background: 'var(--bg)', color: 'var(--text-muted)', fontSize: 14, fontWeight: 700,
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >
@@ -203,7 +203,7 @@ export default async function SignInPage({
               </p>
               <div style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                gap: 8, padding: '8px 16px', background: 'var(--gray-50)', borderRadius: 999
+                gap: 8, padding: '8px 16px', background: 'var(--bg)', borderRadius: 999
               }}>
                 <span
                   className="material-symbols-outlined" aria-hidden="true"

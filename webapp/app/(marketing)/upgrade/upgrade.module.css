@@ -1,7 +1,7 @@
 .pageWrap {
-  background: var(--gray-50);
+  background: var(--bg);
   min-height: 100vh;
-  color: var(--gray-900);
+  color: var(--text);
   padding-bottom: 100px;
 }
 
@@ -21,13 +21,13 @@
   font-size: clamp(32px, 8vw, 56px);
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: var(--gray-900);
+  color: var(--text);
   margin-bottom: 16px;
 }
 
 .sub {
   font-size: 20px;
-  color: var(--gray-700);
+  color: var(--text-sub);
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
@@ -42,8 +42,8 @@
 }
 
 .pricingCard {
-  background: #ffffff;
-  border: 1px solid var(--gray-200);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 24px;
   padding: 48px;
   display: flex;
@@ -100,17 +100,17 @@
   font-family: var(--font-display);
   font-size: 56px;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 .period {
   font-size: 16px;
-  color: var(--gray-600);
+  color: var(--text-muted);
 }
 
 .foundingNote {
   font-size: 13px;
-  color: var(--ai-strong);
+  color: var(--ai-ink);
   line-height: 1.4;
   margin: -24px 0 32px;
 }
@@ -127,7 +127,7 @@
   align-items: center;
   gap: 12px;
   font-size: 15px;
-  color: var(--gray-800);
+  color: var(--text);
 }
 
 .ctaWrap {
@@ -139,7 +139,7 @@
 .soonBlock {
   margin-top: 8px;
   padding-top: 16px;
-  border-top: 1px dashed var(--gray-200);
+  border-top: 1px dashed var(--border);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -171,7 +171,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--gray-100);
+  background: var(--surface-alt);
   /* gray-500 on gray-100 is 4.39:1 — just under AA at this size. */
   color: var(--text-muted);
   font-size: 11px;
@@ -219,12 +219,12 @@
   font-size: 32px;
   font-weight: 800;
   margin-bottom: 48px;
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 .compTableWrapper {
-  background: #ffffff;
-  border: 1px solid var(--gray-200);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 24px;
   overflow: hidden;
   max-width: 900px;
@@ -237,7 +237,7 @@
 }
 
 .compRow {
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--border);
 }
 
 .compCell {
@@ -245,24 +245,24 @@
 }
 
 .compLabel {
-  color: var(--gray-800);
+  color: var(--text);
   font-weight: 500;
 }
 
 .compVal {
   text-align: center;
   width: 120px;
-  color: var(--gray-700);
+  color: var(--text-sub);
 }
 
 .compValPro {
   color: var(--brand-ink);
   font-weight: 700;
-  background: var(--teal-50);
+  background: var(--accent-light);
 }
 
 .compHeadRow {
-  border-bottom: 2px solid var(--gray-200);
+  border-bottom: 2px solid var(--border);
 }
 
 .compHeadCell {
@@ -304,7 +304,7 @@
 .bannerReferral {
   background: var(--ai-light);
   border: 1px solid var(--ai-light);
-  color: var(--ai-strong);
+  color: var(--ai-ink);
   padding: 12px 24px;
   border-radius: 12px;
   text-align: center;
@@ -316,8 +316,8 @@
 }
 
 .manageBox {
-  background: #ffffff;
-  border: 1px solid var(--gray-200);
+  background: var(--surface);
+  border: 1px solid var(--border);
   padding: 32px;
   border-radius: 24px;
   max-width: 600px;
@@ -335,10 +335,10 @@
 .manageTitle {
   font-size: 20px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 .manageText {
-  color: var(--gray-700);
+  color: var(--text-sub);
   margin-bottom: 24px;
 }
