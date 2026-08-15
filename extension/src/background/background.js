@@ -11,6 +11,7 @@ import {
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
+import { getValidToken } from '../auth-token.module.js';
 import { buildPendingRevision } from '../constants.module.js';
 // config.js is a plain script (no import/export) that only sets
 // globalThis.API_BASE — safe to import here for its side effect even though
@@ -567,13 +568,17 @@ const REMINDERS_API = `${globalThis.API_BASE || 'https://clipmark.mithahara.com'
 const REMINDER_HORIZON_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 async function scheduleReminderAlarms() {
-  const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
-  if (!bmUser?.accessToken) return;
+  // Must go through getValidToken: this runs from a daily alarm and on every
+  // service-worker wake-up, so the stored access token is almost always past
+  // its one-hour life. Reading `bmUser.accessToken` raw made every one of these
+  // syncs 401 and silently scheduled no alarms at all.
+  const token = await getValidToken();
+  if (!token) return;
 
   let reminders;
   try {
     const res = await fetch(REMINDERS_API, {
-      headers: { Authorization: `Bearer ${bmUser.accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return;
     const json = await res.json();
@@ -672,12 +677,12 @@ chrome.notifications.onButtonClicked.addListener(async (notifId, buttonIndex) =>
     chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${meta.videoId}` });
   } else if (buttonIndex === 1) {
     // Mark Done — call API then reschedule
-    const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
-    if (bmUser?.accessToken) {
+    const token = await getValidToken();
+    if (token) {
       try {
         await fetch(`${REMINDERS_API}/${reminderId}/done`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${bmUser.accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch {}
     }
