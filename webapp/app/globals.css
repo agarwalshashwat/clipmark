@@ -92,10 +92,20 @@
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */
+/* Every colour here has to come from a SEMANTIC token (--surface, --border,
+   --text…), not from the raw ramp. The ramp scales are fixed values with no dark
+   override — `--gray-100` is #f3f4f6 in both themes — so a rule that reaches for
+   one is pinned to its light-mode appearance forever. That is exactly how this
+   footer ended up rendering as a white slab under a dark page: a literal
+   #ffffff background plus a --gray-100 border, on a surface whose text tokens
+   were flipping correctly around them.
+   Nothing token-level was wrong, which is why R9 (dark-mode completeness) passed
+   throughout — it checks that the tokens have dark values, not that a rule used
+   one. */
 .footer {
   padding: 80px 0 48px;
-  border-top: 1px solid var(--gray-100);
-  background: #ffffff;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .footer-container {
@@ -119,7 +129,10 @@
   font-size: 20px;
   font-weight: 800;
   font-family: var(--font-plus-jakarta);
-  color: var(--gray-900);
+  /* --gray-900 (#111827) is also the dark-mode --surface, so fixing only the
+     background would have painted the wordmark in the background colour and made
+     it disappear. --text is the same #111827 in light and inverts with the theme. */
+  color: var(--text);
   letter-spacing: -0.5px;
 }
 
