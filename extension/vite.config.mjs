@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
-import { assertProdApiBase } from './scripts/api-base-guard.mjs';
+import { assertProdApiBase, assertNoHardcodedApiUrls } from './scripts/api-base-guard.mjs';
 import { assertContentGlobals } from './scripts/content-globals-guard.mjs';
 import {
   assertNoContentGlobalLeaks,
@@ -32,8 +32,39 @@ function apiBaseGuard() {
         );
         return;
       }
+      let apiBase;
       try {
-        assertProdApiBase(source);
+        apiBase = assertProdApiBase(source);
+      } catch (err) {
+        this.error(err.message);
+        return;
+      }
+
+      // Beyond validating config.js itself, make sure no OTHER source file
+      // bakes a literal "<apiBase>/api/…" endpoint URL — the shape of bug
+      // fixed for REMINDERS_API in background.js (see assertNoHardcodedApiUrls
+      // for why that specific shape, and not the bare-origin fallback used by
+      // dashboard.js/side-panel.js/upgrade-modal.js, is the dangerous one).
+      const srcDir = fileURLToPath(new URL('./src', import.meta.url));
+      const excluded = new Set([
+        fileURLToPath(new URL('./src/config.js', import.meta.url)),
+        fileURLToPath(new URL('./src/config.example.js', import.meta.url)),
+      ]);
+      const files = [];
+      const walk = (dir) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walk(full);
+          } else if (/\.m?js$/.test(entry.name) && !excluded.has(full)) {
+            files.push({ path: path.relative(srcDir, full), source: readFileSync(full, 'utf8') });
+          }
+        }
+      };
+      walk(srcDir);
+
+      try {
+        assertNoHardcodedApiUrls(apiBase, files);
       } catch (err) {
         this.error(err.message);
       }
