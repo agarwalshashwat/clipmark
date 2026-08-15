@@ -25,6 +25,7 @@ import {
   shouldInjectIntoTab,
   urlMatchesAnyPattern,
 } from './install-injection.js';
+import { registerUninstallUrl } from './uninstall-url.js';
 
 const errorReporter = initErrorReporting('extension-background');
 
@@ -172,6 +173,12 @@ const TAG_COLORS = {
     // Recreate keepalive alarm on update to ensure it persists
     chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
 
+    // Where Chrome sends the user if they remove ClipMark. Registered on both
+    // install and startup rather than install alone: the registration belongs to
+    // the worker's lifetime, and an update that changes the version has to
+    // re-register to keep ?v= truthful. The call is idempotent and never throws.
+    registerUninstallUrl().catch(() => {});
+
     if (shouldBackfillOnInstalled(details?.reason)) {
       backfillContentScripts().catch(() => {});
     }
@@ -191,6 +198,12 @@ const TAG_COLORS = {
       contexts: ['selection'],
       documentUrlPatterns: ['*://*.youtube.com/watch*'],
     });
+  });
+
+  // Browser restart: onInstalled does NOT fire, so without this the uninstall URL
+  // would only ever be registered by the install/update that first shipped it.
+  chrome.runtime.onStartup.addListener(() => {
+    registerUninstallUrl().catch(() => {});
   });
 
   // ─── Context Menu Handler ──────────────────────────────────────────────────────
