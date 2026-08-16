@@ -245,9 +245,14 @@ export function UninstallForm() {
         {errors.email && <p className="fb-field-error">{errors.email}</p>}
       </div>
 
-      <button type="submit" className="fb-submit" disabled={status === 'submitting'}>
-        {status === 'submitting' ? 'Sending…' : 'Send'}
-      </button>
+      {/* .fb-actions supplies the spacing and divider above the button — the
+          same wrapper /feedback uses. Without it the submit sat flush against
+          the email input. */}
+      <div className="fb-actions">
+        <button type="submit" className="fb-submit" disabled={status === 'submitting'}>
+          {status === 'submitting' ? 'Sending…' : 'Send'}
+        </button>
+      </div>
     </form>
   );
 }

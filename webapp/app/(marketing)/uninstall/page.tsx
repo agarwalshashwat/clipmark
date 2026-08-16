@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 export default function UninstallPage() {
   return (
     <>
-      <section style={{ padding: '72px 32px 40px', background: 'var(--surface)' }}>
+      <section style={{ padding: '72px 32px 24px', background: 'var(--surface)' }}>
         <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
           <span className="cm-section-label">ClipMark is uninstalled</span>
           <h1
@@ -61,7 +61,7 @@ export default function UninstallPage() {
         </div>
       </section>
 
-      <section style={{ padding: '8px 32px 88px', background: 'var(--bg)' }}>
+      <section style={{ padding: '16px 32px 88px', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <UninstallForm />
 
