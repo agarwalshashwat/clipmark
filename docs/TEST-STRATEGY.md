@@ -6,7 +6,7 @@
 > manifest additions in `tests/unit/manifest.test.mjs` — running in `ci-unit` and
 > `ci-extension-smoke`. §1.2/§3.2/§3.4's AUTH_SUCCESS gap and §5's items 1–2 are closed;
 > everything else below still describes work not yet done. This is the
-> follow-up to [`docs/TEST_PLAN_launch.md`](TEST_PLAN_launch.md), which scoped and (as of this
+> follow-up to the launch test plan (§0.1), which scoped and (as of this
 > writing) has been **fully implemented**: the five launch-blocker security/payments paths
 > (RLS self-grant, `/api/share` auth, refund revocation, webhook write failures, admin
 > authorization) all have unit + integration coverage under `webapp/tests/`, running in
@@ -49,6 +49,26 @@ Notable patterns already in place that new tests should **reuse, not reinvent**:
 - No test framework beyond `node:test` + `tsx` + Playwright exists anywhere in the repo. No
   `jsdom`, no React Testing Library, no Vitest. Recommendations below default to reusing these
   three; a new dependency is proposed only where genuinely nothing existing can do the job.
+
+### 0.1 The launch test plan — executed, folded in here
+
+`docs/TEST_PLAN_launch.md` (2026-07-18) planned five launch-blocker test areas plus two
+enablers, and opened with *"plan only, no tests written yet."* **All seven shipped.** Folded in
+so the plan doesn't outlive its own execution:
+
+| Planned | Where it lives now |
+|---|---|
+| Enabler (a) — local Supabase in CI | The `ci-integration` job in `.github/workflows/ci-launch-gates.yml`; locally, `supabase start` + `npm --prefix webapp run db:bootstrap` |
+| Enabler (b) — DI refactor of the Supabase/Dodo clients | The `handleX(req, deps)` pattern above — now the house style for every route |
+| #1 RLS: self-grant-Pro prevention | `webapp/tests/integration/rls-profiles.test.ts` |
+| #2 Dodo webhook — branches + entitlements | `webapp/tests/unit/webhook-dodo.test.ts`, `integration/webhook-entitlements.test.ts` |
+| #3 `/api/share` auth + free-tier limit | `webapp/tests/integration/share.test.ts` |
+| #4 Cloud sync `/api/bookmarks` isolation + Pro gate | `webapp/tests/integration/bookmarks-sync.test.ts` |
+| #5 Admin route authorization | `webapp/tests/unit/admin-auth.test.ts`, `integration/admin-grant.test.ts`, `integration/admin-set-affiliate.test.ts` |
+
+The one caveat that outlived the plan: **`ci-integration` running green does not mean the
+packaged extension works.** CI gates 4 of ~20 Playwright specs and none of the
+`*-packaged.spec.ts` ones — see §4 and `docs/RELEASE-PROCESS.md` §5.
 
 ---
 

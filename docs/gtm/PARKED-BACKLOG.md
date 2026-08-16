@@ -365,6 +365,28 @@ imagery carries content-rights constraints that a blind `git add` would ignore.
 
 ---
 
+## Provenance — `ROADMAP.md` was removed (2026-08-16)
+
+This list is now the only forward-looking backlog. The root `ROADMAP.md` was deleted in the
+docs prune, and **nothing was lost** — the twelve `**Source:** ROADMAP.md:NNN` citations above
+already carried its whole future half into this file: Phase 12 → item 31, the Backlog/Ideas
+grab-bag → item 30, Condense Mode → item 27, and Phase 10a sync → item 18 (PR #107).
+
+Two pieces did **not** come across, deliberately:
+
+- **Phases 1–9, all marked ✅ Done** — a shipped-work history. `docs/LAUNCH-PRD.md` §1–§2 covers
+  what exists today, more accurately and against a stamped commit.
+- **Phase 11 "Smart Watching"** (Q4 2026, compress a video by *engagement* rather than by
+  speech-vs-silence) — a sketch, not a scoped item. Treated as adjacent to item 27; if it's ever
+  picked up it needs its own spike, which item 27 already argues for.
+
+`ROADMAP.md` also carried **stale pricing** ($5/mo, $40/yr) against the live
+$7.99/$59.99/$99.99 — one of the reasons it went. Live pricing:
+`webapp/app/(marketing)/upgrade/pricing.ts`, quoted in `docs/LAUNCH-PRD.md` §1. Those `Source:`
+citations remain readable in git history (`git show a795d01:ROADMAP.md`).
+
+---
+
 ## Notes on what was *not* found
 
 Recorded so the next scan doesn't redo this work:

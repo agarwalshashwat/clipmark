@@ -6,7 +6,7 @@ Status: **diagnosis + spec only — no code changed, no migration applied, no DB
 
 ### 1.1 What the route writes vs. what the schema has
 
-[`webapp/app/api/admin/set-affiliate/route.ts`](webapp/app/api/admin/set-affiliate/route.ts) builds an `updates` object and does `supabaseAdmin.from('profiles').update(updates)`. Cross-checking every key it can write against `webapp/migrations/007_affiliate_program.sql` (adds `is_affiliate`, `affiliate_code`, `commission_rate`) and `009_affiliate_discounts.sql` (adds `affiliate_discount_pct`, `dodo_discount_code`):
+[`webapp/app/api/admin/set-affiliate/route.ts`](../../webapp/app/api/admin/set-affiliate/route.ts) builds an `updates` object and does `supabaseAdmin.from('profiles').update(updates)`. Cross-checking every key it can write against `webapp/migrations/007_affiliate_program.sql` (adds `is_affiliate`, `affiliate_code`, `commission_rate`) and `009_affiliate_discounts.sql` (adds `affiliate_discount_pct`, `dodo_discount_code`):
 
 | Route writes (`route.ts` line) | Exists in schema? | Actual column (if any) |
 |---|---|---|

@@ -3,7 +3,7 @@
 **Date:** 2026-08-12
 **Owner:** Ash (all posting is done by hand — nothing in this plan is automated or pre-scheduled by anyone but him)
 **Companion docs:** [posting-kit.md](posting-kit.md) (paste-ready copy), [paid-plan.md](paid-plan.md) (inorganic)
-**Existing docs this builds on:** [community-engagement-plan.md](community-engagement-plan.md), [SEO-AUDIT.md](SEO-AUDIT.md), [chrome-web-store-listing-FIELDS.md](chrome-web-store-listing-FIELDS.md), [creator-outreach-kit.md](creator-outreach-kit.md), [../release/LAUNCH_DAY_RUNBOOK.md](../release/LAUNCH_DAY_RUNBOOK.md)
+**Existing docs this builds on:** [community-engagement-plan.md](community-engagement-plan.md), [SEO-AUDIT.md](SEO-AUDIT.md), [chrome-web-store-listing-FIELDS.md](chrome-web-store-listing-FIELDS.md), [creator-outreach-kit.md](creator-outreach-kit.md). The old `docs/release/LAUNCH_DAY_RUNBOOK.md` is folded into [§6.1](#61-watch-windows-and-the-incident-path)
 
 ---
 
@@ -167,7 +167,7 @@ All times are **America/New_York (ET)** with PT in brackets where it matters. De
 |---|---|---|
 | 0.1 | **⛔ Publish v1.0.4 to CWS and confirm the public listing reads 1.0.4.** | §1.1. Blocks every dark-mode claim. If not cleared, run the no-dark-mode copy variants. |
 | 0.2 | **⛔ Verify every CTA link resolves**: `clipmark.mithahara.com`, the CWS listing, `/upgrade`, `/affiliate`. Watch for the trailing-slash 308 issue on any hand-built URL. | A dead link on Day 1 costs the whole launch. |
-| 0.3 | **⛔ Do one live end-to-end paid purchase check** per [../release/LAUNCH_GO_NO_GO_CHECKLIST.md](../release/LAUNCH_GO_NO_GO_CHECKLIST.md). Dodo runs `live_mode` on every Vercel build. | If checkout is broken, traffic is wasted. |
+| 0.3 | **⛔ Do one live end-to-end paid purchase check** per `../release/LAUNCH_GO_NO_GO_CHECKLIST.md`. Dodo runs `live_mode` on every Vercel build. | If checkout is broken, traffic is wasted. |
 | 0.4 | **Create the PH draft** — tagline, description, gallery, 60s video, topics, first comment saved as a note. Schedule it for 12:01 AM PT. Do **not** publish. | PH drafts can be prepared in advance; doing this at midnight is how launches go out with typos. |
 | 0.5 | Prepare the X thread, LinkedIn post, HN title+body, IH post, and both Reddit variants as **local drafts** (they're all in [posting-kit.md](posting-kit.md)). | Nothing should be composed live. |
 | 0.6 | **Run the §7.2 rules check on every subreddit** you intend to touch. Write down which variant each sub gets. | 5 minutes per sub. This is the ban-avoidance step. |
@@ -223,6 +223,25 @@ All times are **America/New_York (ET)** with PT in brackets where it matters. De
    Day 1 log ─────────────────────────────────────────> D2 16:00 build-in-public post
    Day 2 retro ───────────────────────────────────────> paid-plan.md keyword list
 ```
+
+### 6.1 Watch windows and the incident path
+
+Folded in from `docs/release/LAUNCH_DAY_RUNBOOK.md` (2026-06-25), which this section replaced.
+Its four named owner roles were dropped — they described a team that doesn't exist. The
+monitoring cadence is the part worth keeping, because launch day is the one day the numbers
+move fast enough that hourly is too slow:
+
+| Window | Cadence | Watch |
+|---|---|---|
+| **First 2 hours** after the listing goes live | every **15 min** | Install and first-open success · checkout completion rate · Dodo webhook errors (**Vercel function logs** — Sentry does not see these) · auth callback failures |
+| **Rest of the first 24 hours** | **hourly** | New paid conversions · listing reviews and support mail · error spikes in API routes |
+
+**If something breaks:** freeze non-essential deploys, fix forward or roll back, then write down
+the timeline and impact while you still remember it. Whether it's a hotfix or waits for the next
+train is a decision **against the criteria in [`../RELEASE-PROCESS.md`](../RELEASE-PROCESS.md) §3**,
+not a judgement call under launch-day pressure — that's exactly the situation the lane was
+written for. Rollback mechanics: [`../RELEASE-RUNBOOK.md`](../RELEASE-RUNBOOK.md) §6. Remember the
+webapp rolls back in seconds and the extension does not roll back at all.
 
 ---
 

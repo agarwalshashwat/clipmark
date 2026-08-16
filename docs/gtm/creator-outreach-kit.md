@@ -1,7 +1,11 @@
 # ClipMark — Creator / Affiliate Outreach Kit (USMLE/Med Beachhead)
 
 **Date:** 2026-07-31
-**Grounds in:** [ClipMark-Distribution-Plan.md](../../ClipMark-Distribution-Plan.md) §2 (creator outreach), §3 (flywheel structure), [ClipMark-MedExam-Strategy-Brief.md](../../ClipMark-MedExam-Strategy-Brief.md) §2 (named creators), §7 (90-day GTM), [ClipMark-Affiliate-Fix-Spec.md](../../ClipMark-Affiliate-Fix-Spec.md), [ClipMark-ROADMAP.md](../../ClipMark-ROADMAP.md).
+**Grounds in:** the archived [ClipMark-Affiliate-Fix-Spec.md](../archive/ClipMark-Affiliate-Fix-Spec.md)
+and [ClipMark-ROADMAP.md](../archive/ClipMark-ROADMAP.md). Two earlier source briefs it also
+cited — a distribution plan (creator outreach, flywheel structure) and a med-exam strategy
+brief (named creators, 90-day GTM) — were **never committed to this repo**; their conclusions
+are carried in the text below.
 **Affiliate terms below are verified against the live code**, not assumed — see §2.
 **Constraint:** solo founder, zero track record with any creator, no ad budget beyond a possible small flat sponsorship ($200–500) for 1–2 creators per the distribution plan §5.
 
@@ -60,7 +64,7 @@
 
 **Important honesty note for outreach — payout is not actually automated.** The marketing page's FAQ says commissions are "paid out monthly," but there is no automated payout job anywhere in the codebase (no scheduled job, no Dodo/Wise/PayPal payout API call — `affiliate/export/route.ts` only *exports* a CSV-style payout report for the founder to act on manually). In practice: the founder personally reviews the export and manually sends payment via Wise or PayPal once a creator clears $25 and the 30-day hold. **Don't promise "automatic" payouts in outreach** — say commissions are tracked automatically and paid out by hand each month, which is both true and still a completely normal creator-affiliate process. This mirrors the same gap the Distribution Plan already flagged (§0.2) as needing a copy fix before real creator money is riding on it — treat this kit's own language as part of that fix, not a repeat of the overpromise.
 
-**The admin bypass for non-Pro external creators — now fixed and usable.** `webapp/app/api/admin/set-affiliate/route.ts` (handler in `handler.ts`) lets an admin grant a working affiliate code, `approve: true` status, a custom `commissionRate` (0–100, stored correctly as a 0–1 fraction — the unit bug that would have paid out 5000% commission on a creator's first sale is fixed, see [ClipMark-Affiliate-Fix-Spec.md](../../ClipMark-Affiliate-Fix-Spec.md)), and a custom `discountPct` — all **same-day, to a user who has never made a ClipMark account, bypassing the self-serve 30-day-Pro gate entirely.** This is the single thing that makes creator outreach viable this early; before this fix, a creator would've had to sign up, pay for Pro, and wait 30 days before getting a code.
+**The admin bypass for non-Pro external creators — now fixed and usable.** `webapp/app/api/admin/set-affiliate/route.ts` (handler in `handler.ts`) lets an admin grant a working affiliate code, `approve: true` status, a custom `commissionRate` (0–100, stored correctly as a 0–1 fraction — the unit bug that would have paid out 5000% commission on a creator's first sale is fixed, see `ClipMark-Affiliate-Fix-Spec.md`), and a custom `discountPct` — all **same-day, to a user who has never made a ClipMark account, bypassing the self-serve 30-day-Pro gate entirely.** This is the single thing that makes creator outreach viable this early; before this fix, a creator would've had to sign up, pay for Pro, and wait 30 days before getting a code.
 
 **Founding-partner offer to pitch (per the strategy brief and distribution plan, both currently just config — no new engineering needed since the admin route works):**
 - **35–40% commission** (vs. the 30% default) for the first 3–5 creators signed, framed explicitly as a time-boxed "founding partner" rate.
