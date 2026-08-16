@@ -31,8 +31,22 @@ const PRODUCT_IDS: Record<string, string> = {
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
 
-function extractCentPrice(p: { type: string; price?: number; fixed_price?: number }): number {
+type DodoPrice = { type: string; price?: number; fixed_price?: number; currency?: string | null };
+
+function extractCentPrice(p: DodoPrice): number {
   return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
+}
+
+/**
+ * The ISO 4217 code Dodo reports for a product price.
+ *
+ * This used to be dropped on the floor, which is why every price on the site
+ * rendered as a bare "$" — ambiguous for the UK and AU visitors ClipMark also
+ * targets. Defaults to USD when absent so a missing field can never blank out
+ * the currency label.
+ */
+function extractCurrency(p: DodoPrice): string {
+  return p.currency ?? 'USD';
 }
 
 function centsToDisplay(cents: number): string {
@@ -51,10 +65,14 @@ const getCachedProductPrices = unstable_cache(
       dodoClient().products.retrieve(PRODUCT_IDS.annual),
       dodoClient().products.retrieve(PRODUCT_IDS.lifetime),
     ]);
+    // All three products are expected to share a currency; monthly is the
+    // reference, and a mismatch would be a Dodo dashboard misconfiguration
+    // rather than something the pricing page should try to render.
     return {
-      monthly: centsToDisplay(extractCentPrice(monthly.price as { type: string; price?: number; fixed_price?: number })),
-      annual: centsToDisplay(extractCentPrice(annual.price as { type: string; price?: number; fixed_price?: number })),
-      lifetime: centsToDisplay(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number })),
+      monthly: centsToDisplay(extractCentPrice(monthly.price as DodoPrice)),
+      annual: centsToDisplay(extractCentPrice(annual.price as DodoPrice)),
+      lifetime: centsToDisplay(extractCentPrice(lifetime.price as DodoPrice)),
+      currency: extractCurrency(monthly.price as DodoPrice),
     };
   },
   ['dodo-product-prices'],

@@ -153,7 +153,7 @@ export default function ActiveRecallYouTubePage() {
             {
               href: '/faq',
               label: 'Questions and answers',
-              desc: 'Playback speed, fullscreen, syncing, permissions, and how this differs from a summariser.',
+              desc: 'Playback speed, fullscreen, syncing, permissions, and how this differs from a summarizer.',
             },
           ]}
         />

@@ -138,7 +138,7 @@ export default function YouTubeFlashcardsPage() {
             {
               href: '/faq',
               label: 'Questions and answers',
-              desc: 'Editing cards, notes, sync, permissions, and how this differs from a summariser.',
+              desc: 'Editing cards, notes, sync, permissions, and how this differs from a summarizer.',
             },
           ]}
         />

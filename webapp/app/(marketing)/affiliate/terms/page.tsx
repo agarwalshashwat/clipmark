@@ -87,7 +87,7 @@ export default function AffiliateTermsPage() {
           <h2 style={H2_STYLE}>1. Definitions</h2>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>&quot;Affiliate&quot;</strong> — an approved participant in the Program who has been issued a unique affiliate code.</li>
-            <li style={LI_STYLE}><strong>&quot;Affiliate Link&quot;</strong> — the personalised URL in the format <code style={{ fontSize: 13, background: 'var(--surface-alt)', padding: '2px 6px', borderRadius: 4 }}>clipmark.mithahara.com/r/[your-code]</code> assigned to you upon approval.</li>
+            <li style={LI_STYLE}><strong>&quot;Affiliate Link&quot;</strong> — the personalized URL in the format <code style={{ fontSize: 13, background: 'var(--surface-alt)', padding: '2px 6px', borderRadius: 4 }}>clipmark.mithahara.com/r/[your-code]</code> assigned to you upon approval.</li>
             <li style={LI_STYLE}><strong>&quot;Commission&quot;</strong> — 30% of the net sale amount earned when a Referred Customer completes a qualifying purchase.</li>
             <li style={LI_STYLE}><strong>&quot;Referred Customer&quot;</strong> — a new customer who clicks your Affiliate Link and completes a qualifying purchase within the 30-day attribution window.</li>
             <li style={LI_STYLE}><strong>&quot;Qualifying Purchase&quot;</strong> — a first-time Pro subscription (monthly, annual, or lifetime) by a Referred Customer. Subscription renewals and purchases by existing Pro users do not qualify.</li>
@@ -209,7 +209,7 @@ export default function AffiliateTermsPage() {
         <div style={SECTION_STYLE}>
           <h2 style={H2_STYLE}>8. Intellectual Property</h2>
           <p style={P_STYLE}>
-            ClipMark grants you a limited, non-exclusive, non-transferable, revocable licence to use the ClipMark name, logo, and official marketing assets solely for the purpose of promoting ClipMark through the Program. You may not:
+            ClipMark grants you a limited, non-exclusive, non-transferable, revocable license to use the ClipMark name, logo, and official marketing assets solely for the purpose of promoting ClipMark through the Program. You may not:
           </p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>Modify or alter the ClipMark logo or brand assets.</li>
