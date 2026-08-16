@@ -32,10 +32,10 @@
   gap: 8px;
   flex: 1;
   min-width: 0;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 12px;
   padding: 10px 16px;
-  border: 1px solid var(--gray-100);
+  border: 1px solid var(--border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: all 0.2s;
 }
@@ -52,7 +52,7 @@
   background: transparent;
   font-size: 14px;
   font-family: 'Inter', sans-serif;
-  color: var(--gray-800);
+  color: var(--text);
   outline: none;
   font-weight: 500;
 }
@@ -70,14 +70,14 @@
   transition: all 0.2s;
 }
 .clearBtn:hover {
-  background: var(--gray-100);
-  color: var(--gray-800);
+  background: var(--surface-alt);
+  color: var(--text);
 }
 
 /* ── Sort ───────────────────────────────────────────────────────────────────── */
 .sortSelect {
-  border: 1px solid var(--gray-100);
-  background: #ffffff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   border-radius: 12px;
   padding: 10px 16px;
@@ -91,15 +91,15 @@
 }
 .sortSelect:hover {
   border-color: var(--brand-ink);
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 /* ── View toggle ─────────────────────────────────────────────────────────────── */
 .viewToggle {
   display: flex;
   gap: 4px;
-  background: #ffffff;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   border-radius: 12px;
   padding: 4px;
@@ -117,8 +117,8 @@
   transition: all 0.2s;
 }
 .viewBtn:hover {
-  color: var(--gray-900);
-  background: var(--gray-100);
+  color: var(--text);
+  background: var(--surface-alt);
 }
 .viewBtnActive {
   background: var(--gray-900);
@@ -127,8 +127,8 @@
 
 /* ── Toolbar button ──────────────────────────────────────────────────────────── */
 .toolbarBtn {
-  background: #ffffff;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   border-radius: 12px;
   padding: 10px;
@@ -158,8 +158,8 @@
   top: calc(100% + 8px);
   right: 0;
   z-index: 10;
-  background: #ffffff;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
@@ -188,15 +188,15 @@
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text);
   font-family: inherit;
   transition: background 0.12s;
 }
-.exportBtn:hover { background: var(--gray-50); }
+.exportBtn:hover { background: var(--bg); }
 
 .exportDivider {
   border: none;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--border);
   margin: 4px 0;
 }
 
@@ -237,7 +237,7 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
-  color: var(--accent-strong);
+  color: var(--brand-ink);
   font-family: inherit;
   padding: 0;
 }
@@ -271,8 +271,8 @@
 .notesPanel {
   margin-top: 8px;
   padding: 10px 12px;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
@@ -283,7 +283,7 @@
   resize: vertical;
   font-size: 13px;
   font-family: 'Inter', sans-serif;
-  color: var(--gray-800);
+  color: var(--text);
   outline: none;
   line-height: 1.5;
   min-height: 40px;
