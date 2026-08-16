@@ -168,8 +168,7 @@ export default function PrivacyPage() {
             secure and for the aggregate, cookieless site measurement described above; and we rely on{' '}
             <em>consent</em> where you volunteer something optional, such as an email address on a
             feedback or uninstall form. You can withdraw that consent at any time by asking us to
-            delete it. Data is stored in the United States (see §3); transfers out of the UK/EEA rely
-            on our providers&apos; standard contractual clauses.
+            delete it. Data is stored in the United States (see §3).
           </p>
         </div>
 
