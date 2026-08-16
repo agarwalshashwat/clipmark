@@ -113,7 +113,7 @@ export default function FaqPage() {
         <FaqList items={FAQ_ITEMS} />
         <p style={{ ...PROSE, marginTop: 32, marginBottom: 0, fontSize: 15 }}>
           Something not covered? Email{' '}
-          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>
+          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>
             {SUPPORT_EMAIL}
           </a>{' '}
           and you&apos;ll get a real answer, including &ldquo;no, we don&apos;t do that.&rdquo;
