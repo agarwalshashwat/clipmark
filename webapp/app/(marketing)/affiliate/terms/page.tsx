@@ -200,6 +200,14 @@ export default function AffiliateTermsPage() {
             Affiliate attribution is tracked via a first-click, 30-day cookie (<code style={{ fontSize: 13, background: 'var(--surface-alt)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code>) set when a visitor clicks your Affiliate Link. If a visitor already has an affiliate cookie from a different affiliate, a new click will <em>not</em> overwrite the existing cookie — first-click attribution applies.
           </p>
           <p style={P_STYLE}>
+            The attribution cookie is a non-essential cookie under UK and EU law, so it is set
+            only where the visitor has accepted optional cookies on our cookie banner (see the{' '}
+            <a href="/privacy#cookies" style={{ color: 'var(--brand-ink)' }}>Privacy Policy</a>).
+            Clicks on your Affiliate Link are recorded either way, but a visitor who declines or
+            ignores the banner cannot be attributed, and no commission arises from that visit.
+            This is a legal requirement and is outside our discretion.
+          </p>
+          <p style={P_STYLE}>
             ClipMark&apos;s tracking records are the authoritative source for commission calculations. Discrepancies must be reported within 30 days of the relevant payout statement by emailing{' '}
             <a href="mailto:affiliates@clipmark.mithahara.com" style={{ color: 'var(--brand-ink)' }}>affiliates@clipmark.mithahara.com</a>.
           </p>
