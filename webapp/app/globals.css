@@ -50,6 +50,18 @@
 
 /* Webapp-specific styles can be added below */
 
+/* ── Fragment landing offset ───────────────────────────────────────────────── */
+/* The header is position:fixed at 80px, and scroll-margin-top was 0, so every
+   in-page jump parked the target section's heading underneath it — measured on
+   production for #pricing (the hero's own "See Pricing" button), #features (the
+   nav link), #active-recall, #anki and #how-it-works. 96px = 80px of nav plus a
+   16px breath. Scoped to fragment targets and to <main> sections so it cannot
+   affect programmatic scrollIntoView in the dashboard. */
+main section[id],
+[id]:target {
+  scroll-margin-top: 96px;
+}
+
 @media (max-width: 767px) {
   .nav-links {
     display: none !important;
@@ -85,10 +97,50 @@
   .mobile-text {
     display: inline;
   }
+  /* min-height + centring, not more padding: the button measured 120x36 on a
+     phone, under the 44px WCAG 2.5.5 target minimum, and it is the only install
+     control above the mobile fold. */
   .nav-cta {
     padding: 10px 16px !important;
     font-size: 13px !important;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
+
+  /* Hero above the fold at 375x812. Before this the badge, a 5-line h1 at the
+     desktop type scale and a 6-line 21px subhead consumed the whole viewport and
+     clipped the primary CTA. Layout only — no colours. */
+  .hero-inner {
+    padding-top: 56px !important;
+  }
+  .hero-badge {
+    margin-bottom: 20px !important;
+  }
+  .hero-sub {
+    margin-bottom: 28px !important;
+  }
+
+  /* 327x16 link rows are well under the touch minimum. */
+  .footer-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-account-mobile {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Desktop already has the "Log In" / "Dashboard" text link, so the icon would be
+   a duplicate control pointing at the same place. */
+.nav-account-mobile {
+  display: none;
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */
