@@ -125,13 +125,13 @@ export default async function AffiliatePage() {
   function commissionDisplay(priceStr: string) {
     const net = Number(priceStr) * (1 - REFERRAL_DISCOUNT);
     const commission = net * COMMISSION_RATE;
-    return `${formatPrice(commission.toFixed(2), prices.currency)} one-time`;
+    return `${formatPrice(commission.toFixed(2))} one-time`;
   }
 
   const COMMISSION_ROWS = [
-    { plan: 'Monthly',  price: `${formatPrice(prices.monthly, prices.currency)} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
-    { plan: 'Annual',   price: `${formatPrice(prices.annual, prices.currency)} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
-    { plan: 'Lifetime', price: `${formatPrice(prices.lifetime, prices.currency)} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
+    { plan: 'Monthly',  price: `${formatPrice(prices.monthly)} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
+    { plan: 'Annual',   price: `${formatPrice(prices.annual)} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
+    { plan: 'Lifetime', price: `${formatPrice(prices.lifetime)} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
   ];
   return (
     <>

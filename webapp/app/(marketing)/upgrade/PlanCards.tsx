@@ -1,6 +1,6 @@
 import { createCheckoutSession } from './actions';
 import type { ProductPrices } from './pricing';
-import { formatAmount, formatPrice } from './pricing';
+import { formatAmount, formatPrice, PRICE_CURRENCY } from './pricing';
 import styles from './upgrade.module.css';
 
 function Check() {
@@ -127,13 +127,13 @@ export default function PlanCards({
             )}
             <div className={styles.planName}>{plan.name}</div>
             <div className={styles.price}>
-              <span className={styles.amount}>{formatAmount(prices[plan.priceKey], prices.currency)}</span>
-              <span className={styles.currencyCode}>{prices.currency}</span>
+              <span className={styles.amount}>{formatAmount(prices[plan.priceKey])}</span>
+              <span className={styles.currencyCode}>{PRICE_CURRENCY}</span>
               <span className={styles.period}>{plan.period}</span>
             </div>
             {plan.id === 'lifetime' && (
               <p className={styles.foundingNote}>
-                Founding price — lock in lifetime access at {formatPrice(prices.lifetime, prices.currency)} before it goes up.
+                Founding price — lock in lifetime access at {formatPrice(prices.lifetime)} before it goes up.
               </p>
             )}
             <div className={styles.featureList}>

@@ -869,7 +869,7 @@ export default async function Home({
               Simple pricing. Absurdly affordable.
             </h2>
             <p style={{ color: 'var(--text-muted)', maxWidth: 560, margin: '0 auto', fontSize: 16 }}>
-              Start free, forever. Upgrade when you&apos;re ready — from <strong>{formatPrice(prices.monthly, prices.currency)}/mo</strong> for a permanent second brain.
+              Start free, forever. Upgrade when you&apos;re ready — from <strong>{formatPrice(prices.monthly)}/mo</strong> for a permanent second brain.
             </p>
           </div>
           <PlanCards prices={prices} variant="preview" />

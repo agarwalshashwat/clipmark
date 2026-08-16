@@ -31,22 +31,10 @@ const PRODUCT_IDS: Record<string, string> = {
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
 
-type DodoPrice = { type: string; price?: number; fixed_price?: number; currency?: string | null };
+type DodoPrice = { type: string; price?: number; fixed_price?: number };
 
 function extractCentPrice(p: DodoPrice): number {
   return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
-}
-
-/**
- * The ISO 4217 code Dodo reports for a product price.
- *
- * This used to be dropped on the floor, which is why every price on the site
- * rendered as a bare "$" — ambiguous for the UK and AU visitors ClipMark also
- * targets. Defaults to USD when absent so a missing field can never blank out
- * the currency label.
- */
-function extractCurrency(p: DodoPrice): string {
-  return p.currency ?? 'USD';
 }
 
 function centsToDisplay(cents: number): string {
@@ -65,14 +53,12 @@ const getCachedProductPrices = unstable_cache(
       dodoClient().products.retrieve(PRODUCT_IDS.annual),
       dodoClient().products.retrieve(PRODUCT_IDS.lifetime),
     ]);
-    // All three products are expected to share a currency; monthly is the
-    // reference, and a mismatch would be a Dodo dashboard misconfiguration
-    // rather than something the pricing page should try to render.
+    // Amounts only: the currency is fixed at USD for every region (see
+    // PRICE_CURRENCY in ./pricing), so there is nothing per-product to carry.
     return {
       monthly: centsToDisplay(extractCentPrice(monthly.price as DodoPrice)),
       annual: centsToDisplay(extractCentPrice(annual.price as DodoPrice)),
       lifetime: centsToDisplay(extractCentPrice(lifetime.price as DodoPrice)),
-      currency: extractCurrency(monthly.price as DodoPrice),
     };
   },
   ['dodo-product-prices'],
