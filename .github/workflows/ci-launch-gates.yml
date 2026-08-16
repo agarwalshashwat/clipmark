@@ -85,6 +85,19 @@ jobs:
       - name: Rendered DESIGN.md + theme conformance (offline)
         run: xvfb-run --auto-servernum npm run test:design:rendered
 
+      # The first-run tour's one-shot flag has now broken TWICE in shipped
+      # builds (v1.0.1 burned it on an SPA navigation; #97 found that a dismiss
+      # faster than driver.js's 400ms highlight transition never wrote it, so
+      # the tour returned on every video). Both were packaged-build bugs that
+      # tests/unit/tour-state.test.mjs cannot see: it covers the pure decision
+      # rules in tour-state.js, while both regressions were in the WIRING in
+      # content/tour.js — which hook fires, and whether chrome.storage actually
+      # gets written. tour-packaged.spec.ts is the only thing that exercises
+      # that against dist, and until now nothing ran it in CI, so a third
+      # regression could ship green. It needs the dist built above.
+      - name: First-run tour against the packaged build
+        run: xvfb-run --auto-servernum npm run test:yt:tour
+
       - run: xvfb-run --auto-servernum npm run test:yt:smoke
 
   webapp-build:
