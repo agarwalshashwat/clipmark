@@ -111,8 +111,8 @@ export default function PrivacyPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Google OAuth</strong> — for sign-in. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Google&apos;s Privacy Policy</a>.</li>
             <li style={LI_STYLE}><strong>Supabase</strong> — our database provider. Data is stored in the United States. See <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Supabase&apos;s Privacy Policy</a>.</li>
-            <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like summarization and tag suggestions are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
-            <li style={LI_STYLE}><strong>Dodo Payments</strong> — for Pro subscriptions. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
+            <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like note drafting are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
+            <li style={LI_STYLE}><strong>Dodo Payments</strong> — our payment processor and <strong>Merchant of Record</strong>, meaning Dodo is the seller of record for Pro purchases and handles billing and tax remittance. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
             <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel&apos;s Privacy Policy</a>.</li>
             <li style={LI_STYLE}><strong>Vercel Web Analytics</strong> — aggregate visitor counts for this website (pages viewed, referrer, country, device type). It sets no cookies, does not fingerprint you, and cannot follow you to other sites, so there is nothing here to consent to or opt out of. It does not run inside the extension and never sees your bookmarks.</li>
           </ul>
@@ -149,7 +149,47 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>Correction</strong> — request correction of inaccurate data.</li>
           </ul>
           <p style={P_STYLE}>
-            If you are located in the EU/EEA, you also have rights under the GDPR, including the right to data portability and to lodge a complaint with a supervisory authority.
+            If you are located in the EU/EEA, you also have rights under the EU GDPR. If you are in
+            the <strong>United Kingdom</strong>, you have the equivalent rights under the{' '}
+            <strong>UK GDPR</strong> and the Data Protection Act 2018. In both cases that includes
+            the right to data portability, the right to object to or restrict processing, and the
+            right to lodge a complaint with a supervisory authority — in the UK that is the{' '}
+            <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>
+              Information Commissioner&apos;s Office (ICO)
+            </a>
+            . Australian users have rights under the Privacy Act 1988 and may complain to the OAIC.
+          </p>
+          <p style={P_STYLE}>
+            <strong>Who is responsible, and on what basis.</strong> ClipMark is the data controller
+            for the data described in this policy; reach us at{' '}
+            <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)' }}>{PRIVACY_EMAIL}</a>.
+            We process your bookmarks and account data to <em>perform the contract</em> you enter
+            into by using ClipMark; we rely on <em>legitimate interests</em> for keeping the service
+            secure and for the aggregate, cookieless site measurement described above; and we rely on{' '}
+            <em>consent</em> where you volunteer something optional, such as an email address on a
+            feedback or uninstall form. You can withdraw that consent at any time by asking us to
+            delete it. Data is stored in the United States (see §3).
+          </p>
+        </div>
+
+        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>cookie</span>
+          </div>
+          <h2 style={H2_STYLE}>6. Cookies</h2>
+          <p style={P_STYLE}>ClipMark sets a small number of cookies. None of them are advertising cookies, and none are used to build a profile of you:</p>
+          <ul style={UL_STYLE}>
+            <li style={LI_STYLE}><strong>Sign-in cookies</strong> — set by Supabase when you sign in, to keep you signed in. Strictly necessary; without them the dashboard cannot know who you are.</li>
+            <li style={LI_STYLE}><strong><code>clipmark_ref</code></strong> — set for <strong>30 days</strong> when you arrive through an affiliate link (a <code>/r/&lt;code&gt;</code> URL). It stores only that affiliate&apos;s code so the referrer is credited if you later upgrade, and it is set only on the first such visit — a later affiliate link will not overwrite it. It is <code>httpOnly</code> and <code>SameSite=Lax</code>, so it is not readable by page scripts and is not sent to other sites. It contains no identifier for you.</li>
+            <li style={LI_STYLE}><strong>Theme preference</strong> — stored in your browser&apos;s local storage, not a cookie, and never sent to us.</li>
+          </ul>
+          <p style={P_STYLE}>
+            The sign-in cookies are strictly necessary, so they do not require consent. The
+            <code> clipmark_ref</code> attribution cookie is not strictly necessary: if you would
+            rather not have it, decline it by visiting ClipMark directly instead of through an
+            affiliate link, or clear it in your browser at any time — nothing about the product
+            stops working without it. We do not currently show a cookie banner; you can block or
+            delete any of these cookies through your browser settings.
           </p>
         </div>
 
@@ -157,7 +197,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>history</span>
           </div>
-          <h2 style={H2_STYLE}>6. Data Retention</h2>
+          <h2 style={H2_STYLE}>7. Data Retention</h2>
           <p style={P_STYLE}>
             We retain your data for as long as your account is active. If you delete your account, we will delete your personal data within 30 days, except where retention is required by law.
             Shared collection pages are deleted immediately upon account deletion.
@@ -168,7 +208,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>child_care</span>
           </div>
-          <h2 style={H2_STYLE}>7. Children&apos;s Privacy</h2>
+          <h2 style={H2_STYLE}>8. Children&apos;s Privacy</h2>
           <p style={P_STYLE}>
             ClipMark is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such data, please contact us immediately.
           </p>
@@ -178,7 +218,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>edit_note</span>
           </div>
-          <h2 style={H2_STYLE}>8. Changes to This Policy</h2>
+          <h2 style={H2_STYLE}>9. Changes to This Policy</h2>
           <p style={P_STYLE}>
             We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the date at the top of this page. Your continued use of ClipMark after any changes constitutes acceptance of the updated policy.
           </p>
@@ -188,7 +228,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>mail</span>
           </div>
-          <h2 style={H2_STYLE}>9. Contact</h2>
+          <h2 style={H2_STYLE}>10. Contact</h2>
           <p style={P_STYLE}>
             If you have questions or requests regarding your data, please contact us at:<br />
             <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>{PRIVACY_EMAIL}</a>

@@ -7,7 +7,7 @@ import { PageHero, Section, FaqList, RelatedLinks, CtaBand, PROSE } from '../_co
 export const metadata: Metadata = buildPageMetadata({
   title: 'ClipMark FAQ — Playback Speed, Sync, Export, Permissions',
   description:
-    'Straight answers about ClipMark: 2x and fullscreen, syncing and exporting clips, what the free tier really includes, and how it differs from a summariser.',
+    'Straight answers about ClipMark: 2x and fullscreen, syncing and exporting clips, what the free tier really includes, and how it differs from a summarizer.',
   path: '/faq',
   keywords: [
     'clipmark faq', 'youtube bookmark extension faq', 'youtube timestamp extension questions',
@@ -38,7 +38,7 @@ const FAQ_ITEMS = [
     a: 'Yes, and export is not paywalled. JSON, CSV, and Markdown export are on the free tier, so you can always get your data out. An Anki-importable file is one export a month on Free and unlimited on Pro; Obsidian and Notion-ready CSV are Pro. ClipMark also imports a JSON array of clips, so your data can move both directions.',
   },
   {
-    q: 'Can I add notes to bookmarks and organise them?',
+    q: 'Can I add notes to bookmarks and organize them?',
     a: 'Yes. Every saved moment takes a one-line description plus a longer note, and any #word you type becomes a tag with its own colour. Videos can be collected into groups, so a lecture series or a course stays together, and you can filter and search across everything you have saved.',
   },
   {
@@ -54,8 +54,8 @@ const FAQ_ITEMS = [
     a: 'A blocker manages your attention; it has no idea what you watched. ClipMark starts after you have watched something and deals with whether you still know it next week — saving the moments that mattered, then quizzing you on them on a spaced schedule. Blockers stop you opening YouTube. ClipMark makes the YouTube you do watch stick. They solve different problems and can be used together.',
   },
   {
-    q: 'How is it different from a YouTube summariser?',
-    a: 'A summariser gives you a digest to read once, which feels productive and is forgotten at roughly the same rate as the video was. ClipMark is built around the opposite step: you decide which moments mattered, and then it makes you retrieve them from memory before it replays the clip. A summary is a shortcut past the video; Active Recall is repeated practice at remembering it. ClipMark can draft a note for a moment, but the drafting is a typing shortcut, not the point.',
+    q: 'How is it different from a YouTube summarizer?',
+    a: 'A summarizer gives you a digest to read once, which feels productive and is forgotten at roughly the same rate as the video was. ClipMark is built around the opposite step: you decide which moments mattered, and then it makes you retrieve them from memory before it replays the clip. A summary is a shortcut past the video; Active Recall is repeated practice at remembering it. ClipMark can draft a note for a moment, but the drafting is a typing shortcut, not the point.',
   },
   {
     q: 'How is it different from Snipo or other notes-to-Notion tools?',

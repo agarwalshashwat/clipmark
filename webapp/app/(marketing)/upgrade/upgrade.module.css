@@ -94,6 +94,7 @@
   align-items: baseline;
   gap: 6px;
   margin-bottom: 32px;
+  flex-wrap: wrap;
 }
 
 .amount {
@@ -101,6 +102,16 @@
   font-size: 56px;
   font-weight: 800;
   color: var(--text);
+}
+
+/* The ISO code sits beside the display-size amount rather than inside it: as
+   part of the same string it wrapped onto its own line at 48px on a phone. */
+.currencyCode {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  align-self: center;
 }
 
 .period {

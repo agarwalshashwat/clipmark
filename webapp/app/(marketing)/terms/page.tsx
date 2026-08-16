@@ -79,7 +79,7 @@ export default function TermsPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>Save timestamped bookmarks on YouTube videos for personal use.</li>
             <li style={LI_STYLE}>Organize, tag, and share collections of bookmarks.</li>
-            <li style={LI_STYLE}>Use AI-powered features (Pro tier) to generate summaries and tags.</li>
+            <li style={LI_STYLE}>Use AI-powered features to draft notes and summaries. These run on Chrome&apos;s on-device model and are available on the free tier.</li>
           </ul>
           <p style={P_STYLE}>You may <strong>not</strong> use ClipMark to:</p>
           <ul style={UL_STYLE}>

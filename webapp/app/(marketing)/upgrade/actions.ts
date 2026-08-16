@@ -31,7 +31,9 @@ const PRODUCT_IDS: Record<string, string> = {
   lifetime: process.env.DODO_LIFETIME_PRODUCT_ID!,
 };
 
-function extractCentPrice(p: { type: string; price?: number; fixed_price?: number }): number {
+type DodoPrice = { type: string; price?: number; fixed_price?: number };
+
+function extractCentPrice(p: DodoPrice): number {
   return p.type === 'usage_based_price' ? (p.fixed_price ?? 0) : (p.price ?? 0);
 }
 
@@ -51,10 +53,12 @@ const getCachedProductPrices = unstable_cache(
       dodoClient().products.retrieve(PRODUCT_IDS.annual),
       dodoClient().products.retrieve(PRODUCT_IDS.lifetime),
     ]);
+    // Amounts only: the currency is fixed at USD for every region (see
+    // PRICE_CURRENCY in ./pricing), so there is nothing per-product to carry.
     return {
-      monthly: centsToDisplay(extractCentPrice(monthly.price as { type: string; price?: number; fixed_price?: number })),
-      annual: centsToDisplay(extractCentPrice(annual.price as { type: string; price?: number; fixed_price?: number })),
-      lifetime: centsToDisplay(extractCentPrice(lifetime.price as { type: string; price?: number; fixed_price?: number })),
+      monthly: centsToDisplay(extractCentPrice(monthly.price as DodoPrice)),
+      annual: centsToDisplay(extractCentPrice(annual.price as DodoPrice)),
+      lifetime: centsToDisplay(extractCentPrice(lifetime.price as DodoPrice)),
     };
   },
   ['dodo-product-prices'],

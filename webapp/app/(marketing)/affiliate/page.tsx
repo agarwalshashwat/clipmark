@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { buildPageMetadata } from '@/app/lib/seo';
 import * as Sentry from '@sentry/nextjs';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
+import { formatPrice, PRICE_DEFAULTS, type ProductPrices } from '@/app/(marketing)/upgrade/pricing';
 
 const META_DESCRIPTION =
   'Earn a one-time 30% commission on every Pro upgrade you refer. Your audience gets 10% off, and referrals are attributed for 30 days.';
@@ -57,7 +58,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How do I get paid?',
-    a: 'Payouts are handled manually today, by bank transfer (via Wise) or PayPal, once your eligible balance reaches $25. Conversions are held for 30 days before becoming eligible, to cover the refund window. Email affiliates@clipmark.mithahara.com to register your payout method and to request a payout.',
+    a: 'Payouts are handled manually today, by bank transfer (via Wise) or PayPal, once your eligible balance reaches $25 USD. Conversions are held for 30 days before becoming eligible, to cover the refund window. Email affiliates@clipmark.mithahara.com to register your payout method and to request a payout.',
   },
   {
     q: 'How long does my referral cookie last?',
@@ -87,7 +88,7 @@ const STEPS = [
   {
     number: '02',
     title: 'Share your unique link — they get 10% off',
-    body: 'Get a personalised link like clipmark.mithahara.com/r/yourname. Drop it in YouTube descriptions, newsletters, Twitter threads, or anywhere your audience hangs out. Anyone who clicks your link gets 10% off automatically at checkout.',
+    body: 'Get a personalized link like clipmark.mithahara.com/r/yourname. Drop it in YouTube descriptions, newsletters, Twitter threads, or anywhere your audience hangs out. Anyone who clicks your link gets 10% off automatically at checkout.',
     icon: 'share',
   },
   {
@@ -102,7 +103,10 @@ const COMMISSION_RATE = 0.30;
 const REFERRAL_DISCOUNT = 0.10; // 10% off for referred visitors
 
 export default async function AffiliatePage() {
-  let prices = { monthly: '5', annual: '40', lifetime: '40' };
+  // PRICE_DEFAULTS rather than an inline literal: this page's own fallback had
+  // drifted to 5 / 40 / 40 against the real 7.99 / 59.99 / 99.99, so a Dodo
+  // outage published a commission table computed from prices we don't charge.
+  let prices: ProductPrices = PRICE_DEFAULTS;
   try {
     prices = await fetchProductPrices();
   } catch (err) {
@@ -121,13 +125,13 @@ export default async function AffiliatePage() {
   function commissionDisplay(priceStr: string) {
     const net = Number(priceStr) * (1 - REFERRAL_DISCOUNT);
     const commission = net * COMMISSION_RATE;
-    return `$${commission.toFixed(2)} one-time`;
+    return `${formatPrice(commission.toFixed(2))} one-time`;
   }
 
   const COMMISSION_ROWS = [
-    { plan: 'Monthly',  price: `$${prices.monthly} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
-    { plan: 'Annual',   price: `$${prices.annual} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
-    { plan: 'Lifetime', price: `$${prices.lifetime} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
+    { plan: 'Monthly',  price: `${formatPrice(prices.monthly)} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
+    { plan: 'Annual',   price: `${formatPrice(prices.annual)} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
+    { plan: 'Lifetime', price: `${formatPrice(prices.lifetime)} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
   ];
   return (
     <>
@@ -202,7 +206,7 @@ export default async function AffiliatePage() {
             { value: '30%', label: 'One-time commission per referred upgrade', icon: 'payments' },
             { value: '10% off', label: 'Incentive discount for your audience', icon: 'sell' },
             { value: '30 days', label: 'Long-lasting cookie attribution', icon: 'history' },
-            { value: '$25', label: 'Low minimum payout threshold', icon: 'account_balance_wallet' },
+            { value: '$25 USD', label: 'Low minimum payout threshold', icon: 'account_balance_wallet' },
           ].map((stat) => (
             <div key={stat.label} className="cm-card" style={{ padding: '32px', textAlign: 'center' }}>
               <div className="cm-icon-badge" style={{ margin: '0 auto 20px', width: 48, height: 48 }}>
@@ -348,7 +352,7 @@ export default async function AffiliatePage() {
               {[
                 { icon: 'schedule', title: '30-day hold', body: 'Commissions are held for 30 days to cover refund windows before becoming eligible.' },
                 { icon: 'event_repeat', title: 'Monthly review', body: 'We review eligible balances each month and settle them by hand — payouts are not yet automated.' },
-                { icon: 'attach_money', title: '$25 threshold', body: 'Once your eligible commissions reach $25, email us and we’ll arrange the payout.' },
+                { icon: 'attach_money', title: '$25 USD threshold', body: 'Once your eligible commissions reach $25 USD, email us and we’ll arrange the payout.' },
                 { icon: 'account_balance', title: 'Payout methods', body: 'We support Bank Transfer (via Wise) or PayPal for all global affiliates.' },
               ].map((item) => (
                 <div key={item.title}>

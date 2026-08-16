@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/nextjs';
 import { createServerSupabase } from '@/lib/supabase';
 import PlanCards from './upgrade/PlanCards';
 import { fetchProductPrices } from './upgrade/actions';
-import { PRICE_DEFAULTS, type ProductPrices } from './upgrade/pricing';
+import { PRICE_DEFAULTS, formatPrice, type ProductPrices } from './upgrade/pricing';
 import { CHROME_STORE_URL } from '@/app/lib/constants';
 import { GuaranteeLine } from '@/app/components/GuaranteeLine';
 import { ScrollReveal } from './ScrollReveal';
@@ -38,7 +38,7 @@ const FAQ_DATA = [
   },
   {
     q: 'How does AI Auto-fill work?',
-    a: 'When you save a moment, ClipMark reads the transcript around that timestamp and drafts a short note for you, then suggests tags based on what the clip is about. You can edit either before saving.',
+    a: 'When you save a moment, ClipMark reads the transcript around that timestamp and drafts a short note for you. You can edit it before saving. It runs on Chrome\'s built-in on-device model and is free — it is not a Pro feature.',
   },
   {
     q: 'How does Active Recall decide what to show me?',
@@ -54,7 +54,7 @@ const FAQ_DATA = [
   },
   {
     q: 'Do you offer educational discounts?',
-    a: 'Yes! We support students and educators. Contact our support team with your .edu email for a special discount code.',
+    a: 'Yes! We support students and educators. Email support from your academic address — .edu, .ac.uk, .edu.au and other university domains all qualify — and we will send you a discount code.',
   },
   {
     q: 'How reliable are the AI features?',
@@ -109,7 +109,7 @@ export default async function Home({
       {
         "@type": "HowToStep",
         "name": "Organize with AI",
-        "text": "ClipMark drafts a note from the transcript and suggests tags for every clip, using Chrome's on-device Gemini Nano."
+        "text": "ClipMark drafts a note from the transcript for every clip, using Chrome's on-device Gemini Nano."
       },
       {
         "@type": "HowToStep",
@@ -662,7 +662,6 @@ export default async function Home({
               <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, background: 'rgba(115,46,228,0.25)', filter: 'blur(100px)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative' }}>
                 {[
-                  { icon: 'label',     title: '✦ Auto Tagging',   desc: 'Suggests tags for each clip from what it\'s actually about.',        active: false },
                   { icon: 'summarize', title: '✦ Smart Summary',  desc: 'Drafts your note from the transcript around the timestamp.',        active: true  },
                   { icon: 'share',     title: '✦ Post Insights',  desc: 'Turns a set of saved clips into a draft post you can share.',      active: false },
                 ].map(({ icon, title, desc, active }) => (
@@ -691,10 +690,10 @@ export default async function Home({
                 background: 'var(--ai-light)', color: 'var(--ai-soft)',
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 24,
               }}>
-                Pro Features
+                AI features — free, on-device
               </span>
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, marginBottom: 32, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>
-                Effortless curation powered by Intelligence.
+                Effortless curation, powered by your own browser.
               </h2>
               {/* This used to read "Our AI engine analyzes transcripts in real-time to
                   surface the gold nuggets so you don't have to" — which claimed an
@@ -704,8 +703,8 @@ export default async function Home({
                   drafts the note for it. */}
               <p style={{ color: 'var(--gray-300)', fontSize: 18, lineHeight: 1.75, marginBottom: 16 }}>
                 You pick the moment. Chrome&apos;s on-device AI reads the transcript around it and
-                drafts the note and tags, so saving a clip costs you a keystroke instead of a
-                paragraph.
+                drafts the note, so saving a clip costs you a keystroke instead of a
+                paragraph. It runs in your browser, on the free tier — nothing here is behind Pro.
               </p>
               <p style={{ fontSize: 11, color: 'var(--gray-300)', marginBottom: 40, fontStyle: 'italic' }}>
                 * AI features use Chrome&apos;s built-in AI (Gemini Nano). Availability is subject to Google&apos;s support and may vary by Chrome version.
@@ -714,7 +713,7 @@ export default async function Home({
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 color: 'var(--ai-soft)', fontWeight: 700, fontSize: 16, textDecoration: 'none',
               }}>
-                Explore Pro Features <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>arrow_forward</span>
+                See what Pro adds <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>arrow_forward</span>
               </a>
             </div>
           </div>
@@ -763,7 +762,7 @@ export default async function Home({
               { 
                 num: '02', 
                 title: 'Organize with AI',   
-                desc: 'ClipMark drafts a note from the transcript and suggests tags, using Chrome\'s on-device Gemini Nano.',
+                desc: 'ClipMark drafts a note from the transcript, using Chrome\'s on-device Gemini Nano.',
                 icon: 'psychology'
               },
               { 
@@ -870,7 +869,7 @@ export default async function Home({
               Simple pricing. Absurdly affordable.
             </h2>
             <p style={{ color: 'var(--text-muted)', maxWidth: 560, margin: '0 auto', fontSize: 16 }}>
-              Start free, forever. Upgrade when you&apos;re ready — from <strong>${prices.monthly}/mo</strong> for a permanent second brain.
+              Start free, forever. Upgrade when you&apos;re ready — from <strong>{formatPrice(prices.monthly)}/mo</strong> for a permanent second brain.
             </p>
           </div>
           <PlanCards prices={prices} variant="preview" />
