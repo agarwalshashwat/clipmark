@@ -42,6 +42,7 @@ knowingly, not by accident.
 | **G7** | **Extension ships on a biweekly train** (second Tuesday) with a narrow hotfix lane — security/privacy, data loss, dead core flow, payments, CWS policy. "One-line fix" is not urgency. `docs/RELEASE-PROCESS.md`. | 2026-08-15 |
 | **G8** | **Never touch `feature/dashboard-extras-hold` or `sync/dashboard-parity`.** Held, out of scope. | 2026-08-16 |
 | **G9** | **Edit both twins.** `constants/recall/loop.js` and their `.module.js` pairs move together — a drift once shipped a production `ReferenceError`. Detail in AGENTS.md. | 2026-08-16 |
+| **G10** | **Primary paying target: US / UK / Australia** — Tier-1, high-purchasing-power, English-speaking (Canada/NZ likely similar). The product stays **globally available**; the lens is for decisions. Weigh features, copy, pricing/currency, positioning, SEO and compliance for **US/UK/AU fit** rather than treating them as generic-global. | 2026-08-16 |
 
 ---
 
@@ -86,6 +87,7 @@ call that looked arbitrary. **Never edit or delete an entry.**
 | 2026-08-16 | **Dark-mode toggle stayed unmounted until every surface passed AA** (#127–#129 before #134) | A reachable toggle over broken surfaces is worse than no toggle — it invites users into a state we know is unreadable. |
 | pre-2026-08-16 | **Rejected: reusing a logged-in ChatGPT/Claude web session for AI** | Violates provider ToS; realistic outcomes are user bans and an extension takedown. Also contradicts the narrow-permissions / on-device posture in G6, which is a selling point. |
 | 2026-08-16 | **Migration 019 applied to prod** via the `db:migrate` runner after a `pg_dump` backup | Enables uninstall-feedback capture. Owner-authorized and done with a backup, per G3. |
+| 2026-08-16 | **Primary target market set to US/UK/AU** (G10) | That's where the purchasing power for a Pro subscription is. The product stays global; decisions get weighed through that lens rather than an averaged-global one. |
 | 2026-08-16 | **Docs prune: 8 archived, 4 merged, 1 deleted, `docs/release/` removed** | Stale docs were causing real false work — a parity audit generating false P1s, two specs saying "not implemented" for shipped features, a policy stub listing 3 of 6 CI gates. Consolidated to the canonical set so there is one place to trust per question. Nothing lost: archived under `docs/archive/`, deletions recoverable from git. |
 
 ---
