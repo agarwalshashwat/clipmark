@@ -60,6 +60,20 @@ export async function Navigation() {
               Log In
             </a>
           )}
+          {/* Below 640px .nav-login, .nav-gopro and .nav-links are all display:none
+              and there is no menu, which left a phone visitor with no route to sign
+              in at all — the footer had no sign-in link either. A full-width text
+              link does not fit next to the wordmark and the install CTA, so mobile
+              gets this icon-only equivalent (44x44, labelled for AT) and desktop
+              keeps the text link above. */}
+          <a href={user ? '/dashboard' : '/signin'}
+             className="nav-account-mobile"
+             aria-label={user ? 'Go to your dashboard' : 'Sign in to ClipMark'}
+             style={{ color: 'var(--text)', textDecoration: 'none' }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>
+              {user ? 'account_circle' : 'login'}
+            </span>
+          </a>
           {!isPro && (
             <a href="/upgrade"
                className="nav-gopro"
