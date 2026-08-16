@@ -119,11 +119,15 @@ coding problem.
 | **Payments work end to end** | ✅ Dodo LIVE webhook + live checkout, refunds ledger applied and verified in prod (#110, #106, #116). Not a blocker — `docs/DODO-LIVE-GATE.md` |
 | **We still can't measure signed-out users** | ❌ Unchanged, and the one strategic gap left — see [§3](#3-launch-definition--success-metrics) |
 
-**Migration `019_uninstall_feedback.sql` is the gating dependency, and it is ordered.** v1.0.6
-registers an uninstall URL pointing at `/uninstall`, so **that page 500s on every uninstall
-until the table exists**. Apply 019 to prod *before* submitting v1.0.6 — the reverse order ships
-a broken page to everyone who leaves. Application status is **owner-reported**; agents never
-touch prod (**G3**).
+**Migration `019_uninstall_feedback.sql` — applied to prod on 2026-08-16, so this dependency is
+cleared.** v1.0.6 registers an uninstall URL pointing at `/uninstall`, and the survey is now
+live end to end. Application status is **owner-reported**; agents never touch prod (**G3**).
+
+> An earlier draft of this line claimed the page **500s** without the table. **It does not** —
+> `app/api/uninstall-feedback/handler.ts` detects `42P01` / `PGRST205` and returns
+> `{ ok: true, stored: false }` with a 200, logging server-side. The real risk was always the
+> quieter one: responses silently dropped, not a visible error. Correcting it here because the
+> claim reached this doc from `CONTEXT.md` and would otherwise outlive both.
 
 **Promo videos — 3 cuts delivered**, not in git: `videos/clipmark-remember-{master-60s,
 cutdown-30s,vertical-15s}`, plus two earlier cuts.
@@ -149,9 +153,10 @@ nothing gets posted publicly before the listing is live and the install CTA reso
 Hour-by-hour sequencing lives in `docs/gtm/marketing-launch-plan.md`; go/no-go criteria in
 `docs/release/LAUNCH_GO_NO_GO_CHECKLIST.md`.
 
-**The submission order is fixed:** migration 019 → submit v1.0.6 → wait for approval → post.
-Skipping the first step ships a 500 to every uninstaller; skipping the third posts traffic at a
-listing that doesn't have the build the copy describes.
+**The submission order is fixed:** migration 019 (**done**) → submit v1.0.6 → wait for approval
+→ post. Had the first step been skipped, every uninstall response would have been silently
+dropped — the handler fails soft, so nothing would have alerted us; skipping the third posts
+traffic at a listing that doesn't have the build the copy describes.
 
 ### Goals for the 2-day push
 
@@ -199,7 +204,7 @@ v1.0.6 ships; otherwise every uninstaller hits a 500 and the rate stays a number
 | M4 sign-ins, and M2/M3/M6/M7 **for signed-in users only** | **Supabase SQL** — `profiles`, `user_bookmarks`, `collections`, `revisit_reminders` | ✅ |
 | M8 crashes | **Sentry** — `clipmark-web` + `clipmark-extension` projects | ✅ |
 | **Qualitative themes** — why people installed, what confused them, what they wanted | `public.feedback` (the `/feedback` page, #98) + support mailbox + listing reviews | ✅ |
-| **M11 *why* — what made people uninstall** | **`/uninstall` survey** (#125, #126). v1.0.6 registers `chrome.runtime.setUninstallURL()`, so removing the extension opens the hosted page; answers land in `public.uninstall_feedback` | 🟡 — needs **migration 019** applied *and* v1.0.6 published. The URL carries the extension version and nothing else — no user id, no counts (**G6**) |
+| **M11 *why* — what made people uninstall** | **`/uninstall` survey** (#125, #126). v1.0.6 registers `chrome.runtime.setUninstallURL()`, so removing the extension opens the hosted page; answers land in `public.uninstall_feedback` | 🟡 — 019 is **applied**; now needs only v1.0.6 published. The URL carries the extension version and nothing else — no user id, no counts (**G6**) |
 | Website visitors, install-CTA click-through | Vercel Web Analytics, on `main` via #120 | 🟡 — code landed; still needs the **Vercel dashboard toggle flipped** (Ash) before any data is collected |
 | M2/M3/M6/M7 **for users who never sign in** | *nothing* | ❌ — extension analytics is **spec only** (#113), blocked on D1/D2 |
 
@@ -232,7 +237,7 @@ Legend: ✅ done · 🟡 in progress / partial · ⬜ not started · ⏳ waiting
 | # | Item | Status | Owner | Notes |
 |---|---|---|---|---|
 | **W0** | **Read the *published* listing version off the CWS dashboard** | ⬜ **do this first** | Ash | A 60-second check that can invalidate copy. The live listing read **v1.0.3** on 2026-08-12 while `main` was already ahead; `main` is now **1.0.6** and the gap is wider. **Every claim in the posting kit must be true of the *published* build, not `main`** (**G5**) — dark mode and the uninstall survey both ship in versions the store may not have yet. Doing this after the copy is scheduled is how a dishonest claim ships |
-| **W1** | **Apply migration `019_uninstall_feedback.sql` to prod** | ⏳ **owner-reported in progress** | Ash | **Blocks W2.** Back up first (**G3**), then verify the object, not the ledger row: `SELECT to_regclass('public.uninstall_feedback')`. 018 already proved that failure mode — its ledger row landed without the body |
+| **W1** | ~~**Apply migration `019_uninstall_feedback.sql` to prod**~~ | ✅ **done 2026-08-16** (owner-reported) | — | Applied via the `db:migrate` runner after a `pg_dump` backup (**G3**), object verified rather than the ledger row. W2 is unblocked |
 | **W2** | **Submit v1.0.6 to the Chrome Web Store** | ⬜ **not started** | Ash | `main` is at 1.0.6 (#126) but **nothing has been uploaded**. Owner-only, never automated (**G4**). Must follow W1 — v1.0.6 registers the uninstall URL, so submitting first means every uninstaller hits a 500. Then it's a review wait, and **the push waits on it** |
 | **W3** | **Enable Vercel Web Analytics in the dashboard** | ⬜ **one click** | Ash | Code landed with #120; until the toggle is on the component mounts and **silently no-ops**, so launch-day traffic is unattributable. Cheapest item on this list and it expires — traffic that arrives before it is on can never be recovered |
 | **W4** | **Website pre-launch wins** — install CTAs, analytics code, custom 404, OG card + favicons | ✅ **done** | — | #120 (with #118/#119 closed as superseded); install CTAs had already landed in `2f60a56`. `CHROME_STORE_URL` in `webapp/app/lib/constants.ts` remains the single source of truth for every install link |
