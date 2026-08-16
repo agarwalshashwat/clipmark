@@ -20,6 +20,7 @@ import {
   shouldAutoRunSidePanelTour,
   shouldMarkTourSeen,
   shouldStartYoutubeTour,
+  hasSeenYoutubeTour,
 } from '../../extension/src/tour-state.js';
 
 describe('shouldStartYoutubeTour', () => {
@@ -135,5 +136,66 @@ describe('didYoutubeTourComplete', () => {
       false,
     );
     assert.equal(didYoutubeTourComplete(undefined), false);
+  });
+});
+
+describe('hasSeenYoutubeTour — the flag survives a storage area that refuses writes', () => {
+  // The reported v1.0.6 symptom was the tour returning on EVERY video. The path
+  // that produces exactly that: chrome.storage.sync.set fails (QUOTA_BYTES
+  // exhausted by saved bm_{videoId} bookmarks, the per-minute write cap, or sync
+  // disabled on the profile), so the one-shot flag is never stored and every new
+  // watch page starts the tour again — with no action the user can take to stop
+  // it. tour.js now mirrors to chrome.storage.local when sync refuses, and reads
+  // both areas through this predicate.
+
+  it('is seen when sync holds the flag (the normal path)', () => {
+    assert.equal(hasSeenYoutubeTour({ syncState: { youtubeTour: true }, localState: {} }), true);
+  });
+
+  it('is seen from the local mirror alone when sync could not be written', () => {
+    // Without this the tour is undismissable: sync refuses every write, so the
+    // flag never lands and the tour re-shows on every single video.
+    assert.equal(hasSeenYoutubeTour({ syncState: {}, localState: { youtubeTour: true } }), true);
+  });
+
+  it('is seen when a sync value arrives later from another machine', () => {
+    assert.equal(
+      hasSeenYoutubeTour({ syncState: { youtubeTour: true }, localState: { youtubeTour: true } }),
+      true,
+    );
+  });
+
+  it('is NOT seen for a genuine first-time user, however the areas are shaped', () => {
+    assert.equal(hasSeenYoutubeTour({ syncState: {}, localState: {} }), false);
+    assert.equal(hasSeenYoutubeTour({}), false);
+    assert.equal(hasSeenYoutubeTour(), false);
+    // A neighbouring flag must not be mistaken for this one.
+    assert.equal(hasSeenYoutubeTour({ syncState: { sidePanelTour: true }, localState: {} }), false);
+    // The replay button clears it — that has to re-offer the tour.
+    assert.equal(
+      hasSeenYoutubeTour({ syncState: { youtubeTour: false }, localState: { youtubeTour: false } }),
+      false,
+    );
+  });
+
+  it('drives shouldStartYoutubeTour, so the tour runs at most once', () => {
+    // The contract end to end: whatever area stored it, the next video must not
+    // start the tour again.
+    const seen = hasSeenYoutubeTour({ syncState: {}, localState: { youtubeTour: true } });
+    assert.equal(shouldStartYoutubeTour({ youtubeTour: seen }), false);
+
+    const unseen = hasSeenYoutubeTour({ syncState: {}, localState: {} });
+    assert.equal(shouldStartYoutubeTour({ youtubeTour: unseen }), true);
+  });
+
+  it('a fast dismiss still counts as seen, then never starts again', () => {
+    // #97's failure: a dismiss faster than driver.js's ~400ms highlight
+    // transition. onPopoverRender sets stepShown, so the outcome is markable...
+    assert.equal(shouldMarkTourSeen({ stepShown: true, abandonedForNavigation: false }), true);
+    // ...and once stored in either area, the tour is over for good.
+    assert.equal(
+      shouldStartYoutubeTour({ youtubeTour: hasSeenYoutubeTour({ localState: { youtubeTour: true } }) }),
+      false,
+    );
   });
 });

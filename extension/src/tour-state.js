@@ -23,6 +23,30 @@ export function shouldStartYoutubeTour(tourState) {
 }
 
 /**
+ * The one-shot flag, read across BOTH storage areas.
+ *
+ * `chrome.storage.sync` is the home of the flag — it is what makes "seen" follow
+ * the user between machines. But sync can refuse a write: it is capped
+ * (QUOTA_BYTES, ~100KB, shared with every `bm_{videoId}` bookmark), rate-limited
+ * per minute, and simply unavailable when the profile has sync turned off. The
+ * write path treats a failed write as "not stored yet" and retries on the next
+ * video — correct in isolation, but if the write can never succeed, the tour
+ * re-shows on EVERY video with nothing the user can do about it. That is the
+ * trap this closes: a local mirror is written when sync refuses, and either area
+ * saying "seen" is believed.
+ *
+ * Deliberately OR, not merge-and-prefer-sync: the mirror only ever gets written
+ * after the user genuinely ended a tour, so it can't manufacture a false "seen",
+ * and a sync value arriving later from another machine is equally trusted.
+ *
+ * @param {{syncState?: {youtubeTour?: boolean}, localState?: {youtubeTour?: boolean}}} areas
+ * @returns {boolean}
+ */
+export function hasSeenYoutubeTour({ syncState, localState } = {}) {
+  return !!(syncState?.youtubeTour || localState?.youtubeTour);
+}
+
+/**
  * @param {{stepShown?: boolean, abandonedForNavigation?: boolean}} outcome
  * @returns {boolean}
  */

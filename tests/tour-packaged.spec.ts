@@ -63,6 +63,18 @@ async function tourState(worker: Worker): Promise<Record<string, unknown>> {
     new Promise((r) => chrome.storage.sync.get({ tourState: {} }, (x) => r(x.tourState || {}))));
 }
 
+/** The same one-shot flag as `tourState`, but from the local fallback area. */
+async function localTourState(worker: Worker): Promise<Record<string, unknown>> {
+  return worker.evaluate(() =>
+    new Promise((r) => chrome.storage.local.get({ tourState: {} }, (x) => r(x.tourState || {}))));
+}
+
+/** Seed the one-shot flag into the LOCAL fallback area only, leaving sync empty. */
+async function seedLocalSeenFlag(worker: Worker): Promise<void> {
+  await worker.evaluate(() =>
+    new Promise<void>((r) => chrome.storage.local.set({ tourState: { youtubeTour: true } }, () => r())));
+}
+
 /** Open a watch page and wait for the tour's first step to be on screen. */
 async function openWithTour(context: BrowserContext, url = VIDEO_URL): Promise<Page> {
   const page = await context.newPage();
@@ -275,6 +287,49 @@ test.describe('First-run guided tour (packaged build)', () => {
       await page.waitForTimeout(4000);
       await expect(page.locator(POPOVER)).toHaveCount(0);
       expect((await tourState(worker)).youtubeTour).toBe(true);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('a seen flag that only reached the local fallback still suppresses the tour', async () => {
+    // The failure this guards: the one-shot flag lived ONLY in
+    // chrome.storage.sync, so when that write was refused nothing was stored and
+    // the tour returned on EVERY video with no way for the user to stop it. sync
+    // refuses writes for reasons that persist across videos — QUOTA_BYTES is
+    // ~100KB shared with every bm_{videoId} bookmark, the per-minute write cap,
+    // or sync switched off on the profile. tour.js now mirrors the flag to
+    // chrome.storage.local and believes EITHER area.
+    //
+    // This asserts the read half against the packaged build, which is the half
+    // that is observable here: sync is seeded empty and local carries the flag,
+    // exactly the state a refused sync write leaves behind. The write half (that
+    // a refused sync set falls through to local) is covered in
+    // tests/unit/tour-state.test.mjs — a genuine quota failure cannot be forced
+    // in this harness, because Chrome does not enforce sync QUOTA_BYTES for an
+    // unsigned-in test profile: filling past 102,000 bytes still accepts a small
+    // write.
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);          // sync: no flag
+      await seedLocalSeenFlag(worker);  // local: seen
+
+      // Sanity: the areas really are in the state this test is about.
+      expect((await tourState(worker)).youtubeTour).not.toBe(true);
+      expect((await localTourState(worker)).youtubeTour).toBe(true);
+
+      const page = await context.newPage();
+      await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.waitForTimeout(4000); // well past the anchor wait + drive()
+      await expect(page.locator(POPOVER)).toHaveCount(0);
+
+      // A second video too — the flag has to hold across navigations.
+      await page.goto(OTHER_VIDEO_URL, { waitUntil: 'domcontentloaded' });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.waitForTimeout(4000);
+      await expect(page.locator(POPOVER)).toHaveCount(0);
     } finally {
       await context.close();
     }
