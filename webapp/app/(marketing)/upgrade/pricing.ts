@@ -14,9 +14,11 @@ export const PRICE_DEFAULTS: ProductPrices = {
  * The one currency ClipMark sells in.
  *
  * Pricing is USD for every region — there is no per-region conversion, and none
- * should be added. Dodo is the Merchant of Record: the customer is charged this
- * USD amount wherever they are, and Dodo remits local tax out of it, so the
- * listed number is also tax-inclusive (see components/GuaranteeLine.tsx).
+ * should be added. Dodo is the Merchant of Record and is configured
+ * tax-EXCLUSIVE: the customer is charged this USD amount wherever they are, and
+ * their local tax is added on top at checkout. The listed number is therefore the
+ * price, NOT the final total — see components/GuaranteeLine.tsx, which is the one
+ * place that says so to the buyer.
  *
  * It is a constant rather than a value read back from the Dodo product because
  * threading a currency through the UI would imply the site can render prices in
