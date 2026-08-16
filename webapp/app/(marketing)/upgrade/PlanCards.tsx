@@ -79,7 +79,7 @@ const PLANS: Plan[] = [
     name: 'Lifetime',
     priceKey: 'lifetime',
     period: '',
-    badge: { label: 'Founding Price', color: 'var(--accent-strong)' },
+    badge: { label: 'Founding Price', color: 'var(--brand-ink)' },
     features: [
       <><strong>Everything in Pro</strong></>,
       'Pay once — no recurring fees',

@@ -166,7 +166,7 @@ export default async function Home({
           padding: '10px 24px',
           textAlign: 'center',
           fontSize: 14,
-          color: 'var(--primary-deep)',
+          color: 'var(--brand-ink)',
           fontWeight: 500,
         }}>
           <span style={{ marginRight: 6 }}>👋</span>
@@ -203,11 +203,11 @@ export default async function Home({
           <h1 className="hero-h1" style={{
             fontSize: 'clamp(44px, 7.5vw, 88px)', fontWeight: 800,
             lineHeight: 0.95, letterSpacing: '-0.05em', maxWidth: 1000, margin: '0 auto 32px',
-            fontFamily: "var(--font-display)", color: 'var(--gray-900)',
+            fontFamily: "var(--font-display)", color: 'var(--text)',
           }}>
             Turn YouTube into flashcards<br />
             <em style={{
-              color: 'var(--accent-strong)',
+              color: 'var(--brand-ink)',
               fontStyle: 'italic',
               fontWeight: 800,
               textDecoration: 'none',
@@ -219,7 +219,7 @@ export default async function Home({
           </h1>
 
           {/* Subtitle */}
-          <p className="hero-sub" style={{ fontSize: 21, color: 'var(--gray-600)', maxWidth: 720, margin: '0 auto 56px', lineHeight: 1.6, fontWeight: 450 }}>
+          <p className="hero-sub" style={{ fontSize: 21, color: 'var(--text-muted)', maxWidth: 720, margin: '0 auto 56px', lineHeight: 1.6, fontWeight: 450 }}>
             Hit <strong>Alt+B</strong> on the moment that matters. ClipMark brings it back on a spaced
             schedule, hides your note, and asks you to recall it — before it replays the clip.
             Free, on-device, exports to Anki.
@@ -245,8 +245,8 @@ export default async function Home({
             <a href="#active-recall"
               style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
-              padding: '20px 44px', background: 'white', border: '1px solid var(--gray-200)',
-              color: 'var(--gray-900)', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
+              padding: '20px 44px', background: 'var(--surface)', border: '1px solid var(--border)',
+              color: 'var(--text)', borderRadius: 16, fontSize: 18, fontWeight: 700, textDecoration: 'none',
               boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             }}>
               <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24, color: 'var(--brand-ink)' }}>play_circle</span>
@@ -306,11 +306,11 @@ export default async function Home({
       </section>
 
       {/* ── Problem / Solution ──────────────────────────────────────────── */}
-      <section style={{ padding: '128px 32px', background: '#ffffff' }}>
+      <section style={{ padding: '128px 32px', background: 'var(--surface)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 80, alignItems: 'center' }}>
           <div>
-            <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 800, marginBottom: 32, fontFamily: "var(--font-display)", color: 'var(--gray-900)', letterSpacing: '-0.5px' }}>
-              Stop Scrubbing, <br /><span style={{ color: 'var(--primary-deep)' }}>Start Remembering.</span>
+            <h2 style={{ fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 800, marginBottom: 32, fontFamily: "var(--font-display)", color: 'var(--text)', letterSpacing: '-0.5px' }}>
+              Stop Scrubbing, <br /><span style={{ color: 'var(--brand-ink)' }}>Start Remembering.</span>
             </h2>
             <p style={{ fontSize: 18, color: 'var(--text-muted)', marginBottom: 40, lineHeight: 1.75 }}>
               Most of what you watch fades within a day. ClipMark&apos;s <strong>Active Recall</strong> quizzes you on the moments you saved before replaying them — turning hours of idle watching into minutes of active mastery.
@@ -326,7 +326,7 @@ export default async function Home({
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-deep)', flexShrink: 0 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(20,184,166,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-ink)', flexShrink: 0 }}>
                   <span className="material-symbols-outlined" aria-hidden="true">bolt</span>
                 </div>
                 <div>
@@ -343,10 +343,10 @@ export default async function Home({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Before / After Transformation Visual */}
             <div style={{ 
-              background: 'var(--gray-50)', 
+              background: 'var(--bg)', 
               padding: 40, 
               borderRadius: 32, 
-              border: '1px solid var(--gray-200)',
+              border: '1px solid var(--border)',
               position: 'relative',
               overflow: 'hidden'
             }}>
@@ -359,12 +359,12 @@ export default async function Home({
                     <div style={{ width: '70%', height: 8, background: 'var(--danger-light)', borderRadius: 4 }} />
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', color: 'var(--primary-deep)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', color: 'var(--brand-ink)' }}>
                   <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>arrow_forward</span>
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <div style={{ color: 'var(--primary-deep)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The ClipMark Way</div>
-                  <div style={{ height: 120, background: 'var(--teal-100)', borderRadius: 16, border: '2px solid var(--teal-200)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 12 }}>
+                  <div style={{ color: 'var(--brand-ink)', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>The ClipMark Way</div>
+                  <div style={{ height: 120, background: 'var(--accent-light)', borderRadius: 16, border: '2px solid var(--teal-200)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 12 }}>
                     <div style={{ width: '90%', height: 12, background: 'var(--accent)', borderRadius: 6 }} />
                     <div style={{ width: '90%', height: 12, background: 'var(--accent)', borderRadius: 6 }} />
                   </div>
@@ -381,7 +381,7 @@ export default async function Home({
                   each "Got it" pushes min(lastInterval * 2, RECALL_MAX_INTERVAL_DAYS)
                   with the cap at 60. Nothing to measure and nothing to fabricate — it
                   is just what the scheduler does. */}
-              <div style={{ borderTop: '1px solid var(--gray-200)', paddingTop: 24 }}>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 24 }}>
                 <p style={{ fontWeight: 700, fontSize: 11, letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 20 }}>
                   Every &ldquo;Got it&rdquo; pushes the next review further out
                 </p>
@@ -398,7 +398,7 @@ export default async function Home({
                     <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
                       <span style={{
                         fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700,
-                        color: i === arr.length - 1 ? 'var(--primary-deep)' : 'var(--text-muted)',
+                        color: i === arr.length - 1 ? 'var(--brand-ink)' : 'var(--text-muted)',
                         textAlign: 'center', marginBottom: 4, whiteSpace: 'nowrap',
                       }}>{d}d</span>
                       <div style={{
@@ -420,7 +420,7 @@ export default async function Home({
       </section>
 
       {/* ── Active Recall ───────────────────────────────────────────────── */}
-      <section id="active-recall" style={{ padding: '128px 32px', background: 'var(--gray-50)' }}>
+      <section id="active-recall" style={{ padding: '128px 32px', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 72 }}>
             {/* Active Recall is NOT Pro-gated. Free gets 25 enrolled moments and 30
@@ -438,7 +438,7 @@ export default async function Home({
             </div>
             <h2 style={{
               fontSize: 'clamp(32px, 4.5vw, 48px)', fontWeight: 800, marginBottom: 20,
-              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--gray-900)',
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--text)',
             }}>
               Don&apos;t just rewatch it.<br />Try to <em style={{ color: 'var(--brand-ink)', fontStyle: 'italic' }}>remember</em> it.
             </h2>
@@ -483,11 +483,11 @@ export default async function Home({
               { icon: 'trending_up', title: 'Remembered it? Wait longer', desc: 'Each "Got it" doubles the next interval — up to 60 days — so easy material stops stealing your time.' },
               { icon: 'replay', title: 'Blanked? See it tomorrow', desc: '"Again" resets the streak and brings the moment back the next day, until it finally sticks.' },
             ].map(({ icon, title, desc }) => (
-              <div key={title} style={{ padding: 28, borderRadius: 24, background: 'white', border: '1px solid var(--gray-200)' }}>
+              <div key={title} style={{ padding: 28, borderRadius: 24, background: 'var(--surface)', border: '1px solid var(--border)' }}>
                 <div className="cm-icon-badge" style={{ marginBottom: 20 }}>
                   <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 26 }}>{icon}</span>
                 </div>
-                <h3 style={{ fontSize: 17, fontWeight: 800, marginBottom: 10, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>{title}</h3>
+                <h3 style={{ fontSize: 17, fontWeight: 800, marginBottom: 10, fontFamily: "var(--font-display)", color: 'var(--text)' }}>{title}</h3>
                 <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>{desc}</p>
               </div>
             ))}
@@ -520,7 +520,7 @@ export default async function Home({
             </div>
             <h2 style={{
               fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, marginBottom: 20,
-              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--gray-900)',
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--text)',
             }}>
               Keep your deck. Add the moment.
             </h2>
@@ -536,7 +536,7 @@ export default async function Home({
                 'Your ClipMark tags come across as Anki tags',
                 'Export from the extension or the web dashboard',
               ].map(item => (
-                <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, color: 'var(--gray-900)' }}>
+                <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, color: 'var(--text)' }}>
                   <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'var(--brand-ink)', flexShrink: 0 }}>check_circle</span>
                   <span>{item}</span>
                 </li>
@@ -582,7 +582,7 @@ export default async function Home({
       <section id="features" style={{ padding: '128px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 96 }}>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: 16, fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--gray-900)' }}>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: 16, fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--text)' }}>
               Curated For Your Workflow
             </h2>
             <p style={{ color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto', fontSize: 16 }}>
@@ -592,26 +592,26 @@ export default async function Home({
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
             {/* Developers */}
-            <div style={{ padding: 32, borderRadius: 32, background: 'var(--gray-100)' }}>
+            <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--gray-900)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined" aria-hidden="true">code</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Builder</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>For the Builder</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
                 Stop "tutorial hell." Capture the exact second a pattern clicks, and build a searchable, taggable library of the deep dives you actually understood.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dbeafe', color: '#1d4ed8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#react</span>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--gray-100)', color: 'var(--gray-600)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#architecture</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--surface-alt)', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#architecture</span>
               </div>
             </div>
 
             {/* Founders */}
-            <div style={{ padding: 32, borderRadius: 32, background: 'var(--gray-100)' }}>
+            <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent-strong)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined" aria-hidden="true">rocket_launch</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Founder</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>For the Founder</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
                 Pull the three moments that actually mattered out of a 3-hour founder podcast, with an on-device AI draft of each — and keep them somewhere you&apos;ll see them again.
               </p>
@@ -622,16 +622,16 @@ export default async function Home({
             </div>
 
             {/* Serious Learners */}
-            <div style={{ padding: 32, borderRadius: 32, background: 'var(--gray-100)' }}>
+            <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--ai)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined" aria-hidden="true">psychology</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>For the Serious Learner</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>For the Serious Learner</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
                 Treat YouTube like a structured course. Active Recall resurfaces your saved moments on a spaced schedule and quizzes you before the reveal — so what you study actually sticks by exam day.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--ai-light)', color: 'var(--ai-strong)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#retention</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--ai-light)', color: 'var(--ai-ink)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#retention</span>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#fce7f3', color: '#be185d', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#second_brain</span>
               </div>
             </div>
@@ -722,7 +722,7 @@ export default async function Home({
       </section>
 
       {/* ── How It Works ────────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: '128px 32px', background: 'white' }}>
+      <section id="how-it-works" style={{ padding: '128px 32px', background: 'var(--surface)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <ScrollReveal>
             <div style={{ textAlign: 'center', marginBottom: 80 }}>
@@ -733,7 +733,7 @@ export default async function Home({
                 marginBottom: 24,
                 fontFamily: "var(--font-display)",
                 letterSpacing: '-0.5px',
-                color: 'var(--gray-900)'
+                color: 'var(--text)'
               }}>
                 The Curator&apos;s Journey
               </h2>
@@ -784,7 +784,7 @@ export default async function Home({
                     fontWeight: 800,
                     marginBottom: 16,
                     fontFamily: "var(--font-display)",
-                    color: 'var(--gray-900)'
+                    color: 'var(--text)'
                   }}>
                     {title}
                   </h3>
@@ -832,7 +832,7 @@ export default async function Home({
               { icon: 'description',     label: 'Notion / Obsidian export (CSV · Pro)', color: 'var(--ai)' },
               { icon: 'cloud_sync',      label: 'Cloud sync (Pro)', color: 'var(--brand-ink)' },
             ].map(({ icon, label, color }) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 16, color: 'var(--gray-900)' }}>
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 16, color: 'var(--text)' }}>
                 <span className="material-symbols-outlined" aria-hidden="true" style={{ color }}>{icon}</span>
                 {label}
               </div>
@@ -859,13 +859,13 @@ export default async function Home({
       </section>
 
       {/* ── Pricing Preview ─────────────────────────────────────────────── */}
-      <section id="pricing" style={{ padding: '128px 32px', background: 'white' }}>
+      <section id="pricing" style={{ padding: '128px 32px', background: 'var(--surface)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <span className="cm-section-label">Pricing</span>
             <h2 style={{
               fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, marginBottom: 16,
-              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--gray-900)',
+              fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--text)',
             }}>
               Simple pricing. Absurdly affordable.
             </h2>
@@ -884,24 +884,24 @@ export default async function Home({
       </section>
 
       {/* ── FAQ Section ────────────────────────────────────────────────── */}
-      <section id="faq" style={{ padding: '96px 32px', background: 'var(--gray-50)' }}>
+      <section id="faq" style={{ padding: '96px 32px', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{
             fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, textAlign: 'center',
-            marginBottom: 64, fontFamily: "var(--font-display)", color: 'var(--gray-900)'
+            marginBottom: 64, fontFamily: "var(--font-display)", color: 'var(--text)'
           }}>
             Questions? We have answers.
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {FAQ_DATA.map(({ q, a }) => (
               <div key={q} style={{
-                background: 'white', padding: '32px', borderRadius: 20,
+                background: 'var(--surface)', padding: '32px', borderRadius: 20,
                 boxShadow: '0 4px 20px rgba(17, 24, 39,0.04)',
                 border: '1px solid rgba(17, 24, 39,0.06)'
               }}>
                 <h3 style={{
                   fontSize: 18, fontWeight: 700, marginBottom: 12,
-                  fontFamily: "var(--font-display)", color: 'var(--gray-900)'
+                  fontFamily: "var(--font-display)", color: 'var(--text)'
                 }}>
                   {q}
                 </h3>
@@ -910,7 +910,7 @@ export default async function Home({
             ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <a href="/faq" style={{ color: 'var(--accent-strong)', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+            <a href="/faq" style={{ color: 'var(--brand-ink)', fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
               Read the full FAQ <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18, verticalAlign: 'middle' }}>arrow_forward</span>
             </a>
           </div>
@@ -920,7 +920,7 @@ export default async function Home({
       {/* ── Retention cluster links ─────────────────────────────────────── */}
       {/* Crawl path from the homepage into the retention pages — without this the
           cluster is only reachable from the footer and the sitemap. */}
-      <section style={{ padding: '96px 32px', background: 'white' }}>
+      <section style={{ padding: '96px 32px', background: 'var(--surface)' }}>
         <div style={{ maxWidth: 1080, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <span className="cm-section-label">Go Deeper</span>
@@ -945,7 +945,7 @@ export default async function Home({
                 display: 'block', padding: 24, borderRadius: 24, textDecoration: 'none',
                 background: 'var(--bg)', border: '1px solid var(--border)',
               }}>
-                <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--accent-strong)', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ color: 'var(--brand-ink)', fontSize: 24, marginBottom: 12, display: 'block' }}>{icon}</span>
                 <span style={{ display: 'block', fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 6, fontFamily: "var(--font-display)" }}>{label}</span>
                 <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{desc}</span>
               </a>
@@ -958,11 +958,11 @@ export default async function Home({
       <section style={{ padding: '128px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         
         {/* Founder Quote (Item 33) */}
-        <div style={{ maxWidth: 640, margin: '0 auto 80px', padding: 48, background: 'white', borderRadius: 32, border: '1px solid var(--gray-200)', position: 'relative' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto 80px', padding: 48, background: 'var(--surface)', borderRadius: 32, border: '1px solid var(--border)', position: 'relative' }}>
           <div style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', width: 64, height: 64, background: 'var(--accent-strong)', borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 24px rgba(20,184,166,0.2)' }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32 }}>person</span>
           </div>
-          <p style={{ fontSize: 18, fontStyle: 'italic', color: 'var(--gray-900)', lineHeight: 1.6, marginBottom: 24, fontWeight: 500 }}>
+          <p style={{ fontSize: 18, fontStyle: 'italic', color: 'var(--text)', lineHeight: 1.6, marginBottom: 24, fontWeight: 500 }}>
             &ldquo;I built ClipMark because I was tired of re-watching the same 3-hour podcasts just to find that one 30-second gem I forgot to write down. YouTube is a goldmine, but only if you have a way to mine it.&rdquo;
           </p>
           <p style={{ fontWeight: 700, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
@@ -972,7 +972,7 @@ export default async function Home({
 
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, background: 'rgba(20,184,166,0.05)', borderRadius: 9999, filter: 'blur(120px)', zIndex: 0, pointerEvents: 'none' }} />
         <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, marginBottom: 24, letterSpacing: '-1px', fontFamily: "var(--font-display)", color: 'var(--gray-900)' }}>
+          <h2 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, marginBottom: 24, letterSpacing: '-1px', fontFamily: "var(--font-display)", color: 'var(--text)' }}>
             Ready to Build Your Second Brain?
           </h2>
           <p style={{ fontSize: 20, color: 'var(--text-muted)', marginBottom: 48 }}>
