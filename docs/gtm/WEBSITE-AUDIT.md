@@ -1,6 +1,6 @@
-# ClipMark website audit — claims, dark mode, UX, a11y
+# ClipMark website audit — claims, dark mode, UX, a11y, target-market fit
 
-**Date:** 2026-08-16 · **Baseline:** `origin/main` @ `a795d01` · **Scope:** all 15 static marketing routes + the Chrome Web Store listing copy
+**Date:** 2026-08-16 · **Baseline:** `origin/main` @ `a795d01` · **Scope:** all 15 static marketing routes + the Chrome Web Store listing copy · **Target market:** US / UK / AU (globally available, deliberately Tier-1 targeted)
 **Method:** every route rendered headlessly (Playwright/Chromium, sandbox — not a real browser profile) at **1280×900** and **375×812**, in **light and dark**, from a production `next build` served out of an isolated worktree. Every advertised claim was treated as a **hypothesis** and traced to shipping, user-reachable code.
 
 > **AUDIT ONLY.** No product code was changed. Everything below is a finding plus a proposed fix.
@@ -15,6 +15,8 @@ The failures are concentrated in **the homepage AI section, the privacy policy, 
 
 1. **A feature that does not exist is advertised in 8 places**, including JSON-LD, the privacy policy and the terms.
 2. **On-device AI is sold as Pro in 5 places** when it is free for everyone — contradicted by `/upgrade`, `/faq`, the store listing, *and* a comment in the shipping code.
+
+A fourth lens — **target-market fit for US/UK/AU** — is added at the end. The short version: pricing renders a bare `$` with no currency anywhere on the site, the student discount is `.edu`-only so it excludes UK and AU students by construction, the privacy policy covers "EU/EEA" but not UK GDPR, and a 30-day affiliate cookie is set with no disclosure and no consent path.
 
 Dark mode is in far better shape than at my last audit — **zero AA contrast failures in both themes across all 15 routes**. But Ash's report was right: **two controls render with no background and no border at all.** Confirmed, root-caused, and reproduced below.
 
@@ -285,6 +287,187 @@ Carried over from `HOMEPAGE-AUDIT.md` F7 and unchanged: the founder quote at `pa
 
 ---
 
+# SEVERITY 2 — Target-market fit (US / UK / AU)
+
+ClipMark stays globally available; the deliberate target is the Tier-1 English-speaking markets. Assessed against that. Several gaps here are cheap to close and one is a genuine compliance exposure for UK buyers.
+
+## M1 · Prices render a bare `$` with no currency anywhere on the site 🟠
+
+**Evidence.** The price type carries no currency at all — `(marketing)/upgrade/pricing.ts`:
+
+```ts
+export interface ProductPrices { monthly: string; annual: string; lifetime: string; }
+```
+
+Dodo returns a currency, but `extractCentPrice` (`upgrade/actions.ts:34`) reads only the number and `centsToDisplay` (`:38`) divides by 100 into a variable literally named `dollars`. The symbol is then hardcoded in JSX:
+
+| Location | Renders |
+|---|---|
+| `upgrade/PlanCards.tsx:129` | `<span className={styles.amount}>${prices[plan.priceKey]}</span>` |
+| `upgrade/PlanCards.tsx:134` | "lock in lifetime access at `${prices.lifetime}`" |
+| `(marketing)/page.tsx:873` | "from **`${prices.monthly}`/mo**" |
+| `affiliate/page.tsx:128-130` | `$${prices.monthly} / mo` etc. |
+
+**A grep for `USD`/`GBP`/`AUD`/`EUR` across the entire marketing tree returns exactly one hit** — and it is not on a pricing page:
+
+```
+(marketing)/affiliate/terms/page.tsx:134   "A minimum balance of $25 USD …"
+```
+
+So the site is explicit about currency when paying *affiliates*, and silent about it when charging *customers*.
+
+**Why it matters:** `$7.99` is unambiguous to nobody outside the US. An Australian reader defaults to AUD (a ~35% real-price difference); a UK reader knows it is foreign but not what they will be charged. Currency ambiguity at the price is a well-known checkout drop-off point, and it is the first number a Tier-1 buyer evaluates.
+
+**Fix (XS):** render `$7.99 USD` — add a `currency` field to `ProductPrices`, populate it from the Dodo price object instead of discarding it, and render `{price} {currency}`. One line of JSX per call site.
+
+## M2 · "taxes included" needs verifying against UK VAT and AU GST 🟠
+
+**Location:** `webapp/app/components/GuaranteeLine.tsx:32`, shown directly under the checkout CTAs on `/` and `/upgrade`:
+
+> "7-day money-back guarantee · **taxes included** · no hidden fees · cancel anytime"
+
+**What is verifiable from code:** the checkout session (`upgrade/actions.ts:270-287`) passes `product_cart`, `customer`, an optional `discount_code`, `metadata` and `return_url` — **no `billing_currency`, no country, no tax flag.** Dodo is the Merchant of Record, so it determines tax presentation on its side.
+
+**What I could not verify, and did not test:** whether Dodo presents UK VAT (20%) and AU GST (10%) as *inclusive* of the displayed price or *added at checkout*. Confirming it means completing a live checkout, which I did not do.
+
+**Why it matters:** if Dodo adds tax on top, a UK buyer sees `$7.99`, is promised "taxes included", and is then charged ~`$9.59`. That is the single highest-risk claim on the site for these markets — it sits under the buy button and it is a price promise.
+
+**Fix:** check the Dodo dashboard's tax configuration for GB and AU. If tax is added at checkout, change the line to "taxes calculated at checkout". **Do not leave it unverified before launch.**
+
+## M3 · Mixed US and UK spelling, including inside single pages 🟡
+
+Swept the **rendered prose** of all 15 routes (not source, to avoid CSS `color` noise):
+
+| Word | UK form used at | US form used at |
+|---|---|---|
+| summarise/summarize | `faq:10, 57, 58` ("summariser"), `active-recall-youtube:156`, `youtube-flashcards:141` | `faq:14` (own SEO keywords: "clipmark vs **summarizer**") |
+| organise/organize | `faq:41` | `page.tsx:102, 111, 765`, `terms:81` |
+| licence/license | `affiliate/terms:212` | `affiliate/terms:111`, `terms:127` |
+| colour/color | `faq:42`, `spaced-repetition-youtube:95` | — |
+| personalise | `affiliate:90`, `affiliate/terms:90` | — |
+| cancelled | `affiliate:76, 304`, `affiliate/terms:145` | — |
+
+Two of these conflict **within one file**: `/faq` says "summariser" in its visible answers and "summarizer" in its own keyword list, and `/affiliate/terms` uses "licence" (:212) and "license" (:111) in the same legal document.
+
+**Why it matters:** less about correctness than about signalling. The US is the largest of the three markets and US readers read `-ise` as foreign; mixed spelling in a legal page reads unpolished. The `/faq` case is also a search problem — US and AU searchers type "summarizer".
+
+**Fix (S):** pick **US English** as the house standard (largest market, and it matches the store listing and the `.edu` discount already in place), normalise the ~10 occurrences above, and note the choice in `CLAUDE.md` conventions so it stops drifting.
+
+## M4 · The student discount is US-only by construction 🟠
+
+**Location:** `webapp/app/(marketing)/page.tsx:57`
+
+> "Yes! We support students and educators. Contact our support team with your **.edu** email for a special discount code."
+
+`.edu` is a US-restricted TLD. UK universities issue `.ac.uk`; Australian ones `.edu.au`. A grep across the marketing tree finds **`.edu` and no `.ac.uk` or `.edu.au` anywhere**.
+
+So a student at Manchester or Melbourne — squarely in the target market, and exactly the retention/exam audience the product is built for — reads the offer, checks their address, and concludes it is not for them.
+
+**Fix (XS):** "…with your university email address (`.edu`, `.ac.uk`, `.edu.au` or equivalent)". Purely a copy change; the discount is issued by hand anyway.
+
+## M5 · The store listing has a targeted beachhead; the website does not 🟠
+
+`docs/gtm/chrome-web-store-listing.md:4` states the positioning explicitly:
+
+> "beachhead is **USMLE/IMG med students** … but copy stays usable for any serious YouTube learner"
+
+and `:100` names "USMLE Step 1/Step 2 students and IMGs".
+
+The **website names an audience exactly twice**: the `.edu` discount (`page.tsx:57`) and one clause in the Serious Learner card — "so what you study actually sticks **by exam day**" (`page.tsx:631`). The homepage personas are *Builder / Founder / Serious Learner* — occupational and region-neutral.
+
+**Why it matters:** the acquisition surface (store listing) is aimed at a concrete, high-intent, high-purchasing-power US segment, and the conversion surface (website) is not aimed at anyone in particular. A visitor arriving from that listing lands on generic productivity framing. No page names a course, exam, credential or education system in any of the three markets.
+
+**Fix (M):** carry one concrete anchor per market into the Serious Learner card and the retention pages — US: USMLE / MCAT / AP; UK: A-levels, undergraduate lecture capture; AU: ATAR / university lectures. One clause each is enough; it does not require new pages and does not narrow the product.
+
+## M6 · UK GDPR is not covered — the policy addresses "EU/EEA" only 🟠
+
+**Location:** `webapp/app/(marketing)/privacy/page.tsx:152`
+
+> "If you are located in the **EU/EEA**, you also have rights under the GDPR, including the right to data portability and to lodge a complaint with a supervisory authority."
+
+Post-Brexit the UK is neither EU nor EEA, and UK GDPR is a separate regime with its own regulator. A UK reader — one of the three target markets — finds no statement that covers them. Verified absent from the policy: **"UK GDPR", "ICO", "data controller", "legal basis", "legitimate interest", "international transfer", "Standard Contractual Clauses"**.
+
+*(I initially miscounted "ICO" as present — that was substring noise from the word "icon". It does not appear.)*
+
+The rights list (`:140-150`) offers Access, Delete, Export and Correction. GDPR/UK GDPR also require **object**, **restrict processing**, and **withdraw consent**.
+
+Also material for these markets: account data sits with Supabase and Vercel, and payments with Dodo, so UK/EU personal data leaves the UK/EEA. The policy names the processors (`:114-117`) but states **no transfer mechanism**.
+
+**Fix (S):** extend `:152` to "If you are in the UK, EU or EEA…", name the ICO alongside EU supervisory authorities, add object/restrict/withdraw to the rights list, name the data controller with a contact, and add one line on international transfers. All disclosure, no engineering.
+
+## M7 · The affiliate cookie is undisclosed and has no consent path 🟠
+
+**Evidence.** `webapp/app/r/[code]/route.ts:38-44` sets a **30-day marketing attribution cookie**:
+
+```ts
+response.cookies.set('clipmark_ref', code, {
+  httpOnly: true, sameSite: 'lax', path: '/',
+  maxAge: 60 * 60 * 24 * 30,          // 30 days
+  secure: process.env.NODE_ENV === 'production',
+});
+```
+
+It is documented in `/affiliate/terms:94` and `:200` — for *affiliates*. It is **not mentioned in the privacy policy at all**. The policy's only cookie statement (`privacy/page.tsx:117`) covers Vercel Analytics and concludes:
+
+> "It sets no cookies … so there is **nothing here to consent to or opt out of**."
+
+That is accurate for Vercel Analytics (`SiteAnalytics.tsx:6` reasons the same way, correctly), but the conclusion does not extend to `clipmark_ref`, and no consent banner exists anywhere in `webapp/app`.
+
+**Why it matters:** the cookie is set on a redirect *before* the visitor sees any page, and attribution/marketing cookies are not "strictly necessary" under UK PECR / EU ePrivacy — they need prior consent, independent of GDPR. Every UK visitor arriving through an affiliate link is currently in that position. The implementation itself is careful (httpOnly, SameSite=Lax, Secure, first-click only); the gap is disclosure and consent, not engineering.
+
+**Fix (S):** disclose `clipmark_ref` in the privacy policy — purpose, 30-day lifetime, how to clear it — and gate the `set` in `r/[code]/route.ts` behind a lightweight consent interstitial for UK/EU traffic, or drop the cookie in favour of a server-side attribution parameter. Worth a lawyer's five minutes, given affiliates are an intended acquisition channel.
+
+## M8 · No legal entity, address or named jurisdiction 🟡
+
+**Location:** `webapp/app/(marketing)/terms/page.tsx:186`
+
+> "These Terms are governed by the laws of **the jurisdiction in which ClipMark is incorporated**"
+
+The jurisdiction is never named, and no entity name or trading address appears anywhere on the site.
+
+**Why it matters:** UK and EU consumer law requires a trader's identity and geographic address to be given before a distance contract; GDPR separately requires the controller's identity. Beyond compliance it is a plain trust signal — a US or UK buyer entering card details on a new product looks for who they are contracting with.
+
+**Fix (XS):** name the entity and jurisdiction in the terms and the footer.
+
+## M9 · California (CCPA/CPRA) — not currently required, cheap to pre-empt 🟢
+
+Verified absent: **"CCPA", "CPRA", "California"**. The policy does say, at `:135`:
+
+> "We do not sell your data to third parties. We do not use your data for advertising."
+
+**Being accurate rather than alarmist:** CCPA/CPRA applies above thresholds (roughly $25M revenue, 100k+ California consumers, or 50%+ revenue from selling personal information). A pre-launch product meets none of them, so **this is not a present violation and I am not flagging it as one.** The statement above is also the substantive thing CCPA cares about, and it is already true.
+
+**Fix (XS, optional):** a short "Your California privacy rights" paragraph restating no-sale/no-share plus the deletion route. It costs nothing, reads as competence to US buyers, and removes the work later.
+
+## M10 · No trust signal that reads as local to any of the three markets 🟡
+
+Extending U3 with the regional lens. The site carries: no named founder (`page.tsx:969` — "— Creator of ClipMark"), no company entity (M8), no currency (M1), no jurisdiction, no support-hours or timezone expectation, and — per the brief — ~0 store reviews. Support is a bare `mailto:`.
+
+For a first-time Tier-1 buyer the page offers nothing that anchors the product to a real, reachable operator.
+
+**Fix (S), all honest and available pre-launch:** sign the founder quote with a real name and link; name the entity and jurisdiction; state currency; state a support response expectation ("we reply within one business day"); keep the free-tier numbers prominent — they are already the strongest trust asset on the site.
+
+---
+
+### Target-market summary
+
+| # | Gap | Market hit hardest | Severity | Effort |
+|---|---|---|---|---|
+| **M1** | Bare `$`, no currency anywhere | AU, UK | 🟠 | XS |
+| **M2** | "taxes included" unverified vs VAT/GST | UK, AU | 🟠 | XS + verify |
+| **M4** | `.edu`-only student discount | UK, AU | 🟠 | XS |
+| **M5** | Website has no audience anchor; listing does | all three | 🟠 | M |
+| **M6** | UK GDPR uncovered; policy says "EU/EEA" | UK | 🟠 | S |
+| **M7** | Affiliate cookie undisclosed, no consent | UK | 🟠 | S |
+| **M3** | Mixed US/UK spelling, incl. within one page | US | 🟡 | S |
+| **M8** | No entity, address or named jurisdiction | all three | 🟡 | XS |
+| **M10** | No locally-legible trust signal | all three | 🟡 | S |
+| **M9** | No California section (not yet required) | US | 🟢 | XS |
+
+**Cheapest high-value cut:** M1 + M4 + M8 are all copy, under an hour together, and they remove the three most concrete "this isn't for me / who am I buying from" objections. M2 needs a Dodo dashboard check before launch. M6 + M7 are worth a lawyer's brief review since they concern a live acquisition channel.
+
+---
+
 # Checked and clean (non-findings)
 
 Recording these so nobody re-spends the time:
@@ -317,6 +500,16 @@ Recording these so nobody re-spends the time:
 | **A4** | Standalone arrow links ~19px | 🟡 | XS |
 | **U2** | Shipped AI features styled as inactive | 🟡 | XS |
 | **U3** | Anonymous founder quote, no social proof | 🟡 | S |
+| **M1** | Prices show a bare `$` — no currency anywhere | 🟠 | XS |
+| **M2** | "taxes included" unverified against UK VAT / AU GST | 🟠 | XS + verify |
+| **M4** | Student discount is `.edu`-only (excludes UK/AU) | 🟠 | XS |
+| **M5** | Website has no audience anchor; store listing does | 🟠 | M |
+| **M6** | UK GDPR uncovered — policy addresses "EU/EEA" only | 🟠 | S |
+| **M7** | Affiliate cookie undisclosed, no consent path (UK) | 🟠 | S |
+| **M3** | Mixed US/UK spelling, incl. within single pages | 🟡 | S |
+| **M8** | No legal entity, address or named jurisdiction | 🟡 | XS |
+| **M10** | No locally-legible trust signal for the three markets | 🟡 | S |
+| **M9** | No California section (not yet legally required) | 🟢 | XS |
 
 **Suggested order:** D1 + A2 + A3 (about an hour, all CSS) → C1 + C2 + C3 (copy, but touches legal documents, so review carefully) → D2 gate extension → the rest.
 
