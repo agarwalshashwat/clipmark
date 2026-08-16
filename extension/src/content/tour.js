@@ -12,7 +12,7 @@
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import '../tour-theme.css';
-import { shouldMarkTourSeen, shouldStartYoutubeTour } from '../tour-state.js';
+import { hasSeenYoutubeTour, shouldMarkTourSeen, shouldStartYoutubeTour } from '../tour-state.js';
 
 const TOUR_POPOVER_CLASS = 'clipmark-tour-popover';
 
@@ -50,10 +50,10 @@ function getBookmarkCount(videoId) {
   });
 }
 
-function getTourState() {
+function readArea(area) {
   return new Promise((resolve) => {
     try {
-      chrome.storage.sync.get({ tourState: {} }, (result) => {
+      chrome.storage[area].get({ tourState: {} }, (result) => {
         resolve(chrome.runtime.lastError ? {} : result.tourState || {});
       });
     } catch {
@@ -62,24 +62,63 @@ function getTourState() {
   });
 }
 
+/**
+ * The tour state as both storage areas see it. `sync` is authoritative for
+ * everything except the one-shot flag, which is believed from either area —
+ * see hasSeenYoutubeTour in ../tour-state.js for why the local mirror exists.
+ */
+async function getTourState() {
+  const [syncState, localState] = await Promise.all([readArea('sync'), readArea('local')]);
+  return { ...localState, ...syncState, youtubeTour: hasSeenYoutubeTour({ syncState, localState }) };
+}
+
 // Set once the flag has been persisted for this page, so the several
 // acknowledgement paths below (onDestroyStarted, onDestroyed, overlay click) can
 // all call markYoutubeTourSeen defensively without spending extra
 // chrome.storage.sync writes on the same one-shot.
 let markedSeen = false;
 
+/**
+ * Last-resort mirror of the one-shot flag in chrome.storage.local.
+ *
+ * Only reached when sync refused the write. local is per-machine so it does not
+ * follow the user, but it is not subject to sync's quota or rate limits — and a
+ * flag that stops the tour on THIS machine is strictly better than a tour that
+ * cannot be dismissed at all. getTourState() believes either area.
+ */
+function mirrorSeenLocally() {
+  try {
+    chrome.storage.local.get({ tourState: {} }, (result) => {
+      if (chrome.runtime.lastError) { markedSeen = false; return; }
+      const tourState = { ...(result.tourState || {}), youtubeTour: true };
+      chrome.storage.local.set({ tourState }, () => {
+        // Both areas refused. Retry on the next video rather than pretend the
+        // one-shot was spent.
+        if (chrome.runtime.lastError) markedSeen = false;
+      });
+    });
+  } catch {
+    markedSeen = false;
+  }
+}
+
 function markYoutubeTourSeen() {
   if (markedSeen) return;
   markedSeen = true;
   try {
     chrome.storage.sync.get({ tourState: {} }, (result) => {
-      if (chrome.runtime.lastError) { markedSeen = false; return; }
-      const tourState = { ...(result.tourState || {}), youtubeTour: true };
+      // A read failure says nothing about whether a write would land, and the
+      // spread below is only needed to preserve sidePanelTour — so fall through
+      // with what we have rather than giving up on persisting anything.
+      const existing = chrome.runtime.lastError ? {} : (result.tourState || {});
+      const tourState = { ...existing, youtubeTour: true };
       chrome.storage.sync.set({ tourState }, () => {
-        // A failed write must not be silent: leaving markedSeen true would make
-        // this page believe the one-shot was spent when nothing was stored, and
-        // the tour would come back on the next video with no way to stop it.
-        if (chrome.runtime.lastError) markedSeen = false;
+        // The write can fail for reasons that will still be true on the next
+        // video — sync QUOTA_BYTES exhausted by saved bookmarks, the per-minute
+        // write cap, or sync disabled on the profile. Retrying forever means the
+        // tour re-appears on every single video with no way for the user to stop
+        // it, which is the exact bug this guards. Mirror to local instead.
+        if (chrome.runtime.lastError) mirrorSeenLocally();
       });
     });
   } catch {
