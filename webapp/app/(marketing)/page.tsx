@@ -254,9 +254,18 @@ export default async function Home({
             </a>
           </div>
 
-          <p style={{ marginTop: 24, fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16, opacity: 0.7 }}>shield_with_heart</span>
-            Privacy First: AI processing (Gemini Nano) happens 100% on your device.
+          {/* The AI line is deliberately above the fold and stated as a property of
+              where the model runs, not as a comparison. docs/gtm/COMPETITIVE-BRIEF.md
+              §4 found no competitor advertising on-device processing — but "nobody
+              else does" is exactly the unverifiable shape of claim that got the
+              WhyClipMark quiz card retired, so this says what is true of us and
+              lets the reader draw the conclusion. */}
+          <p style={{ marginTop: 24, fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', maxWidth: 620, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 16, opacity: 0.8 }}>shield_with_heart</span>
+            <span>
+              <strong>Your transcripts never leave your laptop.</strong> The AI that drafts your
+              notes is Chrome&apos;s own on-device model — free, and nothing is sent to our servers.
+            </span>
           </p>
 
           {/* Cinematic UI Mockup */}
@@ -581,24 +590,48 @@ export default async function Home({
       {/* ── Feature Showcases ───────────────────────────────────────────── */}
       <section id="features" style={{ padding: '128px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          {/* These three cards used to be three identities — Builder / Founder /
+              Serious Learner — which read as three different products and matched
+              none of the positioning in docs/gtm/. They are now three examples of
+              ONE job: remember what you studied. Naming a concrete situation
+              (a lecture series, an exam) is deliberate — docs/gtm/COMPETITIVE-BRIEF.md
+              §6.3 T3 found the category leader won on specificity, and no
+              competitor names an exam, course or syllabus at all. Med/exam is an
+              example here, never the whole identity. */}
           <div style={{ textAlign: 'center', marginBottom: 96 }}>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, marginBottom: 16, fontFamily: "var(--font-display)", letterSpacing: '-0.5px', color: 'var(--text)' }}>
-              Curated For Your Workflow
+              One job, whatever you&apos;re studying
             </h2>
-            <p style={{ color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto', fontSize: 16 }}>
-              Whether you&apos;re building, studying, or creating, ClipMark adapts to your mental model.
+            <p style={{ color: 'var(--text-muted)', maxWidth: 560, margin: '0 auto', fontSize: 16, lineHeight: 1.7 }}>
+              A lecture series, a language course, a three-hour conference talk — ClipMark does the
+              same thing with all of them: mark the moment, then make yourself recall it later.
             </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            {/* Developers */}
+            {/* Lectures and course series — the exam case, named concretely */}
+            <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent-strong)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
+                <span className="material-symbols-outlined" aria-hidden="true">school</span>
+              </div>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>Lectures and course series</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
+                A forty-video series is not something you rewatch. Mark the moments that carry the concept — a Step 1 lecture, a recorded seminar, an exam-board revision channel — and let the review schedule bring each one back before you forget it.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--ai-light)', color: 'var(--ai-ink)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#revision</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#fce7f3', color: '#be185d', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#retention</span>
+              </div>
+            </div>
+
+            {/* Technical deep dives */}
             <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
               <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--gray-900)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
                 <span className="material-symbols-outlined" aria-hidden="true">code</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>For the Builder</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>Technical deep dives</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Stop "tutorial hell." Capture the exact second a pattern clicks, and build a searchable, taggable library of the deep dives you actually understood.
+                Stop &ldquo;tutorial hell.&rdquo; Capture the exact second a pattern clicks, then get asked about it again a week later — which is the difference between having watched the talk and knowing the thing.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dbeafe', color: '#1d4ed8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#react</span>
@@ -606,33 +639,18 @@ export default async function Home({
               </div>
             </div>
 
-            {/* Founders */}
+            {/* Long talks and podcasts */}
             <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent-strong)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined" aria-hidden="true">rocket_launch</span>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--ai)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
+                <span className="material-symbols-outlined" aria-hidden="true">graphic_eq</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>For the Founder</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>Long talks and podcasts</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Pull the three moments that actually mattered out of a 3-hour founder podcast, with an on-device AI draft of each — and keep them somewhere you&apos;ll see them again.
+                Pull the three moments that actually mattered out of a three-hour interview, with an on-device AI draft of each — and keep them somewhere that asks you about them again.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#ffedd5', color: '#c2410c', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#strategy</span>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--success-chip)', color: 'var(--success)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#execution</span>
-              </div>
-            </div>
-
-            {/* Serious Learners */}
-            <div style={{ padding: 32, borderRadius: 32, background: 'var(--surface-alt)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--ai)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-                <span className="material-symbols-outlined" aria-hidden="true">psychology</span>
-              </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, fontFamily: "var(--font-display)", color: 'var(--text)' }}>For the Serious Learner</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.75 }}>
-                Treat YouTube like a structured course. Active Recall resurfaces your saved moments on a spaced schedule and quizzes you before the reveal — so what you study actually sticks by exam day.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--ai-light)', color: 'var(--ai-ink)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#retention</span>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#fce7f3', color: '#be185d', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#second_brain</span>
               </div>
             </div>
           </div>
@@ -693,7 +711,7 @@ export default async function Home({
                 AI features — free, on-device
               </span>
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, marginBottom: 32, lineHeight: 1.2, fontFamily: "var(--font-display)" }}>
-                Effortless curation, powered by your own browser.
+                The AI runs inside your browser. Not on our servers.
               </h2>
               {/* This used to read "Our AI engine analyzes transcripts in real-time to
                   surface the gold nuggets so you don't have to" — which claimed an
