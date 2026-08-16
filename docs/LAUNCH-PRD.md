@@ -238,7 +238,7 @@ Legend: ✅ done · 🟡 in progress / partial · ⬜ not started · ⏳ waiting
 |---|---|---|---|---|
 | **W0** | **Read the *published* listing version off the CWS dashboard** | ⬜ **do this first** | Ash | A 60-second check that can invalidate copy. The live listing read **v1.0.3** on 2026-08-12 while `main` was already ahead; `main` is now **1.0.6** and the gap is wider. **Every claim in the posting kit must be true of the *published* build, not `main`** (**G5**) — dark mode and the uninstall survey both ship in versions the store may not have yet. Doing this after the copy is scheduled is how a dishonest claim ships |
 | **W1** | ~~**Apply migration `019_uninstall_feedback.sql` to prod**~~ | ✅ **done 2026-08-16** (owner-reported) | — | Applied via the `db:migrate` runner after a `pg_dump` backup (**G3**), object verified rather than the ledger row. W2 is unblocked |
-| **W2** | **Submit v1.0.6 to the Chrome Web Store** | ⬜ **not started** | Ash | `main` is at 1.0.6 (#126) but **nothing has been uploaded**. Owner-only, never automated (**G4**). Must follow W1 — v1.0.6 registers the uninstall URL, so submitting first means every uninstaller hits a 500. Then it's a review wait, and **the push waits on it** |
+| **W2** | **Submit v1.0.6 to the Chrome Web Store** | ⬜ **not started** | Ash | `main` is at 1.0.6 (#126) but **nothing has been uploaded**. Owner-only, never automated (**G4**). W1 is done, so this is unblocked. Then it's a review wait, and **the push waits on it** |
 | **W3** | **Enable Vercel Web Analytics in the dashboard** | ⬜ **one click** | Ash | Code landed with #120; until the toggle is on the component mounts and **silently no-ops**, so launch-day traffic is unattributable. Cheapest item on this list and it expires — traffic that arrives before it is on can never be recovered |
 | **W4** | **Website pre-launch wins** — install CTAs, analytics code, custom 404, OG card + favicons | ✅ **done** | — | #120 (with #118/#119 closed as superseded); install CTAs had already landed in `2f60a56`. `CHROME_STORE_URL` in `webapp/app/lib/constants.ts` remains the single source of truth for every install link |
 | **W5** | **Homepage rebuilt around the wedge** | ✅ **done** | — | #131 + #132 — flashcard-led H1, 3 install CTAs, Active Recall shown free, honest review-ladder chart. See [§1](#1-product-one-liner--positioning) |
@@ -251,6 +251,21 @@ action**; none is engineering. W3 is off the path but expires — do it now, not
 
 W0 sits first because it's free and it gates *copy*, not code: if the published listing is
 behind `main`, the fix isn't engineering, it's deleting claims from the posting kit.
+
+### Go / no-go — the last checks before the push
+
+Folded in from `docs/release/LAUNCH_GO_NO_GO_CHECKLIST.md` (2026-06-25), which this table
+replaced. Its CI list was stale (3 gates; there are six — **G2**) and its four sign-off roles
+described a team that doesn't exist. What survives is the part nothing else covers — the money
+paths, which no CI job exercises end to end:
+
+- [ ] **Paid upgrade tested end to end in production mode**, not test mode. Dodo keys `test_mode`
+      off `NODE_ENV`, so this cannot be proven from a Vercel Preview (see [§5](#5-pointers--where-everything-else-lives)).
+- [ ] **Pro entitlement flips correctly on both purchase *and* cancellation/refund.**
+- [ ] **Referral and affiliate attribution survives a real checkout.**
+- [ ] **No open Sev-1/Sev-2 defect**, and the manual pass in [`CHECKLIST.md`](../CHECKLIST.md) is done
+      against the *packaged* build (CI gates 4 of ~20 specs — see the appendix).
+- [ ] **Support mailbox is being read**, and `public.feedback` is somewhere you'll actually look.
 
 > **The process lesson worth keeping** (from the #118/#119/#120 episode, when three agents built
 > the same four items in parallel inside twelve minutes, one of which was already done on

@@ -86,6 +86,7 @@ call that looked arbitrary. **Never edit or delete an entry.**
 | 2026-08-16 | **Dark-mode toggle stayed unmounted until every surface passed AA** (#127–#129 before #134) | A reachable toggle over broken surfaces is worse than no toggle — it invites users into a state we know is unreadable. |
 | pre-2026-08-16 | **Rejected: reusing a logged-in ChatGPT/Claude web session for AI** | Violates provider ToS; realistic outcomes are user bans and an extension takedown. Also contradicts the narrow-permissions / on-device posture in G6, which is a selling point. |
 | 2026-08-16 | **Migration 019 applied to prod** via the `db:migrate` runner after a `pg_dump` backup | Enables uninstall-feedback capture. Owner-authorized and done with a backup, per G3. |
+| 2026-08-16 | **Docs prune: 8 archived, 4 merged, 1 deleted, `docs/release/` removed** | Stale docs were causing real false work — a parity audit generating false P1s, two specs saying "not implemented" for shipped features, a policy stub listing 3 of 6 CI gates. Consolidated to the canonical set so there is one place to trust per question. Nothing lost: archived under `docs/archive/`, deletions recoverable from git. |
 
 ---
 
@@ -105,6 +106,8 @@ docs/               LAUNCH-PRD.md (north star) · RELEASE-PROCESS.md (train + ho
                     RELEASE-RUNBOOK.md · TEST-STRATEGY.md · LAUNCH-GATES.md
   gtm/              PARKED-BACKLOG.md (34 post-launch items) + launch/posting/paid kits
   analytics/        FEATURE-ANALYTICS-SPEC.md (spec only, not built)
+  archive/          superseded point-in-time docs — historical only, do NOT trust as
+                    current state; read its README first
 scripts/            cut-release.sh · design-audit.mjs · sync-design-tokens.js
 tests/              Playwright specs + unit/ (node:test). *-packaged.spec.ts are NOT in CI
 .github/workflows/  ci-launch-gates.yml (the six gates) · release-train.yml (draft build)

@@ -1,8 +1,8 @@
 # ClipMark — Chrome Web Store Listing (Ready to Paste)
 
 **Date:** 2026-07-31
-**Positioning:** "Revise & remember" — Active Recall as hero, additive to Anki, beachhead is USMLE/IMG med students (per [ClipMark-MedExam-Strategy-Brief.md](../../ClipMark-MedExam-Strategy-Brief.md)), but copy stays usable for any serious YouTube learner so the listing doesn't cap itself to one audience.
-**Honesty constraint:** every claim below maps to a shipped feature. Nothing here mentions Deep Transcript Search, Lifetime Cloud Archiving, "Early access to labs," or Notion/Obsidian **sync** (it's a one-off **export**, per the pricing-claims audit in [ClipMark-Claims-Buildout-Plan.md](../../ClipMark-Claims-Buildout-Plan.md) and [ClipMark-ROADMAP.md](../../ClipMark-ROADMAP.md)). Free-tier numbers below (25 Active Recall segments, 30 reviews/mo, 1 Anki export/mo, 10 shared collections) match the shipped caps in [ClipMark-UsageCaps-Spec.md](../../ClipMark-UsageCaps-Spec.md).
+**Positioning:** "Revise & remember" — Active Recall as hero, additive to Anki, beachhead is USMLE/IMG med students (per the med-exam strategy brief, never committed to this repo), but copy stays usable for any serious YouTube learner so the listing doesn't cap itself to one audience.
+**Honesty constraint:** every claim below maps to a shipped feature. Nothing here mentions Deep Transcript Search, Lifetime Cloud Archiving, "Early access to labs," or Notion/Obsidian **sync** (it's a one-off **export**, per the pricing-claims audit in `ClipMark-Claims-Buildout-Plan.md` and `ClipMark-ROADMAP.md`). Free-tier numbers below (25 Active Recall segments, 30 reviews/mo, 1 Anki export/mo, 10 shared collections) match the shipped caps in `ClipMark-UsageCaps-Spec.md`.
 
 **Note on the name:** `extension/manifest.json` currently ships `"name": "Clipmark"` (lowercase "m"), while every planning doc and this listing use `"ClipMark"`. The Chrome Web Store listing title is set independently in the Developer Dashboard, so this doesn't block publishing — but worth reconciling manifest casing with the public brand before the CWS listing goes live, so the install-time permission dialog and the store page match.
 
@@ -166,4 +166,8 @@ Per the distribution plan's own finding: **never buy reviews**, and never prompt
 
 ---
 
-*Companion docs: [ClipMark-Distribution-Plan.md](../../ClipMark-Distribution-Plan.md) (channel strategy this listing supports), [ClipMark-MedExam-Strategy-Brief.md](../../ClipMark-MedExam-Strategy-Brief.md) (positioning source), [ClipMark-UsageCaps-Spec.md](../../ClipMark-UsageCaps-Spec.md) (free-tier numbers cited above), [ClipMark-ROADMAP.md](../../ClipMark-ROADMAP.md) (what's shipped vs. planned).*
+*Companion docs: [marketing-launch-plan.md](marketing-launch-plan.md) (channel strategy this
+listing supports) and [../LAUNCH-PRD.md](../LAUNCH-PRD.md) §1 (positioning, and the **live**
+free-tier caps — quote those, not the numbers in any older brief). Historical context:
+[ClipMark-ROADMAP.md](../archive/ClipMark-ROADMAP.md), archived. A distribution plan, a med-exam
+strategy brief and a usage-caps spec were cited here but **never committed to this repo**.*

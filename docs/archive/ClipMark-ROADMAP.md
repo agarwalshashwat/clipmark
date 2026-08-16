@@ -14,7 +14,7 @@ This is the one place everything discussed across security hardening, pricing, d
 - **Referral gifted-Pro reward now reverses on refund** — `reverseReferralReward()` claws back gifted-Pro months and decrements referral credit when a referred purchase is refunded. Commit `8c684dd`, PR #55.
 - **`/api/reminders` and `/api/reminders/[id]/done` now enforce Pro server-side** — previously relied on a client-side check only. Commit `cffddc9`, PR #55.
 - **`/api/comments` (unauthenticated YouTube proxy) now rate-limited** — commit `070e98c`, PR #55.
-- **Admin affiliate route fixed** (`/api/admin/set-affiliate`) — was writing two non-existent columns (`affiliate_status`, `affiliate_commission_rate`) and had a commission-rate unit bug, now corrected. Commit `1370a68`, PR #52. Full diagnosis: [ClipMark-Affiliate-Fix-Spec.md](ClipMark-Affiliate-Fix-Spec.md).
+- **Admin affiliate route fixed** (`/api/admin/set-affiliate`) — was writing two non-existent columns (`affiliate_status`, `affiliate_commission_rate`) and had a commission-rate unit bug, now corrected. Commit `1370a68`, PR #52. Full diagnosis: `ClipMark-Affiliate-Fix-Spec.md`.
 - **`profiles` INSERT hardening** — restricted to non-entitlement columns. PR #51 (`chore/profiles-insert-grant-hardening`).
 - **Referral credit now actually grants Pro**, not just a counter — commit `9fc8299`.
 - **`/dashboard/queue` now enforces Pro entitlement server-side** — the page previously queried reminder data directly without the same `is_pro` check `/api/reminders` enforces. PR #71 (`fix/dashboard-queue-pro-gate`).
@@ -22,11 +22,11 @@ This is the one place everything discussed across security hardening, pricing, d
 ### Pricing
 - **New tax-inclusive pricing: $7.99/mo, $59.99/yr, $99.99 founding lifetime** — `PRICE_DEFAULTS` in `webapp/app/(marketing)/upgrade/pricing.ts`. PR #54 (`fix/pricing-update-799-5999-9999`): `36caa67` (price update), `4201100` (removed stale lifetime strikethrough, reframed as founding price), `fffcd0f` (tax-inclusive microcopy on the guarantee line), `2201c1d` (labeled Free vs Pro columns in the comparison table).
 - **Stale Pro-only marketing copy corrected** — commit `cead2cc`.
-- **Free shared-collections limit raised 5 → 10** — commit `7caed7d`, matches the recommendation in [ClipMark-UsageCaps-Spec.md](ClipMark-UsageCaps-Spec.md) §2 (viral-mechanic reasoning tied to the distribution plan).
+- **Free shared-collections limit raised 5 → 10** — commit `7caed7d`, matches the recommendation in `ClipMark-UsageCaps-Spec.md` §2 (viral-mechanic reasoning tied to the distribution plan).
 
 ### Free-tier usage caps (med/exam pivot)
 - **Free-tier usage-caps module** (`extension/src/usage-caps.js`) — commit `796347f`, PR #53.
-- **Active Recall/Anki caps enforced, hard recall wall loosened to taste-then-wall** — commit `d7171fb`, PR #53. Matches [ClipMark-UsageCaps-Spec.md](ClipMark-UsageCaps-Spec.md): 25 standing Active-Recall-enrolled segments, 30 reviews/month, 1 Anki export/month, AI Synthesis explicitly free (was a dead gate).
+- **Active Recall/Anki caps enforced, hard recall wall loosened to taste-then-wall** — commit `d7171fb`, PR #53. Matches `ClipMark-UsageCaps-Spec.md`: 25 standing Active-Recall-enrolled segments, 30 reviews/month, 1 Anki export/month, AI Synthesis explicitly free (was a dead gate).
 
 ### Core product (Active Recall / SM-2 build-out — pre-dates this planning pass)
 - SM-2-lite recall scheduling engine (`recall.js`/`recall.module.js` twin, PR #39).
@@ -52,7 +52,7 @@ This is the one place everything discussed across security hardening, pricing, d
 | # | What | Branch | Status |
 |---|---|---|---|
 | **#56** | Bottom-align pricing card CTA buttons across cards | `fix/pricing-cta-alignment` | **OPEN** |
-| — | **"Coming soon" relabel of unbuilt pricing claims** — uncommitted work-in-progress on `fix/pricing-claims-honesty` (no PR yet): adds a `ComingSoon` badge to Deep Transcript Search, Lifetime Cloud Archiving, and Early access to all labs in `PlanCards.tsx`; softens "Sync to Notion & Obsidian" → "Export to Notion & Obsidian" (matches the actual one-off export capability) and "Daily Review Dashboard" → "Review Reminders" / "Advanced Learning Stats" → "Learning Stats" (matches what's actually shipped, no overpromise). **Not yet done**: the comparison-table rows in `page.tsx` ("Permanent Transcript Archiving", "Deep Search (inside transcripts)") still need the same `ComingSoon` treatment, and the "Spaced Repetition Logic" copy fix (§A above — reframe as "unlimited," not Pro-exclusive) hasn't been touched yet. Per [ClipMark-Claims-Buildout-Plan.md](ClipMark-Claims-Buildout-Plan.md) interim section for the full target list. |
+| — | **"Coming soon" relabel of unbuilt pricing claims** — uncommitted work-in-progress on `fix/pricing-claims-honesty` (no PR yet): adds a `ComingSoon` badge to Deep Transcript Search, Lifetime Cloud Archiving, and Early access to all labs in `PlanCards.tsx`; softens "Sync to Notion & Obsidian" → "Export to Notion & Obsidian" (matches the actual one-off export capability) and "Daily Review Dashboard" → "Review Reminders" / "Advanced Learning Stats" → "Learning Stats" (matches what's actually shipped, no overpromise). **Not yet done**: the comparison-table rows in `page.tsx` ("Permanent Transcript Archiving", "Deep Search (inside transcripts)") still need the same `ComingSoon` treatment, and the "Spaced Repetition Logic" copy fix (§A above — reframe as "unlimited," not Pro-exclusive) hasn't been touched yet. Per `ClipMark-Claims-Buildout-Plan.md` interim section for the full target list. |
 
 ---
 
@@ -60,7 +60,7 @@ This is the one place everything discussed across security hardening, pricing, d
 
 ### A. Pricing-claim feature build-out (post-launch backlog, pull based on demand)
 
-Full detail, effort, architecture, and risk for each of these is in **[ClipMark-Claims-Buildout-Plan.md](ClipMark-Claims-Buildout-Plan.md)**. Summary:
+Full detail, effort, architecture, and risk for each of these is in **`ClipMark-Claims-Buildout-Plan.md`**. Summary:
 
 | Feature | Effort | Complexity/Risk | One-line plan |
 |---|---|---|---|
@@ -77,7 +77,7 @@ Full detail, effort, architecture, and risk for each of these is in **[ClipMark-
 
 ### B. User Feature-Request System
 
-**Full spec: [ClipMark-FeatureRequests-Spec.md](ClipMark-FeatureRequests-Spec.md).** Owner wants this **native, with voting** — flagging explicitly per the ask so it doesn't get missed:
+**Full spec: `ClipMark-FeatureRequests-Spec.md`.** Owner wants this **native, with voting** — flagging explicitly per the ask so it doesn't get missed:
 
 - **v1 (recommended starting point, ~3–4 days):** private submission (Pro-only, matching every other Pro-gated route's server-side check) + admin triage view (status: `open → planned → in_progress → shipped/declined`). No voting, no public board yet.
 - **v2 (~5–6 additional days, only once v1 has real submission volume):** public board — **submission stays Pro-only, but viewing and voting are open to all signed-in users** (explicitly called out in the spec as the recommended visibility split — a locked board has no social-proof value, and open voting is a soft upsell surface without diluting the actual differentiator). Adds a `feature_request_votes` join table (proper per-user dedup, not a bare RPC counter) and, only after that, a public read-only roadmap page.
@@ -85,7 +85,7 @@ Full detail, effort, architecture, and risk for each of these is in **[ClipMark-
 
 ### C. PPP / Regional Pricing
 
-**Full detail: [ClipMark-MedExam-Strategy-Brief.md](ClipMark-MedExam-Strategy-Brief.md) §10–16 (Part II — Global Strategy).**
+**Full detail: `ClipMark-MedExam-Strategy-Brief.md` §10–16 (Part II — Global Strategy).**
 
 - Product-level behavior (free English YouTube medical lectures + a global IMG/MBBS audience) is genuinely global; GTM should stay niche-first (USMLE/IMG English beachhead) while the **product** is built global-ready now.
 - **Two-tier pricing plan:** Tier A (US/UK/CA/AU/Gulf/W. Europe) at $60/yr [now $59.99, see Shipped]; Tier B (India/SEA/Africa/LatAm/E. Europe, PPP ~0.3–0.4) at ~$22/yr. Founding-lifetime: $99 Tier A / ~$39 Tier B, time-boxed.
@@ -96,7 +96,7 @@ Full detail, effort, architecture, and risk for each of these is in **[ClipMark-
 
 ### D. Condense Mode / Skip-Silence for long videos
 
-Auto-skip or fast-forward the dead-air / no-speech stretches of long videos (multi-hour workshops, lectures) so a watch-through comes out much shorter and denser. Inspired by Samsung Voice Recorder's skip-silence, which shrinks a recording by dropping the silences. Strong fit for the study/long-lecture wedge, and adjacent to Phase 11 "Smart Watching" in [ROADMAP.md](ROADMAP.md) — that one compresses by *engagement*, this one by *speech vs. silence*.
+Auto-skip or fast-forward the dead-air / no-speech stretches of long videos (multi-hour workshops, lectures) so a watch-through comes out much shorter and denser. Inspired by Samsung Voice Recorder's skip-silence, which shrinks a recording by dropping the silences. Strong fit for the study/long-lecture wedge, and adjacent to Phase 11 "Smart Watching" in `ROADMAP.md` — that one compresses by *engagement*, this one by *speech vs. silence*.
 
 - **Feasibility: the Samsung waveform approach does not port directly.** Real-time amplitude analysis of YouTube's `<video>` element is blocked — EME/DRM plus cross-origin media mean Web Audio's `createMediaElementSource()` won't hand us samples. Any plan that assumes a waveform is dead on arrival.
 - **Feasible path — transcript/caption gaps.** Windows with no caption text ≈ no speech, so skip or speed through them. Builds on the caption data the extension already pulls for transcript auto-fill.
@@ -108,7 +108,7 @@ Auto-skip or fast-forward the dead-air / no-speech stretches of long videos (mul
 
 ## PLANNED — DISTRIBUTION / GTM
 
-**Full detail: [ClipMark-Distribution-Plan.md](ClipMark-Distribution-Plan.md).** Companion to the strategy brief above; pulls two prerequisites in first (both now shipped — see above): the admin-affiliate-route fix and the referral/payout-copy honesty gap.
+**Full detail: `ClipMark-Distribution-Plan.md`.** Companion to the strategy brief above; pulls two prerequisites in first (both now shipped — see above): the admin-affiliate-route fix and the referral/payout-copy honesty gap.
 
 **Channel priority, in order, and why:**
 1. **Reddit / Discord / SDN communities** (r/medicalschoolanki ~175K, r/step1, r/step2, r/usmle, r/medicalschool, SDN) — highest-intent, free, and the credibility prerequisite everything else depends on. **Do not post a product link in week 1** — 2–3 weeks as a genuinely useful member first, then a "resource, not a pitch" framing for the first post.
@@ -135,10 +135,10 @@ Auto-skip or fast-forward the dead-air / no-speech stretches of long videos (mul
 
 | Doc | What it covers |
 |---|---|
-| [ClipMark-ROADMAP.md](ClipMark-ROADMAP.md) | **This file** — the single consolidated view of shipped, in-progress, and planned work |
-| [ClipMark-Claims-Buildout-Plan.md](ClipMark-Claims-Buildout-Plan.md) | Per-feature build spec (architecture, DB/migration needs, effort, risk) for the 7 pricing-page claims, plus the "Coming soon" interim labeling recommendation |
-| [ClipMark-FeatureRequests-Spec.md](ClipMark-FeatureRequests-Spec.md) | Native user feature-request system spec — data model, API routes, v1/v2 scope split, effort estimate |
-| [ClipMark-MedExam-Strategy-Brief.md](ClipMark-MedExam-Strategy-Brief.md) | Med/exam niche thesis (USMLE/IMG beachhead), competitor gaps, pricing rationale, global/PPP strategy (Part II) |
-| [ClipMark-Distribution-Plan.md](ClipMark-Distribution-Plan.md) | Cold-start GTM channel plan executing the strategy brief — community, creator/affiliate, CWS, email, SEO, ambassadors, Product Hunt |
-| [ClipMark-UsageCaps-Spec.md](ClipMark-UsageCaps-Spec.md) | Free/Pro gating audit (what's actually enforced vs. just marketed) + the free-tier usage-cap design that shipped in PR #53 |
-| [ClipMark-Affiliate-Fix-Spec.md](ClipMark-Affiliate-Fix-Spec.md) | Diagnosis + fix spec for the admin-affiliate-route bug that shipped in PR #52 |
+| `ClipMark-ROADMAP.md` | **This file** — the single consolidated view of shipped, in-progress, and planned work |
+| `ClipMark-Claims-Buildout-Plan.md` | Per-feature build spec (architecture, DB/migration needs, effort, risk) for the 7 pricing-page claims, plus the "Coming soon" interim labeling recommendation |
+| `ClipMark-FeatureRequests-Spec.md` | Native user feature-request system spec — data model, API routes, v1/v2 scope split, effort estimate |
+| `ClipMark-MedExam-Strategy-Brief.md` | Med/exam niche thesis (USMLE/IMG beachhead), competitor gaps, pricing rationale, global/PPP strategy (Part II) |
+| `ClipMark-Distribution-Plan.md` | Cold-start GTM channel plan executing the strategy brief — community, creator/affiliate, CWS, email, SEO, ambassadors, Product Hunt |
+| `ClipMark-UsageCaps-Spec.md` | Free/Pro gating audit (what's actually enforced vs. just marketed) + the free-tier usage-cap design that shipped in PR #53 |
+| `ClipMark-Affiliate-Fix-Spec.md` | Diagnosis + fix spec for the admin-affiliate-route bug that shipped in PR #52 |

@@ -1,7 +1,11 @@
 # ClipMark — Community Engagement Plan (USMLE/Med Beachhead)
 
 **Date:** 2026-07-31
-**Grounds in:** [ClipMark-Distribution-Plan.md](../../ClipMark-Distribution-Plan.md) §2 (community channel), [ClipMark-MedExam-Strategy-Brief.md](../../ClipMark-MedExam-Strategy-Brief.md) §2 (named communities), [ClipMark-ROADMAP.md](../../ClipMark-ROADMAP.md), [chrome-web-store-listing.md](chrome-web-store-listing.md) §6 (review flywheel).
+**Grounds in:** [chrome-web-store-listing.md](chrome-web-store-listing.md) §6 (review flywheel)
+and the archived [ClipMark-ROADMAP.md](../archive/ClipMark-ROADMAP.md). Two earlier source
+briefs it also cited — a distribution plan and a med-exam strategy brief — were **never
+committed to this repo**; their conclusions are carried in the text below, so nothing here
+depends on reading them.
 **Constraint:** solo founder, zero existing audience, zero paid budget. Every tactic below has to work at $0 and without a following.
 **Honesty constraint (carries over from the CWS listing):** never claim Deep Transcript Search, Lifetime Cloud Archiving, or Notion/Obsidian **sync** (it's a one-off **export**). Free tier is a real allowance — 25 standing Active Recall segments, 30 reviews/month, 1 Anki export/month, 10 shared collections — not a teaser; Pro is unlimited, not "more."
 
