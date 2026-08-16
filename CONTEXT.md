@@ -47,26 +47,27 @@ knowingly, not by accident.
 
 ## 3. Current status
 
-**Last updated: 2026-08-16 by Claude (Sonnet, Cowork Dispatch)** — against `origin/main` @ `e4d1845`.
+**Last updated: 2026-08-16 by Claude (Cowork Dispatch)** — against `origin/main` @ `55b72b5`.
 
-**Phase:** extension live on the Web Store, webapp and live payments running. **Launch /
-marketing phase** — what's left is mostly owner actions, not engineering.
+**Phase:** webapp and live payments running; **launch / marketing phase**. Every remaining
+critical-path item is an owner action, not a coding problem. ⚠ The extension is **not yet on the
+Web Store at v1.0.6** — `main` is 1.0.6 but the *published* listing is still an older build.
 
-**Done** — refunds ledger + **migration 018 applied and verified in prod** (#110, #106, #116) ·
-recall-gate paywall fixed (#111) · homepage fixes live (#131, #132) · pre-launch web wins:
-analytics, 404, OG card, favicons (#120) · dark-mode surface sweep (#127–#129) · **dark-mode
-toggle merged (#134) — system-synced dark mode now live** · release train (#114) · parked
-backlog (#108) · GTM kit (#109) · CI webapp build gate (#133).
+**Done** — **migration 019 applied and verified in prod today; the `/uninstall` survey is live
+end to end** (table `uninstall_feedback`, RLS anon-insert-only, ledger updated) · migration 018
++ refunds ledger applied and verified earlier (#110, #106, #116) · website launch-ready:
+homepage rebuilt around the wedge, pre-launch wins, system-synced dark mode (#120, #131, #132,
+#134) · recall-gate paywall fixed (#111) · process and docs landed: release train (#114), parked
+backlog (#108), GTM kit (#109), CI build gate (#133), LAUNCH-PRD refresh (#136).
 
 **Pending**
 
 | | Item | Owner |
 |---|---|---|
-| **➡ NEXT** | **Apply `019_uninstall_feedback.sql` to prod** (backup first). v1.0.6 registers the uninstall URL, so that page 500s on every uninstall until the table exists — this must land **before** the store submission. | Owner |
-| 2 | Submit **v1.0.6** to the Chrome Web Store (`main` is already at 1.0.6) | Owner |
-| 3 | PR #107 sync engine — parked post-launch, needs a full rebase; its migration renumbers to **020** | — |
-| 4 | Feature-usage analytics — **spec only** (`docs/analytics/FEATURE-ANALYTICS-SPEC.md`, #113), not built; blocked on Q1 | — |
-| 5 | 2 light-mode contrast misses, incl. `InstallCta` at **2.26:1** (owner-reported, not yet in a repo doc) | — |
+| **➡ NEXT** | **Submit v1.0.6 to the Chrome Web Store.** `main` is at 1.0.6 and its migration dependency (019) is now applied, so nothing blocks the upload. Manual and owner-only (G4). | Owner |
+| 2 | PR #107 sync engine — parked post-launch, needs a full rebase; its migration renumbers to **020** | — |
+| 3 | Feature-usage analytics — **spec only** (`docs/analytics/FEATURE-ANALYTICS-SPEC.md`, #113), not built; blocked on Q1 | — |
+| 4 | 2 light-mode contrast misses, incl. `InstallCta` at **2.26:1** (owner-reported, not yet in a repo doc) | — |
 
 ---
 
@@ -84,6 +85,7 @@ call that looked arbitrary. **Never edit or delete an entry.**
 | 2026-08-15 | **Biweekly release train + narrow hotfix lane** (#114) | 1.0.2→1.0.5 shipped back-to-back, each a follow-up to the last, burning a review cycle and force-updating everyone. Batching stops the thrash; the lane keeps real emergencies fast. |
 | 2026-08-16 | **Dark-mode toggle stayed unmounted until every surface passed AA** (#127–#129 before #134) | A reachable toggle over broken surfaces is worse than no toggle — it invites users into a state we know is unreadable. |
 | pre-2026-08-16 | **Rejected: reusing a logged-in ChatGPT/Claude web session for AI** | Violates provider ToS; realistic outcomes are user bans and an extension takedown. Also contradicts the narrow-permissions / on-device posture in G6, which is a selling point. |
+| 2026-08-16 | **Migration 019 applied to prod** via the `db:migrate` runner after a `pg_dump` backup | Enables uninstall-feedback capture. Owner-authorized and done with a backup, per G3. |
 
 ---
 
