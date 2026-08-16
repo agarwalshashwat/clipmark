@@ -79,7 +79,12 @@ const PLANS: Plan[] = [
     name: 'Lifetime',
     priceKey: 'lifetime',
     period: '',
-    badge: { label: 'Founding Price', color: 'var(--brand-ink)' },
+    // --accent-strong, not --brand-ink: .badge paints its label white, and
+    // --brand-ink lightens to teal-400 in dark, which put white on a pale teal
+    // at 1.86:1. --accent-strong is teal-700 in BOTH themes, so light is byte
+    // for byte what it was (--brand-ink is teal-700 in light too) and dark
+    // becomes white-on-teal-700 at 5.47:1.
+    badge: { label: 'Founding Price', color: 'var(--accent-strong)' },
     features: [
       <><strong>Everything in Pro</strong></>,
       'Pay once — no recurring fees',

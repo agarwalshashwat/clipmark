@@ -13,6 +13,7 @@ import { ThemeProvider } from './components/ThemeProvider';
 import { SiteAnalytics } from './components/SiteAnalytics';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
 import { ogImageUrl } from './lib/seo';
+import { THEME_SCRIPT } from './lib/theme-script';
 
 // Site-wide fallback card: inherited by any route that doesn't build its own via
 // buildPageMetadata(). Next REPLACES openGraph rather than merging it, so a route
@@ -85,13 +86,10 @@ export const metadata: Metadata = {
   },
 };
 
-// Inline script runs synchronously before first paint to avoid flash of wrong theme.
-const themeScript = `
-  try {
-    var t = localStorage.getItem('theme');
-    if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-  } catch(e) {}
-`;
+// Runs synchronously before first paint, so the correct theme is on <html>
+// before anything renders — a flash of the wrong theme is impossible. Source and
+// rationale in app/lib/theme-script.ts, which the unit test evaluates directly.
+const themeScript = THEME_SCRIPT;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
@@ -109,7 +107,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <html lang="en" data-theme="light" className={`${plusJakarta.variable} ${inter.variable} ${jetbrains.variable}`}>
+    // data-theme starts at "light" so the server HTML is deterministic; the
+    // inline script below rewrites it before paint when the user or their OS
+    // wants dark. suppressHydrationWarning because that rewrite is exactly the
+    // server/client attribute mismatch React would otherwise complain about.
+    <html
+      lang="en"
+      data-theme="light"
+      suppressHydrationWarning
+      className={`${plusJakarta.variable} ${inter.variable} ${jetbrains.variable}`}
+    >
       <head>
         <script
           type="application/ld+json"

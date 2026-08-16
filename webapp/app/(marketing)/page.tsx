@@ -617,7 +617,7 @@ export default async function Home({
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#ffedd5', color: '#c2410c', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#strategy</span>
-                <span style={{ padding: '4px 12px', borderRadius: 9999, background: '#dcfce7', color: 'var(--success)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#execution</span>
+                <span style={{ padding: '4px 12px', borderRadius: 9999, background: 'var(--success-chip)', color: 'var(--success)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#execution</span>
               </div>
             </div>
 

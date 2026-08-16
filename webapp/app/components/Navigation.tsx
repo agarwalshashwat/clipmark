@@ -1,6 +1,7 @@
 import React from 'react';
 import { createServerSupabase } from '@/lib/supabase';
 import { CHROME_STORE_URL } from '@/app/lib/constants';
+import { ThemeToggle } from './ThemeToggle';
 
 export async function Navigation() {
   const supabase = await createServerSupabase();
@@ -39,6 +40,9 @@ export async function Navigation() {
           <a href="/affiliate" style={{ color: 'var(--text-sub)', fontWeight: 600, fontSize: 13, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Affiliate</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* Sits in the actions cluster rather than the links group so it stays
+              reachable at 375px — .nav-links is the part that collapses. */}
+          <ThemeToggle />
           {user ? (
             <a href="/dashboard" className="nav-login" style={{
               color: 'var(--text)',

@@ -776,7 +776,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
         query ? (
           <div className={styles.emptyCard}>
             <div className={styles.emptyIcon}>
-              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>search_off</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'var(--icon-empty)' }}>search_off</span>
             </div>
             <h3 className={styles.emptyTitle}>No matches found</h3>
             <p className={styles.emptyText}>Try a different search term or clear the filter.</p>
@@ -784,7 +784,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
         ) : (
           <div className={styles.emptyCard}>
             <div className={styles.emptyIcon}>
-              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>video_call</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'var(--icon-empty)' }}>video_call</span>
             </div>
             <h3 className={styles.emptyTitle}>No collections yet</h3>
             <p className={styles.emptyText}>
@@ -1052,7 +1052,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
 
           <div className={styles.suggestionCard}>
             <div className={styles.suggestionIcon}>
-              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 28, color: 'rgba(0,107,95,0.35)' }}>video_call</span>
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 28, color: 'var(--icon-empty)' }}>video_call</span>
             </div>
             <h3 className={styles.suggestionTitle}>Add more variety</h3>
             <p className={styles.suggestionText}>

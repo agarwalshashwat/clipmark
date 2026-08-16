@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import styles from '../shell.module.css';
+import { ThemeToggle } from '@/app/components/ThemeToggle';
 
 interface Props {
   username: string;
@@ -89,6 +90,9 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
             ? <a href="/upgrade" className={styles.upgradeCta}>✦ Upgrade</a>
             : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: 'var(--brand-ink)', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
           }
+          {/* Next to the avatar so it is present on every dashboard route, and
+              outside the desktop-only sign-out form so it survives at 375px. */}
+          <ThemeToggle />
           {/* Avatar — always visible */}
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
