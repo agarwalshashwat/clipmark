@@ -523,11 +523,18 @@
   border: 2px solid var(--gray-50);
 }
 
+/* --ai-soft, and NOT --ai-ink, even though this is text.
+   The side nav is gray-900 in BOTH themes — it does not follow the theme — so
+   the theme-switching --ai-ink is the wrong tool: it resolves to violet-600 in
+   light, which is 3.11:1 on this permanently dark bar (worse than the --ai it
+   replaced). --ai-soft is the "AI text on a DARK surface" token and is the same
+   value in both themes: 9.6:1 here, always.
+   The old --ai was 4.19:1 — a real AA failure in BOTH themes, not just dark. */
 .sideNavUpgrade {
-  color: var(--ai);
+  color: var(--ai-soft);
 }
 
-.sideNavUpgrade:hover { color: var(--ai); }
+.sideNavUpgrade:hover { color: var(--ai-soft); }
 
 .signOutBtn {
   width: 100%;
@@ -1264,7 +1271,11 @@
   align-items: center;
   height: 72px;
   padding: 0 16px;
-  background: rgba(255, 255, 255, 0.92);
+  /* Was a hardcoded rgba(255,255,255,0.92): a bright bar pinned over the dark
+     page, and the reason its labels measured 2.54:1. The token is that exact
+     value in light. The hairline border is deliberately left as-is — it is
+     decorative, not an AA surface, and changing it would move light. */
+  background: var(--surface-translucent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(17, 24, 39, 0.06);

@@ -96,7 +96,7 @@ export default async function GroupsPage() {
       {collections.length === 0 ? (
         <div className={styles.empty}>
           <div className={styles.emptyIcon}>
-            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>folder_shared</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'var(--icon-empty)' }}>folder_shared</span>
           </div>
           <h3 className={styles.emptyTitle}>No bookmarks yet</h3>
           <p className={styles.emptyText}>
