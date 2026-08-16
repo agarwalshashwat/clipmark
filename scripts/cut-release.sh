@@ -20,6 +20,8 @@
 #                   scan, and bundle-resolve-guard re-run against the extracted
 #                   zip (the bytes that actually ship, not dist/).
 #   7. Checksum   — sha256, `sha256sum -c`-compatible.
+#   8. Tag        — annotated `vX.Y.Z` at the built commit, sha256 in the message,
+#                   pushed to origin. This is the rollback anchor.
 #
 # Usage:
 #   scripts/cut-release.sh patch                 # 1.0.5 -> 1.0.6
@@ -27,7 +29,13 @@
 #   scripts/cut-release.sh patch --dry-run       # preflight + plan, mutate nothing
 #   scripts/cut-release.sh --no-bump             # build/verify/package at the current version
 #   scripts/cut-release.sh --set-version 1.2.0   # explicit target
+#   scripts/cut-release.sh patch --no-tag        # skip the tag (you own the anchor then)
+#   scripts/cut-release.sh patch --no-push-tag   # tag locally, push it yourself
 #   scripts/cut-release.sh --help
+#
+# Tags are immutable. The script refuses — before building — if `vX.Y.Z` already
+# exists locally or on origin, and never moves an existing tag: it anchors a build
+# that may already be installed in users' browsers. `--no-bump` never tags.
 #
 # Idempotency: re-running after a mid-flight failure does NOT double-bump. If the
 # working tree's version already differs from HEAD's, the script adopts that
@@ -60,6 +68,8 @@ BUMP=''
 SET_VERSION=''
 DRY_RUN=0
 NO_BUMP=0
+NO_TAG=0
+PUSH_TAG=1
 ALLOW_DIRTY=0
 SKIP_DESIGN_AUDIT=0
 
@@ -74,6 +84,8 @@ while [ $# -gt 0 ]; do
     --set-version=*)  SET_VERSION="${1#*=}" ;;
     --dry-run)        DRY_RUN=1 ;;
     --no-bump)        NO_BUMP=1 ;;
+    --no-tag)         NO_TAG=1 ;;
+    --no-push-tag)    PUSH_TAG=0 ;;
     --allow-dirty)    ALLOW_DIRTY=1 ;;
     --skip-design-audit) SKIP_DESIGN_AUDIT=1 ;;
     -h|--help)        usage 0 ;;
@@ -228,6 +240,15 @@ fi
 
 ZIP_PATH="$ARTIFACT_DIR/clipmark-extension-$TARGET.zip"
 SUM_PATH="$ZIP_PATH.sha256"
+TAG_NAME="v$TARGET"
+
+# --no-bump builds at the *existing* version to prove main still packages. That
+# artifact is never uploaded, so tagging it would anchor a version to a commit
+# that shipped nothing — and would collide with the real cut's tag later.
+if [ "$NO_BUMP" -eq 1 ] && [ "$NO_TAG" -eq 0 ]; then
+  NO_TAG=1
+  info "verification build (--no-bump): tagging disabled"
+fi
 
 if [ "$NO_BUMP" -eq 1 ]; then
   ok "no-bump mode: building and verifying at the current version $TARGET"
@@ -255,12 +276,33 @@ $( [ "$SKIP_DESIGN_AUDIT" -eq 1 ] || printf '       node scripts/design-audit.mj
     6. unzip -t + verify the manifest inside the zip + re-run the bundle guard
        against the extracted zip
     7. write $SUM_PATH
+$( [ "$NO_TAG" -eq 1 ] \
+     && printf '    8. (--no-tag: no tag would be created)\n' \
+     || printf '    8. git tag -a v%s at %s, sha256 in the message%s\n' \
+          "$TARGET" "$GIT_SHA" "$( [ "$PUSH_TAG" -eq 1 ] && printf ', then push it' || printf ' (push it yourself)' )" )
 
   Nothing is uploaded. The Chrome Web Store upload is a manual owner step —
   see docs/RELEASE-PROCESS.md §5 step 7.
 
 EOF
   exit 0
+fi
+
+# A tag is an immutable rollback anchor, so refuse *before* doing any work if
+# this version is already anchored — finding out after a full build is a waste,
+# and silently moving a tag would break the one guarantee the tag provides.
+if [ "$NO_TAG" -eq 0 ]; then
+  if git rev-parse -q --verify "refs/tags/$TAG_NAME" >/dev/null; then
+    die "$TAG_NAME already exists (at $(git rev-parse --short "$TAG_NAME^{commit}")).
+      A release tag is immutable — it is the rollback anchor for a build that may
+      already be in users' browsers. Cut a higher version, or if this tag was
+      created in error delete it deliberately:
+        git tag -d $TAG_NAME && git push origin :refs/tags/$TAG_NAME"
+  fi
+  if [ "$PUSH_TAG" -eq 1 ] && git ls-remote --exit-code --tags origin "$TAG_NAME" >/dev/null 2>&1; then
+    die "$TAG_NAME already exists on origin. Someone else cut this version — re-sync
+      (git fetch --tags) and check before cutting again."
+  fi
 fi
 
 # ── Bump both version files together ──────────────────────────────────────────
@@ -412,6 +454,49 @@ SHA="$(cut -d' ' -f1 < "$SUM_PATH")"
 ok "$SUM_PATH"
 info "sha256: $SHA"
 
+# ── Tag ───────────────────────────────────────────────────────────────────────
+# The rollback anchor. `main` merges many branches, so "the commit v1.0.6 was
+# built from" is not otherwise recoverable after the fact — an annotated tag is
+# the only durable record. It also keeps the commit alive once the release
+# branch is deleted, since a tag is a ref.
+#
+# Annotated (not lightweight) on purpose: it carries the sha256 of the exact zip
+# handed to the store, so a future "is this artifact the one we shipped?" is a
+# one-command answer.
+if [ "$NO_TAG" -eq 1 ]; then
+  step "Tag — skipped"
+  info "no tag created (--no-tag or verification build)"
+else
+  step "Tag $TAG_NAME"
+
+  # Re-check: the build takes minutes and another cut may have raced us.
+  git rev-parse -q --verify "refs/tags/$TAG_NAME" >/dev/null \
+    && die "$TAG_NAME appeared while this build was running — refusing to move an existing tag."
+
+  git tag -a "$TAG_NAME" -F - <<EOF || die "could not create $TAG_NAME"
+ClipMark extension $TARGET
+
+Built from: $(git rev-parse HEAD) ($BRANCH)
+Artifact:   $(basename "$ZIP_PATH")
+sha256:     $SHA
+
+Immutable rollback anchor — check out this tag and rebuild to reproduce the
+package that was uploaded to the Chrome Web Store as $TARGET.
+EOF
+  ok "annotated tag $TAG_NAME at $GIT_SHA"
+
+  if [ "$PUSH_TAG" -eq 1 ]; then
+    if git push origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+      ok "pushed $TAG_NAME to origin"
+    else
+      warn "could not push $TAG_NAME — it exists locally. Push it yourself:"
+      warn "  git push origin refs/tags/$TAG_NAME"
+    fi
+  else
+    info "--no-push-tag: push it with  git push origin refs/tags/$TAG_NAME"
+  fi
+fi
+
 # ── Hand off ──────────────────────────────────────────────────────────────────
 printf '\n%s%s─── release candidate ready ───%s\n\n' "$BOLD" "$GREEN" "$RESET"
 printf '  version   %s%s%s\n' "$BOLD" "$TARGET" "$RESET"
@@ -421,10 +506,16 @@ printf '  sha256    %s\n' "$SHA"
 printf '\n  Remaining steps are MANUAL and owner-only (docs/RELEASE-PROCESS.md §5):\n\n'
 if [ "$NO_BUMP" -eq 0 ]; then
   printf '    1. commit the bump, open a PR, land it on main\n'
-  printf '    2. git tag -a ext-v%s -m "Extension v%s — <summary>" && git push origin ext-v%s\n' \
-    "$TARGET" "$TARGET" "$TARGET"
-  printf '    3. update CHANGELOG.md\n'
-  printf '    4. upload %s by hand in the CWS dashboard, staged rollout first\n' "$(basename "$ZIP_PATH")"
+  printf '    2. update CHANGELOG.md\n'
+  printf '    3. upload %s by hand in the CWS dashboard, staged rollout first\n' "$(basename "$ZIP_PATH")"
+  if [ "$NO_TAG" -eq 0 ]; then
+    printf '\n  %s%s is your rollback anchor%s — already created%s. To reproduce this build:\n' \
+      "$BOLD" "$TAG_NAME" "$RESET" "$( [ "$PUSH_TAG" -eq 1 ] && printf ' and pushed' || printf ' locally' )"
+    printf '    git checkout %s && npm --prefix extension run build\n' "$TAG_NAME"
+  else
+    printf '\n  %sNo tag was created.%s Nothing anchors this build for rollback — see\n' "$YELLOW" "$RESET"
+    printf '  docs/RELEASE-PROCESS.md §6 before uploading it.\n'
+  fi
 else
   printf '    (--no-bump: this is a verification build, not a release candidate.\n'
   printf '     Do not upload it — cut a real one with a bump type.)\n'
