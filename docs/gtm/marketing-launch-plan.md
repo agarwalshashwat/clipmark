@@ -121,7 +121,7 @@ Mark A, mark B, loop it. Multiple segments per video. Saved as bookmarks, so a p
 
 ### P4 — "It feeds Anki, it doesn't fight it" (the honesty pillar)
 
-Named and answered before anyone asks. One-click export of reviewed segments — note, timestamp, and a deep link back to the moment — into an Anki-importable file. **Available on the free tier, capped at one export a month.**
+Named and answered before anyone asks. One-click export of reviewed segments — note, timestamp, and a deep link back to the moment — into an Anki-importable file. **Available on the free tier, capped at 10 exports a month.**
 
 This pillar is also where the free-tier caps get stated out loud, because a plan that hides its limits doesn't get to use "honest" as positioning. See §8.
 
@@ -287,7 +287,7 @@ Every one of these was checked against the code or the live site on 2026-08-12. 
 - Anki export — note, timestamp, and deep link, as an Anki-importable file.
 - Shared collections via a public link.
 - `#tag` parsing with automatic colouring.
-- Free tier: **unlimited local bookmarks, notes, tags, groups, on-device AI drafting, JSON/CSV/Markdown export, 25 standing Active Recall segments, 30 reviews/month, 1 Anki export/month, up to 10 shared collections. No card, no trial clock.**
+- Free tier: **unlimited local bookmarks, notes, tags, groups, on-device AI drafting, JSON/CSV/Markdown export, 25 standing Active Recall segments, 30 reviews/month, 10 Anki exports/month, up to 10 shared collections. No card, no trial clock.**
 - **Capture, A–B loops, Active Recall and the Anki export all work with no ClipMark account** — bookmarks live in `chrome.storage.sync` and the Anki export is generated locally against a local usage counter. Only shared collections and cross-device cloud sync require an account. Say it that way; don't flatten it to "no account needed" where collections are also being mentioned.
 - Pro: **$7.99/mo, $59.99/yr, $99.99 lifetime.** Removes those caps and adds cloud sync, scheduled review reminders, and Obsidian/Notion **export**.
 - Affiliate: **one-time 30% commission** on a referred user's first Pro purchase, 30-day cookie, audience gets 10% off.
@@ -299,7 +299,7 @@ Every one of these was checked against the code or the live site on 2026-08-12. 
 | System-synced dark mode | ✋ **Ships in v1.0.4, which is not on the public listing yet.** Blocked on Day 0.1. |
 | "Syncs to Notion/Obsidian" | It's a one-off **export**, not sync. |
 | Deep Transcript Search · Lifetime/Permanent Cloud or Transcript Archiving · "early access to labs" | Not built. `ComingSoon` on the pricing page. |
-| "Free unlimited Anki export" / "unlimited free tier" | Free is **1 Anki export a month**, 25 standing segments, 30 reviews. Pro is the unlimited one. |
+| "Free unlimited Anki export" / "unlimited free tier" | Free is **10 Anki exports a month**, 25 standing segments, 30 reviews. Pro is the unlimited one. |
 | "Scheduled reminders, free" | Scheduled review reminders are **Pro**. |
 | **"30% recurring" / "revenue share" / "lifetime commission"** | It's **one-time**, on the first purchase only. The affiliate page says so explicitly. |
 | Any user count, install count, rating, MRR, or "trusted by N learners" | Listing shows a near-zero install count and **zero reviews**. IH removes unproven MRR claims, and HN will find out. |

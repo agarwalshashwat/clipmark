@@ -91,7 +91,7 @@ marketing copy that rounds them is a claim we can't stand behind:
 | *Bookmarks, notes, tags, groups, JSON/CSV/Markdown export* | **never capped** |
 | Active Recall reviews | **30 / month** (warns at 24) |
 | Active Recall enrolled segments | **25**, standing (not monthly) |
-| Anki export | **1 / month** |
+| Anki export | **10 / month** |
 | Saved A–B loops | **3**, standing |
 | *Defining and looping A–B in-session* | **never capped** — this is the acquisition hook |
 

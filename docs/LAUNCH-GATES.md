@@ -200,7 +200,7 @@ than a code-only update.
    (lowercase "m"); replace with `ClipMark — Study Smarter with YouTube
    Flashcards` (see `docs/gtm/chrome-web-store-listing-FIELDS.md`, which is
    current and paste-ready — verified against the live usage-cap constants
-   in code: 25 Active Recall segments / 30 reviews/mo / 1 Anki export/mo /
+   in code: 25 Active Recall segments / 30 reviews/mo / 10 Anki exports/mo /
    10 shared collections all match `extension/src/usage-caps.js` and
    `webapp/app/api/share/handler.ts` exactly).
 4. Paste the **Summary** and **Description** fields from that doc as-is.

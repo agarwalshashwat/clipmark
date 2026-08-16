@@ -102,7 +102,7 @@ export default function YouTubeFlashcardsPage() {
         <p style={PROSE}>
           Saving bookmarks is unlimited on Free and stored locally. Enrolling them as recall cards is capped on Free at
           25 standing cards and 30 reviews a month; Pro makes both unlimited and adds cloud sync so a card made on your
-          laptop is due on your desktop. Free also includes one Anki export a month, and Pro makes that unlimited.
+          laptop is due on your desktop. Free also includes 10 Anki exports a month, and Pro makes that unlimited.
         </p>
         <h3 style={H3}>Can it build cards from a summary or transcript?</h3>
         <p style={{ ...PROSE, marginBottom: 0 }}>

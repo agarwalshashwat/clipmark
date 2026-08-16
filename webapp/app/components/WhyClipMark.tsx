@@ -29,7 +29,7 @@ const STRENGTHS = [
   {
     icon: 'volunteer_activism',
     title: 'A free tier with the numbers printed on it',
-    body: 'Free means unlimited bookmarks stored locally, on-device AI notes, 25 Active Recall cards, 30 reviews a month, and 1 Anki export a month — no card, no trial clock. Those are the real limits, listed on the pricing page rather than discovered after you install.',
+    body: 'Free means unlimited bookmarks stored locally, on-device AI notes, 25 Active Recall cards, 30 reviews a month, and 10 Anki exports a month — no card, no trial clock. Those are the real limits, listed on the pricing page rather than discovered after you install.',
   },
   {
     icon: 'lock',

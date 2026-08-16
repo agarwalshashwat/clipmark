@@ -40,7 +40,7 @@ const COUNTERS: (Record<string, unknown> | null | undefined)[] = [
 describe('Anki export cap: webapp twin matches the extension implementation', () => {
   it('the free-export cap constant is identical', () => {
     assert.equal(webappCap, extensionCap);
-    assert.equal(webappCap, 1);
+    assert.equal(webappCap, 10);
   });
 
   it('usagePeriodKey agrees for the same instant', () => {
@@ -65,8 +65,12 @@ describe('Anki export cap: webapp twin matches the extension implementation', ()
     assert.equal(extensionCapReached(stale, NOW), false);
   });
 
-  it('exactly one export this period reaches the cap (cap is 1/month)', () => {
-    const used = { periodStart: webappPeriodKey(NOW), count: 1 };
+  it('both twins agree on the cap boundary (10/month)', () => {
+    const under = { periodStart: webappPeriodKey(NOW), count: extensionCap - 1 };
+    assert.equal(webappCapReached(under, NOW), false);
+    assert.equal(extensionCapReached(under, NOW), false);
+
+    const used = { periodStart: webappPeriodKey(NOW), count: extensionCap };
     assert.equal(webappCapReached(used, NOW), true);
     assert.equal(extensionCapReached(used, NOW), true);
   });

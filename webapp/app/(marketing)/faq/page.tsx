@@ -35,7 +35,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I export my clips and notes?',
-    a: 'Yes, and export is not paywalled. JSON, CSV, and Markdown export are on the free tier, so you can always get your data out. An Anki-importable file is one export a month on Free and unlimited on Pro; Obsidian and Notion-ready CSV are Pro. ClipMark also imports a JSON array of clips, so your data can move both directions.',
+    a: 'Yes, and export is not paywalled. JSON, CSV, and Markdown export are on the free tier, so you can always get your data out. An Anki-importable file is 10 exports a month on Free and unlimited on Pro; Obsidian and Notion-ready CSV are Pro. ClipMark also imports a JSON array of clips, so your data can move both directions.',
   },
   {
     q: 'Can I add notes to bookmarks and organize them?',
@@ -47,7 +47,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Is it really free? What’s the catch?',
-    a: 'The catch is written down rather than hidden. Free gives you unlimited locally stored bookmarks, notes, tags, groups, on-device AI note drafting, JSON/CSV/Markdown export, 25 moments enrolled in Active Recall at a time, 30 reviews a month, one Anki export a month, and up to 10 shared collections. No card, no trial countdown. Pro removes the caps and adds cloud sync, scheduled review reminders, and Obsidian/Notion export. Every one of those numbers is on the pricing page.',
+    a: 'The catch is written down rather than hidden. Free gives you unlimited locally stored bookmarks, notes, tags, groups, on-device AI note drafting, JSON/CSV/Markdown export, 25 moments enrolled in Active Recall at a time, 30 reviews a month, 10 Anki exports a month, and up to 10 shared collections. No card, no trial countdown. Pro removes the caps and adds cloud sync, scheduled review reminders, and Obsidian/Notion export. Every one of those numbers is on the pricing page.',
   },
   {
     q: 'How is this different from a study or focus blocker?',
