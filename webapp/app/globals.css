@@ -588,7 +588,7 @@ html.cm-js-reveal .cm-reveal--visible {
 .fb-choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 @media (max-width: 560px) {
