@@ -42,17 +42,11 @@ Verified against the live database: `pro_payment_id` present; RLS enabled on `pr
 entitlement columns (only `avatar_url`, `cancel_at_period_end`, `username`); an anonymous
 read of `schema_migrations` returns `401 permission denied`.
 
-## `017_feedback.sql` — NOT YET APPLIED (required before /feedback can store anything)
+## `017_feedback.sql` — applied to production 2026-08-10
 
-Creates `public.feedback` for the `/feedback` form. The page and `/api/feedback` ship
-without it, and until the migration runs every submission fails with `save_failed` (500) —
-the form shows its error state, so nothing is silently dropped, but nothing is kept either.
-
-Apply it the usual way, locally first:
-
-```bash
-make db-migrate          # or: npm --prefix webapp run db:migrate
-```
+Creates `public.feedback` for the `/feedback` form. Before it ran, every submission failed
+with `save_failed` (500) — the form showed its error state, so nothing was silently dropped,
+but nothing was kept either. That's history now; submissions persist.
 
 Read the results with the service role (the Supabase SQL editor / dashboard) — by design
 there is no read path for `anon` or `authenticated`:
@@ -69,6 +63,40 @@ limit, so the policy's `WITH CHECK` — rating in range, at least one answer, `u
 either NULL or the caller's own — is the real bound on what a junk row can be. If spam
 ever shows up in practice, the fix is to drop the anon INSERT policy and let the
 service-role route be the only writer.
+
+## `018_pending_refunds.sql` — applied to production 2026-08-13
+
+Creates `public.pending_refunds`, the ledger of refunds we owe but couldn't pay
+automatically (Dodo returns 409 `INSUFFICIENT_WALLET_FUNDS` when the merchant wallet hasn't
+settled). Verified against the live database: table present with all 8 columns; RLS enabled
+with **zero policies**; no `SELECT`/`INSERT`/`UPDATE`/`DELETE` grant to `anon` or
+`authenticated`; `payment_id` unique; the partial `idx_pending_refunds_unresolved` index in
+place. Service-role only, by design — read it from the dashboard:
+
+```sql
+SELECT created_at, payment_id, reason, amount_cents, currency
+  FROM public.pending_refunds WHERE resolved_at IS NULL ORDER BY created_at;
+```
+
+### Cautionary tale: this one was applied by hand, and the ledger got ahead of the schema
+
+The first attempt ran the `INSERT INTO schema_migrations` **without** the migration body, so
+production ended up with a ledger row for `018` and no `pending_refunds` table. That's worse
+than an unapplied migration: `migrate.ts` derives "pending" from the ledger alone, so
+`db-migrate` skipped `018` from then on, while the cancellation path and the
+`refund.succeeded` webhook both referenced a table that didn't exist. It went unnoticed until
+someone queried the database directly.
+
+If you hand-apply a migration, verify the *objects*, not the ledger row — the ledger is a
+claim, the catalog is the fact:
+
+```sql
+SELECT to_regclass('public.<new_table>');   -- NULL means the DDL never ran
+```
+
+The recovery is to run the migration body with `ON CONFLICT (version) DO NOTHING` on the
+ledger insert, which is exactly what happened here — so `018`'s `applied_at` (08:51 UTC)
+is the timestamp of the *failed* attempt, a few hours before the DDL actually landed.
 
 ## Accepted assumption: migrations rely on hosted Supabase's default grants
 

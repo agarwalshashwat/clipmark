@@ -79,7 +79,7 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
               <div
                 style={{
                   width: 46, height: 46, borderRadius: 14, marginBottom: 22,
-                  background: 'var(--accent-light)', color: 'var(--accent-strong)',
+                  background: 'var(--accent-light)', color: 'var(--brand-ink)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
@@ -95,7 +95,7 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
 
         <p style={{ textAlign: 'center', marginTop: 40, fontSize: 14, color: 'var(--text-muted)' }}>
           Switching from an extension that stopped getting updates?{' '}
-          <a href="/switch-from-videosegments" style={{ color: 'var(--accent-strong)', fontWeight: 700, textDecoration: 'none' }}>
+          <a href="/switch-from-videosegments" style={{ color: 'var(--brand-ink)', fontWeight: 700, textDecoration: 'none' }}>
             Read the migration guide
           </a>
           .

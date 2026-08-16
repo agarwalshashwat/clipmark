@@ -70,6 +70,67 @@ test.describe('Webapp smoke', () => {
     expect(contrast(colours.logo, colours.background)).toBeGreaterThanOrEqual(3);
   });
 
+  // The footer was one symptom of a general problem: marketing surfaces were
+  // built from raw ramp values (--gray-*, #ffffff, --accent-strong), which are
+  // fixed across themes, so they stayed light under a dark page. This sweeps the
+  // rendered result rather than the source — the source-level gates can't tell a
+  // deliberate dark panel from a light-pinned one.
+  test('no marketing surface stays light in dark mode', async ({ page }) => {
+    const luminance = (css: string) => {
+      const [r, g, b] = css.match(/\d+/g)!.slice(0, 3).map(Number);
+      const lin = (c: number) => {
+        const v = c / 255;
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    };
+
+    await page.goto('/');
+    await page.evaluate(() => localStorage.setItem('theme', 'dark'));
+
+    for (const route of ['/', '/upgrade', '/privacy', '/terms', '/faq']) {
+      await page.goto(route);
+
+      const slabs = await page.evaluate(() => {
+        const out: { sel: string; bg: string }[] = [];
+        for (const el of Array.from(document.querySelectorAll('body *'))) {
+          const cs = getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+          const r = el.getBoundingClientRect();
+          // Only surfaces big enough to read as a panel.
+          if (r.width < 120 || r.height < 60) continue;
+          const m = cs.backgroundColor.match(/[\d.]+/g);
+          if (!m) continue;
+          const [red, green, blue, alpha] = m.map(Number);
+          if (alpha !== undefined && alpha <= 0.5) continue;
+          const lin = (c: number) => {
+            const v = c / 255;
+            return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+          };
+          const lum = 0.2126 * lin(red) + 0.7152 * lin(green) + 0.0722 * lin(blue);
+          if (lum > 0.5) {
+            out.push({ sel: `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)}`, bg: cs.backgroundColor });
+          }
+        }
+        return out;
+      });
+
+      expect(slabs, `${route} has light panel(s) in dark mode: ${JSON.stringify(slabs)}`).toEqual([]);
+    }
+
+    // Sanity: the same sweep in LIGHT mode must find plenty of light panels, or
+    // the check above is passing because the selector matched nothing.
+    await page.evaluate(() => localStorage.removeItem('theme'));
+    await page.goto('/privacy');
+    const lightPanels = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('.cm-card')).filter((el) => {
+        const m = getComputedStyle(el).backgroundColor.match(/\d+/g)!;
+        return Number(m[0]) > 200;
+      }).length,
+    );
+    expect(lightPanels).toBeGreaterThan(0);
+  });
+
   test('an unmatched URL returns a real 404 on our own page', async ({ page }) => {
     const response = await page.goto('/this-route-does-not-exist');
 

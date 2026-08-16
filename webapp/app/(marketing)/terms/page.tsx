@@ -17,14 +17,14 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: 'var(--gray-900)',
+  color: 'var(--text)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 12,
 };
@@ -36,7 +36,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -51,7 +51,7 @@ export default function TermsPage() {
           <h1 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 'clamp(32px, 6vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px',
-            color: 'var(--gray-900)', marginBottom: 16, marginTop: 0,
+            color: 'var(--text)', marginBottom: 16, marginTop: 0,
           }}>
             Terms of Service
           </h1>

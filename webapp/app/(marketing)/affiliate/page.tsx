@@ -18,7 +18,7 @@ const H2 = {
   fontFamily: "var(--font-display)",
   fontSize: 32,
   fontWeight: 800,
-  color: 'var(--gray-900)',
+  color: 'var(--text)',
   marginBottom: 20,
   marginTop: 0,
   letterSpacing: '-1px',
@@ -33,7 +33,7 @@ const P = {
 };
 
 const CARD = {
-  background: 'white',
+  background: 'var(--surface)',
   borderRadius: 20,
   padding: '32px',
 };
@@ -148,7 +148,7 @@ export default async function AffiliatePage() {
           <h1 style={{
             fontFamily: "var(--font-display)",
             fontSize: 'clamp(40px, 8vw, 64px)', fontWeight: 800, letterSpacing: '-3px',
-            color: 'var(--gray-900)', marginBottom: 24, marginTop: 0,
+            color: 'var(--text)', marginBottom: 24, marginTop: 0,
             lineHeight: 1,
           }}>
             Share ClipMark.<br />
@@ -180,8 +180,8 @@ export default async function AffiliatePage() {
             </a>
             <a href="/affiliate/terms" className="cm-card" style={{
               padding: '16px 32px',
-              background: 'white',
-              color: 'var(--gray-900)', borderRadius: 14, fontSize: 16, fontWeight: 800,
+              background: 'var(--surface)',
+              color: 'var(--text)', borderRadius: 14, fontSize: 16, fontWeight: 800,
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s'
             }}>
@@ -209,7 +209,7 @@ export default async function AffiliatePage() {
                 <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>{stat.icon}</span>
               </div>
               <p style={{
-                fontSize: 36, fontWeight: 800, color: 'var(--gray-900)',
+                fontSize: 36, fontWeight: 800, color: 'var(--text)',
                 fontFamily: "var(--font-display)",
                 marginBottom: 8, marginTop: 0, letterSpacing: '-1px'
               }}>
@@ -243,7 +243,7 @@ export default async function AffiliatePage() {
                 </div>
                 <h3 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: 20, fontWeight: 800, color: 'var(--gray-900)',
+                  fontSize: 20, fontWeight: 800, color: 'var(--text)',
                   marginBottom: 12, marginTop: 0, letterSpacing: '-0.5px'
                 }}>
                   {step.title}
@@ -274,7 +274,7 @@ export default async function AffiliatePage() {
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, minWidth: 520 }}>
               <thead>
-                <tr style={{ background: 'var(--gray-50)' }}>
+                <tr style={{ background: 'var(--bg)' }}>
                   {['Plan', 'Price', 'Your Commission', 'Notes'].map((h) => (
                     <th key={h} style={{
                       padding: '16px 24px', textAlign: 'left', fontSize: 12,
@@ -288,8 +288,8 @@ export default async function AffiliatePage() {
               </thead>
               <tbody>
                 {COMMISSION_ROWS.map((row, i) => (
-                  <tr key={row.plan} style={{ borderTop: '1px solid var(--gray-100)' }}>
-                    <td style={{ padding: '20px 24px', fontWeight: 800, color: 'var(--gray-900)' }}>{row.plan}</td>
+                  <tr key={row.plan} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td style={{ padding: '20px 24px', fontWeight: 800, color: 'var(--text)' }}>{row.plan}</td>
                     <td style={{ padding: '20px 24px', color: 'var(--text-muted)', fontWeight: 500 }}>{row.price}</td>
                     <td style={{ padding: '20px 24px', fontWeight: 800, color: 'var(--brand-ink)' }}>{row.commission}</td>
                     <td style={{ padding: '20px 24px', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 }}>{row.note}</td>
@@ -327,7 +327,7 @@ export default async function AffiliatePage() {
                   <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>{item.icon}</span>
                 </div>
                 <div>
-                  <p style={{ fontWeight: 800, color: 'var(--gray-900)', marginBottom: 8, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.title}</p>
+                  <p style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 8, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.title}</p>
                   <p style={{ ...P, marginBottom: 0, fontSize: 15, color: 'var(--text-muted)' }}>{item.body}</p>
                 </div>
               </div>
@@ -354,7 +354,7 @@ export default async function AffiliatePage() {
                 <div key={item.title}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                     <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'var(--brand-ink)' }}>{item.icon}</span>
-                    <span style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: 15 }}>{item.title}</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text)', fontSize: 15 }}>{item.title}</span>
                   </div>
                   <p style={{ ...P, fontSize: 14, color: 'var(--text-muted)', marginBottom: 0, lineHeight: 1.6 }}>{item.body}</p>
                 </div>
@@ -380,7 +380,7 @@ export default async function AffiliatePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {FAQ_ITEMS.map((item) => (
               <div key={item.q} className="cm-card" style={{ padding: '32px' }}>
-                <p style={{ fontWeight: 800, color: 'var(--gray-900)', marginBottom: 12, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.q}</p>
+                <p style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 12, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.q}</p>
                 <p style={{ ...P, marginBottom: 0, fontSize: 15, color: 'var(--text-muted)' }}>{item.a}</p>
               </div>
             ))}
