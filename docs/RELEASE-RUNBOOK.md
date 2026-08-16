@@ -34,12 +34,14 @@ A webapp change and an extension change can ship independently. A webapp-only bu
 
 **Git tags — one per extension release** (the webapp doesn't need its own tag since every merge to `main` is already a discrete, identifiable Vercel deployment with its own commit SHA):
 
-```bash
-git tag -a ext-v1.1.0 -m "Extension v1.1.0 — <one-line summary>"
-git push origin ext-v1.1.0
+**You do not do this by hand any more** — `scripts/cut-release.sh` step 8 creates and pushes an annotated `vX.Y.Z` tag at the built commit, with the artifact's sha256 in the message. [`RELEASE-PROCESS.md` §5 step 6](RELEASE-PROCESS.md) owns the rule; this is the summary:
+
+```
+v1.1.0   annotated, at the commit whose extension/dist/ was zipped and uploaded,
+         message carries the zip filename + sha256.   Immutable.
 ```
 
-Tag the exact commit whose `extension/dist/` you zipped and uploaded — this is what lets you find "what code shipped as CWS version 1.1.0" months later. (The repo already has a `launch-candidate-1` tag from the pre-launch phase — that convention is done; `ext-vX.Y.Z` is the ongoing one.)
+It tags the exact commit whose `extension/dist/` you zipped and uploaded — that's what lets you answer "what code shipped as CWS version 1.1.0" months later, and it's the rollback path: check out the tag, rebuild. (The repo also has a `launch-candidate-1` tag from the pre-launch phase — unrelated, not a release anchor. An earlier draft of this doc proposed an `ext-v` prefix; it was never used and the convention is plain `vX.Y.Z`.)
 
 **CHANGELOG** — keep a `CHANGELOG.md` at the repo root (create it with your first post-launch release if it doesn't exist yet), one section per release, newest first:
 
@@ -190,7 +192,7 @@ Run through this before tagging/uploading **any** release (webapp or extension) 
 - [ ] **Relevant tests pass locally**, not just in CI — at minimum re-run the test layer(s) your change touches (`npm run test:unit`, `npm run test:yt`, `npm run test:visual`, `npm run test:integration` — see the root `README.md`/`CLAUDE.md` for which layer maps to which kind of change).
 - [ ] **Any migration for this release has already been applied to production** (§4) — never ship extension/webapp code that depends on a schema change you haven't run against prod yet.
 - [ ] **Manual smoke test** on the actual surface you changed — for extension changes, at minimum the relevant section of `CHECKLIST.md`; for webapp changes, the specific page/flow, done against the Vercel Preview for UI-only changes or locally for anything touching auth/payments/DB (per `DEPLOYMENTS.md` §1's Preview-is-UI-only-review rule).
-- [ ] **Tag the release** (extension: `ext-vX.Y.Z` per §1; webapp: no separate tag needed, the merge commit is the identifier) and **update `CHANGELOG.md`** before or immediately after.
+- [ ] **Confirm the release tag exists** — extension: `vX.Y.Z`, created automatically by `cut-release.sh` per §1; webapp: no separate tag needed, the merge commit is the identifier and **update `CHANGELOG.md`** before or immediately after.
 
 ---
 
