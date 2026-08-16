@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
-  background: white;
-  color: var(--gray-900);
+  background: var(--surface);
+  color: var(--text);
   font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
@@ -98,7 +98,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 36px;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
   letter-spacing: -1.5px;
   margin: 0 0 12px;
   line-height: 1.2;
@@ -121,7 +121,7 @@
 }
 
 .highlights {
-  background: var(--gray-50);
+  background: var(--bg);
   border-radius: 24px;
   padding: 40px;
 }
@@ -130,7 +130,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
   margin: 0 0 40px;
   display: flex;
   align-items: center;
@@ -141,7 +141,7 @@
   font-size: 13px;
   color: var(--text-muted);
   font-weight: 700;
-  background: white;
+  background: var(--surface);
   padding: 4px 12px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
@@ -172,8 +172,8 @@
 .timelineDot {
   width: 64px;
   height: 64px;
-  background: white;
-  border: 2px solid var(--gray-200);
+  background: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 12px;
   flex-shrink: 0;
   display: flex;
@@ -217,7 +217,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text);
   letter-spacing: -0.3px;
   margin: 0 0 12px;
   line-height: 1.5;
@@ -254,8 +254,8 @@
 }
 
 .sideCard {
-  background: white;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 32px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.02);
@@ -295,13 +295,13 @@
 .metaValue {
   font-size: 14px;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 .sideCardDivider {
   border: none;
   height: 1px;
-  background: var(--gray-100);
+  background: var(--surface-alt);
   margin: 0 0 32px;
 }
 
@@ -336,9 +336,9 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   width: 100%;
   padding: 14px;
-  background: var(--gray-50);
-  color: var(--gray-900);
-  border: 1px solid var(--gray-200);
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 12px;
   font-size: 14px;
   font-weight: 800;
@@ -347,8 +347,8 @@
 }
 
 .sideBtnSecondary:hover {
-  background: white;
-  border-color: var(--gray-300);
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .promoCard {
@@ -360,7 +360,7 @@
 .promoTitle {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
   line-height: 1.3;
 }
 

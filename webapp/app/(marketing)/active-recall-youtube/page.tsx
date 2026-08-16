@@ -119,7 +119,7 @@ export default function ActiveRecallYouTubePage() {
           allowance: 25 enrolled cards standing at any time and 30 reviews a month. That is enough to run genuine
           retrieval practice over a full course, not a teaser. Pro lifts both to unlimited and adds cloud sync across
           devices, scheduled review reminders, and unlimited Anki export — the exact split is on the{' '}
-          <a href="/upgrade" style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>pricing page</a>.
+          <a href="/upgrade" style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>pricing page</a>.
         </p>
         <h3 style={H3}>Where the AI does and doesn&apos;t help</h3>
         <p style={{ ...PROSE, marginBottom: 0 }}>

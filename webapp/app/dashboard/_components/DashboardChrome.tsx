@@ -87,7 +87,7 @@ export default function DashboardChrome({ username, avatarInitial, avatarUrl, is
           </form>
           {!isPro
             ? <a href="/upgrade" className={styles.upgradeCta}>✦ Upgrade</a>
-            : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: 'var(--accent-strong)', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
+            : <a href="/upgrade" className={styles.upgradeCta} style={{ background: 'rgba(0,107,95,0.08)', color: 'var(--brand-ink)', border: '1px solid rgba(0,107,95,0.2)' }}>✦ Pro</a>
           }
           {/* Avatar — always visible */}
           {avatarUrl ? (
