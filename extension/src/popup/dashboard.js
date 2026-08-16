@@ -1051,7 +1051,7 @@ async function exportAnki() {
     if (isMonthlyAnkiExportCapReached(ankiExportUsage, Date.now())) {
       showUpgradeModal({
         feature: 'More Anki exports this month',
-        benefit: `You've used your ${FREE_ANKI_EXPORTS_PER_MONTH} free Anki export this month. Upgrade to Pro for unlimited exports.`,
+        benefit: `You've used all ${FREE_ANKI_EXPORTS_PER_MONTH} of this month's free Anki exports. Upgrade to Pro for unlimited exports.`,
       });
       return;
     }

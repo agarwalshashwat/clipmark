@@ -509,7 +509,7 @@ export default async function Home({
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <span className="cm-section-label" style={{ margin: 0 }}>Works with Anki</span>
-              {/* Anki export is not Pro-only either: free is 1 export a month
+              {/* Anki export is not Pro-only either: free is 10 exports a month
                   (FREE_ANKI_EXPORTS_PER_MONTH in extension/src/usage-caps.js),
                   unlimited on Pro. A bare PRO badge overstated the paywall. */}
               <span style={{

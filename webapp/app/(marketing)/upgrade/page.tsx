@@ -25,7 +25,7 @@ const FEATURES = [
   { label: 'Cloud Sync across devices',          free: false,      pro: true       },
   { label: 'Active Recall flashcards',           free: '25 cards', pro: 'Unlimited' },
   { label: 'Active Recall reviews',              free: '30/month', pro: 'Unlimited' },
-  { label: 'Anki export',                        free: '1/month',  pro: 'Unlimited' },
+  { label: 'Anki export',                        free: '10/month', pro: 'Unlimited' },
   { label: 'Export to Notion & Obsidian',        free: false,      pro: true       },
   { label: 'Permanent Transcript Archiving',     free: false,      pro: 'coming-soon' as const },
   { label: 'Deep Search (inside transcripts)',   free: false,      pro: 'coming-soon' as const },

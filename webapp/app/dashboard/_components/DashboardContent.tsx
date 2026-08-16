@@ -574,7 +574,7 @@ export default function DashboardContent({ collections, isPro, initialView, init
                     onClick={() => {
                       setExportOpen(false);
                       if (!isPro && isMonthlyAnkiExportCapReached(getAnkiExportUsage(), Date.now())) {
-                        setCopyToast(`You've used your ${FREE_ANKI_EXPORTS_PER_MONTH} free Anki export this month — upgrade for unlimited exports.`);
+                        setCopyToast(`You've used all ${FREE_ANKI_EXPORTS_PER_MONTH} of this month's free Anki exports — upgrade for unlimited exports.`);
                         setTimeout(() => setCopyToast(''), 3000);
                         return;
                       }

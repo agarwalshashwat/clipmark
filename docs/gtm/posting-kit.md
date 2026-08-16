@@ -110,7 +110,7 @@ card exists, while I'm still in the video.
 
 The free tier is a real allowance, not a teaser — unlimited local bookmarks,
 notes, tags and on-device AI note drafting, 25 moments enrolled in Active Recall
-at a time, 30 reviews a month, one Anki export a month, and up to 10 shared
+at a time, 30 reviews a month, 10 Anki exports a month, and up to 10 shared
 collections. No card, no trial countdown. Pro removes those caps and adds cloud
 sync, scheduled review reminders, and Obsidian/Notion export.
 
@@ -261,7 +261,7 @@ for years; ClipMark is what I use before the card exists.
 9/9
 Free tier is a real allowance, not a teaser: unlimited local bookmarks, notes,
 on-device AI note drafting, 25 Active Recall moments at a time, 30 reviews a
-month, 1 Anki export a month. No card, no trial clock.
+month, 10 Anki exports a month. No card, no trial clock.
 
 It's on PH today — I'd love your read: <PH link>
 ```
@@ -329,7 +329,7 @@ Build the primitive, let people tell you what it's for.
 
 ```
 Wrote out ClipMark's free tier limits as actual numbers on the pricing page:
-25 Active Recall moments, 30 reviews a month, 1 Anki export a month.
+25 Active Recall moments, 30 reviews a month, 10 Anki exports a month.
 
 Every instinct said round it to "generous free tier" and let people find the
 wall later.
@@ -495,7 +495,7 @@ Implementation notes that might interest people here:
   shared collections and cross-device cloud sync.
 
 Free tier is unlimited local bookmarks, notes, tags and on-device note drafting,
-25 moments enrolled in review at a time, 30 reviews a month, and one Anki export
+25 moments enrolled in review at a time, 30 reviews a month, and 10 Anki exports
 a month. Paid removes those caps and adds cross-device sync. The numbers are on
 the pricing page rather than discovered post-install.
 
@@ -565,7 +565,7 @@ The thing I found interesting building it: a loop and a flashcard turned out to
 be the same object, so I made them one thing instead of two features.
 
 Free tier is unlimited local bookmarks, 25 review moments at a time, 30 reviews
-a month, 1 Anki export a month, and it works without an account. Paid removes
+a month, 10 Anki exports a month, and it works without an account. Paid removes
 the caps and adds sync.
 
 Built solo. Chromium-only for now, and the review scheduler is a plain doubling
@@ -659,7 +659,7 @@ inside ClipMark exists to work out which moments deserve a card at all, and the
 export is the handoff. I'm not trying to build a better scheduler than Anki, and
 I'd be a fool to.
 
-Free tier includes the capture, the loops, the review loop and one Anki export a
+Free tier includes the capture, the loops, the review loop and 10 Anki exports a
 month — enough to run a full lecture through it and see if the workflow fits.
 Paid removes the caps.
 
@@ -691,7 +691,7 @@ I built it for lecture material and language learners found it first, which is
 why I'm here. It exports to Anki as well if that's already your setup.
 
 Free tier: unlimited saved moments locally, 25 in active review at a time, 30
-reviews a month, one Anki export a month, no account needed.
+reviews a month, 10 Anki exports a month, no account needed.
 
 https://clipmark.mithahara.com — genuinely interested whether the "reproduce it
 before you hear it" bit is useful for shadowing/pronunciation work or whether
@@ -805,7 +805,7 @@ new one.
 
 **Where it actually is.** Live, freemium, Merchant-of-Record payments, solo.
 Free tier is a real allowance with the numbers written on the pricing page —
-25 review moments at a time, 30 reviews a month, one Anki export a month — and
+25 review moments at a time, 30 reviews a month, 10 Anki exports a month — and
 Pro removes the caps. I'm not going to post revenue numbers because there
 aren't interesting ones yet, and I'd rather say that than imply otherwise.
 
@@ -884,7 +884,7 @@ Free Chrome extension — link in bio.
 
 ```
 Free tier, no account needed: unlimited saved moments locally, 25 in active
-review at a time, 30 reviews a month, 1 Anki export a month. The limits are on
+review at a time, 30 reviews a month, 10 Anki exports a month. The limits are on
 the pricing page, not hidden behind an install. Ask me anything.
 ```
 

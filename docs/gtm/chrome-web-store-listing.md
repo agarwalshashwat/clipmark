@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-31
 **Positioning:** "Revise & remember" — Active Recall as hero, additive to Anki, beachhead is USMLE/IMG med students (per the med-exam strategy brief, never committed to this repo), but copy stays usable for any serious YouTube learner so the listing doesn't cap itself to one audience.
-**Honesty constraint:** every claim below maps to a shipped feature. Nothing here mentions Deep Transcript Search, Lifetime Cloud Archiving, "Early access to labs," or Notion/Obsidian **sync** (it's a one-off **export**, per the pricing-claims audit in `ClipMark-Claims-Buildout-Plan.md` and `ClipMark-ROADMAP.md`). Free-tier numbers below (25 Active Recall segments, 30 reviews/mo, 1 Anki export/mo, 10 shared collections) match the shipped caps in `ClipMark-UsageCaps-Spec.md`.
+**Honesty constraint:** every claim below maps to a shipped feature. Nothing here mentions Deep Transcript Search, Lifetime Cloud Archiving, "Early access to labs," or Notion/Obsidian **sync** (it's a one-off **export**, per the pricing-claims audit in `ClipMark-Claims-Buildout-Plan.md` and `ClipMark-ROADMAP.md`). Free-tier numbers below (25 Active Recall segments, 30 reviews/mo, 10 Anki exports/mo, 10 shared collections) match the shipped caps in `ClipMark-UsageCaps-Spec.md`.
 
 **Note on the name:** `extension/manifest.json` currently ships `"name": "Clipmark"` (lowercase "m"), while every planning doc and this listing use `"ClipMark"`. The Chrome Web Store listing title is set independently in the Developer Dashboard, so this doesn't block publishing — but worth reconciling manifest casing with the public brand before the CWS listing goes live, so the install-time permission dialog and the store page match.
 
@@ -88,7 +88,7 @@ semester's worth of bookmarks stays browsable instead of turning into a pile.
 FREE VS. PRO
 
 Free gets you the full loop, generously capped: unlimited local bookmarks, 25
-standing Active Recall segments, 30 reviews a month, 1 Anki export a month, and up to
+standing Active Recall segments, 30 reviews a month, 10 Anki exports a month, and up to
 10 shared collections — enough to build and review a real deck from one full lecture.
 
 Pro removes the caps and adds cross-device cloud sync, unlimited Active Recall and

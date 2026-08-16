@@ -80,7 +80,7 @@ call that looked arbitrary. **Never edit or delete an entry.**
 | Date | Decision | Why |
 |---|---|---|
 | pre-2026-08-09 | **Freemium; Pro via Dodo as Merchant of Record** | Dodo carries global sales-tax and compliance liability a solo owner can't. Worth the fee. |
-| pre-2026-08-14 | **Anki export stays free** (1/mo) | It's the study-wedge hook — the thing that makes this a retention tool, not a bookmarker. Paywalling it hides the differentiator. |
+| pre-2026-08-14 | **Anki export stays free** (10/mo) | It's the study-wedge hook — the thing that makes this a retention tool, not a bookmarker. Paywalling it hides the differentiator. |
 | pre-2026-08-12 | **Affiliate 30%, one-time on first payment, not recurring** | Sustainable against real CAC and honest to affiliates: a rate we can pay forever beats a headline we later cut. Stored as a fraction (`0.30`). |
 | 2026-08-15 | **Owner applies prod migrations by hand, after a backup** (#115, #116) | Free-tier Supabase has no auto-backups, so a bad migration is unrecoverable. 018 proved the failure mode — its ledger row landed without the body, so the ledger claimed a table that didn't exist. |
 | 2026-08-15 | **Biweekly release train + narrow hotfix lane** (#114) | 1.0.2→1.0.5 shipped back-to-back, each a follow-up to the last, burning a review cycle and force-updating everyone. Batching stops the thrash; the lane keeps real emergencies fast. |

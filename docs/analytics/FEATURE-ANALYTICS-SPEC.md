@@ -66,7 +66,7 @@ single Web Store release.
 | `recall_started` | An Active Recall session begins | Is the flagship differentiator actually used? |
 | `recall_completed` | A Recall session reaches its end rather than being abandoned | Paired with `recall_started` this is the one funnel we get: completion rate. A low rate means the session is too long or too hard. |
 | `loop_created` | An A–B loop is saved as a bookmark | Was the loops feature (v1.0.3) worth building? Directly answers whether to invest further. |
-| `anki_export` | An Anki TSV export completes | Free tier caps this at 1/month (`FREE_ANKI_EXPORTS_PER_MONTH`). Usage against the cap tells us whether the cap converts or just annoys. |
+| `anki_export` | An Anki TSV export completes | Free tier caps this at 10/month (`FREE_ANKI_EXPORTS_PER_MONTH`). Usage against the cap tells us whether the cap converts or just annoys. |
 
 **Tier 2 — ship in v1 if the plumbing is already there (cheap).**
 

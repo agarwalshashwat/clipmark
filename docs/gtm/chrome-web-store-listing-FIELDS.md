@@ -15,7 +15,7 @@ The beta listing is currently live with the wrong casing and (possibly) stale co
 3. **Replace any old copy that overpromises.** If the current beta listing's summary/description predates the pricing-claims honesty pass, check it for:
    - The word **"sync"** applied to Notion or Obsidian — the real feature is a one-off **export**, not live sync. Replace with the description below.
    - Any mention of **Deep Transcript Search**, **Lifetime Cloud Archiving**, **Permanent Transcript Archiving**, or **"early access to labs"** — none of these are built; they're `ComingSoon`-tagged on the pricing page and must not appear in the store listing as if live.
-   - Any claim of unlimited free usage where a real cap exists — Free is capped (25 Active Recall segments standing, 30 reviews/mo, 1 Anki export/mo, 10 shared collections); **Pro is unlimited** on all of those. Say it that way, not "unlimited" across the board.
+   - Any claim of unlimited free usage where a real cap exists — Free is capped (25 Active Recall segments standing, 30 reviews/mo, 10 Anki exports/mo, 10 shared collections); **Pro is unlimited** on all of those. Say it that way, not "unlimited" across the board.
 
 Everything below is written clean against those three constraints — safe to paste as-is.
 
@@ -103,7 +103,7 @@ semester's worth of bookmarks stays browsable instead of turning into a pile.
 FREE VS. PRO
 
 Free gets you the full loop, generously capped: unlimited local bookmarks, 25
-standing Active Recall segments, 30 reviews a month, 1 Anki export a month, and up to
+standing Active Recall segments, 30 reviews a month, 10 Anki exports a month, and up to
 10 shared collections — enough to build and review a real deck from one full lecture.
 
 Pro removes the caps and adds cross-device cloud sync, unlimited Active Recall and
