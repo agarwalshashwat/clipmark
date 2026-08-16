@@ -87,6 +87,37 @@ jobs:
 
       - run: xvfb-run --auto-servernum npm run test:yt:smoke
 
+  webapp-build:
+    name: ci-webapp-build
+    runs-on: ubuntu-latest
+    # Does the production webapp actually BUILD? Nothing else in this pipeline
+    # answers that: every other job either runs `next dev`/Playwright against a
+    # dev server or tests pure logic, so a change that only breaks the
+    # production compile — a missing dependency in package-lock.json, a bad
+    # import, a type error inside a server component — could go green all the
+    # way to a failed Vercel deploy.
+    #
+    # `npm ci` (not `npm install`) is the point of the dependency half: it
+    # installs strictly from package-lock.json and fails outright if the lock
+    # has drifted from package.json, which is exactly the class of bug where a
+    # dependency is imported by app code but never recorded in the lock.
+    env:
+      # Placeholder values, same as the other webapp jobs: `next build` collects
+      # page data, which constructs Supabase clients at module scope on some
+      # routes. Real secrets are neither needed nor wanted here — this gate only
+      # proves the app compiles.
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm --prefix webapp ci
+      - run: npm --prefix webapp run build
+
   webapp-visual-smoke:
     name: ci-webapp-visual-smoke
     runs-on: ubuntu-latest
