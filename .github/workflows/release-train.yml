@@ -79,7 +79,7 @@ jobs:
 
       # Keep exactly one rolling draft rather than accumulating one per week.
       # This only ever deletes a DRAFT this workflow created under its own
-      # non-semver tag; it can't touch a published ext-vX.Y.Z release. Drafts
+      # non-semver tag; it can't touch a published vX.Y.Z release. Drafts
       # carry no git tag until published, so there is no tag to clean up.
       - name: Replace the previous rolling draft
         env:

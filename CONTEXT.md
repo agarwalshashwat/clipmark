@@ -42,30 +42,31 @@ knowingly, not by accident.
 | **G7** | **Extension ships on a biweekly train** (second Tuesday) with a narrow hotfix lane — security/privacy, data loss, dead core flow, payments, CWS policy. "One-line fix" is not urgency. `docs/RELEASE-PROCESS.md`. | 2026-08-15 |
 | **G8** | **Never touch `feature/dashboard-extras-hold` or `sync/dashboard-parity`.** Held, out of scope. | 2026-08-16 |
 | **G9** | **Edit both twins.** `constants/recall/loop.js` and their `.module.js` pairs move together — a drift once shipped a production `ReferenceError`. Detail in AGENTS.md. | 2026-08-16 |
+| **G11** | **Every shipped extension build is tagged `vX.Y.Z` at its build commit** — an immutable rollback anchor, with the zip's sha256 in the annotated tag message. Created at release-cut / upload time by `scripts/cut-release.sh`, never before. Never move or reuse a release tag. | 2026-08-16 |
 | **G10** | **Primary paying target: US / UK / Australia** — Tier-1, high-purchasing-power, English-speaking (Canada/NZ likely similar). The product stays **globally available**; the lens is for decisions. Weigh features, copy, pricing/currency, positioning, SEO and compliance for **US/UK/AU fit** rather than treating them as generic-global. | 2026-08-16 |
 
 ---
 
 ## 3. Current status
 
-**Last updated: 2026-08-16 by Claude (Cowork Dispatch)** — against `origin/main` @ `55b72b5`.
+**Last updated: 2026-08-16 by Claude (Cowork Dispatch)** — against `origin/main` @ `0208463`.
 
 **Phase:** webapp and live payments running; **launch / marketing phase**. Every remaining
-critical-path item is an owner action, not a coding problem. ⚠ The extension is **not yet on the
-Web Store at v1.0.6** — `main` is 1.0.6 but the *published* listing is still an older build.
+critical-path item is an owner action, not a coding problem. **v1.0.6 is the published Web Store
+build** (owner-reported), anchored at tag `v1.0.6`. `main` is at **1.0.7**, being rebuilt with a
+tour fix — it gets its tag at that build, per G11.
 
-**Done** — **migration 019 applied and verified in prod today; the `/uninstall` survey is live
-end to end** (table `uninstall_feedback`, RLS anon-insert-only, ledger updated) · migration 018
-+ refunds ledger applied and verified earlier (#110, #106, #116) · website launch-ready:
-homepage rebuilt around the wedge, pre-launch wins, system-synced dark mode (#120, #131, #132,
-#134) · recall-gate paywall fixed (#111) · process and docs landed: release train (#114), parked
-backlog (#108), GTM kit (#109), CI build gate (#133), LAUNCH-PRD refresh (#136).
+**Done** — migrations 018 + 019 applied and verified in prod; the `/uninstall` survey is live end
+to end · refunds ledger (#110, #106, #116) · recall-gate paywall fixed (#111) · website
+launch-ready: wedge-led homepage, pre-launch wins, system-synced dark mode (#120, #131, #132,
+#134) · process and docs: release train (#114), parked backlog (#108), GTM kit (#109), CI build
+gate (#133), LAUNCH-PRD refresh (#136), docs prune (#138), release tagging (G11).
 
 **Pending**
 
 | | Item | Owner |
 |---|---|---|
-| **➡ NEXT** | **Submit v1.0.6 to the Chrome Web Store.** `main` is at 1.0.6 and its migration dependency (019) is now applied, so nothing blocks the upload. Manual and owner-only (G4). | Owner |
+| **➡ NEXT** | **Cut and submit v1.0.7** once the tour fix lands. `cut-release.sh` tags it automatically (G11); the upload stays manual and owner-only (G4). | Owner |
 | 2 | PR #107 sync engine — parked post-launch, needs a full rebase; its migration renumbers to **020** | — |
 | 3 | Feature-usage analytics — **spec only** (`docs/analytics/FEATURE-ANALYTICS-SPEC.md`, #113), not built; blocked on Q1 | — |
 | 4 | 2 light-mode contrast misses, incl. `InstallCta` at **2.26:1** (owner-reported, not yet in a repo doc) | — |
@@ -87,6 +88,7 @@ call that looked arbitrary. **Never edit or delete an entry.**
 | 2026-08-16 | **Dark-mode toggle stayed unmounted until every surface passed AA** (#127–#129 before #134) | A reachable toggle over broken surfaces is worse than no toggle — it invites users into a state we know is unreadable. |
 | pre-2026-08-16 | **Rejected: reusing a logged-in ChatGPT/Claude web session for AI** | Violates provider ToS; realistic outcomes are user bans and an extension takedown. Also contradicts the narrow-permissions / on-device posture in G6, which is a selling point. |
 | 2026-08-16 | **Migration 019 applied to prod** via the `db:migrate` runner after a `pg_dump` backup | Enables uninstall-feedback capture. Owner-authorized and done with a backup, per G3. |
+| 2026-08-16 | **Release tagging: `vX.Y.Z` at the build commit, automated in `cut-release.sh`** (G11) | `main` merges many branches, so after the fact you cannot tell which commit a version was built from — v1.0.6 took a 14-commit, 3-tree forensic reconstruction to anchor, and its zip sha256 is gone for good. A per-version immutable tag is the only reliable rollback point. |
 | 2026-08-16 | **Primary target market set to US/UK/AU** (G10) | That's where the purchasing power for a Pro subscription is. The product stays global; decisions get weighed through that lens rather than an averaged-global one. |
 | 2026-08-16 | **Docs prune: 8 archived, 4 merged, 1 deleted, `docs/release/` removed** | Stale docs were causing real false work — a parity audit generating false P1s, two specs saying "not implemented" for shipped features, a policy stub listing 3 of 6 CI gates. Consolidated to the canonical set so there is one place to trust per question. Nothing lost: archived under `docs/archive/`, deletions recoverable from git. |
 

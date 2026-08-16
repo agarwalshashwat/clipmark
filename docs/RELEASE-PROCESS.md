@@ -198,19 +198,42 @@ Walk the relevant part of [`CHECKLIST.md`](../CHECKLIST.md) against this build.
 
 Open a PR for the release branch (bump commit only) and merge it. `main` is protected — PR, not a direct push, regardless of whether admin credentials would let it through.
 
-### Step 6 — Tag the exact commit
+### Step 6 — The tag — **automatic, and the rule is non-negotiable**
 
-```bash
-git checkout main && git pull
-git tag -a ext-v1.1.0 -m "Extension v1.1.0 — <one-line summary>"
-git push origin ext-v1.1.0
+**Every shipped extension version is tagged `vX.Y.Z` at the exact commit its uploaded zip was built from.** `cut-release.sh` step 8 does this for you: an **annotated** tag carrying the artifact filename and its **sha256**, pushed to `origin`.
+
+```
+v1.1.0 -> ClipMark extension 1.1.0
+          Built from: <full sha> (release/ext-v1.1.0)
+          Artifact:   clipmark-extension-1.1.0.zip
+          sha256:     <hash>
 ```
 
-Tag **after** merging, on the merge commit. This is what lets you find "what code shipped as CWS 1.1.0" months later — the store keeps the zip but tells you nothing about its provenance.
+**Tags are immutable rollback anchors.** The script refuses to cut — *before* building — if `vX.Y.Z` already exists locally or on `origin`, and it never moves an existing tag. Deleting one is a deliberate two-command act, not something a re-run can do by accident.
+
+Three properties make this the anchor rather than a convenience:
+
+- **`main` merges many branches.** Without a tag, "which commit was 1.0.6 built from?" is not recoverable afterwards — you can bracket it between version bumps, but if the extension tree changed inside that window (it usually does) you cannot tell which side shipped. Ask the v1.0.6 backfill how much fun that is.
+- **A tag is a ref, so it keeps the commit alive** after the release branch is deleted.
+- **The sha256 answers "is this artifact the one we shipped?"** in one command, months later, against a zip pulled off a backup.
+
+**To roll back: check out the tag and rebuild.**
+
+```bash
+git checkout v1.0.6
+npm --prefix extension ci && npm --prefix extension run build
+# extension/dist/ is now byte-for-byte what shipped as 1.0.6
+```
+
+That is the whole recovery path, and it only exists if the tag does. Note what rolling back an *extension* actually means — you cannot un-publish, so this produces the artifact to compare against or to re-cut forward from; see [§6](#6-rollback).
+
+The tag sits on the commit that was **built**, which is usually the release-branch commit rather than the merge commit on `main`. That's deliberate: the built tree is what shipped, and the merge commit's tree may differ if anything else landed alongside it.
+
+`--no-tag` skips it and `--no-bump` never tags (a verification build ships nothing, so anchoring a version to it would be a lie). If you use `--no-tag`, **you** now own creating the anchor before upload.
 
 ### Step 7 — Update `CHANGELOG.md`
 
-Format and rationale in [`RELEASE-RUNBOOK.md` §1](RELEASE-RUNBOOK.md). `git log ext-v1.0.5..HEAD --oneline` reconstructs the batch. Write it before uploading, while you still remember what's in the train.
+Format and rationale in [`RELEASE-RUNBOOK.md` §1](RELEASE-RUNBOOK.md). `git log v1.0.7..HEAD --oneline` reconstructs the batch (tags before `v1.0.6` may not exist — see the backfill note in §9). Write it before uploading, while you still remember what's in the train.
 
 `CHANGELOG.md` **does not exist yet** — the first cut under this process creates it. Start it at that release rather than back-filling 1.0.0–1.0.5 from memory; the commit log is the record for everything before the train.
 
@@ -260,7 +283,7 @@ Because (2) is so expensive, the asymmetry drives the whole process: **an extens
 
 - It runs **`scripts/cut-release.sh --no-bump`** — the same code path as a real cut, so the workflow cannot drift from the local tooling, and `--no-bump` means it can never touch a version number or start a release.
 - **It never uploads to the Chrome Web Store**, and no store credential exists to make that possible (§5 step 8).
-- The release is a **draft prerelease** under a **non-semver tag**, so it can't be mistaken for `ext-vX.Y.Z`. Drafts are visible only to collaborators, and carry no git tag until published. Its release notes state outright that it must not be uploaded — its version is whatever `main` carries, un-bumped, which the store would reject as non-increasing anyway.
+- The release is a **draft prerelease** under a **non-semver tag**, so it can't be mistaken for a release tag `vX.Y.Z`. Drafts are visible only to collaborators, and carry no git tag until published. Its release notes state outright that it must not be uploaded — its version is whatever `main` carries, un-bumped, which the store would reject as non-increasing anyway.
 - **`contents: write` is scoped to that one job**, the workflow's `permissions` default is `read`, and it's `if`-guarded to the canonical repo so forks can't run it.
 - It keeps **one** rolling draft rather than accumulating one per run, deleting only a draft under its own tag — it cannot touch a published release.
 
@@ -303,3 +326,28 @@ scripts/cut-release.sh --help
 | Webapp | Continuous, on merge |
 | CWS upload | **Manual, owner only — never automated** |
 | Version guard | `tests/unit/manifest.test.mjs`, gated by `ci-unit` |
+| Release tag | `vX.Y.Z`, annotated, created + pushed by `cut-release.sh` (§5 step 6) |
+
+---
+
+## 9. Tag coverage, and the pre-tagging backfill
+
+The `vX.Y.Z` rule starts now, so versions cut before it have no anchor. **Naming note:** earlier drafts of this doc and of `RELEASE-RUNBOOK.md` proposed `ext-vX.Y.Z`. That prefix was never actually used — no such tag exists — and the convention is now plain **`vX.Y.Z`**. There is one unrelated legacy tag, `launch-candidate-1`, which is not a release anchor.
+
+| Version | Tag | Anchor |
+|---|---|---|
+| **1.0.6** | ✅ `v1.0.6` | Backfilled at `d98c45d`. **Reconstructed, not recorded** — read the caveat below before trusting it |
+| **1.0.7** | ⬜ not yet | Being rebuilt with a tour fix; it gets tagged at the fixed build, by the script |
+| 1.0.5 / 1.0.4 / 1.0.3 | ⬜ optional backfill | Candidates below |
+
+**Why 1.0.6's anchor is a reconstruction.** No tag existed when it was cut, so the build commit had to be inferred: `main` carried version 1.0.6 across **14** commits (`4deff08` … `ac67e9b`), and the extension tree changed **three** times inside that window. `d98c45d` is the last commit on the middle tree (`dcdf610`) — the newest one that predates the free-Anki-cap change (#144), which was bumped to 1.0.7 precisely *because* it wasn't in the 1.0.6 build. `ac67e9b` is the literal last 1.0.6 commit and is the **wrong** anchor for exactly that reason. Its zip sha256 is unrecoverable — the artifact was never kept. **This paragraph is the argument for the rule:** it is a lot of forensics to land on a "probably", and every future version gets a certainty for free.
+
+Backfill candidates, if you want them. Each is the last commit on the newest extension tree within that version's window — same reasoning, same uncertainty, and none has a recoverable sha256:
+
+| Version | Candidate | Window | Extension trees in window |
+|---|---|---|---|
+| 1.0.5 | `caa4aead` | `b316165` … `caa4aead` (14 commits) | 3 — `caa4aead` (#122, reminders API base) is its own tree and landed **after** 1.0.5 was submitted, so `9ca89fdb` is the safer pick |
+| 1.0.4 | `9245905` | `467ba44` … `9245905` (9 commits) | 2 — tree changes at `5171ce4e` |
+| 1.0.3 | `a9e8f03` | `30911b4` … `a9e8f03` (9 commits) | 5 — the muddiest; `349c9075` … `a9e8f03` share the final tree |
+
+Backfilled tags should say so in the message so nobody mistakes a reconstruction for a record.
