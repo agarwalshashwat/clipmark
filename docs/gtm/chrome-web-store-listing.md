@@ -1,7 +1,12 @@
 # ClipMark — Chrome Web Store Listing (Ready to Paste)
 
 **Date:** 2026-07-31
-**Positioning:** "Revise & remember" — Active Recall as hero, additive to Anki, beachhead is USMLE/IMG med students (per the med-exam strategy brief, never committed to this repo), but copy stays usable for any serious YouTube learner so the listing doesn't cap itself to one audience.
+**Positioning:** **"Actually remember what you study on YouTube."** One broad wedge — retention — that reads the same on the website, the listing and every retention page. Active Recall is the hero, on-device AI is the differentiator, Anki export is additive rather than competitive.
+
+Specific exams and courses (USMLE/Step 1, university lectures, A-levels, language courses) appear as **named examples inside the copy, never as the product's identity**. Rationale in [MARKET-FIT-US-UK-AU.md](MARKET-FIT-US-UK-AU.md) §2 and [COMPETITIVE-BRIEF.md](COMPETITIVE-BRIEF.md) §6.3: a med-only identity does not transfer to the UK or Australia (USMLE is a US licensing exam), while the broad retention wedge works across all three target markets. The brief also found that **no competitor names an exam, course or syllabus at all**, so naming them as examples is upside with none of the cost of narrowing the product.
+
+*Supersedes the earlier "beachhead is USMLE/IMG med students" framing. The med communities remain the highest-value **channel** — see [community-engagement-plan.md](community-engagement-plan.md) — but channel and identity are different decisions, and conflating them is what left four surfaces telling four different stories.*
+
 **Honesty constraint:** every claim below maps to a shipped feature. Nothing here mentions Deep Transcript Search, Lifetime Cloud Archiving, "Early access to labs," or Notion/Obsidian **sync** (it's a one-off **export**, per the pricing-claims audit in `ClipMark-Claims-Buildout-Plan.md` and `ClipMark-ROADMAP.md`). Free-tier numbers below (25 Active Recall segments, 30 reviews/mo, 10 Anki exports/mo, 10 shared collections) match the shipped caps in `ClipMark-UsageCaps-Spec.md`.
 
 **Note on the name:** `extension/manifest.json` currently ships `"name": "Clipmark"` (lowercase "m"), while every planning doc and this listing use `"ClipMark"`. The Chrome Web Store listing title is set independently in the Developer Dashboard, so this doesn't block publishing — but worth reconciling manifest casing with the public brand before the CWS listing goes live, so the install-time permission dialog and the store page match.
@@ -97,9 +102,11 @@ Obsidian.
 
 WHO IT'S FOR
 
-Built first for USMLE Step 1/Step 2 students and IMGs studying from free YouTube
-lecture channels alongside Anki — but the same loop works for any course, lecture, or
-video you're trying to actually retain, not just watch once.
+Anyone who studies from YouTube and is tired of watching things twice. Medical students
+working through Step 1 lecture channels alongside Anki, undergraduates going back over
+recorded lectures before exams, language learners drilling a passage, developers working
+through a long conference talk — the loop is the same one, and so is the problem it
+solves: you watched it, and a week later it's gone.
 
 Get started: install ClipMark, open any YouTube video, and save your first moment.
 ```

@@ -112,9 +112,11 @@ Obsidian.
 
 WHO IT'S FOR
 
-Built first for USMLE Step 1/Step 2 students and IMGs studying from free YouTube
-lecture channels alongside Anki — but the same loop works for any course, lecture, or
-video you're trying to actually retain, not just watch once.
+Anyone who studies from YouTube and is tired of watching things twice. Medical students
+working through Step 1 lecture channels alongside Anki, undergraduates going back over
+recorded lectures before exams, language learners drilling a passage, developers working
+through a long conference talk — the loop is the same one, and so is the problem it
+solves: you watched it, and a week later it's gone.
 
 Get started: install ClipMark, open any YouTube video, and save your first moment.
 ```
@@ -129,7 +131,7 @@ Get started: install ClipMark, open any YouTube video, and save your first momen
 ## Language
 
 **Field:** Store listing → *Language*
-**Select:** `English` (no localized copy exists yet — every claim above assumes an English-reading, USMLE/IMG-adjacent audience per the strategy brief; don't add other languages until real localized copy exists)
+**Select:** `English` (no localized copy exists yet — the copy above targets English-reading study audiences in the US, UK and Australia per [MARKET-FIT-US-UK-AU.md](MARKET-FIT-US-UK-AU.md); don't add other languages until real localized copy exists)
 
 ---
 

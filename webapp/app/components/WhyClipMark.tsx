@@ -18,6 +18,15 @@ import React from 'react';
  * Comparative framing is kept to what ClipMark itself does. No competitor ratings,
  * user counts, or review quotes — those would be unsubstantiated claims on a
  * public page (see CLAUDE.md conventions).
+ *
+ * The fourth card used to read "It quizzes you — no other YouTube bookmarker
+ * does". That was false: docs/gtm/COMPETITIVE-BRIEF.md §2 found two shipping
+ * extensions that quiz on YouTube content and schedule the review themselves
+ * (Web Highlights, ~200K users; Ulearn). The card now states the distinction
+ * that actually survives — those tools generate questions FROM the transcript,
+ * ClipMark hides the note YOU wrote and replays the source as the answer key.
+ * Keep it that way: describe our own mechanism, never a claim about "every"
+ * other tool, which cannot be verified and dates badly.
  */
 
 const STRENGTHS = [
@@ -38,8 +47,8 @@ const STRENGTHS = [
   },
   {
     icon: 'psychology',
-    title: 'It quizzes you — no other YouTube bookmarker does',
-    body: 'Saving a timestamp is where every other extension stops. ClipMark schedules the moment for review (1, 3, then 7 days, doubling up to 60), hides your note, and asks you to remember it before it replays the clip. That loop is the product, not a bullet point.',
+    title: 'Your note is the question. The clip is the answer.',
+    body: 'Tools that quiz you on a video generate the questions themselves, from the transcript. ClipMark does the opposite: it hides the note you wrote and replays the exact second, so you check your own recall against the source. Every saved moment goes on a schedule — 1, 3, then 7 days, doubling up to 60. That retrieval loop is the product, not a bullet point.',
   },
 ];
 

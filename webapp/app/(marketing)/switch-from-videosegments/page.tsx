@@ -51,7 +51,7 @@ export default function SwitchFromVideoSegmentsPage() {
           items={[
             {
               title: 'Your clips live in one browser, on one machine',
-              desc: 'With no cloud sync, the copy in that profile is the only copy. A new laptop, a wiped profile, or a reinstall takes the lot with it — and there is nobody shipping a recovery path.',
+              desc: 'With no cloud sync, the copy in that profile is the only copy. A new laptop, a wiped profile, or a reinstall takes the lot with it — and an extension that has stopped shipping updates is unlikely to ship you a recovery path.',
             },
             {
               title: 'No export means no way out',
