@@ -669,11 +669,28 @@ async function silentSaveBookmark() {
 
     if (video.duration && !isNaN(video.duration)) videoDurations[videoId] = video.duration;
 
+    // The bookmark goes first, and ALONE. videoTitles/videoDurations are single
+    // storage items that grow on every video watched, so either can exceed
+    // QUOTA_BYTES_PER_ITEM; writing them in the same set() as the bookmark meant
+    // an oversized cache failed the save itself. The user's actual data must not
+    // depend on the size of a display cache.
     await new Promise((resolve, reject) =>
-      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations, videoTitles }, () => {
+      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks }, () => {
         if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
         else resolve();
       })
+    );
+
+    // Then the caches, pruned and non-fatal: a failure here costs a re-fetched
+    // title, never the bookmark that was just saved.
+    const pruned = pruneVideoMaps({ videoTitles, videoDurations, keepVideoId: videoId });
+    chrome.storage.sync.set(
+      { videoTitles: pruned.videoTitles, videoDurations: pruned.videoDurations },
+      () => {
+        if (chrome.runtime.lastError) {
+          debugLog('Silent', 'video map write failed (bookmark already saved)', chrome.runtime.lastError.message);
+        }
+      }
     );
 
     updateBookmarkMarkers();
@@ -1014,7 +1031,15 @@ async function saveVideoTitle(expectedVideoId = null) {
     return;
   }
   videoTitles[videoId] = title;
-  chrome.storage.sync.set({ videoTitles });
+  // This runs on every SPA navigation, for every video watched — bookmarked or
+  // not — so it is where the map actually grows toward QUOTA_BYTES_PER_ITEM.
+  // Bound it here, keeping the video we are writing.
+  const { videoTitles: boundedTitles } = pruneVideoMaps({ videoTitles, keepVideoId: videoId });
+  chrome.storage.sync.set({ videoTitles: boundedTitles }, () => {
+    if (chrome.runtime.lastError) {
+      debugLog('Title', 'videoTitles write failed', chrome.runtime.lastError.message);
+    }
+  });
   savedTitlesCache[videoId] = title;
 }
 
