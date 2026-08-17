@@ -1,23 +1,40 @@
 # ClipMark — Posting Kit (paste-ready)
 
-**Date:** 2026-08-12
+**Date:** 2026-08-17 — realigned to the positioning that actually shipped (#147) and the competitive brief (#143).
 **How to use:** everything in a fenced block is written to be posted **as-is**. Everything outside a fenced block is instruction for Ash and must not be pasted.
-**Read first:** [marketing-launch-plan.md](marketing-launch-plan.md) §1 (the Day 0 gate), §7.2 (the Reddit rules check), §8 (the honest-claims register).
+**Read first:** [marketing-launch-plan.md](marketing-launch-plan.md) §7.2 (the Reddit rules check) and §8 (the honest-claims register), plus [COMPETITIVE-BRIEF.md](COMPETITIVE-BRIEF.md) §2 — that section is why one old claim is gone.
+
+---
+
+## ⏱️ Timing note — read before scheduling Product Hunt
+
+**The live Web Store build is v1.0.6, which caps free Anki export at 1/month. The site and every block in this kit say 10/month, which is v1.0.7 — built, on `main`, and not yet uploaded.**
+
+That gap is the one thing in this kit that could make Ash look dishonest rather than early. A visitor who reads "10 exports a month" on the landing page, installs, and hits a cap at 1 has been mis-sold, and it's the exact failure mode the honest-claims register exists to prevent.
+
+**Recommendation: upload v1.0.7 and let it clear review before the PH launch.** PH's own guidance is that the best day is the day you're most prepared, and slipping 24–48 hours costs far less than the first review saying the free tier is smaller than advertised.
+
+**If Ash launches before v1.0.7 is live**, then in every block below change *"10 Anki exports a month"* → *"1 Anki export a month on the current build (10 in the update now in review)"*. Do not simply delete the number — the free-tier allowance is load-bearing in the pitch.
 
 ---
 
 ## 0. Global rules that apply to every block below
 
-1. **🚨 Every `[DARK MODE]`-tagged line is blocked until v1.0.4 is live on the Chrome Web Store.** The public listing read **v1.0.3** on 2026-08-12. Where a block has a dark-mode line, an alternate line is given directly beneath it. Check the listing, then delete one.
-2. **Never ask for upvotes.** Product Hunt's own guidance: ask people to *visit and comment*. Hacker News: *"Please don't ask friends to upvote or comment. That's not ok on HN."* Both are enforced.
-3. **No numbers about ClipMark.** No installs, users, ratings, MRR, "trusted by." The listing has zero reviews; any number is either false or unimpressive.
-4. **Affiliate is one-time 30%.** Never "recurring," never "revenue share."
-5. **Notion/Obsidian is export, not sync.**
-6. **Never post an affiliate/referral link on Reddit, HN, or IH.** Plain product links only.
-7. **Links** — use these exactly:
-   - Site: `https://clipmark.mithahara.com`
-   - Extension: `https://chromewebstore.google.com/detail/clipmark/iboippnihpcnnglgboaiedaiimbiolgg`
-   - No trailing slashes on hand-built URLs (they 308).
+1. **⛔ The "no other YouTube bookmarker quizzes you" claim is RETIRED. Never post it in any form.** It is false: [Web Highlights](https://chromewebstore.google.com/detail/web-highlights-pdf-web-hi/hldjnlbobkdkghfidgoecgmklcemanhm) (~200K users) and [Ulearn](https://chromewebstore.google.com/detail/ulearn-youtube-quiz-space/kfeabnmakekpdjbpkfghknoeoahjagif) both quiz on YouTube content and schedule the review themselves. `COMPETITIVE-BRIEF.md` §2. **Use the distinction that survives** (rule 2). On a product whose brand position *is* claim honesty, this one line would do more damage than the differentiation it was meant to buy.
+2. **The true distinction, and the only comparison to draw:** *other tools generate AI questions **about the video**; ClipMark hides **the note you wrote** and replays **the exact second** as the answer.* Describe our own mechanism. Never make a claim about what "every other tool" does — it can't be verified and it dates badly.
+3. **Lead with on-device AI. State it as fact, not as a boast.** *"The AI runs inside your browser. Not on our servers."* / *"Your transcripts never leave your laptop."* This is Chrome's built-in Gemini Nano (`extension/src/ai/local-ai.js`). Every AI competitor found is cloud-based, so **the fact does the work on its own** — adding "unlike everyone else" turns a checkable statement into an unverifiable one.
+4. **One wedge, and it is broad: *actually remember what you study on YouTube*.** "One job, whatever you're studying." Do **not** post med-specific copy in this window — med is a *channel* reached through participation, not the product's identity, and med-framed copy in a general sub reads as narrow to everyone who isn't in med school.
+5. **Never ask for upvotes.** Product Hunt's own guidance: ask people to *visit and comment*. Hacker News: *"Please don't ask friends to upvote or comment. That's not ok on HN."* Both are enforced.
+6. **No numbers about ClipMark.** No installs, users, ratings, MRR, "trusted by." The listing has zero reviews; any number is either false or unimpressive.
+7. **Prices are USD, and tax is ADDED at checkout — never "taxes included."** `$7.99/mo · $59.99/yr · $99.99 lifetime`, all **USD** (`upgrade/pricing.ts`; Dodo is configured tax-exclusive). Always write the currency: a UK or AU reader cannot tell `$7.99` from GBP/AUD, and both are target markets.
+8. **Free-tier numbers, quoted exactly:** unlimited local bookmarks/notes/tags/groups · on-device AI note drafting · **25** Active Recall segments enrolled (standing) · **30** reviews/month · **10** Anki exports/month · **3** saved A–B loops · defining and looping A–B in-session is **never capped**. **Active Recall is free**, not Pro.
+9. **Affiliate is one-time 30%.** Never "recurring," never "revenue share."
+10. **Notion/Obsidian is export, not sync.**
+11. **Never post an affiliate/referral link on Reddit, HN, or IH.** Plain product links only.
+12. **Links** — use these exactly:
+    - Site: `https://clipmark.mithahara.com`
+    - Extension: `https://chromewebstore.google.com/detail/clipmark/iboippnihpcnnglgboaiedaiimbiolgg`
+    - No trailing slashes on hand-built URLs (they 308).
 
 ---
 
@@ -27,7 +44,7 @@
 
 Submit at **12:01 AM PT** on a **Tuesday or Wednesday**. PH's ranking day runs 12:00 AM–11:59 PM PT, so a late submission competes with a fraction of a day. Prepare the draft the day before; publish, then post the maker comment within five minutes.
 
-PH's own guide notes the best day is "the day on which you're most prepared" — if v1.0.4 hasn't cleared review, slip it.
+PH's own guide notes the best day is "the day on which you're most prepared" — **and the readiness gate here is v1.0.7 being live**, so the store's free-tier cap matches the site's. See the timing note at the top of this file.
 
 ### 1.2 Name
 
@@ -40,33 +57,35 @@ ClipMark
 **Pick one.** Character counts included.
 
 ```
-Spaced repetition for YouTube — remember what you watch
+Actually remember what you study on YouTube
 ```
-*(55) — Recommended. Leads with the retention wedge, and "spaced repetition" is a term the PH audience already knows.*
+*(43) — **Recommended.** The one broad wedge, stated plainly. Works for a med student, a language learner and a self-taught dev without naming any of them.*
 
 ```
-Bookmark, loop and get quizzed on any YouTube moment
+Remember what you study on YouTube. AI stays local.
 ```
-*(52) — Mechanic-first. Better if the gallery carries the "why."*
+*(51) — Leads the moat in the tagline. Use if the gallery's first frame is the recall prompt rather than the privacy line.*
 
 ```
-Turn YouTube lectures into flashcards you actually recall
+Spaced repetition for YouTube — the AI runs in your browser
 ```
-*(56) — Strongest for the student segment, weaker for generalist PH.*
+*(59) — Mechanic + moat. "Spaced repetition" is a term the PH audience already knows.*
+
+> **Retired:** anything of the form *"the only YouTube tool that quizzes you."* See §0 rule 1.
 
 ### 1.4 Description — 240 char limit
 
 ```
-ClipMark bookmarks the exact second that mattered, loops an A–B passage until it's drilled, then pauses the video days later and quizzes you on it before replaying. Every card links back to the source, not a summary. Exports to Anki. Free tier.
+Bookmark the exact second, loop an A–B passage, then get quizzed on it days later — with your own note as the question and the real clip as the answer. The AI runs inside your browser, not on our servers. Free tier, exports to Anki.
 ```
-*(240)*
+*(232) — **Recommended.** Mechanism, then the moat, then the two proof points.*
 
-**Alternate, shorter:**
+**Alternate — moat first:**
 
 ```
-Mark the exact moment. Loop the passage. Get quizzed on it before you forget it — with the clip itself as the answer. Every review links back to the real second in the real video, never a summary. Exports to Anki. Free to use.
+Your lecture transcripts never leave your laptop. ClipMark saves the exact second, loops the passage, and quizzes you days later using the note you wrote and the clip itself as the answer key. Free tier, exports to Anki.
 ```
-*(224)*
+*(220)*
 
 ### 1.5 Topics / categories
 
@@ -82,50 +101,100 @@ Hey Product Hunt 👋
 
 I built ClipMark because of a habit I couldn't shake: I'd watch a 40-minute
 lecture, understand every word of it, and have nothing left a week later. Then
-I'd go back and scrub through the whole thing again to find the one explanation
-I actually needed.
+I'd go back and scrub the whole thing again to find the one explanation I
+actually needed.
 
-The tools I tried all solved the wrong half of the problem. Loopers let me
-replay a section — great, but I still forgot it. Summarizers handed me a wall of
-AI text that wasn't what the professor said. Note apps wanted me to leave the
-video, which is exactly when you lose the thread.
-
-So ClipMark does the other half — retrieval:
+ClipMark has one job — help you actually remember what you study on YouTube.
+Whatever you're studying. It's the same loop for a lecture, a language, or a
+framework tutorial.
 
 📌 One keystroke saves the exact second, without pausing or leaving the page.
 🔁 Mark A, mark B, and loop the passage until it's drilled. Multiple segments
-   per video, and each one is saved — so a passage you looped is a passage you
-   can be quizzed on later.
-🧠 Days later, the video pauses and shows you the timestamp and your tags with
-   your note hidden. You try to recall it, then reveal and replay to check
-   yourself. "Got it" doubles the interval. "Again" brings it back tomorrow.
-🔗 Every review links to the real second in the real video. No paraphrase
-   standing between you and the explanation.
+   per video, and each one is saved — so a passage you looped is a passage that
+   can come back and ask you about itself.
+🧠 Days later the video pauses and shows the timestamp and your tags, with your
+   note hidden. You try to recall it, then reveal and replay to check yourself.
+   "Got it" doubles the interval. "Again" brings it back tomorrow.
 📤 One click exports to an Anki-importable file — note, timestamp, and a deep
    link back to the moment.
 
-On the obvious question: **ClipMark doesn't replace Anki, it feeds it.** I use
-both. Anki is where a card lives for years; ClipMark is what I use before the
-card exists, while I'm still in the video.
+Two things I'd point at specifically.
+
+**The AI runs inside your browser. Not on our servers.**
+ClipMark drafts notes using Chrome's built-in on-device model, so your
+transcripts never leave your laptop. There's no upload step and no inference
+bill, which is also why AI note drafting is on the free tier instead of behind
+Pro. If you study licensed course material, or you're just tired of pasting
+lecture content into someone's API, that's the whole reason this is built the
+way it is.
+
+**Your note is the question. The clip is the answer.**
+This is the part I'd most like scrutiny on, because it's a genuinely different
+bet from the other quiz tools. Tools that quiz you on a video generate the
+questions themselves, from the transcript — you get tested on what the model
+thought was important. ClipMark does the opposite: it hides the note *you*
+wrote and replays the exact second, so you're checking your own recall against
+the primary source. Nobody's paraphrase sits between you and the explanation.
+
+On the obvious question: ClipMark doesn't replace Anki, it feeds it. I use both.
+Anki is where a card lives for years; ClipMark is what I use before the card
+exists, while I'm still in the video.
 
 The free tier is a real allowance, not a teaser — unlimited local bookmarks,
 notes, tags and on-device AI note drafting, 25 moments enrolled in Active Recall
-at a time, 30 reviews a month, 10 Anki exports a month, and up to 10 shared
-collections. No card, no trial countdown. Pro removes those caps and adds cloud
-sync, scheduled review reminders, and Obsidian/Notion export.
+at a time, 30 reviews a month, and 10 Anki exports a month. No card, no trial
+countdown. Pro is $7.99/mo USD (tax added at checkout) and removes those caps,
+plus cloud sync, scheduled review reminders, and Obsidian/Notion export.
 
-I'd genuinely like to know: what's the thing you keep having to rewatch? Language
-learners and musicians have been using the A–B loop in a way I didn't design for,
-and that feedback has been the most useful I've had. Drop it in the comments —
+I'd genuinely like to know: what's the thing you keep having to rewatch?
+Language learners and musicians found the A–B loop in a way I didn't design for,
+and that's been the most useful feedback I've had. Drop it in the comments —
 I'm here all day.
 
 — Ash
 ```
 
-**If v1.0.4 is live**, add after the 📤 line:
+> **Do not add** a line claiming no other tool quizzes you, however it's phrased (§0 rule 1). If a commenter names Web Highlights or Ulearn, that's a good-faith question, not an attack — the honest answer is §0 rule 2, and there's a prepared reply in §1.9.
+
+### 1.9 Prepared replies — the three comments that will come
+
+Have these ready; don't paste them unprompted.
+
+**"How is this different from Web Highlights / Ulearn?"** *(the one that matters — answer it straight)*
 
 ```
-🌓 Light and dark, following your system theme (and YouTube's).
+Fair question, and they're both good — Web Highlights especially, it's a much
+bigger product than mine.
+
+The difference is what gets asked. They generate the questions from the
+transcript, so you're tested on what the model picked out. ClipMark hides the
+note *you* wrote at the moment you decided it mattered, then replays that exact
+second as the answer. So it's checking your own encoding against the source
+rather than answering someone else's question about the video.
+
+Which one you want honestly depends on whether you take notes. If you don't,
+generated questions are probably more useful to you than mine.
+
+The other split is where the AI runs — mine is Chrome's on-device model, so
+transcripts don't leave your machine.
+```
+
+**"Why not just use Anki?"**
+
+```
+I use both — this feeds Anki rather than replacing it. Anki is where a card
+lives for years. ClipMark is the step before the card exists, while I'm still
+in the video and the context is loaded. One click exports note + timestamp +
+deep link as an Anki-importable file.
+```
+
+**"Is this just spaced repetition with extra steps?"**
+
+```
+The scheduler is deliberately simple — 1, 3, then 7 days, doubling up to a
+60-day cap, with "again" resetting it. It's not FSRS and I don't claim it is.
+The part I think is actually novel isn't the algorithm, it's that the answer
+key is the source clip rather than text you have to trust.
 ```
 
 ### 1.7 Gallery / asset checklist
@@ -142,7 +211,8 @@ PH gallery images: **1270 × 760 px**, 6–8 of them, first image is the one tha
 - [ ] **Image 7 (optional) — shared collection** public link view. (`05-side-panel.png`)
 - [ ] Thumbnail/logo asset set.
 - [ ] **⚠️ Asset compliance:** re-shoot rather than reuse any still whose source video isn't cleared for promotional use. Use the MIT-OCW-style lecture stills already identified for this purpose — do not ship the restyled screenshots that show unlicensed content.
-- [ ] **⚠️ Confirm no still shows a v1.0.4-only surface** (dark mode) if v1.0.4 isn't live.
+- [ ] **⚠️ Confirm every still matches the *published* build.** The store is on v1.0.6 until v1.0.7 clears review — a screenshot showing a surface the installed extension doesn't have is the same broken promise as the export-cap gap in the timing note.
+- [ ] **Consider a privacy still.** Nothing in the gallery currently shows the on-device AI claim, which is now the lead. A frame of the AI drafting a note with a caption like *"Runs in your browser. Nothing uploaded."* would carry §0 rule 3 visually.
 
 ### 1.8 Sharing the launch
 
@@ -162,25 +232,25 @@ opinions about what's missing: <PH link>
 
 ### 2.1 Launch thread (Day 1, 07:00 ET) — pin it
 
-**Hook variants — pick one for tweet 1/9:**
+**Hook variants — pick one for post 1/8:**
 
 - **(A) Problem-first, recommended:**
   ```
   I watched a 40-minute lecture, understood every word, and had nothing left a week later.
   ```
-- **(B) Contrarian:**
+- **(B) Moat-first:**
   ```
-  Every YouTube tool solves the wrong half of the problem. They all help you watch. None of them help you remember.
+  I built a study tool that runs its AI inside your browser. Your lecture transcripts never touch a server. Mine included.
   ```
-- **(C) Concrete:**
+- **(C) Mechanism-first:**
   ```
-  400,000 people installed a Chrome extension whose only job is looping a section of a YouTube video. Every one of them still forgets what was in it.
+  Most tools that quiz you on a video write the questions themselves. Mine hides the note you wrote and replays the exact second as the answer.
   ```
 
-**The thread (using hook A):**
+**The thread (using hook A) — 8 posts:**
 
 ```
-1/9
+1/8
 I watched a 40-minute lecture, understood every word, and had nothing left a
 week later.
 
@@ -190,80 +260,75 @@ I got tired of it and built ClipMark. It's live on Product Hunt today 👇
 ```
 
 ```
-2/9
-The tools I tried all fixed watching, not remembering.
+2/8
+One job: actually remember what you study on YouTube.
 
-Loopers replay a section — I still forgot it.
-Summarizers gave me AI text that wasn't what the professor said.
-Note apps wanted me to leave the video, which is exactly when you lose the thread.
+Not a bookmarker. Not a summarizer. The bookmark is just the capture step —
+what matters is what happens three days later.
+
+Same loop whether you're studying medicine, Japanese, or a framework.
 ```
 
 ```
-3/9
-So ClipMark does the missing half: retrieval.
+3/8
+It starts with one keystroke.
 
-One keystroke saves the exact second. No pause, no tab switch, no leaving the
-video.
+Alt+B saves the exact second. No pause, no tab switch, no leaving the video —
+because the moment you leave is the moment you lose the thread.
 ```
 
 ```
-4/9
+4/8
 Then A–B loops.
 
-Mark A. Mark B. Loop the passage until it's drilled.
+Mark A. Mark B. Loop the passage until it's drilled. Multiple segments per
+video, all editable.
 
-Multiple segments per video, all editable. Language learners drilling a phrase
-and musicians drilling a bar found this before I'd even pitched it to them.
+Design decision I'm proudest of: a loop and a flashcard are the same object. A
+passage you looped is a passage that can come back and ask you about itself.
 ```
 
 ```
-5/9
-Here's the design decision I'm proudest of:
-
-a loop and a flashcard are the same object.
-
-A passage you looped is a passage that can come back and ask you about itself.
-```
-
-```
-6/9
-Days later the video pauses and shows you the timestamp and your tags — with
-your note hidden.
+5/8
+Days later the video pauses and shows the timestamp and your tags — with your
+note hidden.
 
 You try to recall it. Then you reveal, and replay the clip to check yourself.
 
 "Got it" → the interval doubles.
-"Again" → it's back tomorrow.
+"Again" → back tomorrow.
 ```
 
 ```
-7/9
-The part I won't compromise on: no summaries.
+6/8
+Here's where it differs from the other quiz tools, and it's a real difference:
 
-Every review links to the real second in the real video. You review the
-professor's actual sentence, not a paraphrase of it.
+they generate questions from the transcript. You get tested on what the model
+thought mattered.
 
-The clip is the answer key.
+ClipMark hides the note YOU wrote and replays the exact second as the answer.
+
+Your encoding, checked against the source.
 ```
 
 ```
-8/9
-And the question everyone asks first:
+7/8
+The AI runs inside your browser. Not on our servers.
 
-no, it doesn't replace Anki. It feeds it.
-
-One click exports your reviewed segments — note, timestamp, deep link back to
-the moment — as an Anki-importable file. I use both. Anki is where a card lives
-for years; ClipMark is what I use before the card exists.
+Note drafting uses Chrome's built-in on-device model, so your transcripts never
+leave your laptop. No upload step, no inference bill —
+which is also why it's on the free tier instead of behind Pro.
 ```
 
 ```
-9/9
+8/8
 Free tier is a real allowance, not a teaser: unlimited local bookmarks, notes,
-on-device AI note drafting, 25 Active Recall moments at a time, 30 reviews a
-month, 10 Anki exports a month. No card, no trial clock.
+on-device AI drafting, 25 Active Recall moments at a time, 30 reviews a month,
+10 Anki exports a month. No card, no trial clock.
 
-It's on PH today — I'd love your read: <PH link>
+It feeds Anki rather than replacing it.
+
+On PH today: <PH link>
 ```
 
 **Reply-post to your own thread, ~13:00 ET** (attach a short screen capture of the A–B loop):
@@ -279,7 +344,44 @@ was in it.
 
 ### 2.2 Build-in-public posts
 
-**(a) Day 2, 16:00 ET — the honest numbers post.** Fill in the real figures. Small honest numbers outperform vague big ones; this is the post that starts the habit.
+**(a) The retired-claim post — post this one.** It is the strongest build-in-public asset available right now, because it is a real thing that happened this week and it demonstrates the brand position instead of asserting it. Standalone, any day.
+
+```
+I had a false claim on my landing page.
+
+"It quizzes you — no other YouTube bookmarker does."
+
+I ran a competitor sweep this week and found two that already do it. One has
+200,000 users. My claim wasn't a stretch, it was just wrong.
+
+Rewrote the card. The honest version is narrower and, annoyingly, better:
+
+Those tools generate questions from the transcript. Mine hides the note YOU
+wrote and replays the exact second as the answer. Different act — retrieval of
+your own encoding vs. recognition of a machine's multiple choice.
+
+Absolute claims about "every other tool" are unverifiable and they date badly.
+Describe your own mechanism instead.
+```
+
+**(b) The on-device AI decision.** Standalone, any day.
+
+```
+ClipMark drafts your notes with AI that runs inside your browser. Nothing gets
+uploaded — your lecture transcripts never leave your laptop.
+
+That wasn't a privacy stance first. It was an economics one.
+
+Server-side inference on video transcripts means a per-user bill that scales
+with exactly the people who use the product most. Chrome's built-in on-device
+model costs me nothing per call, so I can put AI note drafting on the FREE tier
+instead of behind the paywall.
+
+The privacy property came free with the cheap architecture. Best kind of
+constraint.
+```
+
+**(c) Day 2, 16:00 ET — the honest numbers post.** Fill in the real figures. Small honest numbers outperform vague big ones; this is the post that starts the habit.
 
 ```
 ClipMark launch, 24 hours in, actual numbers:
@@ -296,7 +398,7 @@ __ times now, which tells me it belongs at the top of the landing page, not
 buried in the FAQ.
 ```
 
-**(b) The build-in-public post about the constraint** (any day after launch):
+**(d) The build-in-public post about the constraint** (any day after launch):
 
 ```
 Something I got wrong for months.
@@ -311,7 +413,7 @@ from a bookmark tool to something that actually teaches.
 Retrieval only works if you have to reach for it.
 ```
 
-**(c) The segment-discovery post:**
+**(e) The segment-discovery post:**
 
 ```
 I built A–B loops for students re-drilling a lecture passage.
@@ -325,7 +427,7 @@ design for.
 Build the primitive, let people tell you what it's for.
 ```
 
-**(d) The honest-pricing post:**
+**(f) The honest-pricing post:**
 
 ```
 Wrote out ClipMark's free tier limits as actual numbers on the pricing page:
@@ -338,7 +440,7 @@ Naming the wall up front is the whole reason I'd trust a study tool with a
 semester of work. Doing it.
 ```
 
-**(e) Show HN day cross-post (Day 2, 09:00 ET):**
+**(g) Show HN day cross-post (Day 2, 09:00 ET):**
 
 ```
 ClipMark is on Show HN today.
@@ -518,28 +620,38 @@ which will break again. Happy to get into any of it.
 | "Is this SM-2/FSRS?" | No. It's `min(lastInterval × 2, 60)` days, with "again" resetting the streak and re-queueing for ~tomorrow. Give the actual formula — vagueness here reads as bluffing. |
 | "What happens when YouTube changes the DOM?" | It breaks and gets repaired; that's the standing maintenance cost of the category. Note the `yt-navigate-finish` handling. |
 | "What's the AI, and where does my data go?" | Chrome's built-in Gemini Nano through the Prompt API, on-device, for drafting a note from the surrounding transcript. Nothing leaves the machine. Volunteer the caveat: Chrome gates availability on hardware/version and a model download, so some users won't have it. |
-| "Business model?" | Freemium, $7.99/mo, $59.99/yr, $99.99 lifetime, Merchant-of-Record payments. Say the numbers. |
+| "Business model?" | Freemium — **$7.99/mo, $59.99/yr, $99.99 lifetime, all USD, tax added at checkout** (Merchant-of-Record). Say the numbers, and say the currency. |
 | "Privacy / permissions?" | Point at the privacy page and the actual permission list. Do not hand-wave this one on HN. |
 
 ---
 
 ## 5. Reddit
 
-> **⛔ Before any block in this section: run the §7.2 check in [marketing-launch-plan.md](marketing-launch-plan.md).**
-> `reddit.com` was blocked by policy in the environment this kit was written in, so **no rule below was read first-hand.** Each sub is tagged with what's corroborated vs. what must be verified. If a check contradicts anything here, the sub's actual rules win.
+> **⛔ VERIFY BEFORE POSTING — every sub below.**
+> `reddit.com` is blocked by policy in the environment this kit was written in, so **no rule text below was read first-hand.** Each sub carries a `VERIFY BEFORE POSTING` box listing exactly what to check. Open the sub's sidebar and rules page, spend five minutes, and if anything contradicts this file **the sub's actual rules win**. A ban on the best-matched sub is the highest-severity GTM failure available and it is not reversible by apologising.
 >
-> **Universal rules, corroborated across sources:** roughly **90/10** — most of your activity should be genuine participation, not promotion. Disclose that you built it, always. Never post the same text in two subs. **Never post an affiliate or referral link.** One sub at a time, not a same-day sweep.
+> **Universal rules, corroborated across sources:** roughly **90/10** — most of your activity should be genuine participation, not promotion. Disclose that you built it, always. Never post the same text in two subs — Reddit's spam filter catches duplicates across subs, and so do mods. **Never post an affiliate or referral link.** One sub at a time, not a same-day sweep.
+
+### 5.0 Scope for this window — and what is deliberately excluded
+
+**In scope now: builder subs and study subs that permit disclosed self-promotion.** Those are §5.1–§5.4, plus the weekly-thread fallback in §5.6.
+
+**⛔ Explicitly NOT in this window: r/medicalschoolanki, r/step1, r/step2, r/usmle, r/medicalschool, r/Mcat**, and the general study subs r/productivity, r/GetStudying, r/studytips.
+
+This is not squeamishness — those are the **best-matched** audiences for the wedge, which is exactly why they are excluded. They are high-trust communities with low tolerance for a first-post product drop, and med subs in particular treat vendor posts as an attack on the sub. `community-engagement-plan.md` commits to **weeks of genuine participation before posting there**, and calls a ban there the worst outcome available to this launch. Treat them as a multi-week post-launch play, not launch inventory. Med is a *channel*, not the product's identity (§0 rule 4) — and nothing in the launch copy should be med-framed.
 
 ### 5.1 r/SideProject — Day 1, 09:00 ET
 
-**Rule status:** *Corroborated* — this is the rare sub where posting your own project in the main feed is the intended behaviour, and it does **not** publish a sub-specific self-promo rule, so the site-wide norm applies. It **does** enforce that posts show real progress (screenshots, working demo) — *"just an idea"* posts get removed — and bans repeat submissions of the same project in a short window. Reciprocity is the social contract: comment on other people's projects too.
-**Still verify:** flair requirements and any karma/age gate.
+> **📋 Self-promo rule — VERIFY BEFORE POSTING**
+> **Corroborated:** this is the rare sub where posting your own project in the main feed **is** the intended behaviour, and it publishes no sub-specific self-promo ratio, so the site-wide 90/10 norm applies. It **does** enforce that posts show real progress — screenshots or a working demo; *"just an idea"* posts get removed — and it bans repeat submissions of the same project in a short window.
+> **Verify:** flair requirement · karma/account-age gate · whether ClipMark has been posted here before (repeat-submission rule).
+> **Social contract:** comment on a few other people's projects the same day. Reciprocity is the norm here and mods notice drive-bys.
 
-**Post — attach a screen capture of the recall prompt or the A–B loop.**
+**Post — attach a screen capture of the recall prompt or the A–B loop.** This sub removes text-only project posts.
 
 Title:
 ```
-I built a Chrome extension that pauses YouTube days later and quizzes you on the moment you bookmarked
+I built a Chrome extension that pauses YouTube days later and quizzes you on the moment you bookmarked — with the AI running locally
 ```
 
 Body:
@@ -547,41 +659,48 @@ Body:
 I kept rewatching lectures I'd already understood, because a week later there
 was nothing left of them.
 
-Loopers let me replay a section but I still forgot it. Summarizers gave me AI
-text that wasn't what the lecturer said. Note apps wanted me to leave the video.
-
-So I built ClipMark to do the missing part — retrieval:
+So I built ClipMark. One job: actually remember what you study on YouTube.
 
 - One keystroke saves the exact second, no pausing or tab-switching
 - Mark A, mark B, and it loops that passage. Several segments per video
 - Days later the video pauses and shows the timestamp and tags with your note
   hidden. You try to recall it, then reveal and replay to check. "Got it"
   doubles the interval, "again" brings it back tomorrow
-- Every review links to the real second in the real video, never a summary
-- One-click export to an Anki-importable file, because this feeds Anki rather
-  than replacing it
+- One-click export to an Anki-importable file — this feeds Anki, doesn't
+  replace it
 
-The thing I found interesting building it: a loop and a flashcard turned out to
-be the same object, so I made them one thing instead of two features.
+Two implementation choices I'd actually like feedback on:
+
+1. The AI note drafting runs on Chrome's built-in on-device model, so
+   transcripts never leave the machine. No server, no per-user inference cost,
+   which is why I could put it on the free tier instead of behind Pro. Tradeoff
+   is it only works on Chromium with the model available.
+
+2. There are other tools that quiz you on YouTube videos, and they generate the
+   questions from the transcript. I went the other way: it hides the note YOU
+   wrote and replays the exact second as the answer key. Betting that checking
+   your own encoding beats answering a model's multiple choice — but that's a
+   bet, not a finding.
 
 Free tier is unlimited local bookmarks, 25 review moments at a time, 30 reviews
-a month, 10 Anki exports a month, and it works without an account. Paid removes
-the caps and adds sync.
+a month, 10 Anki exports a month, works with no account. Paid removes the caps
+and adds sync.
 
-Built solo. Chromium-only for now, and the review scheduler is a plain doubling
-interval rather than a real FSRS implementation — both on the list.
+Built solo. Chromium-only for now, and the scheduler is a plain doubling
+interval, not FSRS — I don't want to claim otherwise. Both on the list.
 
 https://clipmark.mithahara.com
 
-What I'd most like feedback on: does the "pause and ask before replaying" bit
-land, or does it just feel annoying? That's the whole bet and I can't tell from
-the inside.
+What I'd most like feedback on: does "pause and ask before replaying" land, or
+does it just feel annoying? That's the whole bet and I can't tell from inside.
 ```
 
 ### 5.2 r/chrome_extensions — Day 2, 12:00 ET
 
-**Rule status:** ⚠️ **UNVERIFIED.** I could not retrieve this sub's rules. Builder-oriented extension subs commonly permit "I made an extension" posts, but that is an assumption, not a checked fact.
-**Check for:** self-promo ban, a dedicated showcase/weekly thread, flair requirement, karma/age gate. If it's weekly-thread-only, use variant B in §5.6.
+> **📋 Self-promo rule — ⚠️ UNVERIFIED, VERIFY BEFORE POSTING**
+> I could not retrieve this sub's rules. Builder-oriented extension subs commonly permit "I made an extension" posts, but that is an **assumption, not a checked fact**.
+> **Verify:** whether self-promo is banned outright · whether a dedicated showcase or weekly thread is the only permitted route (if so → use §5.6) · flair requirement · karma/age gate · whether a Web Store link in the body is allowed or must go in a comment.
+> **Framing that helps here:** this sub rewards build detail over product pitch. The post below leads with two MV3 problems and treats the product as context. Keep it that way.
 
 Title:
 ```
@@ -608,6 +727,15 @@ Two things bit me that might save someone else the afternoon:
    for the scheduling side. Obvious in hindsight, invisible until reminders
    silently stopped firing.
 
+3. Chrome's built-in on-device model (Gemini Nano via the LanguageModel API) is
+   genuinely usable now, and it changed what I could afford to give away. Note
+   drafting runs locally, so there's no server, no per-user inference cost, and
+   no transcript ever leaves the machine — which meant I could put AI drafting
+   on the free tier rather than behind the paywall. Caveats worth knowing before
+   you build on it: availability is not guaranteed on every install, the model
+   downloads on first use, and you need a real fallback path for when it isn't
+   there.
+
 Also worth knowing if you touch YouTube: it's an SPA, so you want
 `yt-navigate-finish` rather than page loads, or your injected UI survives into a
 video it doesn't belong to.
@@ -622,9 +750,10 @@ a convention held together by tests.
 
 ### 5.3 r/Anki — Day 2, 14:00 ET (pick this **or** §5.4, not both)
 
-**Rule status:** ⚠️ **UNVERIFIED.** Third-party sources indicate r/Anki recognises a "Self-Promotion" post category, which suggests promotion is permitted with appropriate flair — **but I could not read the rules.**
-**Check for:** the flair requirement (very likely), any mod-preclearance step, karma/age gate.
-**Framing is everything here.** This audience will assume you're trying to replace Anki. Lead with the opposite.
+> **📋 Self-promo rule — ⚠️ UNVERIFIED, VERIFY BEFORE POSTING**
+> Third-party sources indicate r/Anki recognises a **"Self-Promotion" post flair**, which suggests promotion is permitted *with* that flair — **but I could not read the rules first-hand.**
+> **Verify:** the flair requirement (very likely mandatory) · any mod pre-clearance step · karma/age gate · whether free-tier-limited tools are treated as "commercial."
+> **Framing is everything here.** This audience will assume you're trying to replace Anki, and they are protective of it. Lead with the opposite and never imply your scheduler competes with theirs.
 
 Title:
 ```
@@ -659,6 +788,11 @@ inside ClipMark exists to work out which moments deserve a card at all, and the
 export is the handoff. I'm not trying to build a better scheduler than Anki, and
 I'd be a fool to.
 
+One thing that may matter to this sub specifically: the AI note drafting runs on
+Chrome's built-in on-device model, so lecture transcripts never leave your
+machine. If you're working from licensed course material, nothing gets uploaded
+anywhere — including to me.
+
 Free tier includes the capture, the loops, the review loop and 10 Anki exports a
 month — enough to run a full lecture through it and see if the workflow fits.
 Paid removes the caps.
@@ -672,8 +806,10 @@ exists? I've built it as a link-back and I'm not sure that's right.
 
 ### 5.4 r/languagelearning — Day 2, 14:00 ET (alternative to §5.3)
 
-**Rule status:** ⚠️ **UNVERIFIED, and this sub is likely restrictive.** Large language-learning communities commonly restrict tool/app promotion to a **weekly or pinned megathread**, and often ban it outright in the main feed.
-**Default assumption: use the weekly thread, comment form only. Do not make a top-level post unless the rules explicitly allow it.**
+> **📋 Self-promo rule — ⚠️ UNVERIFIED, AND LIKELY RESTRICTIVE. VERIFY BEFORE POSTING**
+> Large language-learning communities commonly restrict tool/app promotion to a **weekly or pinned megathread**, and often ban it outright in the main feed.
+> **Default assumption: weekly thread, comment form only. Do NOT make a top-level post unless the rules explicitly permit it.**
+> **Verify:** whether a self-promo megathread exists and its cadence · whether "I built this" is allowed in the main feed at all · karma/age gate · whether links are permitted in comments.
 
 **Comment for the weekly self-promo / tools thread:**
 
@@ -700,7 +836,9 @@ you'd rather just have the raw loop.
 
 ### 5.5 One more, if a check clears it
 
-**r/GetStudying / r/studytips / r/EdTech** — ⚠️ **UNVERIFIED and probably restrictive.** Study subs are typically strict about tool promotion. **Default: skip in the 2-day window**, and put them on the long-game track in [community-engagement-plan.md](community-engagement-plan.md). Only if a check shows promotion is explicitly permitted, use the workflow-framed variant:
+> **📋 r/GetStudying · r/studytips · r/EdTech — ⚠️ UNVERIFIED AND PROBABLY RESTRICTIVE**
+> **Default: SKIP these in the launch window** (§5.0). Study subs are typically strict about tool promotion, and these sit next door to the med communities we're deliberately not touching yet. Put them on the long-game track in [community-engagement-plan.md](community-engagement-plan.md).
+> **Only if a rules check shows promotion is explicitly permitted**, use the workflow-framed variant below — it is written to be useful even to someone who installs nothing, which is the only form of tool post these subs tolerate.
 
 Title:
 ```
@@ -747,8 +885,11 @@ Disclosure: mine, and free to use.
 
 ClipMark is a Chrome extension that saves the exact second of a YouTube video,
 loops an A–B passage, and then pauses the video days later to quiz you on that
-moment before replaying it — note hidden, so you have to actually recall it.
-Exports to Anki; doesn't try to replace it.
+moment before replaying it — your own note hidden, the clip itself as the answer
+key. Exports to Anki; doesn't try to replace it.
+
+The AI note drafting runs on Chrome's on-device model, so nothing you watch gets
+uploaded anywhere.
 
 Free tier works without an account. https://clipmark.mithahara.com
 
@@ -892,7 +1033,9 @@ the pricing page, not hidden behind an install. Ask me anything.
 
 ## 8. Pre-post checklist — run once per post
 
-- [ ] Zero dark-mode claims, **or** v1.0.4 is confirmed live on the CWS listing
+- [ ] **The retired claim (§0 rule 1) appears nowhere** — no "only tool that quizzes you" in any phrasing
+- [ ] **Free-tier export number matches the PUBLISHED build** — 10/mo only once v1.0.7 is live (see timing note)
+- [ ] Every screenshot/claim matches the *published* version, not `main`
 - [ ] No user/install/rating/revenue numbers about ClipMark
 - [ ] "Export," never "sync," for Notion/Obsidian
 - [ ] Free-tier caps stated as real numbers wherever the free tier is mentioned

@@ -17,7 +17,9 @@ The beta listing is currently live with the wrong casing and (possibly) stale co
    - Any mention of **Deep Transcript Search**, **Lifetime Cloud Archiving**, **Permanent Transcript Archiving**, or **"early access to labs"** — none of these are built; they're `ComingSoon`-tagged on the pricing page and must not appear in the store listing as if live.
    - Any claim of unlimited free usage where a real cap exists — Free is capped (25 Active Recall segments standing, 30 reviews/mo, 10 Anki exports/mo, 10 shared collections); **Pro is unlimited** on all of those. Say it that way, not "unlimited" across the board.
 
-Everything below is written clean against those three constraints — safe to paste as-is.
+4. **⚠️ Do not paste the "10 Anki exports a month" line until v1.0.7 is the uploaded package.** The copy below describes v1.0.7 (`main`). The currently published build is **v1.0.6, which caps free Anki export at 1/month.** Publishing listing copy that promises 10 against a package that allows 1 is a mis-sell on the highest-traffic surface ClipMark has — and the store listing is slower to correct than the website. **Upload the v1.0.7 package first, then paste this copy.** See the timing note in [posting-kit.md](posting-kit.md).
+
+Everything below is written clean against those constraints — safe to paste as-is **once #4 is satisfied**.
 
 ---
 
@@ -37,8 +39,14 @@ ClipMark — Study Smarter with YouTube Flashcards
 
 **Field:** Store listing → *Summary*
 **Limit:** 132 characters max
-**Character count of the pick below: 90 / 132**
+**Character count of the pick below: 122 / 132**
 **Paste this:**
+
+```
+Capture YouTube timestamps, quiz yourself with spaced repetition, export to Anki. AI runs on your device, not on a server.
+```
+
+*Updated 2026-08-17 to carry the on-device AI lead (`posting-kit.md` §0 rule 3) — it is the one differentiator no competitor in `COMPETITIVE-BRIEF.md` offers, and the store summary is the highest-traffic 132 characters ClipMark owns. Previous version (90 chars), still accurate if the longer one reads as cluttered in the dashboard preview:*
 
 ```
 Capture YouTube timestamps, quiz yourself with spaced repetition, export straight to Anki.
