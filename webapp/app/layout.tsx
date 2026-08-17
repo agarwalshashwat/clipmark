@@ -10,6 +10,8 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './components/ThemeProvider';
+import { ConsentProvider } from './components/ConsentProvider';
+import { CookieConsent } from './components/CookieConsent';
 import { SiteAnalytics } from './components/SiteAnalytics';
 import { APP_URL, CHROME_STORE_URL } from './lib/constants';
 import { ogImageUrl } from './lib/seo';
@@ -137,9 +139,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
-        {/* Website visitor analytics. See components/SiteAnalytics.tsx for what it
-            does and does not collect, and why /embed/* is excluded. */}
+        {/* ConsentProvider is the gate every NON-essential cookie or tracker goes
+            through — today the affiliate/referral attribution cookies, next the
+            extension's feature-usage analytics. It reads its answer from a
+            cookie on the client so the marketing pages stay statically
+            rendered; see components/ConsentProvider.tsx. */}
+        <ThemeProvider>
+          <ConsentProvider>
+            {children}
+            <CookieConsent />
+          </ConsentProvider>
+        </ThemeProvider>
+        {/* Website visitor analytics. Cookieless and anonymous — Vercel sets
+            nothing on the device and identifies visitors by a hash of the
+            incoming request that is discarded after 24h — so it sits OUTSIDE
+            the consent gate by design, not by oversight. See
+            components/SiteAnalytics.tsx and §3/§6 of /privacy. */}
         <SiteAnalytics />
       </body>
     </html>

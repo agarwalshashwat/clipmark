@@ -800,3 +800,195 @@ html.cm-js-reveal .cm-reveal--visible {
   .fb-submit { width: 100%; }
   .fb-ghost { width: 100%; }
 }
+
+/* ── Cookie consent banner ─────────────────────────────────────────────────── */
+/* Presentation for components/CookieConsent.tsx. Every colour is a semantic
+   token, never a raw ramp step, so the panel follows dark mode — the dark-mode
+   sweep in tests/ci/webapp-smoke.spec.ts would otherwise catch it as a light
+   slab pinned over a dark page, which is how the footer regressed once already.
+
+   Deliberately NOT a modal: no scrim, no scroll lock. Consent must be a real
+   choice, and a wall that only clears by answering is not one. */
+.cc-root {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 200;             /* over the sticky nav (50) and the dashboard chrome */
+  display: flex;
+  justify-content: center;
+  outline: none;            /* focus lands here on open; .cc-panel draws the ring */
+  animation: cc-rise 0.24s ease-out;
+}
+/* :focus, not :focus-visible — the banner is tabIndex=-1, so the only way it
+   receives focus is the programmatic .focus() on open, and Chrome's
+   focus-visible heuristic does not light up for that. Without the ring a
+   screen-reader or keyboard user is moved somewhere they cannot see. */
+.cc-root:focus .cc-panel {
+  box-shadow: var(--shadow-lg), 0 0 0 3px var(--focus-ring);
+}
+
+@keyframes cc-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-root { animation: none; }
+}
+
+.cc-panel {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.cc-copy { flex: 1 1 auto; min-width: 0; }
+
+.cc-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 32px 6px 0;     /* right gap keeps the close button off the title */
+}
+
+.cc-body {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--text-sub);
+  margin: 0;
+}
+
+.cc-meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+
+.cc-link {
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+/* Equal-width columns rather than flex, so the two buttons come out identical
+   even though "Reject optional" and "Accept optional" render 6px apart. Sizing
+   to content made reject the visibly smaller of the two, which is the shape
+   regulators read as nudging. */
+.cc-actions {
+  flex: 0 0 auto;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 12px;
+}
+
+/* Accept and Reject are the same shape and size on purpose — rejecting has to
+   be as easy as accepting. The only difference is fill vs outline, and the
+   outline is 2px of --text-sub (9.4:1 light / 9.9:1 dark on --surface) so it
+   still clears WCAG 1.4.11 for a non-text control boundary. */
+.cc-btn {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.2;
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  min-height: 44px;         /* touch target */
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.cc-btn:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.cc-btn-accept {
+  background: var(--accent-strong);
+  color: var(--on-primary);
+  border: 2px solid var(--accent-strong);
+}
+.cc-btn-accept:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.cc-btn-reject {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--text-sub);
+}
+.cc-btn-reject:hover { background: var(--surface-alt); }
+
+.cc-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.cc-close:hover { background: var(--surface-alt); color: var(--text); }
+.cc-close:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.cc-close .material-symbols-outlined { font-size: 20px; }
+
+/* The "change your choice" trigger. A <button> that has to read as a link, so
+   the browser's default button chrome is stripped rather than restyled. */
+.cc-pref-link,
+.cc-pref-inline {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.cc-pref-inline {
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.cc-pref-link:focus-visible,
+.cc-pref-inline:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* Below the panel's natural two-column width the copy stacks above the buttons,
+   which then split the row evenly — still side by side, still equal weight. */
+@media (max-width: 720px) {
+  .cc-root { left: 12px; right: 12px; bottom: 12px; }
+  .cc-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px;
+  }
+  .cc-actions { width: 100%; }
+  .cc-btn { padding: 12px 10px; }
+}
+
+/* At 375px "Reject optional" is the widest label the row can hold; letting it
+   wrap is better than letting it overflow the panel. */
+@media (max-width: 400px) {
+  .cc-btn { white-space: normal; }
+}
