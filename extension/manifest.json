@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "ClipMark",
+  "name": "ClipMark: YouTube Notes, Flashcards & Spaced Repetition",
   "short_name": "ClipMark",
   "version": "1.0.7",
-  "description": "Capture YouTube timestamps, quiz yourself with spaced-repetition Active Recall, and export straight to Anki.",
+  "description": "YouTube notes and flashcards that quiz you back: timestamps, spaced repetition, Anki export. AI runs on your device.",
   "permissions": [
     "storage",
     "activeTab",
