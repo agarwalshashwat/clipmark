@@ -12,7 +12,7 @@
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import '../tour-theme.css';
-import { shouldMarkTourSeen, shouldStartYoutubeTour } from '../tour-state.js';
+import { hasSeenYoutubeTour, shouldMarkTourSeen, shouldStartYoutubeTour } from '../tour-state.js';
 
 const TOUR_POPOVER_CLASS = 'clipmark-tour-popover';
 
@@ -50,10 +50,10 @@ function getBookmarkCount(videoId) {
   });
 }
 
-function getTourState() {
+function readArea(area) {
   return new Promise((resolve) => {
     try {
-      chrome.storage.sync.get({ tourState: {} }, (result) => {
+      chrome.storage[area].get({ tourState: {} }, (result) => {
         resolve(chrome.runtime.lastError ? {} : result.tourState || {});
       });
     } catch {
@@ -62,24 +62,74 @@ function getTourState() {
   });
 }
 
+/**
+ * The tour state as both storage areas see it. `sync` is authoritative for
+ * everything except the one-shot flag, which is believed from either area —
+ * see hasSeenYoutubeTour in ../tour-state.js for why the local mirror exists.
+ */
+async function getTourState() {
+  const [syncState, localState] = await Promise.all([readArea('sync'), readArea('local')]);
+  return { ...localState, ...syncState, youtubeTour: hasSeenYoutubeTour({ syncState, localState }) };
+}
+
 // Set once the flag has been persisted for this page, so the several
 // acknowledgement paths below (onDestroyStarted, onDestroyed, overlay click) can
 // all call markYoutubeTourSeen defensively without spending extra
 // chrome.storage.sync writes on the same one-shot.
 let markedSeen = false;
 
+// Last-resort, in-memory backstop: the user ended a tour on this page, whatever
+// storage did about it. Both areas refusing a write is not a reason to show the
+// tour again on the next video — that is the endless-tour bug in its purest
+// form, and the one thing the user cannot escape. This suppresses it for the
+// rest of the session (until the tab or SPA session goes away), by which point
+// a healthy write will normally have landed. It deliberately does NOT persist:
+// if storage really is unwritable, a fresh session offering the tour once more
+// is the correct, bounded fallback.
+let endedThisSession = false;
+
+/**
+ * Last-resort mirror of the one-shot flag in chrome.storage.local.
+ *
+ * Only reached when sync refused the write. local is per-machine so it does not
+ * follow the user, but it is not subject to sync's quota or rate limits — and a
+ * flag that stops the tour on THIS machine is strictly better than a tour that
+ * cannot be dismissed at all. getTourState() believes either area.
+ */
+function mirrorSeenLocally() {
+  try {
+    chrome.storage.local.get({ tourState: {} }, (result) => {
+      if (chrome.runtime.lastError) { markedSeen = false; return; }
+      const tourState = { ...(result.tourState || {}), youtubeTour: true };
+      chrome.storage.local.set({ tourState }, () => {
+        // Both areas refused. `endedThisSession` already suppresses the tour for
+        // the rest of this session, so allowing a retry here costs nothing and
+        // may still catch a write once quota/rate pressure clears.
+        if (chrome.runtime.lastError) markedSeen = false;
+      });
+    });
+  } catch {
+    markedSeen = false;
+  }
+}
+
 function markYoutubeTourSeen() {
   if (markedSeen) return;
   markedSeen = true;
   try {
     chrome.storage.sync.get({ tourState: {} }, (result) => {
-      if (chrome.runtime.lastError) { markedSeen = false; return; }
-      const tourState = { ...(result.tourState || {}), youtubeTour: true };
+      // A read failure says nothing about whether a write would land, and the
+      // spread below is only needed to preserve sidePanelTour — so fall through
+      // with what we have rather than giving up on persisting anything.
+      const existing = chrome.runtime.lastError ? {} : (result.tourState || {});
+      const tourState = { ...existing, youtubeTour: true };
       chrome.storage.sync.set({ tourState }, () => {
-        // A failed write must not be silent: leaving markedSeen true would make
-        // this page believe the one-shot was spent when nothing was stored, and
-        // the tour would come back on the next video with no way to stop it.
-        if (chrome.runtime.lastError) markedSeen = false;
+        // The write can fail for reasons that will still be true on the next
+        // video — sync QUOTA_BYTES exhausted by saved bookmarks, the per-minute
+        // write cap, or sync disabled on the profile. Retrying forever means the
+        // tour re-appears on every single video with no way for the user to stop
+        // it, which is the exact bug this guards. Mirror to local instead.
+        if (chrome.runtime.lastError) mirrorSeenLocally();
       });
     });
   } catch {
@@ -96,7 +146,11 @@ function markYoutubeTourSeen() {
  * those paths silently not storing it.
  */
 function markSeenIfShown() {
-  if (shouldMarkTourSeen({ stepShown, abandonedForNavigation })) markYoutubeTourSeen();
+  if (!shouldMarkTourSeen({ stepShown, abandonedForNavigation })) return;
+  // Set before the async write, and independently of whether it lands — this is
+  // the record that the USER ended the tour, not that storage agreed.
+  endedThisSession = true;
+  markYoutubeTourSeen();
 }
 
 function buildSteps(hasBookmark) {
@@ -193,8 +247,27 @@ let abandonedForNavigation = false;
 // the very video it fired on. Cleared when an attempt gives up or a tour ends.
 let tourVideoId = null;
 
+/**
+ * True once this content script has been orphaned — the extension was updated,
+ * reloaded or disabled while the page stayed open. Every chrome.* call then
+ * throws "Extension context invalidated", and `chrome.runtime.id` is the cheap
+ * synchronous tell. Without this the yt-navigate-finish listener keeps calling
+ * startYoutubeTour on a dead context for as long as the tab lives.
+ */
+function isContextInvalidated() {
+  try {
+    return !chrome.runtime?.id;
+  } catch {
+    return true;
+  }
+}
+
 async function startYoutubeTour() {
   if (starting || tourInstance) return;
+  if (isContextInvalidated()) return;
+  // The user already ended a tour in this session; a storage write that never
+  // landed must not bring it back on the next video.
+  if (endedThisSession) return;
   if (!isWatchPage()) return;
   if (!shouldStartYoutubeTour(await getTourState())) return;
 
@@ -305,6 +378,9 @@ async function startYoutubeTour() {
 // marking the tour seen — so a first-run user could neither finish it nor get
 // rid of it. Gate on the video id actually changing.
 document.addEventListener('yt-navigate-finish', () => {
+  // Orphaned by an extension update/reload while this tab stayed open: every
+  // chrome.* call below would throw. Nothing left to drive.
+  if (isContextInvalidated()) return;
   const nextVideoId = currentVideoId();
   if (nextVideoId && nextVideoId === tourVideoId) return; // same video — not a navigation
 

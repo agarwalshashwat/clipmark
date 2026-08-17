@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/app/lib/seo';
 import { PRIVACY_EMAIL } from '@/app/lib/constants';
+import { CookiePreferencesButton } from '@/app/components/CookiePreferencesButton';
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Privacy Policy — ClipMark',
@@ -27,6 +28,17 @@ const P_STYLE = {
   color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 12,
+};
+
+// §6 is the only section long enough to need a third level. Sized between H2 and
+// body so the essential/optional split reads as a real division of the section.
+const H3_STYLE = {
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+  marginTop: 28,
 };
 
 const UL_STYLE = {
@@ -56,7 +68,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 0 }}>
-            Last updated: March 25, 2026 • We respect your data.
+            Last updated: August 17, 2026 • We respect your data.
           </p>
         </div>
 
@@ -114,7 +126,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like note drafting are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
             <li style={LI_STYLE}><strong>Dodo Payments</strong> — our payment processor and <strong>Merchant of Record</strong>, meaning Dodo is the seller of record for Pro purchases and handles billing and tax remittance. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
             <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel&apos;s Privacy Policy</a>.</li>
-            <li style={LI_STYLE}><strong>Vercel Web Analytics</strong> — aggregate visitor counts for this website (pages viewed, referrer, country, device type). It sets no cookies, does not fingerprint you, and cannot follow you to other sites, so there is nothing here to consent to or opt out of. It does not run inside the extension and never sees your bookmarks.</li>
+            <li style={LI_STYLE}><strong>Vercel Web Analytics</strong> — aggregate visitor counts for this website (pages viewed, referrer, country, device type). It sets <strong>no cookies</strong> and stores nothing on your device; repeat visits within a day are recognised by a hash derived from the incoming request, which is discarded after 24 hours, so it cannot follow you across sites or from one day to the next. Because nothing is stored on or read from your device, there is no cookie consent to give here — see §6 for what that does and does not mean. It does not run inside the extension and never sees your bookmarks.</li>
           </ul>
         </div>
 
@@ -166,30 +178,67 @@ export default function PrivacyPage() {
             We process your bookmarks and account data to <em>perform the contract</em> you enter
             into by using ClipMark; we rely on <em>legitimate interests</em> for keeping the service
             secure and for the aggregate, cookieless site measurement described above; and we rely on{' '}
-            <em>consent</em> where you volunteer something optional, such as an email address on a
-            feedback or uninstall form. You can withdraw that consent at any time by asking us to
-            delete it. Data is stored in the United States (see §3).
+            <em>consent</em> for the optional attribution cookies in §6 and wherever you volunteer
+            something optional, such as an email address on a feedback or uninstall form. You can
+            withdraw that consent at any time — through the cookie preferences control for §6, or
+            by asking us to delete anything you volunteered. Data is stored in the United States
+            (see §3).
           </p>
         </div>
 
-        <div className="cm-card" style={{ marginBottom: 32, padding: '40px' }}>
+        <div className="cm-card" id="cookies" style={{ marginBottom: 32, padding: '40px', scrollMarginTop: 96 }}>
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>cookie</span>
           </div>
           <h2 style={H2_STYLE}>6. Cookies</h2>
-          <p style={P_STYLE}>ClipMark sets a small number of cookies. None of them are advertising cookies, and none are used to build a profile of you:</p>
+          <p style={P_STYLE}>
+            ClipMark sets a small number of cookies. None of them are advertising cookies,
+            none are third-party cookies, and none are used to build a profile of you. They
+            fall into two groups, and the difference decides whether we ask you first.
+          </p>
+
+          <h3 style={H3_STYLE}>Strictly necessary — always on</h3>
+          <p style={P_STYLE}>
+            These deliver the service you asked for. Without them the site cannot work, so
+            they do not require consent and the banner does not offer to turn them off.
+          </p>
           <ul style={UL_STYLE}>
-            <li style={LI_STYLE}><strong>Sign-in cookies</strong> — set by Supabase when you sign in, to keep you signed in. Strictly necessary; without them the dashboard cannot know who you are.</li>
+            <li style={LI_STYLE}><strong>Sign-in cookies</strong> — set by Supabase when you sign in, to keep you signed in. Without them the dashboard cannot know who you are.</li>
+            <li style={LI_STYLE}><strong><code>clipmark_consent</code></strong> — remembers your answer to the cookie banner for six months, so we neither ask you on every page nor act on an answer you did not give. It stores only your choice and the date you made it.</li>
+          </ul>
+
+          <h3 style={H3_STYLE}>Optional — only with your consent</h3>
+          <p style={P_STYLE}>
+            These are for us, not for you: they credit whoever sent you to ClipMark. Nothing
+            about the product stops working without them. We set them only if you choose
+            &quot;Accept optional&quot; on the cookie banner, and never before.
+          </p>
+          <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong><code>clipmark_ref</code></strong> — set for <strong>30 days</strong> when you arrive through an affiliate link (a <code>/r/&lt;code&gt;</code> URL). It stores only that affiliate&apos;s code so the referrer is credited if you later upgrade, and it is set only on the first such visit — a later affiliate link will not overwrite it. It is <code>httpOnly</code> and <code>SameSite=Lax</code>, so it is not readable by page scripts and is not sent to other sites. It contains no identifier for you.</li>
-            <li style={LI_STYLE}><strong>Theme preference</strong> — stored in your browser&apos;s local storage, not a cookie, and never sent to us.</li>
+            <li style={LI_STYLE}><strong><code>clipmark_user_ref</code></strong> — the same thing for a referral link shared by another ClipMark user (a <code>/ref/&lt;code&gt;</code> URL): 30 days, first click wins, the referrer&apos;s code and nothing else.</li>
           </ul>
           <p style={P_STYLE}>
-            The sign-in cookies are strictly necessary, so they do not require consent. The
-            <code> clipmark_ref</code> attribution cookie is not strictly necessary: if you would
-            rather not have it, decline it by visiting ClipMark directly instead of through an
-            affiliate link, or clear it in your browser at any time — nothing about the product
-            stops working without it. We do not currently show a cookie banner; you can block or
-            delete any of these cookies through your browser settings.
+            If you arrive through one of those links and have not answered the banner yet,
+            the code travels in the page address only. We store nothing on your device unless
+            and until you accept — and if you decline, or simply never answer, no attribution
+            cookie is ever set.
+          </p>
+
+          <h3 style={H3_STYLE}>Not cookies at all</h3>
+          <ul style={UL_STYLE}>
+            <li style={LI_STYLE}><strong>Theme preference</strong> — stored in your browser&apos;s local storage, not a cookie, and never sent to us.</li>
+            <li style={LI_STYLE}><strong>Visitor statistics</strong> — Vercel Web Analytics (§3) stores nothing on your device and reads nothing from it. It counts unique visitors using a hash derived from the incoming request, which is discarded after 24 hours and cannot be used to follow you across sites or from one day to the next. That means there is no cookie here to consent to — but it is not <em>nothing</em>: we still receive the aggregate figures listed in §3, and we rely on legitimate interests for them (§5). If you object, tell us at{' '}
+              <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)' }}>{PRIVACY_EMAIL}</a>.</li>
+          </ul>
+
+          <h3 style={H3_STYLE}>Changing your mind</h3>
+          <p style={P_STYLE}>
+            Withdrawing consent is as easy as giving it. Use{' '}
+            <CookiePreferencesButton variant="inline">the cookie preferences control</CookiePreferencesButton>{' '}
+            here or the same link in the footer of every page — the banner reopens and your
+            new answer replaces the old one immediately. Choosing &quot;Reject optional&quot;
+            also deletes any attribution cookie you already had. You can additionally block or
+            delete any of these cookies through your browser settings at any time.
           </p>
         </div>
 

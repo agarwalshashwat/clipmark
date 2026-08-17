@@ -27,6 +27,7 @@ import { GET as resolveAffiliateCode } from '../../app/r/[code]/route.js';
 import { adminClient, anonClient } from './fixtures/supabase.js';
 import { createTestUser, type TestUser } from './fixtures/seed.js';
 import { makeRequest, fakeDodo, fakeDodoDiscounts } from '../unit/fixtures/fakes.js';
+import { CONSENT_COOKIE, makeConsentRecord, serializeConsent } from '../../app/lib/consent.js';
 
 const admin = adminClient();
 
@@ -149,8 +150,17 @@ describe('admin set-affiliate (integration)', () => {
     assert.equal(grantRes.status, 200);
 
     // Code resolves via the real, unmodified /r/[code] route.
+    //
+    // `clipmark_ref` is a non-essential marketing cookie, so the route sets it
+    // only where consent is already on record — the visitor here arrives with
+    // an "accept" cookie, which is what the consent banner writes. The
+    // no-consent case is asserted separately below; both directions matter,
+    // because a route that set the cookie unconditionally would still pass the
+    // conversion assertions that follow.
     const resolveRes = await resolveAffiliateCode(
-      new NextRequest('http://localhost/r/e2ecreator'),
+      new NextRequest('http://localhost/r/e2ecreator', {
+        headers: { cookie: `${CONSENT_COOKIE}=${serializeConsent(makeConsentRecord(true, Date.now()))}` },
+      }),
       { params: Promise.resolve({ code: 'e2ecreator' }) },
     );
     assert.ok(resolveRes instanceof NextResponse);
@@ -189,5 +199,53 @@ describe('admin set-affiliate (integration)', () => {
     assert.equal(Number(row.commission_rate), 0.4, 'uses the admin-set 40% rate, not the 30% self-serve default');
     assert.equal(Number(row.commission_usd), 4, '$10 * 0.40 = $4');
     assert.equal(row.status, 'pending');
+  });
+
+  // The other half of the consent gate, against the real route and the real DB.
+  // `clipmark_ref` is a marketing cookie under UK PECR reg. 6, so a visitor who
+  // has not answered the banner — which is EVERY first-time visitor, since /r is
+  // the first request they make — must be redirected without one. The click is
+  // still recorded: that row lives on our server and stores nothing on the
+  // visitor's device, so the affiliate's click count is unaffected by the answer.
+  it('does not set the attribution cookie without consent, but still counts the click', async () => {
+    const creator = await createTestUser('creator-noconsent@example.test');
+    await setAffiliate(adminUser.accessToken, {
+      userId: creator.id,
+      affiliateCode: 'noconsentcreator',
+      commissionRate: 30,
+      approve: true,
+    });
+
+    const before = await admin
+      .from('affiliate_clicks')
+      .select('id', { count: 'exact', head: true })
+      .eq('affiliate_code', 'noconsentcreator');
+
+    for (const [label, cookie] of [
+      ['no consent cookie at all', undefined],
+      ['optional cookies rejected', `${CONSENT_COOKIE}=${serializeConsent(makeConsentRecord(false, Date.now()))}`],
+    ] as const) {
+      const res = await resolveAffiliateCode(
+        new NextRequest('http://localhost/r/noconsentcreator', {
+          headers: cookie ? { cookie } : {},
+        }),
+        { params: Promise.resolve({ code: 'noconsentcreator' }) },
+      );
+      assert.equal(res.status, 307, `${label}: still redirects`);
+      assert.ok(
+        res.headers.get('location')?.includes('ref=noconsentcreator'),
+        `${label}: the code still rides the redirect for the banner to claim`,
+      );
+      assert.ok(
+        !(res.headers.get('set-cookie') ?? '').includes('clipmark_ref='),
+        `${label}: must not set the attribution cookie`,
+      );
+    }
+
+    const after = await admin
+      .from('affiliate_clicks')
+      .select('id', { count: 'exact', head: true })
+      .eq('affiliate_code', 'noconsentcreator');
+    assert.equal((after.count ?? 0) - (before.count ?? 0), 2, 'both clicks are recorded regardless of consent');
   });
 });
