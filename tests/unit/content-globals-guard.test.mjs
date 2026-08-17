@@ -24,7 +24,8 @@ describe('assertContentGlobals', () => {
     const chunkD = exposing(['clipmarkReportError', 'clipmarkContentScriptVersion']);
     const chunkE = exposing(['countEnrolledRecallSegments', 'isEnrollmentCapReached', 'isMonthlyReviewCapReached', 'normalizeMonthlyCounter', 'isMonthlyReviewWarnThreshold', 'countSavedLoops', 'isSavedLoopCapReached']);
     const chunkF = exposing(['advanceLoop', 'loopEditAnchor', 'normalizeLoopSegment', 'isValidLoopSegment', 'isSameLoopSegment', 'insertLoopSegment', 'removeLoopSegment', 'updateLoopSegmentBound', 'needsOverlayRemount', 'shouldRebindVideo', 'loopEndForBookmark', 'loopSegmentsFromBookmarks', 'formatLoopClock', 'buildLoopBookmark', 'isDuplicateLoop', 'LOOP_CONSTANTS']);
-    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE, chunkF]), true);
+    const chunkG = exposing(['pruneVideoMaps', 'pruneMapToBudget', 'storageItemBytes']);
+    assert.equal(assertContentGlobals([chunkA, chunkB, chunkC, chunkD, chunkE, chunkF, chunkG]), true);
   });
 
   it('passes on minified-style assignments (no spaces)', () => {

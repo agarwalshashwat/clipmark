@@ -24,6 +24,10 @@ export const REQUIRED_CONTENT_GLOBALS = [
   'FONT_FAMILY_NATIVE',
   'TRANSCRIPT_TRUNCATE_LENGTH',
   'isPendingRevisionExpired',
+  // src/storage-maps.js
+  'pruneVideoMaps',
+  'pruneMapToBudget',
+  'storageItemBytes',
   // src/ai/local-ai.js
   'localSummarizeSnippet',
   // src/recall.js
