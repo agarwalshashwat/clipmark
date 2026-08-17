@@ -16,6 +16,17 @@
  * seen flag being set on genuine completion/dismissal and NOT on a real
  * navigation away mid-tour.
  *
+ * The watch pages here are a DETERMINISTIC stand-in served at the real
+ * youtube.com origin (tests/fixtures/youtube-watch.ts), not live YouTube.
+ * Issue #84: gating this suite in CI put eleven more live-YouTube page loads
+ * into `ci-extension-smoke`, so a single slow window at YouTube reddened a
+ * dozen tests — the anchor wait below was routinely the thing that timed out.
+ * None of what these tests assert is about YouTube's servers: the tour keys off
+ * `.yt-bookmark-player-btn` appearing, chrome.storage, and yt-navigate-finish,
+ * all of which the fixture reproduces faithfully (the player is mounted
+ * asynchronously after document_end, exactly as the real one is, which is what
+ * the content script's MutationObservers need in order to fire at all).
+ *
  * Requires `make ext-build` first (skips with a message otherwise).
  */
 import { test, expect, BrowserContext, Page, Worker } from '@playwright/test';
@@ -23,15 +34,21 @@ import { existsSync } from 'node:fs';
 import path from 'path';
 import {
   launchExtensionContext,
-  TEST_VIDEO_ID, TEST_VIDEO_URL,
+  TEST_VIDEO_ID, TEST_VIDEO_TITLE, TEST_VIDEO_URL,
   TEST_VIDEO_ID_2, TEST_VIDEO_URL_2,
 } from './fixtures';
+import { serveYouTubeFixture, waitForExtensionMount } from './fixtures/youtube-watch';
 
 const DIST = path.resolve(__dirname, '../extension/dist');
 const VIDEO_ID = TEST_VIDEO_ID;
 const OTHER_VIDEO_ID = TEST_VIDEO_ID_2;
 const VIDEO_URL = TEST_VIDEO_URL;
 const OTHER_VIDEO_URL = TEST_VIDEO_URL_2;
+const OTHER_VIDEO_TITLE = 'Second fixture video';
+
+// The fixture mounts its player ~200ms in, so the anchor is bounded by us
+// rather than by youtube.com. 15s is still generous for a cold profile.
+const MOUNT_TIMEOUT = 15_000;
 
 const POPOVER = '.clipmark-tour-popover';
 const PROGRESS = '.driver-popover-progress-text';
@@ -50,7 +67,14 @@ async function extensionServiceWorker(context: BrowserContext): Promise<Worker> 
 }
 
 async function launch(): Promise<BrowserContext> {
-  return launchExtensionContext(DIST);
+  const context = await launchExtensionContext(DIST);
+  // Installed on the context so every page this spec opens — including the
+  // second video and the reloads below — is served locally. Nothing in this
+  // file reaches the network.
+  await serveYouTubeFixture(context, {
+    titles: { [VIDEO_ID]: TEST_VIDEO_TITLE, [OTHER_VIDEO_ID]: OTHER_VIDEO_TITLE },
+  });
+  return context;
 }
 
 /** Put the profile back to "never seen the tour". */
@@ -79,8 +103,8 @@ async function seedLocalSeenFlag(worker: Worker): Promise<void> {
 async function openWithTour(context: BrowserContext, url = VIDEO_URL): Promise<Page> {
   const page = await context.newPage();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
-  await page.locator(POPOVER).waitFor({ timeout: 40_000 });
+  await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
+  await page.locator(POPOVER).waitFor({ timeout: MOUNT_TIMEOUT });
   // driver.js fades the popover in over 400ms; clicking mid-fade is not a fair
   // test of the controls (an opacity-0 ancestor is not hit-testable).
   await page.waitForFunction(
@@ -107,17 +131,18 @@ async function openWithTour(context: BrowserContext, url = VIDEO_URL): Promise<P
 async function openWithTourNoFadeWait(context: BrowserContext, url = VIDEO_URL): Promise<Page> {
   const page = await context.newPage();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
-  await page.locator(POPOVER).waitFor({ state: 'visible', timeout: 40_000 });
+  await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
+  await page.locator(POPOVER).waitFor({ state: 'visible', timeout: MOUNT_TIMEOUT });
   return page;
 }
 
 test.describe('First-run guided tour (packaged build)', () => {
   test.skip(!existsSync(DIST), 'extension/dist missing — run `make ext-build` first');
-  // Each case launches its own Chrome with the extension and loads a real
-  // YouTube watch page; the anchor wait alone can take 30s+ on a cold profile,
-  // which does not fit the repo-wide 60s default.
-  test.setTimeout(180_000);
+  // Each case launches its own Chrome with the extension, which dominates the
+  // wall clock now that the page itself is local. The old 180s allowance was
+  // sized for youtube.com's worst case; the several deliberate settle-waits
+  // below still push a case past the repo-wide 60s default.
+  test.setTimeout(90_000);
 
   test('survives the initial-load yt-navigate-finish instead of resetting to step 1', async () => {
     const context = await launch();
@@ -189,7 +214,7 @@ test.describe('First-run guided tour (packaged build)', () => {
 
       // A reload must not bring it back.
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
       await page.waitForTimeout(3000);
       await expect(page.locator(POPOVER)).toHaveCount(0);
     } finally {
@@ -233,12 +258,53 @@ test.describe('First-run guided tour (packaged build)', () => {
       await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
 
       await page.goto(OTHER_VIDEO_URL, { waitUntil: 'domcontentloaded' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
 
       // Still unseen…
       expect((await tourState(worker)).youtubeTour).toBeFalsy();
       // …and offered again on the video the user landed on.
-      await page.locator(POPOVER).waitFor({ timeout: 40_000 });
+      await page.locator(POPOVER).waitFor({ timeout: MOUNT_TIMEOUT });
+      await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('an in-page SPA navigation mid-tour does NOT burn the seen flag either', async () => {
+    // The case above is a full page load, which tears the content script down
+    // wholesale — so `abandonedForNavigation` never runs and the rule is only
+    // incidentally satisfied. The path production actually takes between two
+    // videos keeps the SAME content-script instance alive and reaches the tour
+    // through its yt-navigate-finish listener: bump navigationEpoch, destroy a
+    // live tour with abandonedForNavigation set, restart on the new video. That
+    // branch had no coverage until the watch page became a local fixture we can
+    // navigate without a reload.
+    const context = await launch();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      const page = await openWithTour(context);
+      await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
+
+      // Sentinel: a document-level global survives pushState but not a reload.
+      // Without it this test would still pass if navigateTo ever regressed into
+      // a real navigation — and would then be a duplicate of the case above
+      // rather than cover for the listener branch.
+      await page.evaluate(() => { (window as any).__spaSentinel = true; });
+
+      await page.evaluate(
+        ({ id, title }) => (window as any).__clipmarkFixture.navigateTo(id, title),
+        { id: OTHER_VIDEO_ID, title: OTHER_VIDEO_TITLE },
+      );
+      await waitForExtensionMount(page, MOUNT_TIMEOUT);
+
+      // Same content-script instance, new video…
+      expect(await page.evaluate(() => (window as any).__spaSentinel)).toBe(true);
+      expect(new URL(page.url()).searchParams.get('v')).toBe(OTHER_VIDEO_ID);
+      // …carried there rather than choosing to end the tour, so still unseen…
+      expect((await tourState(worker)).youtubeTour).toBeFalsy();
+      // …and offered again, from the top.
+      await page.locator(POPOVER).waitFor({ timeout: MOUNT_TIMEOUT });
       await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
     } finally {
       await context.close();
@@ -277,13 +343,13 @@ test.describe('First-run guided tour (packaged build)', () => {
       // A DIFFERENT video, loaded fresh — the content script re-evaluates and
       // must short-circuit on the stored flag.
       await page.goto(OTHER_VIDEO_URL, { waitUntil: 'domcontentloaded' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
       await page.waitForTimeout(4000); // well past the anchor wait + drive()
       await expect(page.locator(POPOVER)).toHaveCount(0);
 
       // And a third load, to be sure it is not alternating.
       await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
       await page.waitForTimeout(4000);
       await expect(page.locator(POPOVER)).toHaveCount(0);
       expect((await tourState(worker)).youtubeTour).toBe(true);
@@ -321,13 +387,13 @@ test.describe('First-run guided tour (packaged build)', () => {
 
       const page = await context.newPage();
       await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
       await page.waitForTimeout(4000); // well past the anchor wait + drive()
       await expect(page.locator(POPOVER)).toHaveCount(0);
 
       // A second video too — the flag has to hold across navigations.
       await page.goto(OTHER_VIDEO_URL, { waitUntil: 'domcontentloaded' });
-      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: 40_000 });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
       await page.waitForTimeout(4000);
       await expect(page.locator(POPOVER)).toHaveCount(0);
     } finally {
