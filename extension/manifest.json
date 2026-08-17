@@ -50,6 +50,7 @@
         "src/recall.js",
         "src/loop.js",
         "src/usage-caps.js",
+        "src/storage-maps.js",
         "src/content/content.js",
         "src/content/tour.js"
       ],
