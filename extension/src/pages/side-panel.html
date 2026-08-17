@@ -15,6 +15,9 @@
   <!-- Fonts are self-hosted from assets/fonts via styles/fonts.css, which
        side-panel.css imports — no runtime request to a font CDN. -->
   <link rel="stylesheet" href="../../styles/side-panel.css">
+  <!-- Self-contained, scoped under .review-nudge; kept out of side-panel.css so
+       the two can be edited independently. -->
+  <link rel="stylesheet" href="../../styles/review-nudge.css">
 </head>
 <body class="side-panel-root">
 
@@ -144,6 +147,11 @@
         <div id="comment-list" class="sp-comment-list"></div>
       </div>
     </section>
+
+    <!-- Filled in by src/popup/review-nudge-banner.js, and only for users past
+         the engagement milestone — empty for everyone else. Last in the scroll,
+         after the content the panel is actually for. -->
+    <div id="review-nudge-slot"></div>
 
   </main>
 
