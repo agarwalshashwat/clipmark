@@ -32,11 +32,19 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'cd webapp && npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  // The extension specs never talk to localhost:3000: they run against
+  // chrome-extension:// pages and route-intercepted origins only. Booting
+  // `next dev` for them costs ~30s and hands `ci-extension-smoke` a 120s-timeout
+  // failure mode belonging to a server it has no use for — a second source of
+  // the red builds in issue #84, alongside live youtube.com. The extension-only
+  // npm scripts set this so the webapp projects keep their server unchanged.
+  webServer: process.env.CLIPMARK_SKIP_WEBAPP_SERVER
+    ? undefined
+    : {
+        command: 'cd webapp && npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120 * 1000,
+      },
   reporter: [['list'], ['html', { open: 'never' }]],
 });

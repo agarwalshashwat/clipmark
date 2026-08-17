@@ -1,6 +1,7 @@
 import React from 'react';
 import { createServerSupabase } from '@/lib/supabase';
 import { CHROME_STORE_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { CookiePreferencesButton } from './CookiePreferencesButton';
 
 // Auth-aware for one reason: the footer is the only sign-in route a phone has.
 // Below 640px the header's "Log In" link is display:none, and until now nothing
@@ -41,6 +42,10 @@ export async function Footer() {
             <span className="footer-links-title">Legal</span>
             <a href="/privacy" className="footer-link">Privacy Policy</a>
             <a href="/terms" className="footer-link">Terms of Service</a>
+            {/* Withdrawing consent must be as easy as giving it, so the control
+                is on every page rather than only on /privacy. */}
+            <CookiePreferencesButton />
+
           </div>
           <div className="footer-links-col">
             <span className="footer-links-title">Contact</span>

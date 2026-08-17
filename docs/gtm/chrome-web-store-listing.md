@@ -1,180 +1,161 @@
-# ClipMark — Chrome Web Store Listing (Ready to Paste)
+# ClipMark — Chrome Web Store Listing (strategy + rationale)
 
-**Date:** 2026-07-31
-**Positioning:** **"Actually remember what you study on YouTube."** One broad wedge — retention — that reads the same on the website, the listing and every retention page. Active Recall is the hero, on-device AI is the differentiator, Anki export is additive rather than competitive.
+**Date:** 2026-08-17 — rewritten as an SEO pass.
+**This doc is the *why*.** The paste-ready field values are in
+**[chrome-web-store-listing-FIELDS.md](chrome-web-store-listing-FIELDS.md)** — that's the one to work from at the dashboard.
 
-Specific exams and courses (USMLE/Step 1, university lectures, A-levels, language courses) appear as **named examples inside the copy, never as the product's identity**. Rationale in [MARKET-FIT-US-UK-AU.md](MARKET-FIT-US-UK-AU.md) §2 and [COMPETITIVE-BRIEF.md](COMPETITIVE-BRIEF.md) §6.3: a med-only identity does not transfer to the UK or Australia (USMLE is a US licensing exam), while the broad retention wedge works across all three target markets. The brief also found that **no competitor names an exam, course or syllabus at all**, so naming them as examples is upside with none of the cost of narrowing the product.
-
-*Supersedes the earlier "beachhead is USMLE/IMG med students" framing. The med communities remain the highest-value **channel** — see [community-engagement-plan.md](community-engagement-plan.md) — but channel and identity are different decisions, and conflating them is what left four surfaces telling four different stories.*
-
-**Honesty constraint:** every claim below maps to a shipped feature. Nothing here mentions Deep Transcript Search, Lifetime Cloud Archiving, "Early access to labs," or Notion/Obsidian **sync** (it's a one-off **export**, per the pricing-claims audit in `ClipMark-Claims-Buildout-Plan.md` and `ClipMark-ROADMAP.md`). Free-tier numbers below (25 Active Recall segments, 30 reviews/mo, 10 Anki exports/mo, 10 shared collections) match the shipped caps in `ClipMark-UsageCaps-Spec.md`.
-
-**Note on the name:** `extension/manifest.json` currently ships `"name": "Clipmark"` (lowercase "m"), while every planning doc and this listing use `"ClipMark"`. The Chrome Web Store listing title is set independently in the Developer Dashboard, so this doesn't block publishing — but worth reconciling manifest casing with the public brand before the CWS listing goes live, so the install-time permission dialog and the store page match.
+**Why this matters:** for a Chrome extension with no ad budget, store search is the largest organic channel available, and the listing is the only part of it you control. The title alone carries more ranking weight than everything else on the page combined.
 
 ---
 
-## 1. Extension name / title (pick one)
+## 0. The research this is built on
 
-CWS discourages literal keyword-stuffing in the title field (e.g. "ClipMark - YouTube Notes Timestamps Bookmarks Study Anki Flashcards" reads as spam and risks a listing flag) — so keywords are handled by title + summary *together*, plus the dedicated tags field (§5), not crammed into the title alone.
+### 0.1 Hard constraints (verified against Google's own docs)
 
-| # | Title | Rationale |
+| Constraint | Value | Source |
 |---|---|---|
-| A | **ClipMark: YouTube Notes & Active Recall** | Safe, clean, hits two real search clusters ("youtube notes," "active recall") without stuffing. Broadest appeal — doesn't read as med-only, so it still works if ClipMark expands to coding/language learners later. |
-| B | **ClipMark — Study Smarter with YouTube Flashcards** ⭐ Recommended | Leads with outcome ("study smarter") and includes "flashcards" — the single word that best bridges general search *and* the Anki/med-exam crowd, since "flashcards" is core vocabulary for that audience without being as narrow as literally saying "USMLE" or "med school" in the title. Reads natural, not stuffed. |
-| C | **ClipMark: Active Recall & Anki Export for YouTube** | Most specific/technical — best for searchers who already know the vocabulary (the exact med/exam power-user this niche targets), but narrower top-of-funnel reach for people who haven't heard "active recall" yet. Good fallback if B underperforms in CWS search testing. |
+| **Title max** | **75 characters** (universal since 22 Feb 2024; was 45 for English) | [Chromium extensions PSA](https://groups.google.com/a/chromium.org/g/chromium-extensions/c/mpDvFpT0KJM/m/WWFFQZFyAAAJ) |
+| **Title shown in search** | **~35 characters** before truncation | [ExtensionFast ranking guide](https://www.extensionfast.com/blog/chrome-web-store-seo-complete-ranking-guide-for-2025) |
+| **Summary max** | **132 characters** | manifest `description` field |
+| **Title source** | `manifest.json` → `name` — **not dashboard-editable** | [Complete your listing information](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) |
+| **Summary source** | `manifest.json` → `description` — **not dashboard-editable** | same |
+| **Keyword spam** | **Policy violation.** "Unnatural repetition of the same keyword more than 5 times"; lists of keywords with no added value | [Listing requirements policy](https://developer.chrome.com/docs/webstore/program-policies/listing-requirements/) |
+| **Misleading metadata** | Policy violation — titles, descriptions, screenshots must be accurate | same |
 
-**Recommendation: B.** It's the best single line for the med/exam beachhead without hard-coding the extension to that niche alone — "study smarter" + "flashcards" is exactly the language a USMLE/Step 1 searcher uses, but it reads equally well to a coding-course or language-learning searcher if the product expands later per the strategy brief's stated sequencing.
+> **The two findings that change how this gets applied:**
+>
+> 1. **Title and summary are not dashboard fields.** They come from the manifest, so changing them means a package re-upload, not a paste. An earlier version of this doc claimed the title was "separate from `manifest.json`'s `name`" — that was wrong and it is corrected in FIELDS §"Read first". **Ride the change along with the pending v1.0.7 upload** and it costs no extra review cycle.
+> 2. **Aggressive keyword packing is against policy, not just tacky.** High uninstall rates and misleading descriptions also damage rankings directly — so the SEO-optimal listing and the honest listing are the same listing here. That is convenient, and it is also why none of the retired claims come back.
+
+### 0.2 What the ranking algorithm rewards
+
+- **Title is the highest-weight field.** Exact keyword matches in the title beat the same keyword buried in the description. Treat it as a keyword decision, not a branding decision.
+- **The first paragraph of the description is weighted well above the rest** — write the first 150–200 words as if nothing after them counts.
+- **Install velocity and active users** matter more than lifetime install totals, so a listing change is best made *before* a traffic push, not after.
+- **Uninstalls hurt.** A listing that oversells is worse than one that undersells, twice over: once at review, once in the ranking.
+
+### 0.3 The keyword landscape
+
+Grouped by intent, with the competition actually holding the term.
+
+| Keyword cluster | Intent | Competition | Verdict |
+|---|---|---|---|
+| **youtube notes**, take notes on youtube, youtube note taking | High — the category's front door | **Crowded**: LunaNotes, YiNote, Rocket Note, TubeMemo, Video Notebook | **Target.** Highest volume in the set. We won't rank #1 quickly, but not appearing at all is the current state |
+| **youtube flashcards**, video flashcards | High, and precisely our wedge | **Thin**: TubeStack, Knowt | **Target hard.** Best volume-to-competition ratio available |
+| **spaced repetition**, active recall | High, self-selecting for the study audience | Moderate: ActiveRecall, Recall, Web Highlights | **Target.** These users convert — they already believe in the method |
+| **anki youtube**, export to anki | Lower volume, **highest intent** | **Thin**: Klarrity | **Target.** Small pool, but they arrive knowing what they want |
+| **youtube timestamps / bookmarks** | Medium | Moderate | **Secondary** — describes the mechanic, not the outcome |
+| **loop youtube section**, youtube looper | High volume, **wrong intent** | **Saturated + free**: Looper for YouTube (~400K), YouTube Looper, Video Speed Controller | **Do not position here.** `COMPETITIVE-BRIEF.md` T4 (PR #143, not yet merged) says the same: loops are an acquisition hook, not the paid story. Mention the feature, never lead with it |
+| **youtube summarizer** | High volume | Saturated, and a conceded space | **Avoid.** We deliberately don't summarize; ranking here would import users who'll uninstall |
+
+### 0.4 How the competitors title themselves
+
+| Extension | Title | Users | Pattern |
+|---|---|---|---|
+| [Web Highlights](https://chromewebstore.google.com/detail/web-highlights-pdf-web-hi/hldjnlbobkdkghfidgoecgmklcemanhm) | `Web Highlights: PDF & Web Highlighter + Notes & AI Summary` (58) | 200K | Brand + **four** keyword phrases |
+| [Language Reactor](https://chromewebstore.google.com/detail/language-reactor/hoombieeljmmljlkjmnheibnpciblicm) | `Language Reactor` (16) | 2M | **Bare brand** |
+| [Looper for YouTube](https://chromewebstore.google.com/detail/looper-for-youtube/iggpfpnahkgpnindfkdncknoldgnccdg) | `Looper for YouTube - Puts any YouTube Video on an Endless Loop` (62) | — | Brand + plain-English function |
+| TubeStack | `TubeStack — YouTube Summarizer with Flashcards` (46) | — | Brand + two keywords |
+| LunaNotes | `LunaNotes - Take notes on YouTube` (33) | — | Brand + the literal search query |
+
+**The read:** the dominant pattern is `[Brand][separator][keyword phrase]`, and most sit at 45–60 characters — comfortably past the 35-char display cut, which tells you experienced builders accept truncation to buy the keyword match.
+
+**Language Reactor is the exception that proves the rule.** A bare brand name works at 2M users because the brand *is* the search term. ClipMark is not there, and copying that title today would be copying the outcome of distribution we don't have. Our current title — bare `ClipMark` — is accidentally the Language Reactor strategy without the Language Reactor brand.
 
 ---
 
-## 2. Short description (132-character summary — shown under the title in search results)
+## 1. Title — recommendation
 
-| # | Copy | Length |
-|---|---|---|
-| 1 ⭐ | Capture YouTube timestamps, quiz yourself with spaced repetition, export straight to Anki. | 90 chars |
-| 2 | Study smarter: capture YouTube timestamps, review with spaced repetition, export to Anki. | 89 chars |
-| 3 | Bookmark YouTube moments, quiz yourself with Active Recall, export straight to Anki. | 84 chars |
+**✅ `ClipMark: YouTube Notes, Flashcards & Spaced Repetition`** (55 chars)
 
-**Recommendation: #1.** "Spaced repetition" and "Anki" are both real, specific, and search-relevant terms for the target audience; "quiz yourself" reads as an active benefit rather than a feature name, which tests better in summary lines than jargon alone.
+Reasoning: brand first (identity, and policy-safe), then the two highest-value clusters from §0.3 in descending volume order. The first 35 characters — all a searcher sees — render as `ClipMark: YouTube Notes, Flashcards`, which is a complete, readable phrase rather than a chopped one. "Spaced Repetition" lives past the cut, where it still earns the match at zero readability cost.
+
+Alternates and the exact strings are in [FIELDS §1](chrome-web-store-listing-FIELDS.md).
+
+**Rejected:** stuffing timestamps/bookmarks/study/Anki into the same title. It reads as spam to a human and trips the "lists of keywords" clause with the reviewer.
 
 ---
 
-## 3. Full detailed description
+## 2. Summary — recommendation
+
+**✅ `YouTube notes and flashcards that quiz you back: timestamps, spaced repetition, Anki export. AI runs on your device.`** (116/132)
+
+The existing summary is accurate but spends its whole budget on mechanics and omits *notes* and *flashcards*, the two highest-volume terms we're targeting. "That quiz you back" is the benefit in four words; the closing clause is the one differentiator no competitor in the brief offers.
+
+---
+
+## 3. Detailed description — what it's doing
+
+Full paste-ready text in [FIELDS §3](chrome-web-store-listing-FIELDS.md). The structure:
+
+1. **First paragraph is the SEO payload** — "YouTube", "study extension", "timestamped notes", "loop", "spaced repetition", "Anki", "students", "lectures" all inside the first ~60 words, in prose that still scans as written-by-a-person. This is the part the algorithm weights most.
+2. **On-device AI gets its own section, near the top**, per `COMPETITIVE-BRIEF.md` T2 (#143) — the only property nobody else in the set has. Stated as fact, never as a superiority claim.
+3. **The surviving distinction, not the retired one.** *"Tools that quiz you on a video generate the questions from the transcript; ClipMark asks you about the note you wrote."* The false "no other bookmarker quizzes you" claim appears nowhere and must not return.
+4. **Real numbers for the free tier** — 10 Anki exports, 30 reviews, 25 enrolled, 3 saved loops. Naming the wall beats "generous free tier" and directly protects against the uninstall penalty in §0.2.
+5. **USD prices with tax stated as added at checkout.**
+
+**Keyword density check** (measured on the final text, 600 words): youtube ×7, anki ×7, note ×12, loop ×7, active recall ×4, spaced repetition ×2, flashcards ×2. Every one is contextual usage, nothing near the "unnatural repetition" line. Re-run this check if the copy is edited.
+
+---
+
+## 4. Screenshot plan — shot list and captions
+
+**Ash produces the images; this is the brief.** 1280×800 PNG, no padding or letterboxing, real product UI, no mockup chrome. Up to 5 slots — use all 5.
+
+**Caption rule, and it is the important part of this section: write for someone who has never heard the words "spaced repetition."** Screenshot captions are read by people deciding in about four seconds. No jargon, no feature names, no product vocabulary. Plain sentences a non-technical person understands instantly. Burn the caption into the image as large, high-contrast text — most people never read the description.
+
+Order is outcome-first: what you get, then how it works.
+
+| # | Shot — what's on screen | Caption (burn in, verbatim) | Why this shot |
+|---|---|---|---|
+| **1** | Active Recall mid-prompt: timestamp and tags visible, the note **hidden**, Reveal button waiting | **"It asks you what you saved — before it shows you."** | The payoff, and the thing no screenshot elsewhere in the category shows. Leads because it's the reason to install |
+| **2** | Same card revealed, clip replaying, grade buttons visible | **"Then it plays the exact moment, so you can check."** | Completes the story shot 1 opens. "Check yourself against the real thing" needs no explanation |
+| **3** | Video playing, timestamp just saved, note being written, tag chips | **"Save the exact second. One key. Never pause the video."** | The core mechanic, in the user's language — "one key" not "keyboard shortcut" |
+| **4** | AI drafting a note from the transcript, with a visible on-device/offline indicator | **"It writes the note for you — on your computer, not ours."** | The moat, in plain speech. "Runs locally" means nothing to a student; "on your computer, not ours" is instantly clear |
+| **5** | Export screen: the Anki file produced, deep link visible | **"Send your cards to Anki. Free, every month."** | The highest-intent audience needs to see this exists before they install |
+
+**If a sixth slot ever exists**, the A–B loop mid-drill: *"Play just the hard part, over and over."* It's deliberately last — loops are the acquisition hook, not the pitch (§0.3).
+
+**Compliance, non-negotiable:**
+- Every shot must match the **published** build, not `main`. A screenshot of something the installed extension doesn't do is misleading metadata under the same policy as the copy.
+- Re-shoot rather than reuse any still whose source video isn't cleared for promotional use. Use the MIT-OCW-style lecture stills already identified.
+
+---
+
+## 5. Measuring whether any of this worked
+
+**Record the baseline before uploading.** Once the new title ships you cannot recover the old ranks, and "it feels better" is not a result.
+
+**[Extension Ranker](https://extensionranker.com/tools/rank-checker)** is the tool for this — it reads public Chrome Web Store data to check where an extension ranks for a keyword (top 30, English market by default), track that rank over time, tie movement to specific listing updates, and surface keywords you already rank for without knowing it. There is also an *Extension Rank Checker* companion extension that runs the same check from Chrome's side panel.
+
+**Track this set** — it's §0.3's targets plus two controls:
 
 ```
-Turn YouTube lectures into flashcards you actually remember.
-
-ClipMark lets you bookmark the exact moment that matters in any YouTube video — a
-professor's explanation, a mechanism, a diagram — then brings that moment back for
-review before you forget it. Built for anyone learning from video, and tuned for
-students who live in Anki: the workflow already works with Boards & Beyond, Sketchy,
-Ninja Nerd, and any other lecture you study from.
-
-WHY CLIPMARK
-
-Most note-taking tools summarize a video once and let you forget it. ClipMark is
-built around retention, not summarization — capture the moment, then let spaced
-review bring it back until it sticks.
-
-HOW IT WORKS
-
-📌 Capture in one keystroke
-Hit a shortcut (or the ClipMark button) while a YouTube video plays to save the exact
-timestamp — no pausing, no switching tabs. Add a quick note and tag, or let ClipMark's
-on-device AI draft one for you from the surrounding transcript (free, runs entirely in
-your browser — nothing leaves your device).
-
-🧠 Active Recall Mode
-This is the core loop: when a saved moment comes due for review, ClipMark shows you
-the timestamp and tags but hides your note. Try to recall it first — then reveal your
-note and replay the clip to confirm. Say "got it" and the next review interval
-doubles; say "again" and it comes back tomorrow. It's spaced repetition built for
-video, not flashcard text.
-
-🔗 Every card links back to the source
-No paraphrasing, no lossy summary — every review links straight back to the exact
-second in the original video, so you're reviewing the professor's actual explanation,
-not someone's rewrite of it.
-
-📤 Export straight to Anki
-ClipMark doesn't compete with Anki — it feeds it. One click exports your reviewed
-segments (note, timestamp, and a deep link back to the moment) into an
-Anki-importable file, so you keep the deck and workflow you already trust.
-
-🗂️ Share a collection
-Turn a lecture series into a shareable ClipMark collection — a public link classmates
-can open to see the same bookmarked moments, the same way AnKing-style shared decks
-already circulate in study groups.
-
-🏷️ Smart tags
-Add #tags in your notes and ClipMark colors and organizes them automatically, so a
-semester's worth of bookmarks stays browsable instead of turning into a pile.
-
-FREE VS. PRO
-
-Free gets you the full loop, generously capped: unlimited local bookmarks, 25
-standing Active Recall segments, 30 reviews a month, 10 Anki exports a month, and up to
-10 shared collections — enough to build and review a real deck from one full lecture.
-
-Pro removes the caps and adds cross-device cloud sync, unlimited Active Recall and
-Anki exports, unlimited shared collections, and one-click export to Notion and
-Obsidian.
-
-WHO IT'S FOR
-
-Anyone who studies from YouTube and is tired of watching things twice. Medical students
-working through Step 1 lecture channels alongside Anki, undergraduates going back over
-recorded lectures before exams, language learners drilling a passage, developers working
-through a long conference talk — the loop is the same one, and so is the problem it
-solves: you watched it, and a week later it's gone.
-
-Get started: install ClipMark, open any YouTube video, and save your first moment.
+youtube notes            youtube flashcards       spaced repetition
+active recall            anki youtube             export to anki
+take notes on youtube    youtube timestamps       study youtube
+youtube bookmarks        lecture notes            clipmark          ← brand control
 ```
 
----
+**Method:** baseline all of them the day before the upload → re-check weekly → attribute any move to the one listing change that preceded it. Change the title *or* the description in a given week, not both, or you won't know which did it.
 
-## 4. Screenshot plan (5 screenshots, outcome-first order) + demo video outline
-
-CWS screenshots are viewed in sequence before install, so order them as a story — outcome first, mechanism second — not a feature list.
-
-| # | Shows | Caption (overlay text) |
-|---|---|---|
-| 1 | **The payoff moment**: Active Recall overlay mid-quiz on a real lecture (e.g. a Boards & Beyond–style video) — timestamp + tags visible, note hidden, "Reveal" button waiting. | "Recall it before you replay it." |
-| 2 | **The capture moment**: YouTube video playing with the ClipMark capture UI open — timestamp just saved, AI-drafted note visible, tag chips shown. | "One keystroke saves the moment — AI drafts the note for you." |
-| 3 | **The bridge to Anki**: dashboard/export screen showing a segment being exported, with the resulting Anki-importable file and a visible deep-link back to the timestamp. | "Export straight to Anki — every card links back to the source." |
-| 4 | **The habit view**: dashboard showing the due-for-review queue/strip across multiple saved lectures, spaced-repetition intervals visible. | "Spaced review that brings it back until it sticks." |
-| 5 | **The social/shareable moment**: a shared collection page (public link view) with a lecture series' worth of bookmarks. | "Share a collection — study the same deck as your classmates." |
-
-**Sizing:** CWS accepts 1280×800 or 640×400 screenshots (1280×800 preferred for retina display) — capture at 1280×800, PNG, no padding/letterboxing.
-
-**30-second demo video outline** (for the CWS video field and reused as a creator-outreach asset per the distribution plan):
-1. **0:00–0:05** — Cold open on a real lecture playing, cursor hits the shortcut, timestamp saves instantly. Text: "Stop rewatching the whole lecture."
-2. **0:05–0:12** — AI-drafted note appears, tag auto-applied. Text: "AI drafts the note. You just confirm."
-3. **0:12–0:20** — Cut to Active Recall: moment comes due, note hidden, user recalls, reveals, clip replays to confirm. Text: "Recall it — then replay to confirm."
-4. **0:20–0:26** — One click exports to an Anki file. Text: "Feeds straight into Anki. No new habit to build."
-5. **0:26–0:30** — ClipMark logo + CTA. Text: "Free to start. clipmark.mithahara.com"
+**Expectations, so nobody panics:** ranking response to a listing change is typically slow, and install velocity is a heavier factor than copy (§0.2). A GTM push that drives installs will move ranks more than any wording here. **This pass is what makes that traffic compound instead of evaporate** — it is a multiplier on distribution, not a substitute for it.
 
 ---
 
-## 5. Category and search keywords/tags
+## 6. Review flywheel
 
-**Primary CWS category:** Productivity (education-adjacent tools without a dedicated "Education" category on CWS list under Productivity; this is where Anki-adjacent and note-taking extensions land).
-
-**Search keywords/tags to target** (for the CWS keywords field, meta description, and organic phrasing across the listing — not for title-stuffing):
-- youtube notes
-- youtube timestamps
-- youtube bookmarks
-- active recall
-- spaced repetition
-- anki export
-- anki
-- study tool
-- flashcards from video
-- video notes
-- usmle study tools
-- step 1 study tools
-- med school study tools
-- boards and beyond notes
-- second brain youtube
-
-Keep the med/exam terms (usmle, step 1, med school, boards and beyond) present in the **description body and tags**, not the title — this is where the niche keywords actually get indexed without tripping title-stuffing review flags, and it matches how CWS surfaces long-tail search matches.
+Ratings and review count feed ranking, and the listing currently has none. Ask *after* a completed recall streak, never at install. Never incentivise a review — that's a policy violation and gets the listing pulled, which costs more than every gain in this document.
 
 ---
 
-## 6. Review flywheel — when and how to ask
+## Sources
 
-Per the distribution plan's own finding: **never buy reviews**, and never prompt at install — prompt at the activation moment, when the "it worked" feeling is freshest.
-
-- **Trigger point:** right after a user's **first completed Active Recall session** (first "reveal → replay → grade" cycle) or their **first successful Anki export** — whichever comes first. Both are the exact moments the caps spec identifies as "it stuck."
-- **Mechanism:** a single non-blocking in-app prompt ("Was that useful? A quick review helps other students find ClipMark.") linking straight to the CWS review URL — never a modal that blocks the flow it's congratulating the user for completing.
-- **Don't re-prompt** a user who dismisses it for at least 30 days, and never prompt the same session twice.
-- **First 20-30 reviews realistically come from the design-partner cohort** (15-25 med students recruited via Reddit/Discord DMs per the distribution plan), asked directly once they've had a genuine "aha" moment — not from organic discovery. Layer the automated in-app trigger on top of that, don't rely on it alone in month 1.
-- **Community asks** ("if this was useful, a review helps other students find it") are fine inside Reddit/Discord *once trust is established* in that community — never on a first post.
-
----
-
-*Companion docs: [marketing-launch-plan.md](marketing-launch-plan.md) (channel strategy this
-listing supports) and [../LAUNCH-PRD.md](../LAUNCH-PRD.md) §1 (positioning, and the **live**
-free-tier caps — quote those, not the numbers in any older brief). Historical context:
-[ClipMark-ROADMAP.md](../archive/ClipMark-ROADMAP.md), archived. A distribution plan, a med-exam
-strategy brief and a usage-caps spec were cited here but **never committed to this repo**.*
+- [Chrome Web Store listing requirements policy](https://developer.chrome.com/docs/webstore/program-policies/listing-requirements/) — keyword spam and misleading metadata
+- [Complete your listing information](https://developer.chrome.com/docs/webstore/cws-dashboard-listing) — which fields are dashboard-editable
+- [Extension name length PSA](https://groups.google.com/a/chromium.org/g/chromium-extensions/c/mpDvFpT0KJM/m/WWFFQZFyAAAJ) — the 75-character limit
+- [Chrome Web Store SEO ranking guide](https://www.extensionfast.com/blog/chrome-web-store-seo-complete-ranking-guide-for-2025) — truncation, title weighting, first-paragraph weighting
+- [Chrome Web Store ranking algorithm](https://www.extensionfast.com/blog/chrome-web-store-ranking-algorithm-how-extensions-get-ranked-in-2025) — install velocity
+- [Extension Ranker](https://extensionranker.com/) · [rank checker](https://extensionranker.com/tools/rank-checker)
+- Competitor listings: [Web Highlights](https://chromewebstore.google.com/detail/web-highlights-pdf-web-hi/hldjnlbobkdkghfidgoecgmklcemanhm) · [Language Reactor](https://chromewebstore.google.com/detail/language-reactor/hoombieeljmmljlkjmnheibnpciblicm) · [Looper for YouTube](https://chromewebstore.google.com/detail/looper-for-youtube/iggpfpnahkgpnindfkdncknoldgnccdg)
+- Internal: `docs/gtm/COMPETITIVE-BRIEF.md` T2/T4 — **PR #143, still open**, so the file is not on `main` yet · [posting-kit.md](posting-kit.md) §0
