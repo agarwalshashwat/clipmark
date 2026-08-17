@@ -235,10 +235,29 @@ body {
 
 .ai-insights-card:active { transform: scale(0.99); }
 
+/* Disabled = Chrome's built-in AI is unavailable, which for most machines is the
+   DEFAULT state rather than a transient one — this card sits dimmed permanently.
+   A blanket `opacity: 0.6` blended every child toward the backdrop and dropped
+   the whole card below AA (measured: the violet label at 3.84:1 on dark and
+   2.72:1 on light, against 4.5). Dim with the muted TOKEN instead, so the state
+   still reads as unavailable but the text stays legible in both themes. */
 .ai-insights-card:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.ai-insights-card:disabled .ai-insights-label,
+.ai-insights-card:disabled .ai-insights-icon .material-symbols-outlined,
+.ai-insights-card:disabled .ai-insights-chevron {
+  color: var(--text-muted);
+}
+
+.ai-insights-card:disabled .ai-insights-title {
+  color: var(--text-sub);
+}
+
+.ai-insights-card:disabled .ai-insights-icon {
+  background: var(--surface-alt);
 }
 
 .ai-insights-left {
