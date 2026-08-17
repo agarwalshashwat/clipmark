@@ -18,9 +18,11 @@ This is the thing that trips people up, and an earlier version of this doc got i
 
 Only the detailed description, screenshots and category are editable from the dashboard. **The title — the single highest-weight ranking field — requires a package upload.**
 
-> **✅ The good news: v1.0.7 is already pending upload.** The manifest changes below should ride along with that upload, so the SEO title and summary cost **zero extra review cycles**. If v1.0.7 ships without them, the next chance is the release after.
+**⚠️ The export-cap gate — now satisfied, kept here for the reasoning.** The copy below says free Anki export is **10/month**, which is v1.0.7. While **v1.0.6** was the published build that cap was **1/month**, so pasting this copy early would have promised 10 against a package that allowed 1 — a mis-sell on the highest-traffic surface ClipMark owns, and a store listing is slower to correct than a website. **v1.0.7 was uploaded to the Chrome Web Store on 2026-08-17** (tagged `v1.0.7`), so that gate is cleared and the 10/month copy is safe to paste. See the timing note in [posting-kit.md](posting-kit.md).
 
-**⚠️ And the standing gate:** the published build is still **v1.0.6, which caps free Anki export at 1/month**. Every description below says **10/month**, which is v1.0.7. **Upload v1.0.7 before pasting this copy** — promising 10 against a package that allows 1 is a mis-sell on the highest-traffic surface ClipMark owns, and a store listing is slower to correct than a website. See the timing note in [posting-kit.md](posting-kit.md).
+> **⚠️ Title and Summary still need a package upload.** They live in `extension/manifest.json`, so the SEO recommendations in §1 and §2 below cannot be applied from the dashboard — they ride along with the *next* package upload. v1.0.7 shipped without them, so the next release is the earliest chance; batching them into it costs **zero extra review cycles**.
+
+Everything below is written clean against those constraints — the detailed description is **safe to paste as-is now**; the title and summary wait for the next upload.
 
 ---
 
