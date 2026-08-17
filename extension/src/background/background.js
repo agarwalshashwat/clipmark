@@ -10,6 +10,7 @@ import {
   isRecallStartBlocked,
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
+import { pruneVideoMaps } from '../storage-maps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
 import { getValidToken } from '../auth-token.module.js';
 import { buildPendingRevision } from '../constants.module.js';
@@ -318,12 +319,27 @@ const TAG_COLORS = {
     // Save to storage
     bookmarks.push(newBookmark);
     if (duration && !isNaN(duration)) videoDurations[videoId] = duration;
+    // Bookmark first and alone — see the same split in content/content.js.
+    // videoTitles/videoDurations are single storage items that grow on every
+    // video watched, so either can exceed QUOTA_BYTES_PER_ITEM; sharing a set()
+    // with them meant an oversized display cache failed the actual save.
     await new Promise((resolve, reject) => {
-      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations, videoTitles }, () => {
+      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks }, () => {
         if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
         else resolve();
       });
     });
+
+    // Caches after, pruned and non-fatal.
+    const prunedMaps = pruneVideoMaps({ videoTitles, videoDurations, keepVideoId: videoId });
+    chrome.storage.sync.set(
+      { videoTitles: prunedMaps.videoTitles, videoDurations: prunedMaps.videoDurations },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.warn('[background] video map write failed (bookmark already saved):', chrome.runtime.lastError.message);
+        }
+      }
+    );
 
     // Notify content script to update markers
     try {
