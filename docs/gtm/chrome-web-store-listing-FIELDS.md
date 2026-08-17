@@ -1,163 +1,194 @@
 # ClipMark — Chrome Web Store Dashboard Fields (Copy/Paste)
 
-**Date:** 2026-07-31
-**Purpose:** paste-ready field values for the **existing beta listing** (item ID `iboippnihpcnnglgboaiedaiimbiolgg`, currently published to testers as "Clipmark"). This doc is a dashboard-formatted extract of [chrome-web-store-listing.md](chrome-web-store-listing.md) — read that doc for rationale/alternates; this one is just the fields, in the order the Developer Dashboard's "Store listing" tab presents them.
-**Scope:** copy/paste handoff only. No Web Store API calls made, no prod touched — the owner applies these by hand in the dashboard.
+**Date:** 2026-08-17 — SEO pass. Keyword-optimized against the research in [chrome-web-store-listing.md](chrome-web-store-listing.md) §0.
+**Purpose:** paste-ready field values for the live listing (item ID `iboippnihpcnnglgboaiedaiimbiolgg`).
+**Scope:** copy/paste handoff only. No Web Store API calls made, no prod touched — the owner applies these by hand.
 
 ---
 
-## Changes to apply to the current beta listing
+## 🚨 Read first: two of these three fields are NOT dashboard-editable
 
-The beta listing is currently live with the wrong casing and (possibly) stale copy. Three must-dos, in order:
+This is the thing that trips people up, and an earlier version of this doc got it wrong.
 
-1. **Fix the name casing.** The dashboard "Title" field almost certainly still reads `Clipmark` (lowercase "m"). Replace it with the corrected title below (`ClipMark` — capital M throughout this doc and the product).
-2. **Re-upload the corrected package.** `extension/manifest.json` on `main` now ships `"name": "ClipMark"` / `"short_name": "ClipMark"` (fixed in [PR #58](https://github.com/agarwalshashwat/clipmark/pull/58)). Build a fresh zip (`make ext-zip`) from current `main` and upload it as a new package version — otherwise the install-time permission dialog and `chrome://extensions` entry will keep showing the old lowercase name even after the dashboard listing text is fixed, and the two will visibly disagree to testers.
-3. **Replace any old copy that overpromises.** If the current beta listing's summary/description predates the pricing-claims honesty pass, check it for:
-   - The word **"sync"** applied to Notion or Obsidian — the real feature is a one-off **export**, not live sync. Replace with the description below.
-   - Any mention of **Deep Transcript Search**, **Lifetime Cloud Archiving**, **Permanent Transcript Archiving**, or **"early access to labs"** — none of these are built; they're `ComingSoon`-tagged on the pricing page and must not appear in the store listing as if live.
-   - Any claim of unlimited free usage where a real cap exists — Free is capped (25 Active Recall segments standing, 30 reviews/mo, 10 Anki exports/mo, 10 shared collections); **Pro is unlimited** on all of those. Say it that way, not "unlimited" across the board.
+| Field | Where it actually comes from | How to change it |
+|---|---|---|
+| **Title** (the big text in search results) | **`extension/manifest.json` → `name`** | Edit the manifest, bump the version, rebuild, **re-upload the package** |
+| **Summary** (the grey line under the title) | **`extension/manifest.json` → `description`** | Same — manifest edit + re-upload |
+| **Detailed description** | **Dashboard → Store listing tab** | Paste and save. Live after review |
 
-4. **⚠️ Do not paste the "10 Anki exports a month" line until v1.0.7 is the uploaded package.** The copy below describes v1.0.7 (`main`). The currently published build is **v1.0.6, which caps free Anki export at 1/month.** Publishing listing copy that promises 10 against a package that allows 1 is a mis-sell on the highest-traffic surface ClipMark has — and the store listing is slower to correct than the website. **Upload the v1.0.7 package first, then paste this copy.** See the timing note in [posting-kit.md](posting-kit.md).
+Only the detailed description, screenshots and category are editable from the dashboard. **The title — the single highest-weight ranking field — requires a package upload.**
 
-Everything below is written clean against those constraints — safe to paste as-is **once #4 is satisfied**.
+**⚠️ The export-cap gate — now satisfied, kept here for the reasoning.** The copy below says free Anki export is **10/month**, which is v1.0.7. While **v1.0.6** was the published build that cap was **1/month**, so pasting this copy early would have promised 10 against a package that allowed 1 — a mis-sell on the highest-traffic surface ClipMark owns, and a store listing is slower to correct than a website. **v1.0.7 was uploaded to the Chrome Web Store on 2026-08-17** (tagged `v1.0.7`), so that gate is cleared and the 10/month copy is safe to paste. See the timing note in [posting-kit.md](posting-kit.md).
 
----
+> **⚠️ Title and Summary still need a package upload.** They live in `extension/manifest.json`, so the SEO recommendations in §1 and §2 below cannot be applied from the dashboard — they ride along with the *next* package upload. v1.0.7 shipped without them, so the next release is the earliest chance; batching them into it costs **zero extra review cycles**.
 
-## Title / Name
-
-**Field:** Store listing → *Title* (also drives what testers/reviewers see; separate from `manifest.json`'s `name`, but should match it — see must-do #2 above)
-**Limit:** 75 characters max
-**Paste this (48 chars):**
-
-```
-ClipMark — Study Smarter with YouTube Flashcards
-```
+Everything below is written clean against those constraints — the detailed description is **safe to paste as-is now**; the title and summary wait for the next upload.
 
 ---
 
-## Summary (short description)
+## 1. Title
 
-**Field:** Store listing → *Summary*
-**Limit:** 132 characters max
-**Character count of the pick below: 122 / 132**
-**Paste this:**
+**Source:** `extension/manifest.json` → `name` · **Hard limit: 75 characters** (universal since Feb 2024)
+**Practical limit: ~35 characters** — that's roughly where the Chrome Web Store truncates a title in search results. Everything past 35 still counts for keyword matching, but a searcher won't read it.
 
-```
-Capture YouTube timestamps, quiz yourself with spaced repetition, export to Anki. AI runs on your device, not on a server.
-```
+**Current value is `ClipMark` — a bare brand name with zero keywords in the highest-weight field ClipMark controls.** Fixing that is the single biggest lever in this document.
 
-*Updated 2026-08-17 to carry the on-device AI lead (`posting-kit.md` §0 rule 3) — it is the one differentiator no competitor in `COMPETITIVE-BRIEF.md` offers, and the store summary is the highest-traffic 132 characters ClipMark owns. Previous version (90 chars), still accurate if the longer one reads as cluttered in the dashboard preview:*
+**✅ Recommended (55 chars):**
 
 ```
-Capture YouTube timestamps, quiz yourself with spaced repetition, export straight to Anki.
+ClipMark: YouTube Notes, Flashcards & Spaced Repetition
+```
+
+*First 35 render as `ClipMark: YouTube Notes, Flashcards` — brand, then the two highest-intent keywords, both fully visible before the cut. "Spaced Repetition" sits past the truncation point where it still earns the keyword match without costing anything visible.*
+
+**Alternate A — Anki-forward (50 chars):**
+
+```
+ClipMark — YouTube Flashcards, Notes & Anki Export
+```
+*Use if the Anki audience is the priority. "Anki" is lower-volume but very high-intent, and the competition on it is thin.*
+
+**Alternate B — shortest, cleanest (37 chars):**
+
+```
+ClipMark – YouTube Notes & Flashcards
+```
+*Nothing truncates. Fewer keyword matches, best readability. Pick this if the listing is going to lean on the screenshots.*
+
+> **Do not** pack more keywords in. Listing policy prohibits **keyword spam**, defined to include *"unnatural repetition of the same keyword more than 5 times"* and *"lists of … keywords"* with no added value. A title like *"ClipMark: YouTube Notes, Video Bookmarks, Timestamps, Flashcards, Anki, Study, Spaced Repetition"* is a rejection risk, not a clever one.
+
+---
+
+## 2. Summary (short description)
+
+**Source:** `extension/manifest.json` → `description` · **Hard limit: 132 characters**
+This is the grey line under the title in search results — the only body copy most searchers read.
+
+**Current value (108 chars):** `Capture YouTube timestamps, quiz yourself with spaced-repetition Active Recall, and export straight to Anki.`
+Accurate, but it spends its budget on mechanics and never says what the user gets, and it omits "notes" and "flashcards" — two of the highest-volume terms in the category.
+
+**✅ Recommended (116 chars):**
+
+```
+YouTube notes and flashcards that quiz you back: timestamps, spaced repetition, Anki export. AI runs on your device.
+```
+
+*Leads with the two biggest keywords, states the benefit ("quiz you back"), and closes on the differentiator no competitor has.*
+
+**Alternate — benefit-first (118 chars):**
+
+```
+Turn YouTube lectures into flashcards. Timestamped notes, spaced repetition, free Anki export. AI runs on your device.
 ```
 
 ---
 
-## Detailed description
+## 3. Detailed description
 
-**Field:** Store listing → *Description*
-**Paste this as-is** (plain text; the CWS editor supports line breaks and emoji, no markdown/HTML):
+**Field:** Dashboard → Store listing → *Detailed description* · **Dashboard-editable, no package upload needed**
+**Paste as-is.** Plain text; the editor supports line breaks and emoji, no markdown or HTML.
+
+The first paragraph carries the most algorithmic weight and is what shows in previews — it is deliberately dense with the target keywords and still reads like a sentence a human wrote.
 
 ```
-Turn YouTube lectures into flashcards you actually remember.
+Turn YouTube into flashcards you actually remember.
 
-ClipMark lets you bookmark the exact moment that matters in any YouTube video — a
-professor's explanation, a mechanism, a diagram — then brings that moment back for
-review before you forget it. Built for anyone learning from video, and tuned for
-students who live in Anki: the workflow already works with Boards & Beyond, Sketchy,
-Ninja Nerd, and any other lecture you study from.
+ClipMark is a study extension for YouTube. Save timestamped notes on any YouTube
+video, loop the passage you need to drill, then get quizzed on it days later with
+spaced repetition — and export your cards to Anki for free. Built for students,
+self-teachers, and anyone who learns from long lectures, tutorials and talks.
 
-WHY CLIPMARK
+One job: help you actually remember what you study. Whatever you're studying.
 
-Most note-taking tools summarize a video once and let you forget it. ClipMark is
-built around retention, not summarization — capture the moment, then let spaced
-review bring it back until it sticks.
+THE AI RUNS INSIDE YOUR BROWSER
+
+ClipMark can draft a note for you from the surrounding transcript using Chrome's
+built-in on-device AI. Nothing is uploaded. Your lecture transcripts never leave
+your laptop, because there is no server to send them to. That is also why AI
+note drafting is on the free tier instead of behind the paywall — it costs
+nothing to run.
 
 HOW IT WORKS
 
-📌 Capture in one keystroke
-Hit a shortcut (or the ClipMark button) while a YouTube video plays to save the exact
-timestamp — no pausing, no switching tabs. Add a quick note and tag, or let ClipMark's
-on-device AI draft one for you from the surrounding transcript (free, runs entirely in
-your browser — nothing leaves your device).
+📌 Timestamped notes, one keystroke
+Hit a shortcut while the video plays to save the exact second — no pausing, no
+switching tabs. Add a note and tags, or let the on-device AI draft one for you.
 
-🧠 Active Recall Mode
-This is the core loop: when a saved moment comes due for review, ClipMark shows you
-the timestamp and tags but hides your note. Try to recall it first — then reveal your
-note and replay the clip to confirm. Say "got it" and the next review interval
-doubles; say "again" and it comes back tomorrow. It's spaced repetition built for
-video, not flashcard text.
+🔁 A–B loops for the part that matters
+Mark A, mark B, and loop just that passage until it's drilled. Several segments
+per video, all editable. Looping is never capped, on any plan.
 
-🔗 Every card links back to the source
-No paraphrasing, no lossy summary — every review links straight back to the exact
-second in the original video, so you're reviewing the professor's actual explanation,
-not someone's rewrite of it.
+🧠 Active recall, on a spaced repetition schedule
+Saved moments come back at 1, 3, then 7 days, doubling out to a 60-day maximum.
+Answer "again" and it returns tomorrow. Active Recall is on the free tier, not
+locked behind Pro.
 
-📤 Export straight to Anki
-ClipMark doesn't compete with Anki — it feeds it. One click exports your reviewed
-segments (note, timestamp, and a deep link back to the moment) into an
-Anki-importable file, so you keep the deck and workflow you already trust.
+🔗 Your note is the question. The clip is the answer.
+When a moment comes due, ClipMark shows the timestamp and your tags but hides
+your note. You try to remember it, then reveal and replay the exact second to
+check yourself. Tools that quiz you on a video generate the questions from the
+transcript; ClipMark asks you about the note you wrote, and hands you the source
+as the answer key. No paraphrase in between.
 
-🗂️ Share a collection
-Turn a lecture series into a shareable ClipMark collection — a public link classmates
-can open to see the same bookmarked moments, the same way AnKing-style shared decks
-already circulate in study groups.
+📤 Free export to Anki
+One click turns your saved moments into YouTube flashcards Anki can import —
+note, timestamp, and a deep link back to the exact second. ClipMark doesn't
+replace Anki, it feeds it: Anki is where a card lives for years, and this is the
+step before the card exists, while you're still in the video.
 
-🏷️ Smart tags
-Add #tags in your notes and ClipMark colors and organizes them automatically, so a
-semester's worth of bookmarks stays browsable instead of turning into a pile.
+🏷️ Tags that organise themselves
+Add #tags in a note and ClipMark colours and groups them, so a semester of
+bookmarks stays browsable.
 
-FREE VS. PRO
+🗂️ Shareable collections
+Turn a YouTube lecture series into a public link classmates can open.
 
-Free gets you the full loop, generously capped: unlimited local bookmarks, 25
-standing Active Recall segments, 30 reviews a month, 10 Anki exports a month, and up to
-10 shared collections — enough to build and review a real deck from one full lecture.
+WORKS WITHOUT AN ACCOUNT
 
-Pro removes the caps and adds cross-device cloud sync, unlimited Active Recall and
-Anki exports, unlimited shared collections, and one-click export to Notion and
-Obsidian.
+Capture, loops, active recall and Anki export all work signed out. Only cloud
+sync and shared collections need an account. No card, no trial countdown.
+
+FREE VS PRO
+
+Free, every month: 10 Anki exports, 30 recall reviews, 25 moments enrolled in
+Active Recall at a time, 3 saved A–B loops, and unlimited local bookmarks,
+notes and tags. On-device AI note drafting is included.
+
+Pro is $7.99/month USD, $59.99/year USD, or $99.99 USD once (local tax added at
+checkout). It removes those caps and adds cross-device cloud sync, scheduled
+review reminders, and one-click export to Notion and Obsidian.
 
 WHO IT'S FOR
 
-Anyone who studies from YouTube and is tired of watching things twice. Medical students
-working through Step 1 lecture channels alongside Anki, undergraduates going back over
-recorded lectures before exams, language learners drilling a passage, developers working
-through a long conference talk — the loop is the same one, and so is the problem it
-solves: you watched it, and a week later it's gone.
+Anyone who studies from YouTube and is tired of watching things twice. Medical and
+undergraduate students working through recorded lectures, language learners
+drilling a phrase until the pronunciation sticks, musicians looping four bars,
+developers working through a long conference talk. Same problem every time: you
+watched it, you understood it, and a week later it's gone.
 
-Get started: install ClipMark, open any YouTube video, and save your first moment.
+Install ClipMark, open any YouTube video, and save your first moment.
 ```
 
 ---
 
-## Category
+## 4. Category and language
 
-**Field:** Store listing → *Category*
-**Select:** `Productivity`
+**Primary category:** `Productivity`
+*Considered and rejected: `Education`. Productivity is the larger surface and the one the competitor set sits in. Revisit if rank tracking shows Education converting better.*
 
-## Language
-
-**Field:** Store listing → *Language*
-**Select:** `English` (no localized copy exists yet — the copy above targets English-reading study audiences in the US, UK and Australia per [MARKET-FIT-US-UK-AU.md](MARKET-FIT-US-UK-AU.md); don't add other languages until real localized copy exists)
+**Language:** `English` — the copy targets US/UK/AU study audiences. Don't add locales until real localized copy exists; an unlocalized locale is a keyword-spam signal, not a reach win.
 
 ---
 
-## Screenshots (5) — shot checklist
+## 5. Screenshots
 
-CWS displays these in order before install, so shoot them as a story — outcome first, mechanism second. Capture at **1280×800 PNG**, no padding/letterboxing, real product UI (no mockup chrome).
+Full shot list, plain-language captions and the reasoning are in
+**[chrome-web-store-listing.md](chrome-web-store-listing.md) §4** — that section is the one to hand to whoever produces the images.
 
-- [ ] **Screenshot 1 — the payoff moment.** Active Recall overlay mid-quiz on a real lecture (e.g. a Boards & Beyond–style video) — timestamp + tags visible, note hidden, "Reveal" button waiting.
-  **Caption overlay:** "Recall it before you replay it."
-- [ ] **Screenshot 2 — the capture moment.** YouTube video playing with the ClipMark capture UI open — timestamp just saved, AI-drafted note visible, tag chips shown.
-  **Caption overlay:** "One keystroke saves the moment — AI drafts the note for you."
-- [ ] **Screenshot 3 — the bridge to Anki.** Dashboard/export screen showing a segment being exported, with the resulting Anki-importable file and a visible deep link back to the timestamp.
-  **Caption overlay:** "Export straight to Anki — every card links back to the source."
-- [ ] **Screenshot 4 — the habit view.** Dashboard showing the due-for-review queue/strip across multiple saved lectures, spaced-repetition intervals visible.
-  **Caption overlay:** "Spaced review that brings it back until it sticks."
-- [ ] **Screenshot 5 — the social/shareable moment.** A shared collection page (public link view) with a lecture series' worth of bookmarks.
-  **Caption overlay:** "Share a collection — study the same deck as your classmates."
+**Specs:** 1280×800 PNG, no padding or letterboxing, real product UI. Up to 5; ship all 5.
 
 ---
 
-*Source doc: [chrome-web-store-listing.md](chrome-web-store-listing.md) (title/summary alternates, rationale, demo video outline, keyword list, review-flywheel trigger). Casing fix reference: [PR #58](https://github.com/agarwalshashwat/clipmark/pull/58).*
+## 6. After it's live — track whether any of this worked
+
+Covered in [chrome-web-store-listing.md](chrome-web-store-listing.md) §5. Short version: record the baseline ranks **before** uploading, then re-check weekly with **[Extension Ranker](https://extensionranker.com/tools/rank-checker)**.
