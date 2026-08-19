@@ -246,10 +246,20 @@ Format and rationale in [`RELEASE-RUNBOOK.md` §1](RELEASE-RUNBOOK.md). `git log
 **(b) Locally, via `--publish`.** `scripts/cut-release.sh patch --publish` hands the built zip to `scripts/cws-publish.mjs`, which authenticates with a Chrome Web Store service account and calls the CWS API v2 directly to upload and submit for review. It:
 
 - reads the service-account key **only** from `~/.config/cws/service-account.json` (or `CWS_SERVICE_ACCOUNT_KEY`) — **outside this repo, never committed, never in CI**;
-- refuses to run at all without `CWS_PUBLISHER_ID` (or `--publisher-id`) — there is no default and no lookup API, so it never guesses one;
+- defaults publisher id and item id to the owner's account and ClipMark's item — see [**Identifiers vs. the key**](#identifiers-vs-the-key) below;
 - **never fires without an explicit human "yes"** — an interactive confirmation prompt, unless `--yes` is also passed;
 - never logs, prints, or persists the key or the resulting access token anywhere;
 - has a strictly read-only `--dry-run` (authenticate + fetch the item's current status — no upload, no publish) for checking the credential and item id actually work before you trust it with a real cut.
+
+#### Identifiers vs. the key
+
+Two different kinds of value, handled two different ways:
+
+- **The service-account key** (`~/.config/cws/service-account.json`) is the actual credential. Never in this repo, never in an env default, never printed.
+- **Publisher id and item id are not secrets** — they're addresses, not credentials, the same category as a URL or a database table name. `scripts/cws-publish.mjs` defaults both:
+  - `DEFAULT_PUBLISHER_ID` — the owner's Chrome Web Store publisher account. One person, so one value, shared across every extension in the fleet.
+  - `DEFAULT_ITEM_ID` — ClipMark's own item, `iboippnihpcnnglgboaiedaiimbiolgg`. Per-repo: each repo in the fleet sets its own.
+  - Both are overridable via `--publisher-id`/`CWS_PUBLISHER_ID` and `--item-id`/`CWS_ITEM_ID`, e.g. for a different account or a second extension sharing this tooling.
 
 **Why (a) still exists and isn't being retired:** the dashboard has fields the API can't touch — the Title casing, the listing copy — and (b) does not replace it for those. **Why (b) was added despite the reasoning below:** the credential lives only on the owner's machine, is read by nothing but this one script, and every write path requires the same explicit confirmation a dashboard click would — so the core guarantee ("no credential that anything-triggerable-by-a-PR can reach") holds exactly as before. Nothing in CI ever passes `--publish`; `release-train.yml` (§7) still runs `--no-bump` only and still cannot upload anything.
 

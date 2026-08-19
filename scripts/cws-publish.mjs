@@ -28,8 +28,11 @@
  *     identifier, not a secret, and confirms which credential authenticated.
  *
  * Publisher id has no programmatic lookup (Google's docs: find it in the CWS
- * Developer Dashboard under Publisher > Settings) — it must be supplied via
- * CWS_PUBLISHER_ID or --publisher-id, and this refuses to guess one.
+ * Developer Dashboard under Publisher > Settings) — Google never returns it
+ * from an API call, so this can't discover one on its own. It IS one fixed
+ * value across the owner's whole account, though — not a secret, just a
+ * non-obvious identifier — so DEFAULT_PUBLISHER_ID below is a real default,
+ * override with --publisher-id / CWS_PUBLISHER_ID for a different account.
  *
  * Item id DOES have a per-repo default (DEFAULT_ITEM_ID below) since each repo
  * in the fleet publishes exactly one extension; override with --item-id or
@@ -48,6 +51,13 @@ export const CWS_API_BASE = 'https://chromewebstore.googleapis.com';
 // ClipMark's own Chrome Web Store item id. Override via --item-id / CWS_ITEM_ID
 // for any other extension this tooling is pointed at.
 export const DEFAULT_ITEM_ID = 'iboippnihpcnnglgboaiedaiimbiolgg';
+
+// The owner's Chrome Web Store publisher id — one account, so one value across
+// every extension in the fleet. Not a secret, just a non-obvious identifier
+// with no API lookup (Google's docs: find it in the CWS Developer Dashboard
+// under Publisher > Settings). Override via --publisher-id / CWS_PUBLISHER_ID
+// for a different account.
+export const DEFAULT_PUBLISHER_ID = '0ac82e48-e2d9-4cf9-9dc4-97965f02d8b5';
 
 // ─── Key resolution + reading ────────────────────────────────────────────────
 
@@ -183,7 +193,7 @@ export function parseArgs(argv, env = process.env) {
   const opts = {
     mode: null, // 'dry-run' | 'publish' | 'help'
     itemId: env.CWS_ITEM_ID || DEFAULT_ITEM_ID,
-    publisherId: env.CWS_PUBLISHER_ID || null,
+    publisherId: env.CWS_PUBLISHER_ID || DEFAULT_PUBLISHER_ID,
     zipPath: null,
     keyPath: resolveKeyPath(env),
     yes: false,
@@ -227,8 +237,9 @@ Chrome Web Store publish tooling.
 
 Config, in precedence order (flag > env > repo default):
   --item-id / CWS_ITEM_ID           default: ${DEFAULT_ITEM_ID} (ClipMark)
-  --publisher-id / CWS_PUBLISHER_ID no default — required, see CWS Developer
-                                     Dashboard > Publisher > Settings
+  --publisher-id / CWS_PUBLISHER_ID default: ${DEFAULT_PUBLISHER_ID} (the owner's
+                                     account — same for every extension in the
+                                     fleet; override for a different account)
   --key / CWS_SERVICE_ACCOUNT_KEY   default: ~/.config/cws/service-account.json
 `;
 

@@ -18,6 +18,7 @@ import path from 'node:path';
 
 import {
   DEFAULT_ITEM_ID,
+  DEFAULT_PUBLISHER_ID,
   resolveKeyPath,
   readServiceAccountKey,
   signServiceAccountJwt,
@@ -248,11 +249,11 @@ describe('fetchItemStatus / uploadPackage / publishItem', () => {
 describe('parseArgs', () => {
   const base = ['node', 'cws-publish.mjs'];
 
-  it('defaults item id to DEFAULT_ITEM_ID and requires no publisher id at parse time', () => {
+  it('defaults item id and publisher id to their repo defaults', () => {
     const opts = parseArgs([...base, '--dry-run'], {});
     assert.equal(opts.mode, 'dry-run');
     assert.equal(opts.itemId, DEFAULT_ITEM_ID);
-    assert.equal(opts.publisherId, null);
+    assert.equal(opts.publisherId, DEFAULT_PUBLISHER_ID);
   });
 
   it('reads item id, publisher id and key path from the environment', () => {
