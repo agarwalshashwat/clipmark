@@ -4,9 +4,18 @@
 #
 # The release train (docs/RELEASE-PROCESS.md) batches extension releases because
 # every Web Store upload costs a Google review and force-updates every user. This
-# script is the mechanical half of that: it does everything up to — and
-# deliberately NOT including — the upload. The upload stays a manual owner step in
-# the CWS dashboard, so there is no store API key anywhere in this repo or its CI.
+# script is the mechanical half of that: build, verify, package, tag. By default
+# it stops there — the upload is a manual owner step in the CWS dashboard, and
+# nothing above the Publish step reads a store credential or touches the network
+# for one, so a plain cut never needs the key to exist at all.
+#
+# --publish is the one opt-in exception: it hands the built zip to
+# scripts/cws-publish.mjs, which reads a service-account key from
+# ~/.config/cws/service-account.json (never from this repo, never from CI — see
+# that file's own docstring) and uploads + submits for review. It is still a
+# deliberate, explicitly-confirmed local action, not automation: nothing in CI
+# passes --publish, and cws-publish.mjs itself refuses the actual upload without
+# an explicit "yes" (interactively, unless --yes is also passed here).
 #
 # What it does, in order:
 #   1. Preflight  — tools, repo root, git state, resolve the target version.
@@ -22,6 +31,8 @@
 #   7. Checksum   — sha256, `sha256sum -c`-compatible.
 #   8. Tag        — annotated `vX.Y.Z` at the built commit, sha256 in the message,
 #                   pushed to origin. This is the rollback anchor.
+#   9. Publish    — only with --publish: upload + submit for review via
+#                   scripts/cws-publish.mjs. Skipped by default.
 #
 # Usage:
 #   scripts/cut-release.sh patch                 # 1.0.5 -> 1.0.6
@@ -31,6 +42,8 @@
 #   scripts/cut-release.sh --set-version 1.2.0   # explicit target
 #   scripts/cut-release.sh patch --no-tag        # skip the tag (you own the anchor then)
 #   scripts/cut-release.sh patch --no-push-tag   # tag locally, push it yourself
+#   scripts/cut-release.sh patch --publish       # also upload + submit (asks to confirm)
+#   scripts/cut-release.sh patch --publish --yes # same, without the interactive prompt
 #   scripts/cut-release.sh --help
 #
 # Tags are immutable. The script refuses — before building — if `vX.Y.Z` already
@@ -59,7 +72,7 @@ warn()  { printf '  %s!%s %s\n' "$YELLOW" "$RESET" "$*" >&2; }
 die()   { printf '\n  %s✗%s %s\n\n' "$RED" "$RESET" "$*" >&2; exit 1; }
 
 usage() {
-  sed -n '3,35p' "$0" | sed 's|^# \{0,1\}||'
+  sed -n '3,47p' "$0" | sed 's|^# \{0,1\}||'
   exit "${1:-0}"
 }
 
@@ -72,6 +85,8 @@ NO_TAG=0
 PUSH_TAG=1
 ALLOW_DIRTY=0
 SKIP_DESIGN_AUDIT=0
+PUBLISH=0
+PUBLISH_YES=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -88,6 +103,8 @@ while [ $# -gt 0 ]; do
     --no-push-tag)    PUSH_TAG=0 ;;
     --allow-dirty)    ALLOW_DIRTY=1 ;;
     --skip-design-audit) SKIP_DESIGN_AUDIT=1 ;;
+    --publish)        PUBLISH=1 ;;
+    --yes)            PUBLISH_YES=1 ;;
     -h|--help)        usage 0 ;;
     *)                printf '%sunknown argument: %s%s\n\n' "$RED" "$1" "$RESET" >&2; usage 1 ;;
   esac
@@ -106,6 +123,13 @@ if [ "$selectors" -eq 0 ]; then
   printf '%sno bump type given.%s Pass patch, minor, major, --set-version X.Y.Z, or --no-bump.\n\n' \
     "$RED" "$RESET" >&2
   usage 1
+fi
+
+# --no-bump is a verification build ("does main still package?") and must
+# never be uploaded — see its own tagging refusal above. --publish would
+# upload it, so refuse the combination before doing any work.
+if [ "$PUBLISH" -eq 1 ] && [ "$NO_BUMP" -eq 1 ]; then
+  die "--publish cannot be combined with --no-bump: a no-bump build is a verification build and must never be uploaded."
 fi
 
 # ── Locate the repo ───────────────────────────────────────────────────────────
@@ -280,10 +304,12 @@ $( [ "$NO_TAG" -eq 1 ] \
      && printf '    8. (--no-tag: no tag would be created)\n' \
      || printf '    8. git tag -a v%s at %s, sha256 in the message%s\n' \
           "$TARGET" "$GIT_SHA" "$( [ "$PUSH_TAG" -eq 1 ] && printf ', then push it' || printf ' (push it yourself)' )" )
-
-  Nothing is uploaded. The Chrome Web Store upload is a manual owner step —
-  see docs/RELEASE-PROCESS.md §5 step 7.
-
+$( [ "$PUBLISH" -eq 1 ] \
+     && printf '    9. hand off to scripts/cws-publish.mjs --publish --zip %s%s\n         (reads the service-account key from ~/.config/cws/service-account.json;\n         prompts for interactive confirmation unless --yes was also passed here)\n' \
+          "$ZIP_PATH" "$( [ "$PUBLISH_YES" -eq 1 ] && printf ' --yes' )" )
+$( [ "$PUBLISH" -eq 1 ] \
+     && printf '  --publish was passed: step 9 above would upload and submit for review.\n  Nothing is uploaded by a dry run regardless — this only describes the plan.\n' \
+     || printf '  Nothing is uploaded. Pass --publish to hand off to scripts/cws-publish.mjs,\n  or upload the zip by hand — see docs/RELEASE-PROCESS.md section 5 step 7.\n' )
 EOF
   exit 0
 fi
@@ -497,6 +523,28 @@ EOF
   fi
 fi
 
+# ── Publish ───────────────────────────────────────────────────────────────────
+# The ONLY place in this script a store credential is touched — everything
+# above this point (build, verify, package, tag) never read one. Delegated
+# entirely to scripts/cws-publish.mjs, which reads the service-account key from
+# ~/.config/cws/service-account.json (never from this repo) and refuses the
+# actual upload+submit without an explicit "yes" — interactively, unless --yes
+# was also passed to this script. See docs/RELEASE-PROCESS.md §5 step 8.
+PUBLISHED=0
+if [ "$PUBLISH" -eq 1 ]; then
+  step "Publish"
+  PUBLISH_ARGS=(--publish --zip "$ZIP_PATH")
+  [ "$PUBLISH_YES" -eq 1 ] && PUBLISH_ARGS+=(--yes)
+  if node scripts/cws-publish.mjs "${PUBLISH_ARGS[@]}"; then
+    ok "submitted to the Chrome Web Store for review"
+    PUBLISHED=1
+  else
+    die "publish failed — see above. The build, tag and artifact above are still
+      valid; nothing here needs re-running. Retry just the publish step:
+        node scripts/cws-publish.mjs --publish --zip $ZIP_PATH"
+  fi
+fi
+
 # ── Hand off ──────────────────────────────────────────────────────────────────
 printf '\n%s%s─── release candidate ready ───%s\n\n' "$BOLD" "$GREEN" "$RESET"
 printf '  version   %s%s%s\n' "$BOLD" "$TARGET" "$RESET"
@@ -507,7 +555,13 @@ printf '\n  Remaining steps are MANUAL and owner-only (docs/RELEASE-PROCESS.md �
 if [ "$NO_BUMP" -eq 0 ]; then
   printf '    1. commit the bump, open a PR, land it on main\n'
   printf '    2. update CHANGELOG.md\n'
-  printf '    3. upload %s by hand in the CWS dashboard, staged rollout first\n' "$(basename "$ZIP_PATH")"
+  if [ "$PUBLISHED" -eq 1 ]; then
+    printf '    3. already submitted via --publish — set the staged rollout %% and\n'
+    printf '       watch the review in the CWS dashboard (docs/RELEASE-RUNBOOK.md §3b)\n'
+  else
+    printf '    3. upload %s by hand in the CWS dashboard, staged rollout first\n' "$(basename "$ZIP_PATH")"
+    printf '       (or re-run with --publish to do this from here)\n'
+  fi
   if [ "$NO_TAG" -eq 0 ]; then
     printf '\n  %s%s is your rollback anchor%s — already created%s. To reproduce this build:\n' \
       "$BOLD" "$TAG_NAME" "$RESET" "$( [ "$PUSH_TAG" -eq 1 ] && printf ' and pushed' || printf ' locally' )"

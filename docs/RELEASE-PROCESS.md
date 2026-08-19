@@ -186,7 +186,7 @@ Then it prints the artifact path, the sha256, and the manual steps left.
 
 **If it fails partway, just run it again.** It won't double-bump: when the working tree's version already differs from `HEAD`'s, it adopts that in-flight version instead of bumping on top of it. Re-running `patch` three times against a `1.0.5` HEAD yields `1.0.6` every time, not `1.0.8`. That accidental double-bump is a real contributor to version thrash.
 
-Other flags: `--set-version X.Y.Z` for an explicit target, `--no-bump` to build/verify/package at the current version without touching a version number (verification only — do not upload it; §7 uses this), `--skip-design-audit` to cut past a design failure you've deliberately accepted, `--help`.
+Other flags: `--set-version X.Y.Z` for an explicit target, `--no-bump` to build/verify/package at the current version without touching a version number (verification only — do not upload it; §7 uses this), `--skip-design-audit` to cut past a design failure you've deliberately accepted, `--publish` to upload + submit for review via `scripts/cws-publish.mjs` once the build is tagged (see §5 step 8b — mutually exclusive with `--no-bump`), `--yes` to skip that step's interactive confirmation, `--help`.
 
 ### Step 4 — Install the artifact and test it
 
@@ -237,20 +237,29 @@ Format and rationale in [`RELEASE-RUNBOOK.md` §1](RELEASE-RUNBOOK.md). `git log
 
 `CHANGELOG.md` **does not exist yet** — the first cut under this process creates it. Start it at that release rather than back-filling 1.0.0–1.0.5 from memory; the commit log is the record for everything before the train.
 
-### Step 8 — Upload to the Chrome Web Store — **manual, owner only**
+### Step 8 — Upload to the Chrome Web Store
 
-**This step is never automated, and that's a deliberate decision, not a gap.**
+**Two ways to do this, and both stay owner-gated — there is no path that publishes without a human confirming it.**
 
-Follow [`RELEASE-RUNBOOK.md` §3, steps 3–5](RELEASE-RUNBOOK.md) for the dashboard walkthrough (item ID, the Title-casing check, staged rollout, submit). Then §3b for monitoring the rollout.
+**(a) By hand in the dashboard (the original path, still fully supported).** Follow [`RELEASE-RUNBOOK.md` §3, steps 3–5](RELEASE-RUNBOOK.md) for the walkthrough (item ID, the Title-casing check, staged rollout, submit). Then §3b for monitoring the rollout.
 
-Why it stays manual:
+**(b) Locally, via `--publish`.** `scripts/cut-release.sh patch --publish` hands the built zip to `scripts/cws-publish.mjs`, which authenticates with a Chrome Web Store service account and calls the CWS API v2 directly to upload and submit for review. It:
 
-- **It's irreversible.** There is no unpublish. The only correction is another version through another review cycle. An automated path could push an unreviewed build to every user with no human in the loop.
-- **It force-updates everyone.** Chrome installs silently, without consent. That deserves an intentional human action.
-- **The dashboard has fields the repo can't see** — the Title casing, the rollout percentage, the listing copy. A CWS API upload skips all of them.
-- **No store credential should exist here.** This repo is **public**. Automating the upload means a CWS OAuth client secret and refresh token in Actions secrets, giving anything that can trigger a workflow the power to publish. Not having the credential at all is a stronger guarantee than guarding it. There is no store API key in this repo or its CI, by design.
+- reads the service-account key **only** from `~/.config/cws/service-account.json` (or `CWS_SERVICE_ACCOUNT_KEY`) — **outside this repo, never committed, never in CI**;
+- refuses to run at all without `CWS_PUBLISHER_ID` (or `--publisher-id`) — there is no default and no lookup API, so it never guesses one;
+- **never fires without an explicit human "yes"** — an interactive confirmation prompt, unless `--yes` is also passed;
+- never logs, prints, or persists the key or the resulting access token anywhere;
+- has a strictly read-only `--dry-run` (authenticate + fetch the item's current status — no upload, no publish) for checking the credential and item id actually work before you trust it with a real cut.
 
-The `release-train.yml` workflow (§7) exists so that the *build* is always ready and this manual step is as short as possible — never so that it can be skipped.
+**Why (a) still exists and isn't being retired:** the dashboard has fields the API can't touch — the Title casing, the listing copy — and (b) does not replace it for those. **Why (b) was added despite the reasoning below:** the credential lives only on the owner's machine, is read by nothing but this one script, and every write path requires the same explicit confirmation a dashboard click would — so the core guarantee ("no credential that anything-triggerable-by-a-PR can reach") holds exactly as before. Nothing in CI ever passes `--publish`; `release-train.yml` (§7) still runs `--no-bump` only and still cannot upload anything.
+
+Why this stays gated, whichever path you take:
+
+- **It's irreversible.** There is no unpublish. The only correction is another version through another review cycle. Automation with no human in the loop could push an unreviewed build to every user — which is exactly why (b) still stops and asks.
+- **It force-updates everyone.** Chrome installs silently, without consent. That deserves an intentional human action, not a default.
+- **No store credential should exist in the repo or CI.** This repo is **public**. A credential an Actions workflow could reach would give anything that can trigger a workflow the power to publish. That has not changed: the key lives at `~/.config/cws/`, on the owner's machine, full stop.
+
+The `release-train.yml` workflow (§7) exists so that the *build* is always ready and whichever upload path you take is as short as possible — never so that it can be skipped.
 
 ---
 
