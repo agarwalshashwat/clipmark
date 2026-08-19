@@ -78,14 +78,14 @@ async function getTourState() {
 // chrome.storage.sync writes on the same one-shot.
 let markedSeen = false;
 
-// Last-resort, in-memory backstop: the user ended a tour on this page, whatever
-// storage did about it. Both areas refusing a write is not a reason to show the
-// tour again on the next video — that is the endless-tour bug in its purest
-// form, and the one thing the user cannot escape. This suppresses it for the
-// rest of the session (until the tab or SPA session goes away), by which point
-// a healthy write will normally have landed. It deliberately does NOT persist:
-// if storage really is unwritable, a fresh session offering the tour once more
-// is the correct, bounded fallback.
+// Last-resort, in-memory backstop: a tour reached the user on this page,
+// whatever storage did about it. Both areas refusing a write is not a reason to
+// show the tour again on the next video — that is the endless-tour bug in its
+// purest form, and the one thing the user cannot escape. This suppresses it for
+// the rest of the session (until the tab or SPA session goes away), by which
+// point a healthy write will normally have landed. It deliberately does NOT
+// persist: if storage really is unwritable, a fresh session offering the tour
+// once more is the correct, bounded fallback.
 let endedThisSession = false;
 
 /**
@@ -141,14 +141,15 @@ function markYoutubeTourSeen() {
 /**
  * Persist "seen" if the tour genuinely reached the user.
  *
- * Kept as one helper because there are several places the user can end the tour
- * and every one of them has to store the flag — the bug this closes was one of
- * those paths silently not storing it.
+ * Called from first paint AND from every teardown path. Kept as one idempotent
+ * helper (`markedSeen` dedupes) because there are several places a run can end
+ * and every one of them has to store the flag — one of those paths silently not
+ * storing it is the bug shape this has regressed into twice now.
  */
 function markSeenIfShown() {
-  if (!shouldMarkTourSeen({ stepShown, abandonedForNavigation })) return;
+  if (!shouldMarkTourSeen({ stepShown })) return;
   // Set before the async write, and independently of whether it lands — this is
-  // the record that the USER ended the tour, not that storage agreed.
+  // the record that the tour REACHED the user, not that storage agreed.
   endedThisSession = true;
   markYoutubeTourSeen();
 }
@@ -240,7 +241,27 @@ let starting = false;
 let navigationEpoch = 0;
 // Per-run outcome, read by onDestroyed to decide whether the tour counts as seen.
 let stepShown = false;
-let abandonedForNavigation = false;
+
+/**
+ * The tour has been put on screen once in this content-script context.
+ *
+ * This is the belt to storage's braces, and the thing that actually bounds the
+ * bug a real user hit on v1.0.8: the tour re-appeared on video after video
+ * because every SPA navigation tore it down, declined to record the one-shot,
+ * and re-armed it on the next video. Storage alone cannot close that loop —
+ * whether the flag is written is decided asynchronously and can be refused,
+ * whereas navigation is immediate and endless.
+ *
+ * Set SYNCHRONOUSLY, in the same tick as `drive()`, so no amount of re-entrant
+ * `yt-navigate-finish` can slip between "decide to show" and "recorded that we
+ * showed". It deliberately latches on the tour being SHOWN rather than merely
+ * attempted, so an attempt that gives up waiting for the player button still
+ * leaves the next watch page free to offer the tour.
+ *
+ * Per-context by design: a genuine new page load starts fresh and defers to the
+ * persisted flag, which is what makes "at most once ever" survive a reload.
+ */
+let tourOfferedInThisContext = false;
 // The video the tour is running on, or is currently trying to start on. Set at
 // ATTEMPT time, not just once the tour is live, so a `yt-navigate-finish` that
 // lands while we are still waiting for the anchor doesn't cancel the attempt for
@@ -263,18 +284,29 @@ function isContextInvalidated() {
 }
 
 async function startYoutubeTour() {
+  // ── Synchronous guards ────────────────────────────────────────────────────
+  // Everything decidable without I/O happens before the first `await`, and
+  // `starting` is claimed in this same tick. v1.0.8 read the seen flag BEFORE
+  // claiming it, so two `yt-navigate-finish` events landing while that read was
+  // in flight both passed the guard and both went on to drive a tour — one
+  // popover overwriting the other's `tourInstance` and leaving it on screen with
+  // nothing able to close it.
   if (starting || tourInstance) return;
+  // Already shown once here — never re-arm, whatever storage did or didn't do.
+  if (tourOfferedInThisContext) return;
   if (isContextInvalidated()) return;
   // The user already ended a tour in this session; a storage write that never
   // landed must not bring it back on the next video.
   if (endedThisSession) return;
   if (!isWatchPage()) return;
-  if (!shouldStartYoutubeTour(await getTourState())) return;
 
   starting = true;
   const epoch = navigationEpoch;
   tourVideoId = currentVideoId();
   try {
+    // Now the async part. The resolved flag gates the tour — nothing below is
+    // reachable for a user who has already seen it.
+    if (!shouldStartYoutubeTour(await getTourState())) return;
     // v1.0.1 drove the tour immediately and leaned on driver.js's own
     // `waitForElement` for the anchor. That does not fail loudly: on timeout
     // driver.js falls back to its centred `driver-dummy-element`, so step one
@@ -296,11 +328,11 @@ async function startYoutubeTour() {
     const bookmarkCount = await getBookmarkCount(currentVideoId());
 
     stepShown = false;
-    abandonedForNavigation = false;
-    // A fresh run gets a fresh chance to persist the one-shot (the previous run
-    // on this page may have been torn down by an SPA navigation before it
-    // counted as seen).
     markedSeen = false;
+    // Claimed here, synchronously, before driver.js can paint anything and
+    // before any listener can re-enter: from this point the tour has had its one
+    // turn in this context.
+    tourOfferedInThisContext = true;
 
     tourInstance = driver({
       showProgress: true,
@@ -318,20 +350,30 @@ async function startYoutubeTour() {
         markSeenIfShown();
         tourInstance?.destroy();
       },
-      // Proof that a coach-mark was actually painted. `onPopoverRender` fires as
-      // soon as the popover is in the DOM (~10ms after drive()), whereas
-      // `onHighlighted` is the END of driver.js's 400ms highlight transition —
-      // and on a page as busy as a YouTube watch page that lands over a second
-      // later. Gating "shown" on onHighlighted alone meant a user who clicked ×
-      // during the fade-in — the common case, the × is right there — was
-      // recorded as having seen nothing, so the one-shot flag was never stored
-      // and the tour returned on every single video. Both are wired up; the
-      // first to fire wins.
+      // Proof that a coach-mark was actually painted, and the point at which the
+      // one-shot is persisted.
+      //
+      // `onPopoverRender` fires as soon as the popover is in the DOM (~10ms after
+      // drive()), whereas `onHighlighted` is the END of driver.js's 400ms
+      // highlight transition — and on a page as busy as a YouTube watch page that
+      // lands over a second later. Gating "shown" on onHighlighted alone meant a
+      // user who clicked × during the fade-in — the common case, the × is right
+      // there — was recorded as having seen nothing, so the flag was never stored
+      // and the tour returned on every video. Both are wired up; first to fire wins.
+      //
+      // Storing here rather than only on teardown is what closes the last hole:
+      // teardown is not guaranteed to run at all. A full page load mid-tour
+      // (typed URL, hard link, reload) destroys this content script outright — no
+      // yt-navigate-finish, no onDestroyed, nothing — so a flag written only on
+      // the way out is simply lost and the next page offers the tour again. The
+      // teardown paths below still call this; `markedSeen` makes the repeats free.
       onPopoverRender: () => {
         stepShown = true;
+        markSeenIfShown();
       },
       onHighlighted: () => {
         stepShown = true;
+        markSeenIfShown();
       },
       // The only teardown hook driver.js calls unconditionally. `onDestroyed` is
       // guarded on its `__activeElement` state, which is set at the same instant
@@ -355,28 +397,38 @@ async function startYoutubeTour() {
     tourInstance.drive();
   } finally {
     starting = false;
+    // The attempt concluded without a live tour (flag already set, anchor never
+    // arrived, or the page moved on): stop claiming a video, or the navigation
+    // listener's "same video, not a real navigation" check would compare against
+    // a stale id.
+    if (!tourInstance) tourVideoId = null;
     // A navigation that landed while this attempt was awaiting the anchor was
     // swallowed by the `starting` guard at the top. Pick it back up, or the
-    // tour would sit out the very video the user just opened.
+    // tour would sit out the very video the user just opened. Harmless once the
+    // tour has had its turn — the latch above returns immediately.
     if (epoch !== navigationEpoch && !tourInstance) startYoutubeTour();
   }
 }
 
-// SPA navigation risk: YouTube never fully reloads between videos, and a
-// tour mid-step should dismiss rather than try to survive a torn-down DOM.
-// Dismissing this way is not the user declining the tour, so it does not count
-// as seen — the tour picks up again on the video they navigated to.
+// SPA navigation risk: YouTube never fully reloads between videos, and a tour
+// mid-step should dismiss rather than try to survive a torn-down DOM.
 //
-// But `yt-navigate-finish` is NOT a reliable "you navigated" signal: YouTube
-// fires it on the INITIAL load of a watch page (~600ms in, well after our tour
-// has started) and again as the SPA settles, all without the video changing.
+// `yt-navigate-finish` is NOT a reliable "you navigated" signal: YouTube fires it
+// on the INITIAL load of a watch page (~600ms in, well after our tour has
+// started) and again as the SPA settles, all without the video changing.
 // Treating those as navigations tore the live tour down and restarted it at
 // step 1 roughly a second after it appeared — so Next appeared to do nothing
-// (the step advanced, then the restart reset it), and the close button appeared
-// dead (the tour was dismissed, then immediately re-shown). Worse, every one of
-// those teardowns set abandonedForNavigation, which by design suppresses
-// marking the tour seen — so a first-run user could neither finish it nor get
-// rid of it. Gate on the video id actually changing.
+// (the step advanced, then the restart reset it) and the close button appeared
+// dead (dismissed, then immediately re-shown). Gate on the video id actually
+// changing.
+//
+// That gate fixed the spurious case but not the REAL one, which is what a user
+// reported on v1.0.8: when the video id genuinely does change, this handler
+// destroyed the tour and started it again on the new video — and the teardown
+// declined to record the one-shot, so it could repeat forever. Two things stop
+// that now: the teardown marks the tour seen like any other (see
+// shouldMarkTourSeen), and `tourOfferedInThisContext` refuses a second showing
+// in this context even if the write never lands.
 document.addEventListener('yt-navigate-finish', () => {
   // Orphaned by an extension update/reload while this tab stayed open: every
   // chrome.* call below would throw. Nothing left to drive.
@@ -386,7 +438,11 @@ document.addEventListener('yt-navigate-finish', () => {
 
   navigationEpoch += 1;
   if (tourInstance?.isActive()) {
-    abandonedForNavigation = true;
+    // Tearing the tour down here used to set `abandonedForNavigation`, which
+    // suppressed the one-shot — so the tour came straight back on the new video,
+    // for as long as the user kept browsing. It now falls through to
+    // markSeenIfShown like every other teardown: a coach-mark that reached the
+    // screen counts, and `tourOfferedInThisContext` stops the re-arm regardless.
     tourInstance.destroy();
   }
   tourVideoId = null;

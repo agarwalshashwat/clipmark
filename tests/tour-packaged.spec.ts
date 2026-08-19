@@ -246,10 +246,13 @@ test.describe('First-run guided tour (packaged build)', () => {
     }
   });
 
-  test('a real navigation mid-tour does NOT burn the seen flag', async () => {
-    // The rule this protects: "seen" means a step rendered AND the user was the
-    // one who ended it. Being carried to another video by an SPA navigation is
-    // neither, so the tour gets another go on the next watch page.
+  test('navigating away mid-tour records it and does not offer it again', async () => {
+    // INVERTED for the v1.0.8 field bug. This used to assert the opposite — that
+    // being carried to another video left the flag unset so the tour "got
+    // another go". That rule is what a real user hit: they browse videos, so the
+    // tour got another go every single time, forever.
+    //
+    // A coach-mark that reached the screen counts as seen however the run ended.
     const context = await launch();
     try {
       const worker = await extensionServiceWorker(context);
@@ -260,25 +263,26 @@ test.describe('First-run guided tour (packaged build)', () => {
       await page.goto(OTHER_VIDEO_URL, { waitUntil: 'domcontentloaded' });
       await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
 
-      // Still unseen…
-      expect((await tourState(worker)).youtubeTour).toBeFalsy();
-      // …and offered again on the video the user landed on.
-      await page.locator(POPOVER).waitFor({ timeout: MOUNT_TIMEOUT });
-      await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
+      // Recorded…
+      await expect
+        .poll(async () => (await tourState(worker)).youtubeTour, { timeout: 10_000 })
+        .toBe(true);
+      // …and not offered on the video the user landed on.
+      await page.waitForTimeout(4000); // past the anchor wait + drive()
+      await expect(page.locator(POPOVER)).toHaveCount(0);
     } finally {
       await context.close();
     }
   });
 
-  test('an in-page SPA navigation mid-tour does NOT burn the seen flag either', async () => {
-    // The case above is a full page load, which tears the content script down
-    // wholesale — so `abandonedForNavigation` never runs and the rule is only
-    // incidentally satisfied. The path production actually takes between two
-    // videos keeps the SAME content-script instance alive and reaches the tour
-    // through its yt-navigate-finish listener: bump navigationEpoch, destroy a
-    // live tour with abandonedForNavigation set, restart on the new video. That
-    // branch had no coverage until the watch page became a local fixture we can
-    // navigate without a reload.
+  test('an in-page SPA navigation mid-tour records it and does not re-arm', async () => {
+    // INVERTED alongside the case above, and this is the one that matters: a
+    // full page load tears the content script down wholesale, whereas the path
+    // production actually takes between two videos keeps the SAME content-script
+    // instance alive and reaches the tour through its yt-navigate-finish
+    // listener. That listener destroyed the live tour, declined to record the
+    // one-shot, and restarted the tour on the new video — the exact loop a user
+    // filmed on v1.0.8.
     const context = await launch();
     try {
       const worker = await extensionServiceWorker(context);
@@ -301,11 +305,13 @@ test.describe('First-run guided tour (packaged build)', () => {
       // Same content-script instance, new video…
       expect(await page.evaluate(() => (window as any).__spaSentinel)).toBe(true);
       expect(new URL(page.url()).searchParams.get('v')).toBe(OTHER_VIDEO_ID);
-      // …carried there rather than choosing to end the tour, so still unseen…
-      expect((await tourState(worker)).youtubeTour).toBeFalsy();
-      // …and offered again, from the top.
-      await page.locator(POPOVER).waitFor({ timeout: MOUNT_TIMEOUT });
-      await expect(page.locator(PROGRESS)).toHaveText('1 of 3');
+      // …the one-shot is recorded…
+      await expect
+        .poll(async () => (await tourState(worker)).youtubeTour, { timeout: 10_000 })
+        .toBe(true);
+      // …and the tour does not come back on the video they landed on.
+      await page.waitForTimeout(4000);
+      await expect(page.locator(POPOVER)).toHaveCount(0);
     } finally {
       await context.close();
     }
@@ -529,6 +535,126 @@ test.describe('First-run guided tour (packaged build)', () => {
       await expect(page.locator(POPOVER)).toContainText('Active Recall');
       await expect(page.locator(POPOVER)).not.toContainText('Come back here once');
       await expect(page.locator(POPOVER)).toContainText("quizzes you before each clip plays");
+    } finally {
+      await context.close();
+    }
+  });
+
+  /**
+   * ─── The v1.0.8 field report ───────────────────────────────────────────────
+   *
+   * A real end user sent video of the tour coach-mark re-appearing over and over
+   * while they watched YouTube — the "Or just press a key / Alt+B" step in
+   * particular. Not the orphaned-context case #148 covered: an ordinary install,
+   * an ordinary person moving between videos.
+   *
+   * Reproduced exactly here before the fix: 1 cold load + 4 in-page navigations
+   * showed the tour 5 times, restarting at "1 of 3" every time, with BOTH storage
+   * areas still empty. Cause was the interaction of two deliberate rules —
+   * `shouldMarkTourSeen` refused to record the one-shot when a navigation ended
+   * the tour, and the yt-navigate-finish listener immediately re-armed it on the
+   * new video. Nothing terminated that loop, because browsing is not a terminal
+   * state.
+   *
+   * These walk more navigations than any other case here on purpose: the bug is
+   * only visible in the repetition, which is why a suite full of single-navigation
+   * tests passed all the way through v1.0.8.
+   */
+  const MORE_VIDEO_IDS = ['ZZZspaVideo03', 'ZZZspaVideo04', 'ZZZspaVideo05'];
+
+  /** launch(), but with the extra fixture videos these two cases navigate through. */
+  async function launchWithExtraVideos(): Promise<BrowserContext> {
+    const context = await launchExtensionContext(DIST);
+    const titles: Record<string, string> = {
+      [VIDEO_ID]: TEST_VIDEO_TITLE,
+      [OTHER_VIDEO_ID]: OTHER_VIDEO_TITLE,
+    };
+    MORE_VIDEO_IDS.forEach((id, i) => { titles[id] = `SPA fixture ${i + 3}`; });
+    await serveYouTubeFixture(context, { titles });
+    return context;
+  }
+
+  /** Drive one in-page SPA navigation and let the tour have every chance to appear. */
+  async function spaNavigate(page: Page, videoId: string, title: string): Promise<void> {
+    await page.evaluate(
+      ({ id, t }) => (window as any).__clipmarkFixture.navigateTo(id, t),
+      { id: videoId, t: title },
+    );
+    await waitForExtensionMount(page, MOUNT_TIMEOUT);
+    // Generous on purpose: past the anchor wait and drive(), so a tour that WOULD
+    // re-arm has time to paint rather than being missed by a tight assertion.
+    await page.waitForTimeout(3000);
+  }
+
+  test('the tour is offered at most once across repeated SPA navigations', async () => {
+    const context = await launchWithExtraVideos();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await resetTour(worker);
+      await worker.evaluate(() =>
+        new Promise<void>((r) => chrome.storage.local.remove('tourState', () => r())));
+
+      // A genuine first-run user: the tour appears, and they click Next — which
+      // is where the filmed video was, on the Alt+B step.
+      const page = await openWithTour(context);
+      await expect(page.locator(POPOVER)).toHaveCount(1);
+      await page.locator(NEXT).click();
+      await expect(page.locator(PROGRESS)).toHaveText('2 of 3');
+
+      let appearances = 1;
+      const journey: Array<[string, string]> = [
+        [OTHER_VIDEO_ID, OTHER_VIDEO_TITLE],
+        ...MORE_VIDEO_IDS.map((id, i) => [id, `SPA fixture ${i + 3}`] as [string, string]),
+      ];
+      for (const [id, title] of journey) {
+        await spaNavigate(page, id, title);
+        appearances += await page.locator(POPOVER).count();
+      }
+
+      expect(
+        appearances,
+        `tour was shown ${appearances}× across a cold load + ${journey.length} SPA navigations`,
+      ).toBe(1);
+
+      // And the one-shot really is persisted, not merely suppressed in memory.
+      await expect
+        .poll(async () => (await tourState(worker)).youtubeTour, { timeout: 10_000 })
+        .toBe(true);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('a persisted seen flag survives repeated SPA navigations and re-inits', async () => {
+    // The other half: a returning user whose flag is already stored. Covers the
+    // read path across many navigations in ONE content-script context, then
+    // across fresh contexts (full reloads re-evaluate the content script), which
+    // is what "never re-arms" has to mean for someone who saw the tour weeks ago.
+    const context = await launchWithExtraVideos();
+    try {
+      const worker = await extensionServiceWorker(context);
+      await worker.evaluate(() =>
+        new Promise<void>((r) => chrome.storage.sync.set({ tourState: { youtubeTour: true } }, () => r())));
+
+      const page = await context.newPage();
+      await page.goto(VIDEO_URL, { waitUntil: 'domcontentloaded' });
+      await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
+      await page.waitForTimeout(3000);
+      await expect(page.locator(POPOVER)).toHaveCount(0);
+
+      // Many in-page navigations, same content-script instance.
+      for (const [i, id] of MORE_VIDEO_IDS.entries()) {
+        await spaNavigate(page, id, `SPA fixture ${i + 3}`);
+        await expect(page.locator(POPOVER), `tour re-armed on SPA navigation ${i + 1}`).toHaveCount(0);
+      }
+
+      // Then fresh content-script contexts, which re-read storage from scratch.
+      for (const url of [OTHER_VIDEO_URL, VIDEO_URL]) {
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        await page.locator('.yt-bookmark-player-btn').waitFor({ state: 'attached', timeout: MOUNT_TIMEOUT });
+        await page.waitForTimeout(3000);
+        await expect(page.locator(POPOVER), `tour re-armed on a reload of ${url}`).toHaveCount(0);
+      }
     } finally {
       await context.close();
     }

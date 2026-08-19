@@ -47,12 +47,31 @@ export function hasSeenYoutubeTour({ syncState, localState } = {}) {
 }
 
 /**
+ * Whether a finished tour run counts as "the user has seen the tour".
+ *
+ * One rule: a coach-mark was actually painted. `stepShown` is set from
+ * driver.js's onPopoverRender/onHighlighted, so it is true only if something
+ * really reached the screen — which is the whole point of the flag, and enough
+ * on its own.
+ *
+ * v1.0.8 also required `!abandonedForNavigation`, so a YouTube SPA navigation
+ * mid-tour refused to record the flag. The intent was fair ("being carried to
+ * the next video isn't the user declining, so offer it again"), but combined
+ * with the yt-navigate-finish listener restarting the tour on the new video it
+ * produced an unbounded loop: a real user reported the tour re-appearing on
+ * video after video, and neither storage area ever had the flag. Navigating
+ * while the tour is up is what a normal person does, so that path has to
+ * terminate. A user who saw the tour and moved on has seen it; the side panel's
+ * "Replay guided tour" button is there for anyone who wants it back.
+ *
+ * `abandonedForNavigation` is still accepted so existing callers keep working,
+ * but it no longer suppresses the flag.
+ *
  * @param {{stepShown?: boolean, abandonedForNavigation?: boolean}} outcome
  * @returns {boolean}
  */
-export function shouldMarkTourSeen({ stepShown, abandonedForNavigation } = {}) {
-  if (!stepShown) return false; // nothing ever rendered — the user saw no tour
-  return !abandonedForNavigation; // torn down by a YouTube SPA nav, not by the user
+export function shouldMarkTourSeen({ stepShown } = {}) {
+  return !!stepShown; // nothing rendered → the user saw no tour → not seen
 }
 
 /**

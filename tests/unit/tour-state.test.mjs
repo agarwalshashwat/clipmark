@@ -49,10 +49,22 @@ describe('shouldMarkTourSeen', () => {
     assert.equal(shouldMarkTourSeen(), false);
   });
 
-  it('does not mark seen when a YouTube SPA navigation tore the tour down', () => {
-    // v1.0.1 regression: navigating to the next video mid-tour marked it seen
-    // for good, even though the user neither completed nor dismissed it.
-    assert.equal(shouldMarkTourSeen({ stepShown: true, abandonedForNavigation: true }), false);
+  it('marks seen even when a YouTube SPA navigation tore the tour down', () => {
+    // The v1.0.8 field bug, reported with video by a real user: this returned
+    // false, so a navigation mid-tour never recorded the one-shot — and the
+    // yt-navigate-finish listener then re-armed the tour on the video the user
+    // had just opened. Browsing between videos is the normal thing to do, so the
+    // tour came back over and over with no way out.
+    //
+    // A painted coach-mark is a seen coach-mark, however the run ended. The
+    // side panel's "Replay guided tour" covers anyone who wants it back.
+    assert.equal(shouldMarkTourSeen({ stepShown: true, abandonedForNavigation: true }), true);
+  });
+
+  it('still refuses to mark seen on a navigation that rendered nothing', () => {
+    // The guarantee that survives: a tour torn down before it painted anything
+    // has not been seen, so it must not consume the one-shot.
+    assert.equal(shouldMarkTourSeen({ stepShown: false, abandonedForNavigation: true }), false);
   });
 });
 
