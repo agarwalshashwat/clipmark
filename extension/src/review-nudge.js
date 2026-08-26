@@ -49,6 +49,44 @@ export const MIN_BOOKMARKS_FOR_NUDGE = 8;
  */
 export const MIN_DAYS_SINCE_FIRST_BOOKMARK = 3;
 
+/* ── The value moment ──────────────────────────────────────────────── */
+
+/**
+ * chrome.storage.local key holding `{ count, lastCompletedAt }` for completed
+ * Active Recall sessions.
+ *
+ * Written by the content script the moment a session ends — see
+ * recordRecallSessionComplete in src/content/content.js, which spells this key
+ * literally the way `recallReviewUsage` already is (a content script cannot
+ * import this ESM module). tests/unit/review-nudge.test.mjs asserts the two
+ * spellings never drift.
+ */
+export const RECALL_SESSION_STATS_KEY = 'recallSessionStats';
+
+/**
+ * Completed Active Recall sessions required before we will ask.
+ *
+ * Two, not one. A single session is a trial — someone poking the feature to see
+ * what it does. Two means they came back and drilled again, which for a
+ * spaced-repetition tool *is* the product working: the clips they saved came
+ * due, and they showed up for them. That is the honest basis for asking a
+ * learner to vouch for ClipMark, and a far better signal than a count of saved
+ * bookmarks — saving is cheap, and easy to rack up in one sitting on one video.
+ */
+export const MIN_RECALL_SESSIONS_FOR_NUDGE = 2;
+
+/**
+ * How long after a completed session an ask still counts as "in the moment".
+ *
+ * This is the half of the trigger that decides *when*, not *whether*. The
+ * banner should appear while the user can still feel the thing they would be
+ * reviewing — just after "Recall session complete ✓" — not at an unrelated panel
+ * open three days later. Thirty minutes is wide enough to cover finishing a
+ * drill and *then* opening the side panel, and narrow enough that the ask is
+ * never divorced from the value that earned it.
+ */
+export const RECENT_SESSION_WINDOW_MS = 30 * 60 * 1000;
+
 /* ── Frequency cap ─────────────────────────────────────────────────────────── */
 
 /** Hard lifetime ceiling on how many times the banner may ever be shown. */
@@ -128,14 +166,65 @@ export function hasCompletedRecallReview({ bookmarks, reviewUsage } = {}) {
 }
 
 /**
- * The engagement gate, independent of the frequency cap.
+ * Coerces the stored session record into `{ count, lastCompletedAt }`.
  *
- * @param {{bookmarks?: Array<object>, reviewUsage?: object|null, nowMs: number}} input
+ * Same posture as normalizeNudgeState: anything unreadable reads as "no
+ * sessions yet", which delays an ask rather than granting one. Users who
+ * drilled heavily *before* this counter shipped therefore start at zero and
+ * have to complete two fresh sessions — deliberately the slow direction.
+ *
+ * @param {object|null|undefined} stored
+ * @returns {{count: number, lastCompletedAt: number}}
+ */
+export function normalizeRecallSessionStats(stored) {
+  const count = Number.isFinite(stored?.count) && stored.count > 0
+    ? Math.floor(stored.count)
+    : 0;
+  const lastCompletedAt = Number.isFinite(stored?.lastCompletedAt) && stored.lastCompletedAt > 0
+    ? stored.lastCompletedAt
+    : 0;
+  return { count, lastCompletedAt };
+}
+
+/**
+ * "Did a recall session just finish?" — the timing half of the trigger.
+ *
+ * A timestamp in the future (a clock that moved backwards, a record restored
+ * from a machine running fast) is not "just now"; it is unusable, so it reads
+ * as no rather than as an open invitation.
+ *
+ * @param {{sessionStats?: object|null, nowMs: number}} input
  * @returns {boolean}
  */
-export function hasReachedEngagementMilestone({ bookmarks, reviewUsage, nowMs } = {}) {
+export function justCompletedRecallSession({ sessionStats, nowMs } = {}) {
+  const { lastCompletedAt } = normalizeRecallSessionStats(sessionStats);
+  if (!lastCompletedAt || lastCompletedAt > nowMs) return false;
+  return nowMs - lastCompletedAt <= RECENT_SESSION_WINDOW_MS;
+}
+
+/**
+ * The engagement gate, independent of the frequency cap.
+ *
+ * Ordered so the recall evidence decides. Repeated completed sessions plus a
+ * just-finished one are what earn the ask for a learning tool; the bookmark
+ * count and the history check are floors underneath, there to stop a bulk
+ * import or a restored sync from looking like a fortnight of study.
+ *
+ * @param {{bookmarks?: Array<object>, reviewUsage?: object|null, sessionStats?: object|null, nowMs: number}} input
+ * @returns {boolean}
+ */
+export function hasReachedEngagementMilestone({ bookmarks, reviewUsage, sessionStats, nowMs } = {}) {
+  // The value moment: they have drilled repeatedly, and one just ended.
+  const stats = normalizeRecallSessionStats(sessionStats);
+  if (stats.count < MIN_RECALL_SESSIONS_FOR_NUDGE) return false;
+  if (!justCompletedRecallSession({ sessionStats, nowMs })) return false;
+
   const saved = (bookmarks || []).filter(b => b && typeof b === 'object');
   if (saved.length < MIN_BOOKMARKS_FOR_NUDGE) return false;
+
+  // Cross-check that locally-written counter against the durable review
+  // evidence in storage.sync. A session count with no reviewed bookmark and no
+  // monthly grades behind it is a record we should not be acting on.
   if (!hasCompletedRecallReview({ bookmarks: saved, reviewUsage })) return false;
 
   const first = firstBookmarkAt(saved);
@@ -150,13 +239,14 @@ export function hasReachedEngagementMilestone({ bookmarks, reviewUsage, nowMs } 
  * @param {{
  *   bookmarks?: Array<object>,
  *   reviewUsage?: object|null,
+ *   sessionStats?: object|null,
  *   state?: object|null,
  *   nowMs: number,
  *   sessionShown?: boolean,
  * }} input
  * @returns {boolean}
  */
-export function shouldShowReviewNudge({ bookmarks, reviewUsage, state, nowMs, sessionShown } = {}) {
+export function shouldShowReviewNudge({ bookmarks, reviewUsage, sessionStats, state, nowMs, sessionShown } = {}) {
   // In-memory guard: one paint per panel session, whatever storage says. This
   // is what holds the line when a "shown" write fails and the state on disk
   // still reads as never-shown.
@@ -175,7 +265,7 @@ export function shouldShowReviewNudge({ bookmarks, reviewUsage, state, nowMs, se
     if (nowMs - s.lastShownAt < NUDGE_RESHOW_AFTER_MS) return false;
   }
 
-  return hasReachedEngagementMilestone({ bookmarks, reviewUsage, nowMs });
+  return hasReachedEngagementMilestone({ bookmarks, reviewUsage, sessionStats, nowMs });
 }
 
 /**

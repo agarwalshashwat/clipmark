@@ -2434,7 +2434,7 @@ function buildRevisionSegments(bookmarks) {
 function startRevisionMode(bookmarks, recall = false) {
   if (!bookmarks.length) return;
   exitRevisionMode(); // clean up any prior session
-  revisionState = { segments: buildRevisionSegments(bookmarks), index: 0, countdownTimer: null, speed: 1, recall: !!recall };
+  revisionState = { segments: buildRevisionSegments(bookmarks), index: 0, countdownTimer: null, speed: 1, recall: !!recall, graded: 0 };
   enterSegment(0);
 }
 
@@ -2450,9 +2450,15 @@ function enterSegment(index) {
 }
 
 function finishRevisionSession() {
+  // Both read before exitRevisionMode() clears revisionState.
   const recall = !!revisionState?.recall;
+  const graded = revisionState?.graded || 0;
   exitRevisionMode();
   showSilentSaveIndicator(recall ? 'Recall session complete ✓' : 'Revision complete ✓');
+  // Only a session the user actually answered counts as value delivered: the
+  // revisit overlay's Next button can walk to the end without grading a single
+  // card, and a skipped-through session is not evidence of anything.
+  if (recall && graded > 0) recordRecallSessionComplete().catch(() => {});
 }
 
 function advanceToNextOrFinish() {
@@ -2750,6 +2756,7 @@ function showRecallGrade() {
 function handleRecallGrade(bookmark, grade) {
   if (!revisionState) return;
   removeRecallPanels();
+  revisionState.graded = (revisionState.graded || 0) + 1;
   gradeAndPersistBookmark(bookmark, grade);
   incrementRecallReviewCounter().catch(() => {});
   advanceToNextOrFinish();
@@ -2777,6 +2784,36 @@ async function incrementRecallReviewCounter() {
   if (isMonthlyReviewWarnThreshold(updated, now)) {
     showSilentSaveIndicator(`${updated.count} of ${FREE_RECALL_REVIEWS_PER_MONTH} free reviews used this month`);
   }
+}
+
+// ─── Review-nudge value moment ───────────────────────────────────────────────
+// A completed Active Recall session is the one moment ClipMark can point at and
+// say "that worked": clips the user saved came due, and they showed up to
+// answer them. The side panel's review nudge triggers off this record and
+// nothing else — see MIN_RECALL_SESSIONS_FOR_NUDGE and RECENT_SESSION_WINDOW_MS
+// in src/review-nudge.js for why two sessions, and why recency matters.
+//
+// The key is spelled literally here for the same reason `recallReviewUsage` is:
+// this is a classic content script and cannot import the ESM module that owns
+// RECALL_SESSION_STATS_KEY. tests/unit/review-nudge.test.mjs asserts the two
+// spellings never drift.
+async function recordRecallSessionComplete() {
+  if (!isContextValid()) return;
+  const { recallSessionStats } = await new Promise(resolve =>
+    chrome.storage.local.get({ recallSessionStats: null }, resolve)
+  );
+  const count = Number.isFinite(recallSessionStats?.count) && recallSessionStats.count > 0
+    ? Math.floor(recallSessionStats.count)
+    : 0;
+  await new Promise((resolve, reject) =>
+    chrome.storage.local.set(
+      { recallSessionStats: { count: count + 1, lastCompletedAt: Date.now() } },
+      () => {
+        if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+        else resolve();
+      }
+    )
+  );
 }
 
 // Read-modify-write on bm_<videoId>: grade the FRESH stored copy (not the

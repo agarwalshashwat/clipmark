@@ -17,10 +17,26 @@
  *   v1.0.1 tour flag bug (see src/tour-state.js).
  *
  *   `sessionShown` backs that up in memory for the lifetime of this panel.
+ *
+ * NO STAR-GATING — this is a Chrome Web Store policy line, not a preference:
+ *
+ *   There is exactly one ask, and it links straight to the public review page
+ *   for every user who sees it. We never ask "are you enjoying this?" first and
+ *   route only the happy answers to the store while diverting the unhappy ones
+ *   to a feedback form — that is review-gating, it violates Web Store policy,
+ *   and it manufactures a rating the listing has not earned. We also never name
+ *   a rating: no "five stars", no "rate us highly". The copy asks for a review;
+ *   what the review says is the user's business.
+ *
+ *   Concretely, that means this file must only ever build ONE outbound control,
+ *   pointing at chromeStoreReviewUrl(), plus a dismiss that stores a decision
+ *   and navigates nowhere. tests/unit/review-nudge.test.mjs asserts exactly
+ *   that, so a future sentiment prompt cannot be added here quietly.
  */
 
 import { collectStoredBookmarks } from '../idle-summary.js';
 import {
+  RECALL_SESSION_STATS_KEY,
   REVIEW_NUDGE_STORAGE_KEY,
   chromeStoreReviewUrl,
   markNudgeClickedThrough,
@@ -89,11 +105,18 @@ function buildBanner({ onReview, onDismiss }) {
   const title = document.createElement('p');
   title.className = 'review-nudge-title';
   title.id = 'review-nudge-title';
-  title.textContent = 'Enjoying ClipMark?';
+  title.textContent = 'You\u2019ve been turning videos into flashcards';
 
   const body = document.createElement('p');
   body.className = 'review-nudge-body';
-  body.textContent = 'A quick review really helps other learners find it.';
+  // Names the thing this user actually did, asks once, and says plainly that a
+  // "no" is final — the dismiss below really does retire the nudge for good.
+  // No rating is ever named or implied: see the no-star-gating note in the
+  // module header.
+  body.textContent =
+    'And coming back to review them \u2014 the part most people skip. '
+    + 'If it\u2019s making things stick, a short review helps other learners find ClipMark. '
+    + 'Say no and we won\u2019t ask again.';
 
   const actions = document.createElement('div');
   actions.className = 'review-nudge-actions';
@@ -141,8 +164,15 @@ export async function mountReviewNudge() {
 
   let state;
   try {
-    const [{ [REVIEW_NUDGE_STORAGE_KEY]: stored, recallReviewUsage }, syncAll] = await Promise.all([
-      localGet({ [REVIEW_NUDGE_STORAGE_KEY]: null, recallReviewUsage: null }),
+    const [
+      { [REVIEW_NUDGE_STORAGE_KEY]: stored, [RECALL_SESSION_STATS_KEY]: sessionStats, recallReviewUsage },
+      syncAll,
+    ] = await Promise.all([
+      localGet({
+        [REVIEW_NUDGE_STORAGE_KEY]: null,
+        [RECALL_SESSION_STATS_KEY]: null,
+        recallReviewUsage: null,
+      }),
       syncGetAll(),
     ]);
     state = stored;
@@ -150,6 +180,7 @@ export async function mountReviewNudge() {
     const show = shouldShowReviewNudge({
       bookmarks: collectStoredBookmarks(syncAll),
       reviewUsage: recallReviewUsage,
+      sessionStats,
       state: stored,
       nowMs: Date.now(),
       sessionShown,
@@ -179,6 +210,32 @@ export async function mountReviewNudge() {
 
   slot.replaceChildren(banner);
   return true;
+}
+
+/**
+ * What the side panel calls once, on open.
+ *
+ * Two chances to mount, because the trigger is now a *moment* rather than a
+ * standing threshold (see RECENT_SESSION_WINDOW_MS in ../review-nudge.js):
+ *
+ *   1. Panel open — catches someone who finished a drill and then opened the
+ *      panel, and is also the only path when the panel was shut at the time.
+ *   2. A `recallSessionStats` write — the panel is usually already open while
+ *      the user drills on the YouTube tab, so this is the common case: the
+ *      banner appears as the session ends, not on some later open.
+ *
+ * The listener is harmless after a successful paint: `sessionShown` makes the
+ * second call a no-op, and every permanent stop is re-checked from storage on
+ * each attempt.
+ */
+export function initReviewNudge() {
+  mountReviewNudge();
+  // Optional-chained so a stripped-down test or non-extension context can import
+  // this module without a storage.onChanged stub — a nudge never breaks a panel.
+  chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area !== 'local' || !changes?.[RECALL_SESSION_STATS_KEY]) return;
+    mountReviewNudge();
+  });
 }
 
 /** Test-only: clears the in-memory one-paint-per-session guard. */
