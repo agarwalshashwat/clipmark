@@ -1,7 +1,7 @@
 {
   "name": "clipmark-extension",
   "private": true,
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "ClipMark Chrome extension dev tooling",
   "scripts": {
     "dev": "vite",

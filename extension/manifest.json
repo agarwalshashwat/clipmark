@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "YouTube Notes to Anki Flashcards & Spaced Repetition — ClipMark",
   "short_name": "ClipMark",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Turn YouTube lectures into timestamped notes and Anki flashcards, lock them in with spaced-repetition review. No account needed.",
   "permissions": [
     "storage",
