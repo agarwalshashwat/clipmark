@@ -121,6 +121,13 @@
     <!-- Revisit reminder -->
     <div id="revisit-reminder-panel" class="revisit-reminder-panel"></div>
 
+    <!-- Filled in by src/popup/review-nudge-banner.js, and only in the minutes
+         after a user past the engagement milestone finishes an Active Recall
+         session — empty for everyone else, nearly always. It sits here, beside
+         the recall surface its copy is about, rather than last in the scroll:
+         an ask this rare and this earned should not need scrolling to find. -->
+    <div id="review-nudge-slot"></div>
+
     <!-- Bookmarks / Comments Tabs -->
     <section class="sp-section sp-bookmarks-section">
       <div class="sp-tab-header">
@@ -147,11 +154,6 @@
         <div id="comment-list" class="sp-comment-list"></div>
       </div>
     </section>
-
-    <!-- Filled in by src/popup/review-nudge-banner.js, and only for users past
-         the engagement milestone — empty for everyone else. Last in the scroll,
-         after the content the panel is actually for. -->
-    <div id="review-nudge-slot"></div>
 
   </main>
 

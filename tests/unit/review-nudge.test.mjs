@@ -24,15 +24,20 @@ import {
   MAX_NUDGE_SHOWS,
   MIN_BOOKMARKS_FOR_NUDGE,
   MIN_DAYS_SINCE_FIRST_BOOKMARK,
+  MIN_RECALL_SESSIONS_FOR_NUDGE,
   NUDGE_RESHOW_AFTER_MS,
+  RECALL_SESSION_STATS_KEY,
+  RECENT_SESSION_WINDOW_MS,
   REVIEW_NUDGE_STORAGE_KEY,
   chromeStoreReviewUrl,
   hasCompletedRecallReview,
   hasReachedEngagementMilestone,
+  justCompletedRecallSession,
   markNudgeClickedThrough,
   markNudgeDismissed,
   markNudgeShown,
   normalizeNudgeState,
+  normalizeRecallSessionStats,
   shouldShowReviewNudge,
 } from '../../extension/src/review-nudge.js';
 
@@ -53,11 +58,20 @@ function makeBookmarks({ count, ageDays = 30, reviewedCount = 1, nowMs = NOW } =
   }));
 }
 
+/**
+ * A qualifying recall-session record: enough completed sessions, the last of
+ * them just now. `agoMs` and `count` are the two knobs the gate turns on.
+ */
+function recentSessions({ count = MIN_RECALL_SESSIONS_FOR_NUDGE, agoMs = 60_000, nowMs = NOW } = {}) {
+  return { count, lastCompletedAt: nowMs - agoMs };
+}
+
 /** The happy path: an engaged user who has never been asked. */
 function engagedInput(overrides = {}) {
   return {
     bookmarks: makeBookmarks({ count: MIN_BOOKMARKS_FOR_NUDGE }),
     reviewUsage: null,
+    sessionStats: recentSessions(),
     state: null,
     nowMs: NOW,
     sessionShown: false,
@@ -147,11 +161,129 @@ describe('hasCompletedRecallReview', () => {
   });
 });
 
+describe('normalizeRecallSessionStats', () => {
+  it('reads anything unusable as "no sessions yet"', () => {
+    for (const bad of [null, undefined, {}, 'nope', 7, { count: 'x' }, { count: -2 }]) {
+      assert.deepEqual(normalizeRecallSessionStats(bad), { count: 0, lastCompletedAt: 0 });
+    }
+  });
+
+  it('floors a fractional count and rejects a nonsense timestamp', () => {
+    assert.equal(normalizeRecallSessionStats({ count: 3.9 }).count, 3);
+    assert.equal(normalizeRecallSessionStats({ count: 1, lastCompletedAt: -5 }).lastCompletedAt, 0);
+    assert.equal(normalizeRecallSessionStats({ count: 1, lastCompletedAt: NaN }).lastCompletedAt, 0);
+  });
+});
+
+describe('justCompletedRecallSession', () => {
+  it('is true inside the window and false once it has passed', () => {
+    const inside = { sessionStats: recentSessions({ agoMs: RECENT_SESSION_WINDOW_MS - 1000 }), nowMs: NOW };
+    const outside = { sessionStats: recentSessions({ agoMs: RECENT_SESSION_WINDOW_MS + 1000 }), nowMs: NOW };
+    assert.equal(justCompletedRecallSession(inside), true);
+    assert.equal(justCompletedRecallSession(outside), false);
+  });
+
+  it('is false when nothing has ever been recorded', () => {
+    assert.equal(justCompletedRecallSession({ sessionStats: null, nowMs: NOW }), false);
+    assert.equal(justCompletedRecallSession({ nowMs: NOW }), false);
+    assert.equal(justCompletedRecallSession(), false);
+  });
+
+  it('refuses a timestamp from the future rather than treating it as "now"', () => {
+    // A clock that moved backwards, or a record restored from a fast machine.
+    const stats = { count: 5, lastCompletedAt: NOW + 60_000 };
+    assert.equal(justCompletedRecallSession({ sessionStats: stats, nowMs: NOW }), false);
+  });
+});
+
+describe('hasReachedEngagementMilestone — the value moment', () => {
+  const engaged = { bookmarks: makeBookmarks({ count: MIN_BOOKMARKS_FOR_NUDGE }), nowMs: NOW };
+
+  it('is not satisfied by a single session — that is a trial, not a habit', () => {
+    assert.equal(
+      hasReachedEngagementMilestone({ ...engaged, sessionStats: recentSessions({ count: 1 }) }),
+      false,
+    );
+    assert.equal(
+      hasReachedEngagementMilestone({
+        ...engaged,
+        sessionStats: recentSessions({ count: MIN_RECALL_SESSIONS_FOR_NUDGE }),
+      }),
+      true,
+    );
+  });
+
+  it('never fires on saved bookmarks alone, however many there are', () => {
+    // The old failure mode this replaces: a generic engagement counter that a
+    // single bulk-clipping session could satisfy.
+    assert.equal(
+      hasReachedEngagementMilestone({
+        bookmarks: makeBookmarks({ count: 200 }),
+        sessionStats: null,
+        nowMs: NOW,
+      }),
+      false,
+    );
+  });
+
+  it('goes quiet again once the session is no longer recent', () => {
+    // Earned, but the moment has passed — we wait for the next one rather than
+    // asking at an unrelated panel open.
+    assert.equal(
+      hasReachedEngagementMilestone({
+        ...engaged,
+        sessionStats: recentSessions({ agoMs: RECENT_SESSION_WINDOW_MS + 1 }),
+      }),
+      false,
+    );
+  });
+
+  it('ignores a session count with no recall evidence behind it', () => {
+    // recallSessionStats is written by the content script into storage.local;
+    // the durable lastReviewed/monthly-counter evidence in sync is the check on it.
+    assert.equal(
+      hasReachedEngagementMilestone({
+        bookmarks: makeBookmarks({ count: MIN_BOOKMARKS_FOR_NUDGE, reviewedCount: 0 }),
+        reviewUsage: null,
+        sessionStats: recentSessions({ count: 99 }),
+        nowMs: NOW,
+      }),
+      false,
+    );
+  });
+});
+
+describe('the content script writes the record this module reads', () => {
+  // Same drift guard as the CHROME_STORE_URL test above: content.js is a classic
+  // content script and cannot import RECALL_SESSION_STATS_KEY, so it spells the
+  // key literally. If these two ever disagree the nudge simply never fires,
+  // which is a silent failure — hence a test rather than a comment.
+  const source = readFileSync(
+    fileURLToPath(new URL('../../extension/src/content/content.js', import.meta.url)),
+    'utf8',
+  );
+
+  it('spells the storage key the same way', () => {
+    assert.ok(
+      source.includes(RECALL_SESSION_STATS_KEY),
+      `content.js must write ${RECALL_SESSION_STATS_KEY}`,
+    );
+  });
+
+  it('stamps it when a graded recall session finishes, and only then', () => {
+    assert.match(source, /if \(recall && graded > 0\) recordRecallSessionComplete\(\)/);
+    // The counter increments per answered card, so a skipped-through session
+    // (Next through every clip, grading nothing) leaves graded at 0.
+    assert.match(source, /revisionState\.graded = \(revisionState\.graded \|\| 0\) \+ 1;/);
+  });
+});
+
 describe('hasReachedEngagementMilestone', () => {
   it('passes for a user with enough bookmarks, a review, and some history', () => {
     assert.equal(
       hasReachedEngagementMilestone({
         bookmarks: makeBookmarks({ count: MIN_BOOKMARKS_FOR_NUDGE }),
+        sessionStats: recentSessions(),
         nowMs: NOW,
       }),
       true,
@@ -159,7 +291,9 @@ describe('hasReachedEngagementMilestone', () => {
   });
 
   it('never fires on a first run — no bookmarks at all', () => {
-    assert.equal(hasReachedEngagementMilestone({ bookmarks: [], nowMs: NOW }), false);
+    const sessionStats = recentSessions();
+    assert.equal(hasReachedEngagementMilestone({ bookmarks: [], sessionStats, nowMs: NOW }), false);
+    assert.equal(hasReachedEngagementMilestone({ sessionStats, nowMs: NOW }), false);
     assert.equal(hasReachedEngagementMilestone({ nowMs: NOW }), false);
     assert.equal(hasReachedEngagementMilestone(), false);
   });
@@ -168,6 +302,7 @@ describe('hasReachedEngagementMilestone', () => {
     assert.equal(
       hasReachedEngagementMilestone({
         bookmarks: makeBookmarks({ count: MIN_BOOKMARKS_FOR_NUDGE - 1 }),
+        sessionStats: recentSessions(),
         nowMs: NOW,
       }),
       false,
@@ -178,6 +313,7 @@ describe('hasReachedEngagementMilestone', () => {
     assert.equal(
       hasReachedEngagementMilestone({
         bookmarks: makeBookmarks({ count: 50, reviewedCount: 0 }),
+        sessionStats: recentSessions(),
         nowMs: NOW,
       }),
       false,
@@ -190,6 +326,7 @@ describe('hasReachedEngagementMilestone', () => {
     assert.equal(
       hasReachedEngagementMilestone({
         bookmarks: makeBookmarks({ count: 40, ageDays: 0 }),
+        sessionStats: recentSessions(),
         nowMs: NOW,
       }),
       false,
@@ -197,6 +334,7 @@ describe('hasReachedEngagementMilestone', () => {
     assert.equal(
       hasReachedEngagementMilestone({
         bookmarks: makeBookmarks({ count: 40, ageDays: MIN_DAYS_SINCE_FIRST_BOOKMARK - 1 }),
+        sessionStats: recentSessions(),
         nowMs: NOW,
       }),
       false,
@@ -204,6 +342,7 @@ describe('hasReachedEngagementMilestone', () => {
     assert.equal(
       hasReachedEngagementMilestone({
         bookmarks: makeBookmarks({ count: 40, ageDays: MIN_DAYS_SINCE_FIRST_BOOKMARK }),
+        sessionStats: recentSessions(),
         nowMs: NOW,
       }),
       true,
@@ -212,12 +351,18 @@ describe('hasReachedEngagementMilestone', () => {
 
   it('ignores non-object junk in the bookmark list', () => {
     const bookmarks = [...makeBookmarks({ count: MIN_BOOKMARKS_FOR_NUDGE - 1 }), null, undefined, 'x'];
-    assert.equal(hasReachedEngagementMilestone({ bookmarks, nowMs: NOW }), false);
+    assert.equal(
+      hasReachedEngagementMilestone({ bookmarks, sessionStats: recentSessions(), nowMs: NOW }),
+      false,
+    );
   });
 
   it('treats undateable bookmarks as no history', () => {
     const bookmarks = Array.from({ length: 30 }, () => ({ lastReviewed: new Date(NOW).toISOString() }));
-    assert.equal(hasReachedEngagementMilestone({ bookmarks, nowMs: NOW }), false);
+    assert.equal(
+      hasReachedEngagementMilestone({ bookmarks, sessionStats: recentSessions(), nowMs: NOW }),
+      false,
+    );
   });
 });
 
@@ -357,14 +502,38 @@ class FakeElement {
   }
 }
 
+/** Every node under `root`, flattened — for asserting on the whole banner. */
+function descendants(root, out = []) {
+  for (const child of root.children) {
+    out.push(child);
+    descendants(child, out);
+  }
+  return out;
+}
+
 /**
- * @param {{sync?: object, local?: object, failLocalSet?: boolean}} options
+ * The banner reads the real clock, so its session record has to be stamped
+ * against Date.now() rather than the fixed NOW the pure rules use.
+ *
+ * `sessions: null` is how a test says "this user has no qualifying recall
+ * session", which is the new default state of the world for everyone.
+ *
+ * @param {{sync?: object, local?: object, failLocalSet?: boolean, sessions?: object|null}} options
  */
-function installStubs({ sync = {}, local = {}, failLocalSet = false } = {}) {
+function installStubs({ sync = {}, local = {}, failLocalSet = false, sessions } = {}) {
   const slot = new FakeElement('div');
   slot.id = 'review-nudge-slot';
   const openedTabs = [];
   const setCalls = [];
+  const changeListeners = [];
+
+  // Seeded first so an explicit `local` can still override it.
+  local = {
+    [RECALL_SESSION_STATS_KEY]: sessions === undefined
+      ? recentSessions({ nowMs: Date.now() })
+      : sessions,
+    ...local,
+  };
 
   globalThis.document = {
     getElementById: id => (id === 'review-nudge-slot' ? slot : null),
@@ -384,6 +553,7 @@ function installStubs({ sync = {}, local = {}, failLocalSet = false } = {}) {
     runtime: { lastError: undefined },
     tabs: { create: info => openedTabs.push(info.url) },
     storage: {
+      onChanged: { addListener: fn => changeListeners.push(fn) },
       local: {
         get: (defaults, cb) => respond(local, defaults, cb),
         set: (items, cb) => {
@@ -402,7 +572,16 @@ function installStubs({ sync = {}, local = {}, failLocalSet = false } = {}) {
     },
   };
 
-  return { slot, openedTabs, setCalls, local };
+  /** Simulates the content script stamping a finished recall session. */
+  const completeRecallSession = async (stats = recentSessions({ nowMs: Date.now() })) => {
+    local[RECALL_SESSION_STATS_KEY] = stats;
+    for (const fn of changeListeners) {
+      fn({ [RECALL_SESSION_STATS_KEY]: { newValue: stats } }, 'local');
+    }
+    await new Promise(resolve => setImmediate(resolve));
+  };
+
+  return { slot, openedTabs, setCalls, local, changeListeners, completeRecallSession };
 }
 
 /** storage.sync as it really looks: bookmarks under bm_<videoId> keys. */
@@ -412,6 +591,7 @@ function syncStoreWithBookmarks(count) {
 
 describe('mountReviewNudge', () => {
   let mountReviewNudge;
+  let initReviewNudge;
   let resetSession;
 
   beforeEach(async () => {
@@ -421,6 +601,7 @@ describe('mountReviewNudge', () => {
       installStubs();
       const mod = await import('../../extension/src/popup/review-nudge-banner.js');
       mountReviewNudge = mod.mountReviewNudge;
+      initReviewNudge = mod.initReviewNudge;
       resetSession = mod.__resetReviewNudgeSession;
     }
     resetSession();
@@ -553,5 +734,104 @@ describe('mountReviewNudge', () => {
     globalThis.document.getElementById = () => null;
 
     assert.equal(await mountReviewNudge(), false);
+  });
+
+  /* ── The trigger is a moment, not a standing threshold ─────────────────── */
+
+  it('stays silent for a user who has never finished a recall session', async () => {
+    const { slot, setCalls } = installStubs({
+      sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE),
+      sessions: null,
+    });
+
+    assert.equal(await mountReviewNudge(), false);
+    assert.equal(slot.children.length, 0);
+    assert.equal(setCalls.length, 0, 'an unearned ask must not even spend a write');
+  });
+
+  it('stays silent once the session is no longer recent', async () => {
+    const { slot } = installStubs({
+      sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE),
+      sessions: { count: 9, lastCompletedAt: Date.now() - (RECENT_SESSION_WINDOW_MS + 60_000) },
+    });
+
+    assert.equal(await mountReviewNudge(), false);
+    assert.equal(slot.children.length, 0);
+  });
+
+  it('surfaces the ask the moment a session lands while the panel is open', async () => {
+    // The common shape: the panel was already open and nothing was earned when
+    // it opened. This is what initReviewNudge's storage listener exists for.
+    const stubs = installStubs({
+      sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE),
+      sessions: null,
+    });
+
+    initReviewNudge();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(stubs.slot.children.length, 0, 'nothing to ask about yet');
+
+    await stubs.completeRecallSession();
+    assert.equal(stubs.slot.children.length, 1, 'the drill just finished — ask now');
+    assert.equal(stubs.local[REVIEW_NUDGE_STORAGE_KEY].shownCount, 1);
+  });
+
+  it('ignores unrelated storage traffic', async () => {
+    const stubs = installStubs({
+      sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE),
+      sessions: null,
+    });
+
+    initReviewNudge();
+    await new Promise(resolve => setImmediate(resolve));
+    for (const fn of stubs.changeListeners) {
+      fn({ recallReviewUsage: { newValue: { count: 4 } } }, 'local');
+      fn({ [RECALL_SESSION_STATS_KEY]: { newValue: {} } }, 'sync');
+    }
+    await new Promise(resolve => setImmediate(resolve));
+
+    assert.equal(stubs.slot.children.length, 0);
+  });
+
+  /* ── No star-gating. Web Store policy, not taste. ──────────────────────── */
+
+  it('offers exactly one outbound path, and it is the public review page', async () => {
+    const { slot } = installStubs({ sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE) });
+    await mountReviewNudge();
+
+    const links = descendants(slot.children[0]).filter(node => node.href);
+    assert.equal(links.length, 1, 'a second destination is how star-gating gets in');
+    assert.equal(links[0].href, chromeStoreReviewUrl());
+    assert.equal(
+      slot.find('review-nudge-dismiss').href,
+      undefined,
+      'declining must navigate nowhere — no feedback-form diversion',
+    );
+  });
+
+  it('never names a rating, and never asks how the user feels first', async () => {
+    const { slot } = installStubs({ sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE) });
+    await mountReviewNudge();
+
+    const copy = descendants(slot.children[0]).map(node => node.textContent).join(' ');
+    assert.doesNotMatch(
+      copy,
+      /\bstars?\b|five[- ]star|5[- ]star|\brate (us|it|clipmark)\b|\bhighly\b/i,
+      'asking for a particular score is review-gating',
+    );
+    assert.doesNotMatch(
+      copy,
+      /enjoying|love it|not really|how.s it going|having (a )?(good|bad)/i,
+      'a sentiment question is the front half of a star gate',
+    );
+  });
+
+  it('speaks to what this user actually did, and keeps its promise visible', async () => {
+    const { slot } = installStubs({ sync: syncStoreWithBookmarks(MIN_BOOKMARKS_FOR_NUDGE) });
+    await mountReviewNudge();
+
+    const copy = descendants(slot.children[0]).map(node => node.textContent).join(' ');
+    assert.match(copy, /flashcards/i, 'the ask names the thing they have been doing');
+    assert.match(copy, /won.t ask again/i, 'and says plainly that a no is final');
   });
 });

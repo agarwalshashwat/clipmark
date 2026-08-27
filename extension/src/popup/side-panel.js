@@ -36,7 +36,7 @@ import {
   localSummarizeSnippet,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
-import { mountReviewNudge } from './review-nudge-banner.js';
+import { initReviewNudge } from './review-nudge-banner.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import {
@@ -1656,7 +1656,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Own storage reads, own gate, never throws — see review-nudge-banner.js.
   // Deliberately after the tour: a first-run user cannot reach the milestone,
   // but the ordering makes it impossible for the two to ever race for attention.
-  mountReviewNudge();
+  // Also subscribes to the recall-session record, so a drill finished while this
+  // panel is open surfaces the ask at that moment rather than on a later open.
+  initReviewNudge();
   document.getElementById('replay-tour-btn')?.addEventListener('click', async () => {
     await setTourState({ youtubeTour: false, sidePanelTour: false });
     runSidePanelTour({ force: true });
