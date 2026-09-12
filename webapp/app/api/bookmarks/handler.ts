@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, createServerSupabase } from '@/lib/supabase';
-import { liveBookmarks, type WireBookmark } from '@/lib/bookmarks';
+import { isTombstone, liveBookmarks, type WireBookmark } from '@/lib/bookmarks';
 
 // Result of authenticating a request: the user + a Supabase client scoped to
 // that user's JWT (so RLS auth.uid() applies), or null when unauthenticated.
@@ -216,23 +216,32 @@ export async function handlePutBookmarks(request: NextRequest, { admin, getAuthe
 
     if (baseRevision === undefined) {
       // Legacy path (clients without the sync engine): blind last-write-wins
-      // upsert, unchanged — but keep the revision moving so sync clients on the
-      // same account still detect this write. The read-then-write race here is
-      // acceptable: two legacy writers were last-write-wins before too.
+      // upsert for the fields a legacy client actually knows about — but keep
+      // the revision moving so sync clients on the same account still detect
+      // this write. The read-then-write race here is acceptable: two legacy
+      // writers were last-write-wins before too.
       const { data: existing } = await auth.client
         .from('user_bookmarks')
-        .select('revision')
+        .select('bookmarks, revision')
         .eq('user_id', auth.user.id)
         .eq('video_id', videoId)
         .maybeSingle();
       const revision = ((existing?.revision as number | undefined) ?? 0) + 1;
+
+      // A legacy client only ever sends live bookmarks — it has never heard of
+      // tombstones. A blind overwrite would silently undelete anything a sync
+      // engine device deleted for this video. Carry forward any tombstone the
+      // legacy write doesn't itself resurrect.
+      const incomingIds = new Set(bookmarks.map((b) => (b as WireBookmark).id));
+      const existingWire = Array.isArray(existing?.bookmarks) ? existing!.bookmarks as WireBookmark[] : [];
+      const survivingTombstones = existingWire.filter((e) => isTombstone(e) && !incomingIds.has(e.id));
 
       const { error } = await auth.client
         .from('user_bookmarks')
         .upsert({
           user_id:    auth.user.id,
           video_id:   videoId,
-          bookmarks,
+          bookmarks:  [...bookmarks, ...survivingTombstones],
           updated_at: now,
           revision,
         }, { onConflict: 'user_id,video_id' });

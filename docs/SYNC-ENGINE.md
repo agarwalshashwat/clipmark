@@ -142,8 +142,12 @@ Postgres → PostgREST → JSON → client round-trip exactly; timestamptz
 microsecond formatting does not reliably.
 
 **Legacy path kept on purpose:** a PUT *without* `baseRevision` (shipped
-clients ≤ 1.0.4) still blind-upserts, but bumps the revision so engine clients
-detect the write. Symmetrically, GET hides tombstones unless
+clients ≤ 1.0.4) still blind-upserts the live array it sends, but bumps the
+revision so engine clients detect the write, and carries forward any stored
+tombstone whose id the legacy write doesn't itself resurrect — a legacy
+client has never heard of tombstones, so without this a save from an old
+device would silently undelete anything a sync-engine device had already
+deleted for that video. Symmetrically, GET hides tombstones unless
 `includeDeleted=1` (only the engine asks), because legacy clients union
 whatever they receive into local state and would render tombstones as broken
 bookmarks. Do not remove either until the Web Store fleet has moved past

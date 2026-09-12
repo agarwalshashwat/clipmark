@@ -131,6 +131,38 @@ describe('PUT /api/bookmarks — legacy path (no baseRevision)', () => {
     assert.deepEqual(await res.json(), { ok: true, revision: 1 });
     assert.equal((calls.find(c => c.op === 'update')!.payload as { revision: number }).revision, 1);
   });
+
+  it('carries forward a tombstone the legacy write does not itself resurrect', async () => {
+    // A pre-sync-engine client (≤1.0.4) only ever sends live bookmarks — it has
+    // never heard of tombstones. A blind overwrite of the stored wire array
+    // would silently undelete anything a sync-engine device already deleted
+    // for this video, once that legacy client next saves. Regression for the
+    // defect noted in docs/SYNC-ENGINE.md's legacy-path caveat.
+    const { deps, calls } = proDeps((ctx) =>
+      ctx.op === 'select' ? { data: { bookmarks: [live, tomb], revision: 5 } } : { data: null },
+    );
+    const res = await handlePutBookmarks(putReq({ videoId: 'v', bookmarks: [live] }), deps);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { ok: true, revision: 6 });
+
+    const write = calls.find(c => c.op === 'update')!;
+    const written = (write.payload as { bookmarks: unknown[] }).bookmarks;
+    assert.equal(written.length, 2, 'the tombstone must ride along with the legacy write');
+    assert.ok(written.some((e: any) => e.id === tomb.id && e.deleted === true));
+  });
+
+  it('a legacy write that itself resurrects an id drops the now-stale tombstone', async () => {
+    const { deps, calls } = proDeps((ctx) =>
+      ctx.op === 'select' ? { data: { bookmarks: [tomb], revision: 5 } } : { data: null },
+    );
+    // The legacy client sends the same id back as live — e.g. the user
+    // re-created a bookmark at the same timestamp after a stale-state re-save.
+    const resurrected = { ...live, id: tomb.id };
+    await handlePutBookmarks(putReq({ videoId: 'v', bookmarks: [resurrected] }), deps);
+    const write = calls.find(c => c.op === 'update')!;
+    const written = (write.payload as { bookmarks: unknown[] }).bookmarks;
+    assert.deepEqual(written, [resurrected]);
+  });
 });
 
 describe('GET /api/bookmarks — tombstone filtering', () => {
