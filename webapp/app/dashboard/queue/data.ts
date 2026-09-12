@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { liveBookmarks } from '@/lib/bookmarks';
 
 export interface QueueTarget {
   id: string;
@@ -57,14 +58,16 @@ export async function loadRemindersQueue(
       .order('created_at', { ascending: false }),
   ]);
 
-  type BookmarkRow = { videoTitle?: string; tags?: string[] };
-
-  const collections = (userBookmarksData ?? []).map(row => ({
-    id: row.video_id as string,
-    video_id: row.video_id as string,
-    video_title: ((row.bookmarks as BookmarkRow[])?.[0]?.videoTitle) ?? null,
-    tags: Array.from(new Set((row.bookmarks as BookmarkRow[] ?? []).flatMap(b => b.tags ?? []))).slice(0, 4),
-  }));
+  // liveBookmarks: the JSONB may carry sync tombstones — never surface those.
+  const collections = (userBookmarksData ?? []).map(row => {
+    const bookmarks = liveBookmarks(row.bookmarks);
+    return {
+      id: row.video_id as string,
+      video_id: row.video_id as string,
+      video_title: bookmarks[0]?.videoTitle ?? null,
+      tags: Array.from(new Set(bookmarks.flatMap(b => b.tags ?? []))).slice(0, 4),
+    };
+  });
 
   const collectionMap = new Map(collections.map(c => [c.id, c]));
   const groupMap = new Map((groupsData ?? []).map((g: { id: string; name: string }) => [g.id, g]));

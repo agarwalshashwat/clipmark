@@ -242,55 +242,23 @@ async function getVideoBookmarks(videoId) {
   return getVideoBookmarksLocal(videoId);
 }
 
+// All cloud traffic is owned by the background SyncEngine
+// (src/sync/sync-engine.js, docs/SYNC-ENGINE.md). This page only writes
+// chrome.storage.sync — the engine observes the write, stamps it, records
+// deletions as tombstones and pushes with retry. Do not add fetch calls to
+// /api/bookmarks here again.
 async function saveVideoBookmarks(videoId, bookmarks) {
   await syncSet({ [bmKey(videoId)]: bookmarks });
-  // Cloud sync: push to backend if signed in
-  try {
-    const token = await getValidToken();
-    if (token) {
-      const res = await fetch(`${API_BASE}/api/bookmarks`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ videoId, bookmarks }),
-      });
-      if (res.status === 403) {
-        // Server says not Pro — sync local flag so UI reflects reality
-        const { bmUser } = await syncGet({ bmUser: null });
-        if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
-      }
-    }
-  } catch {
-    // Best-effort cloud sync
-  }
 }
 
+// Ask the engine for a fresh merge of this video before first render.
+// Best-effort: if the worker can't pull (offline, signed out), local state
+// is already the right thing to show.
 async function pullFromCloud(videoId) {
   try {
-    const token = await getValidToken();
-    if (!token) return;
-    const res = await fetch(`${API_BASE}/api/bookmarks?videoId=${encodeURIComponent(videoId)}`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (res.status === 403) {
-      // Server says not Pro — sync local flag so UI reflects reality
-      const { bmUser } = await syncGet({ bmUser: null });
-      if (bmUser) await syncSet({ bmUser: { ...bmUser, isPro: false } });
-      return;
-    }
-    if (!res.ok) return;
-    const { bookmarks: cloudBms } = await res.json();
-    if (!cloudBms?.length) return;
-    const localBms = await getVideoBookmarksLocal(videoId);
-    const localIds = new Set(localBms.map(b => b.id));
-    const newFromCloud = cloudBms.filter(b => !localIds.has(b.id));
-    if (!newFromCloud.length) return;
-    const merged = [...localBms, ...newFromCloud];
-    await saveVideoBookmarks(videoId, merged);
+    await chrome.runtime.sendMessage({ type: 'SYNC_PULL_VIDEO', videoId });
   } catch {
-    // Pull is best-effort — don't block the user
+    // Worker unavailable — local data stands.
   }
 }
 
@@ -1643,6 +1611,48 @@ async function loadAuthState() {
   }
 }
 
+// ─── Sync status indicator ────────────────────────────────────────────────────
+// Rendered exclusively from the background SyncEngine's own state — this page
+// never guesses. 'disabled' (signed out / free plan) hides the chip entirely.
+const SYNC_STATUS_LABELS = {
+  synced:  'Synced',
+  pending: 'Syncing…',
+  offline: 'Offline',
+  error:   'Sync error',
+};
+
+function renderSyncStatus(status) {
+  const chip = document.getElementById('sync-status');
+  if (!chip) return;
+  const state = status?.state;
+  if (!state || state === 'disabled') {
+    chip.style.display = 'none';
+    return;
+  }
+  chip.style.display = '';
+  chip.dataset.syncState = state;
+  const label = chip.querySelector('.sync-status-label');
+  if (label) {
+    label.textContent = state === 'pending' && status.pendingCount > 1
+      ? `Syncing ${status.pendingCount}…`
+      : SYNC_STATUS_LABELS[state];
+  }
+  chip.title = status.lastSyncAt
+    ? `Last synced ${new Date(status.lastSyncAt).toLocaleString()}`
+    : 'Not synced yet';
+}
+
+async function initSyncStatus() {
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type === 'SYNC_STATUS_CHANGED') renderSyncStatus(msg.status);
+  });
+  try {
+    renderSyncStatus(await chrome.runtime.sendMessage({ type: 'SYNC_STATUS_GET' }));
+  } catch {
+    // Worker unreachable — leave the chip hidden rather than show a guess.
+  }
+}
+
 // ─── Initialize ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   logger.info('Side panel initialized', { devLoggingEnabled: logger.enabled, apiBase: API_BASE });
@@ -1650,6 +1660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   scheduleBookmarksReload(0);
   loadAuthState();
+  initSyncStatus();
   checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
   refreshEntitlement();
   runSidePanelTour();

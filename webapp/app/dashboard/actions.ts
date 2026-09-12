@@ -2,6 +2,17 @@
 
 import { revalidatePath } from 'next/cache';
 import { createServerSupabase, type Bookmark } from '@/lib/supabase';
+import { isTombstone, makeTombstone, type WireBookmark } from '@/lib/bookmarks';
+
+// Sync notes (Phase 10a), shared by every writer below:
+//  * Deleting writes a TOMBSTONE into the JSONB instead of dropping the entry
+//    (and the row is kept even when only tombstones remain) — dropping it
+//    would erase the deletion record and other devices would resurrect the
+//    bookmark on their next merge.
+//  * Every write bumps `revision` so sync clients' compare-and-swap sees it.
+//  * These actions run as the signed-in user, so RLS applies: a lapsed
+//    (non-Pro) user's UPDATE matches 0 rows — same outcome as today, no
+//    policy change needed (see migrations/016).
 
 // ─── Delete a single bookmark ─────────────────────────────────────────────────
 export async function deleteBookmark(videoId: string, bookmarkId: number) {
@@ -11,29 +22,23 @@ export async function deleteBookmark(videoId: string, bookmarkId: number) {
 
   const { data: row } = await supabase
     .from('user_bookmarks')
-    .select('bookmarks')
+    .select('bookmarks, revision')
     .eq('user_id', user.id)
     .eq('video_id', videoId)
     .single();
 
   if (!row) return;
 
-  const updated = (row.bookmarks as Bookmark[]).filter(b => b.id !== bookmarkId);
+  const now = new Date().toISOString();
+  const updated = (row.bookmarks as WireBookmark[]).map(b =>
+    b.id === bookmarkId ? makeTombstone(bookmarkId, now) : b
+  );
 
-  if (updated.length === 0) {
-    // Remove the entire video row when no bookmarks remain
-    await supabase
-      .from('user_bookmarks')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('video_id', videoId);
-  } else {
-    await supabase
-      .from('user_bookmarks')
-      .update({ bookmarks: updated, updated_at: new Date().toISOString() })
-      .eq('user_id', user.id)
-      .eq('video_id', videoId);
-  }
+  await supabase
+    .from('user_bookmarks')
+    .update({ bookmarks: updated, updated_at: now, revision: ((row.revision as number | null) ?? 0) + 1 })
+    .eq('user_id', user.id)
+    .eq('video_id', videoId);
 
   revalidatePath('/dashboard');
 }
@@ -60,18 +65,21 @@ export async function updateBookmarkNotes(videoId: string, bookmarkId: number, n
 
   const { data: row } = await supabase
     .from('user_bookmarks')
-    .select('bookmarks')
+    .select('bookmarks, revision')
     .eq('user_id', user.id)
     .eq('video_id', videoId)
     .single();
 
   if (!row) return;
 
-  const updated = (row.bookmarks as Bookmark[]).map(b => b.id === bookmarkId ? { ...b, notes } : b);
+  const now = new Date().toISOString();
+  const updated = (row.bookmarks as WireBookmark[]).map(b =>
+    b.id === bookmarkId && !isTombstone(b) ? { ...b, notes, updatedAt: now } : b
+  );
 
   await supabase
     .from('user_bookmarks')
-    .update({ bookmarks: updated, updated_at: new Date().toISOString() })
+    .update({ bookmarks: updated, updated_at: now, revision: ((row.revision as number | null) ?? 0) + 1 })
     .eq('user_id', user.id)
     .eq('video_id', videoId);
 
@@ -94,7 +102,7 @@ export async function bulkDeleteBookmarks(pairs: { videoId: string; bookmarkId: 
   const videoIds = Array.from(byVideo.keys());
   const { data: rows } = await supabase
     .from('user_bookmarks')
-    .select('video_id, bookmarks')
+    .select('video_id, bookmarks, revision')
     .eq('user_id', user.id)
     .in('video_id', videoIds);
 
@@ -104,21 +112,16 @@ export async function bulkDeleteBookmarks(pairs: { videoId: string; bookmarkId: 
     const toDelete = byVideo.get(row.video_id as string);
     if (!toDelete) continue;
 
-    const updated = (row.bookmarks as Bookmark[]).filter(b => !toDelete.has(b.id));
+    const now = new Date().toISOString();
+    const updated = (row.bookmarks as WireBookmark[]).map(b =>
+      toDelete.has(b.id) && !isTombstone(b) ? makeTombstone(b.id, now) : b
+    );
 
-    if (updated.length === 0) {
-      await supabase
-        .from('user_bookmarks')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('video_id', row.video_id);
-    } else {
-      await supabase
-        .from('user_bookmarks')
-        .update({ bookmarks: updated, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('video_id', row.video_id);
-    }
+    await supabase
+      .from('user_bookmarks')
+      .update({ bookmarks: updated, updated_at: now, revision: ((row.revision as number | null) ?? 0) + 1 })
+      .eq('user_id', user.id)
+      .eq('video_id', row.video_id);
   }
 
   revalidatePath('/dashboard');
@@ -135,23 +138,31 @@ export async function importBookmarks(
   const videoIds = incoming.map(g => g.videoId);
   const { data: existing } = await supabase
     .from('user_bookmarks')
-    .select('video_id, bookmarks')
+    .select('video_id, bookmarks, revision')
     .eq('user_id', user.id)
     .in('video_id', videoIds);
 
-  const existingMap = new Map<string, Bookmark[]>(
-    (existing ?? []).map(row => [row.video_id as string, (row.bookmarks as Bookmark[]) ?? []])
+  const existingMap = new Map<string, { bookmarks: WireBookmark[]; revision: number }>(
+    (existing ?? []).map(row => [
+      row.video_id as string,
+      { bookmarks: (row.bookmarks as WireBookmark[]) ?? [], revision: (row.revision as number | null) ?? 0 },
+    ])
   );
 
   for (const { videoId, bookmarks: newBms } of incoming) {
-    const current = existingMap.get(videoId) ?? [];
-    const existingIds = new Set(current.map(b => b.id));
-    const merged = [...current, ...newBms.filter(b => !existingIds.has(b.id))];
+    const current = existingMap.get(videoId) ?? { bookmarks: [], revision: 0 };
+    // Tombstone ids count as "existing" too — importing must not resurrect a
+    // bookmark another device deleted.
+    const existingIds = new Set(current.bookmarks.map(b => b.id));
+    const merged = [...current.bookmarks, ...newBms.filter(b => !existingIds.has(b.id))];
 
     await supabase
       .from('user_bookmarks')
       .upsert(
-        { user_id: user.id, video_id: videoId, bookmarks: merged, updated_at: new Date().toISOString() },
+        {
+          user_id: user.id, video_id: videoId, bookmarks: merged,
+          updated_at: new Date().toISOString(), revision: current.revision + 1,
+        },
         { onConflict: 'user_id,video_id' }
       );
   }

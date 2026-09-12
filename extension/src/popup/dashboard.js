@@ -2255,54 +2255,18 @@ async function loadAuthState() {
   }
 }
 
+// All cloud traffic is owned by the background SyncEngine
+// (src/sync/sync-engine.js, docs/SYNC-ENGINE.md) — this page's old push/pull
+// loop was one of three drifting copies and is gone. SYNC_NOW pulls
+// everything, merges (deletions and per-bookmark conflicts included), and
+// drains the outbox. Returns how many videos changed locally.
 async function syncAllWithCloud() {
-  const token = await getValidToken();
-  if (!token) return 0;
-
-  // Fetch all bookmarks from cloud in a single request
-  const cloudRes = await fetch(`${API_BASE}/api/bookmarks`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!cloudRes.ok) return 0;
-  const { videos: cloudVideos } = await cloudRes.json();
-
-  const allData = await new Promise(resolve => chrome.storage.sync.get(null, resolve));
-  const cloudVideoIds = new Set((cloudVideos || []).map(v => v.videoId));
-  const localVideoIds = Object.keys(allData)
-    .filter(k => k.startsWith('bm_') && Array.isArray(allData[k]))
-    .map(k => k.slice(3));
-
-  let updatedCount = 0;
-
-  // Merge cloud → local for every video in cloud (handles new-device case where local is empty)
-  for (const { videoId, bookmarks: cloudBms } of (cloudVideos || [])) {
-    try {
-      const localBms = allData[bmKey(videoId)] || [];
-      const localIds = new Set(localBms.map(b => b.id));
-      const newFromCloud = (cloudBms || []).filter(b => !localIds.has(b.id));
-      if (!newFromCloud.length) continue;
-
-      const merged = [...localBms, ...newFromCloud];
-      await new Promise(resolve => chrome.storage.sync.set({ [bmKey(videoId)]: merged }, resolve));
-      updatedCount++;
-    } catch { /* skip this video */ }
+  try {
+    const res = await chrome.runtime.sendMessage({ type: 'SYNC_NOW' });
+    return res?.ok ? (res.changedCount ?? 0) : 0;
+  } catch {
+    return 0;
   }
-
-  // Push any local-only videos to cloud
-  for (const videoId of localVideoIds) {
-    if (cloudVideoIds.has(videoId)) continue;
-    const localBms = allData[bmKey(videoId)] || [];
-    if (!localBms.length) continue;
-    try {
-      await fetch(`${API_BASE}/api/bookmarks`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ videoId, bookmarks: localBms }),
-      });
-    } catch { /* skip this video */ }
-  }
-
-  return updatedCount;
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
