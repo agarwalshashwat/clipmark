@@ -115,6 +115,36 @@ describe('Dodo webhook handler (#2)', () => {
     assert.equal(res.status, 500);
   });
 
+  it('refund.succeeded settles any pending_refunds row for that payment', async () => {
+    const event = { type: 'refund.succeeded', data: { payment_id: 'pay_1' } };
+    const { client, calls } = makeFakeSupabase((ctx: FakeCtx) =>
+      ctx.table === 'profiles' && ctx.op === 'select' ? { data: { id: 'u1' } } : { error: null },
+    );
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+
+    assert.equal(res.status, 200);
+    const resolve = calls.find((c) => c.table === 'pending_refunds' && c.op === 'update');
+    assert.ok(resolve, 'expected the owed-refund ledger row to be settled');
+    assert.ok((resolve!.payload as { resolved_at?: string }).resolved_at, 'expected resolved_at stamped');
+    assert.deepEqual(resolve!.filters, [
+      ['eq', 'payment_id', 'pay_1'],
+      ['is', 'resolved_at', null],
+    ]);
+  });
+
+  it('still returns 200 when the pending_refunds ledger write fails', async () => {
+    // The ledger is bookkeeping. Migration 018 is not applied in production yet,
+    // so this is the live case today — it must not make Dodo redeliver.
+    const event = { type: 'refund.succeeded', data: { payment_id: 'pay_1' } };
+    const { client } = makeFakeSupabase((ctx: FakeCtx) => {
+      if (ctx.table === 'pending_refunds') return { error: { code: '42P01', message: 'no such table' } };
+      if (ctx.table === 'profiles' && ctx.op === 'select') return { data: { id: 'u1' } };
+      return { error: null };
+    });
+    const res = await handleDodoWebhook(req(), { dodo: fakeDodo({ event }), admin: client });
+    assert.equal(res.status, 200);
+  });
+
   it('maps subscription.active product_id to the annual plan', async () => {
     const event = {
       type: 'subscription.active',

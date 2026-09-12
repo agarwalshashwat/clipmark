@@ -1,33 +1,14 @@
-import { APP_URL, PRIVACY_EMAIL } from '@/app/lib/constants';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
+import { PRIVACY_EMAIL } from '@/app/lib/constants';
+import { CookiePreferencesButton } from '@/app/components/CookiePreferencesButton';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Privacy Policy — ClipMark',
   description: 'How ClipMark collects, uses, and protects your data.',
-  alternates: {
-    canonical: '/privacy',
-  },
-  openGraph: {
-    title: 'Privacy Policy — ClipMark',
-    description: 'How ClipMark collects, uses, and protects your data.',
-    type: 'website',
-    url: '/privacy',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Privacy Policy — ClipMark',
-    description: 'How ClipMark collects, uses, and protects your data.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/privacy',
+  ogTitle: 'Privacy Policy',
+});
 
 const SECTION_STYLE = {
   marginBottom: 48,
@@ -37,16 +18,27 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: 'var(--gray-900)',
+  color: 'var(--text)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 12,
+};
+
+// §6 is the only section long enough to need a third level. Sized between H2 and
+// body so the essential/optional split reads as a real division of the section.
+const H3_STYLE = {
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+  marginTop: 28,
 };
 
 const UL_STYLE = {
@@ -56,7 +48,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -71,12 +63,12 @@ export default function PrivacyPage() {
           <h1 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 'clamp(32px, 6vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px',
-            color: 'var(--gray-900)', marginBottom: 16, marginTop: 0,
+            color: 'var(--text)', marginBottom: 16, marginTop: 0,
           }}>
             Privacy Policy
           </h1>
           <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 0 }}>
-            Last updated: March 25, 2026 • We respect your data.
+            Last updated: August 17, 2026 • We respect your data.
           </p>
         </div>
 
@@ -103,6 +95,7 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>Auth tokens</strong> — OAuth access and refresh tokens, stored encrypted in your browser&apos;s Chrome storage and our secure database.</li>
             <li style={LI_STYLE}><strong>Usage data</strong> — view counts for shared collections (no personal identifying data).</li>
             <li style={LI_STYLE}><strong>Feedback you submit</strong> — the rating and answers you send from the <a href="/feedback" style={{ color: 'var(--brand-ink)' }}>feedback form</a>, plus the name and email address only if you choose to fill them in. Both are optional; leaving them blank keeps the submission anonymous.</li>
+            <li style={LI_STYLE}><strong>Uninstall feedback</strong> — if you remove the extension, Chrome opens our <a href="/uninstall" style={{ color: 'var(--brand-ink)' }}>uninstall page</a>. Answering is entirely optional. If you do, we store the reason you picked, anything you write, the version of the extension you had, and an email address only if you choose to leave one — used solely to reply to you and to decide what to fix. Nothing that identifies you is added automatically, and no account or sign-in is involved.</li>
           </ul>
           <p style={P_STYLE}>
             We do <strong>not</strong> collect browsing history, track pages outside of YouTube, or use third-party advertising trackers.
@@ -130,9 +123,10 @@ export default function PrivacyPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>Google OAuth</strong> — for sign-in. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Google&apos;s Privacy Policy</a>.</li>
             <li style={LI_STYLE}><strong>Supabase</strong> — our database provider. Data is stored in the United States. See <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Supabase&apos;s Privacy Policy</a>.</li>
-            <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like summarization and tag suggestions are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
-            <li style={LI_STYLE}><strong>Dodo Payments</strong> — for Pro subscriptions. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
+            <li style={LI_STYLE}><strong>On-device AI (Gemini Nano)</strong> — AI features like note drafting are processed entirely within your browser using Chrome&apos;s built-in models. Your data never leaves your device for AI processing, ensuring maximum privacy and zero data retention by external AI providers.</li>
+            <li style={LI_STYLE}><strong>Dodo Payments</strong> — our payment processor and <strong>Merchant of Record</strong>, meaning Dodo is the seller of record for Pro purchases and handles billing and tax remittance. Payment details are handled entirely by Dodo Payments and are never stored on our servers.</li>
             <li style={LI_STYLE}><strong>Vercel</strong> — our web hosting provider. See <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>Vercel&apos;s Privacy Policy</a>.</li>
+            <li style={LI_STYLE}><strong>Vercel Web Analytics</strong> — aggregate visitor counts for this website (pages viewed, referrer, country, device type). It sets <strong>no cookies</strong> and stores nothing on your device; repeat visits within a day are recognised by a hash derived from the incoming request, which is discarded after 24 hours, so it cannot follow you across sites or from one day to the next. Because nothing is stored on or read from your device, there is no cookie consent to give here — see §6 for what that does and does not mean. It does not run inside the extension and never sees your bookmarks.</li>
           </ul>
         </div>
 
@@ -167,7 +161,84 @@ export default function PrivacyPage() {
             <li style={LI_STYLE}><strong>Correction</strong> — request correction of inaccurate data.</li>
           </ul>
           <p style={P_STYLE}>
-            If you are located in the EU/EEA, you also have rights under the GDPR, including the right to data portability and to lodge a complaint with a supervisory authority.
+            If you are located in the EU/EEA, you also have rights under the EU GDPR. If you are in
+            the <strong>United Kingdom</strong>, you have the equivalent rights under the{' '}
+            <strong>UK GDPR</strong> and the Data Protection Act 2018. In both cases that includes
+            the right to data portability, the right to object to or restrict processing, and the
+            right to lodge a complaint with a supervisory authority — in the UK that is the{' '}
+            <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-ink)' }}>
+              Information Commissioner&apos;s Office (ICO)
+            </a>
+            . Australian users have rights under the Privacy Act 1988 and may complain to the OAIC.
+          </p>
+          <p style={P_STYLE}>
+            <strong>Who is responsible, and on what basis.</strong> ClipMark is the data controller
+            for the data described in this policy; reach us at{' '}
+            <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)' }}>{PRIVACY_EMAIL}</a>.
+            We process your bookmarks and account data to <em>perform the contract</em> you enter
+            into by using ClipMark; we rely on <em>legitimate interests</em> for keeping the service
+            secure and for the aggregate, cookieless site measurement described above; and we rely on{' '}
+            <em>consent</em> for the optional attribution cookies in §6 and wherever you volunteer
+            something optional, such as an email address on a feedback or uninstall form. You can
+            withdraw that consent at any time — through the cookie preferences control for §6, or
+            by asking us to delete anything you volunteered. Data is stored in the United States
+            (see §3).
+          </p>
+        </div>
+
+        <div className="cm-card" id="cookies" style={{ marginBottom: 32, padding: '40px', scrollMarginTop: 96 }}>
+          <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>cookie</span>
+          </div>
+          <h2 style={H2_STYLE}>6. Cookies</h2>
+          <p style={P_STYLE}>
+            ClipMark sets a small number of cookies. None of them are advertising cookies,
+            none are third-party cookies, and none are used to build a profile of you. They
+            fall into two groups, and the difference decides whether we ask you first.
+          </p>
+
+          <h3 style={H3_STYLE}>Strictly necessary — always on</h3>
+          <p style={P_STYLE}>
+            These deliver the service you asked for. Without them the site cannot work, so
+            they do not require consent and the banner does not offer to turn them off.
+          </p>
+          <ul style={UL_STYLE}>
+            <li style={LI_STYLE}><strong>Sign-in cookies</strong> — set by Supabase when you sign in, to keep you signed in. Without them the dashboard cannot know who you are.</li>
+            <li style={LI_STYLE}><strong><code>clipmark_consent</code></strong> — remembers your answer to the cookie banner for six months, so we neither ask you on every page nor act on an answer you did not give. It stores only your choice and the date you made it.</li>
+          </ul>
+
+          <h3 style={H3_STYLE}>Optional — only with your consent</h3>
+          <p style={P_STYLE}>
+            These are for us, not for you: they credit whoever sent you to ClipMark. Nothing
+            about the product stops working without them. We set them only if you choose
+            &quot;Accept optional&quot; on the cookie banner, and never before.
+          </p>
+          <ul style={UL_STYLE}>
+            <li style={LI_STYLE}><strong><code>clipmark_ref</code></strong> — set for <strong>30 days</strong> when you arrive through an affiliate link (a <code>/r/&lt;code&gt;</code> URL). It stores only that affiliate&apos;s code so the referrer is credited if you later upgrade, and it is set only on the first such visit — a later affiliate link will not overwrite it. It is <code>httpOnly</code> and <code>SameSite=Lax</code>, so it is not readable by page scripts and is not sent to other sites. It contains no identifier for you.</li>
+            <li style={LI_STYLE}><strong><code>clipmark_user_ref</code></strong> — the same thing for a referral link shared by another ClipMark user (a <code>/ref/&lt;code&gt;</code> URL): 30 days, first click wins, the referrer&apos;s code and nothing else.</li>
+          </ul>
+          <p style={P_STYLE}>
+            If you arrive through one of those links and have not answered the banner yet,
+            the code travels in the page address only. We store nothing on your device unless
+            and until you accept — and if you decline, or simply never answer, no attribution
+            cookie is ever set.
+          </p>
+
+          <h3 style={H3_STYLE}>Not cookies at all</h3>
+          <ul style={UL_STYLE}>
+            <li style={LI_STYLE}><strong>Theme preference</strong> — stored in your browser&apos;s local storage, not a cookie, and never sent to us.</li>
+            <li style={LI_STYLE}><strong>Visitor statistics</strong> — Vercel Web Analytics (§3) stores nothing on your device and reads nothing from it. It counts unique visitors using a hash derived from the incoming request, which is discarded after 24 hours and cannot be used to follow you across sites or from one day to the next. That means there is no cookie here to consent to — but it is not <em>nothing</em>: we still receive the aggregate figures listed in §3, and we rely on legitimate interests for them (§5). If you object, tell us at{' '}
+              <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)' }}>{PRIVACY_EMAIL}</a>.</li>
+          </ul>
+
+          <h3 style={H3_STYLE}>Changing your mind</h3>
+          <p style={P_STYLE}>
+            Withdrawing consent is as easy as giving it. Use{' '}
+            <CookiePreferencesButton variant="inline">the cookie preferences control</CookiePreferencesButton>{' '}
+            here or the same link in the footer of every page — the banner reopens and your
+            new answer replaces the old one immediately. Choosing &quot;Reject optional&quot;
+            also deletes any attribution cookie you already had. You can additionally block or
+            delete any of these cookies through your browser settings at any time.
           </p>
         </div>
 
@@ -175,7 +246,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>history</span>
           </div>
-          <h2 style={H2_STYLE}>6. Data Retention</h2>
+          <h2 style={H2_STYLE}>7. Data Retention</h2>
           <p style={P_STYLE}>
             We retain your data for as long as your account is active. If you delete your account, we will delete your personal data within 30 days, except where retention is required by law.
             Shared collection pages are deleted immediately upon account deletion.
@@ -186,7 +257,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>child_care</span>
           </div>
-          <h2 style={H2_STYLE}>7. Children&apos;s Privacy</h2>
+          <h2 style={H2_STYLE}>8. Children&apos;s Privacy</h2>
           <p style={P_STYLE}>
             ClipMark is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such data, please contact us immediately.
           </p>
@@ -196,7 +267,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>edit_note</span>
           </div>
-          <h2 style={H2_STYLE}>8. Changes to This Policy</h2>
+          <h2 style={H2_STYLE}>9. Changes to This Policy</h2>
           <p style={P_STYLE}>
             We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the date at the top of this page. Your continued use of ClipMark after any changes constitutes acceptance of the updated policy.
           </p>
@@ -206,7 +277,7 @@ export default function PrivacyPage() {
           <div className="cm-icon-badge" style={{ width: 48, height: 48, marginBottom: 20 }}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>mail</span>
           </div>
-          <h2 style={H2_STYLE}>9. Contact</h2>
+          <h2 style={H2_STYLE}>10. Contact</h2>
           <p style={P_STYLE}>
             If you have questions or requests regarding your data, please contact us at:<br />
             <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>{PRIVACY_EMAIL}</a>

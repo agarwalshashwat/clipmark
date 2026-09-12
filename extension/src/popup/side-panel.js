@@ -11,6 +11,12 @@ import {
 } from '../constants.module.js';
 import { formatLoopRange, isLoopBookmark } from '../loop.module.js';
 import {
+  getValidToken,
+  resolveAccessToken,
+  TOKEN_NO_SESSION,
+  TOKEN_SESSION_EXPIRED,
+} from '../auth-token.module.js';
+import {
   buildDueSummary,
   buildIdleVideoCards,
   collectStoredBookmarks,
@@ -30,6 +36,7 @@ import {
   localSummarizeSnippet,
 } from '../ai/local-ai.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
+import { initReviewNudge } from './review-nudge-banner.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import {
@@ -40,7 +47,6 @@ import {
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
 import { isDueForRecall } from '../recall.module.js';
-import { getValidToken } from '../auth-token.module.js';
 import { initErrorReporting } from '../error-reporting.js';
 // `?sp` for the same reason as the driver.js imports below: content/tour.js
 // imports this too, and without the distinct module id Rollup hoists it into a
@@ -146,9 +152,6 @@ async function resolveNewBookmarkReviewSchedule() {
   if (isEnrollmentCapReached(enrolled)) return { reviewSchedule: [], capped: true };
   return { reviewSchedule: [1, 3, 7], capped: false };
 }
-
-// getValidToken (token refresh) now lives in src/auth-token.module.js — one
-// copy shared with the dashboard and the background sync engine.
 
 // Re-checks Pro status against the server and updates the cached bmUser.isPro
 // flag on a mismatch, so upgrading via the web dashboard unlocks gated
@@ -1592,9 +1595,12 @@ async function loadAuthState() {
     userChip.title           = bmUser.userEmail || '';
     if (signoutBtn) signoutBtn.style.display = '';
 
-    // Silently validate/refresh token — sign out if session is fully expired
-    const token = await getValidToken();
-    if (!token) {
+    // Silently validate/refresh token — sign out only when the session is
+    // genuinely gone (server rejected it, or the record is unusable). A failed
+    // refresh used to sign the user out whether the token was dead or the
+    // network was merely down.
+    const { reason } = await resolveAccessToken();
+    if (reason === TOKEN_SESSION_EXPIRED || reason === TOKEN_NO_SESSION) {
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
     }
@@ -1658,6 +1664,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   checkPro().then(applyProGating);  // show PRO badges on gated controls for free users
   refreshEntitlement();
   runSidePanelTour();
+  // Own storage reads, own gate, never throws — see review-nudge-banner.js.
+  // Deliberately after the tour: a first-run user cannot reach the milestone,
+  // but the ordering makes it impossible for the two to ever race for attention.
+  // Also subscribes to the recall-session record, so a drill finished while this
+  // panel is open surfaces the ask at that moment rather than on a later open.
+  initReviewNudge();
   document.getElementById('replay-tour-btn')?.addEventListener('click', async () => {
     await setTourState({ youtubeTour: false, sidePanelTour: false });
     runSidePanelTour({ force: true });

@@ -11,7 +11,7 @@
   font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: var(--gray-900);
+  color: var(--text);
   margin: 0 0 8px;
 }
 
@@ -24,8 +24,8 @@
 
 /* Empty state */
 .empty {
-  background: white;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   border-radius: 20px;
   padding: 80px 32px;
@@ -52,7 +52,7 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
   margin: 0;
 }
 
@@ -73,14 +73,14 @@
   gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--border);
 }
 
 .groupTag {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--text);
   letter-spacing: -0.02em;
 }
 
@@ -151,8 +151,8 @@
 
 /* ── Create Form ──────────────────────────────────────────────────────────── */
 .createForm {
-  background: var(--gray-50);
-  border: 1px solid var(--gray-100);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 40px;
@@ -160,12 +160,12 @@
 
 .typeToggle {
   display: flex;
-  background: #ffffff;
+  background: var(--surface);
   padding: 4px;
   border-radius: 12px;
   width: fit-content;
   margin-bottom: 20px;
-  border: 1px solid var(--gray-100);
+  border: 1px solid var(--border);
 }
 
 .typeBtn {
@@ -192,8 +192,8 @@
 
 .formInput {
   flex: 1;
-  background: #ffffff;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 14px;
@@ -206,8 +206,8 @@
 
 /* ── Mini Cards (inside groups) ────────────────────────────────────────────── */
 .miniCard {
-  background: #ffffff;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
   display: flex;
@@ -217,14 +217,14 @@
   transition: all 0.2s;
 }
 .miniCard:hover {
-  border-color: var(--gray-200);
+  border-color: var(--border);
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .miniThumb {
   width: 100%;
   aspect-ratio: 16/9;
-  background: var(--gray-100);
+  background: var(--surface-alt);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -233,7 +233,7 @@
 .miniTitle {
   font-size: 13px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -245,15 +245,15 @@
 .tagsSection {
   margin-top: 64px;
   padding-top: 48px;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--border);
 }
 
 .removeBtn {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: white;
-  border: 1px solid var(--gray-100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 6px;
   width: 24px;
   height: 24px;
@@ -276,14 +276,14 @@
 }
 
 .addCard {
-  border: 2px dashed var(--gray-100);
+  border: 2px dashed var(--border);
   border-radius: 14px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-  background: var(--gray-50);
+  background: var(--bg);
   min-height: 120px;
 }
 
@@ -291,10 +291,10 @@
   width: 100%;
   padding: 6px;
   border-radius: 8px;
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--border);
   font-size: 11px;
   font-weight: 600;
-  background: white;
+  background: var(--surface);
   outline: none;
 }
 

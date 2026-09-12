@@ -104,13 +104,13 @@ No single PR owns this — it's a cross-cutting effort across the whole period:
 ## 3. Strategy & GTM docs produced
 
 **Committed to `main`:**
-- [ClipMark-ROADMAP.md](../ClipMark-ROADMAP.md) — the consolidated master roadmap (shipped/in-progress/planned), committed 2026-07-28, since amended by several of the fix PRs above.
-- [ClipMark-Affiliate-Fix-Spec.md](../ClipMark-Affiliate-Fix-Spec.md) — diagnosis + fix spec for the admin-affiliate-route bug (PR #52).
-- [docs/gtm/chrome-web-store-listing.md](gtm/chrome-web-store-listing.md) and [chrome-web-store-listing-FIELDS.md](gtm/chrome-web-store-listing-FIELDS.md) — ready-to-paste CWS listing copy + a dashboard-fields handoff variant.
-- [docs/gtm/community-engagement-plan.md](gtm/community-engagement-plan.md) — named-community GTM plan for the USMLE/med beachhead.
-- [docs/gtm/creator-outreach-kit.md](gtm/creator-outreach-kit.md) — creator/affiliate outreach templates and verified program terms.
-- [docs/guided-tour-spec.md](guided-tour-spec.md) — the spec PR #67 implements.
-- [docs/RELEASE-RUNBOOK.md](RELEASE-RUNBOOK.md), [docs/DEPLOYMENTS.md](DEPLOYMENTS.md), [docs/OWNER_SETUP_CHECKLIST.md](OWNER_SETUP_CHECKLIST.md), [docs/CONVERSION_PLAN.md](CONVERSION_PLAN.md), [docs/TEST_PLAN_launch.md](TEST_PLAN_launch.md), [docs/release/LAUNCH_PLAN.md](release/LAUNCH_PLAN.md), [docs/release/LAUNCH_DAY_RUNBOOK.md](release/LAUNCH_DAY_RUNBOOK.md), [docs/release/LAUNCH_GO_NO_GO_CHECKLIST.md](release/LAUNCH_GO_NO_GO_CHECKLIST.md), [docs/release/RELEASE_POLICY.md](release/RELEASE_POLICY.md) — operational runbooks and checklists, all committed.
+- `ClipMark-ROADMAP.md` — the consolidated master roadmap (shipped/in-progress/planned), committed 2026-07-28, since amended by several of the fix PRs above.
+- `ClipMark-Affiliate-Fix-Spec.md` — diagnosis + fix spec for the admin-affiliate-route bug (PR #52).
+- [docs/gtm/chrome-web-store-listing.md](../gtm/chrome-web-store-listing.md) and [chrome-web-store-listing-FIELDS.md](../gtm/chrome-web-store-listing-FIELDS.md) — ready-to-paste CWS listing copy + a dashboard-fields handoff variant.
+- [docs/gtm/community-engagement-plan.md](../gtm/community-engagement-plan.md) — named-community GTM plan for the USMLE/med beachhead.
+- [docs/gtm/creator-outreach-kit.md](../gtm/creator-outreach-kit.md) — creator/affiliate outreach templates and verified program terms.
+- `docs/guided-tour-spec.md` — the spec PR #67 implements.
+- [docs/RELEASE-RUNBOOK.md](../RELEASE-RUNBOOK.md), [docs/DEPLOYMENTS.md](../DEPLOYMENTS.md), [docs/OWNER_SETUP_CHECKLIST.md](../OWNER_SETUP_CHECKLIST.md), `docs/CONVERSION_PLAN.md`, `docs/TEST_PLAN_launch.md`, `docs/release/LAUNCH_PLAN.md`, `docs/release/LAUNCH_DAY_RUNBOOK.md`, `docs/release/LAUNCH_GO_NO_GO_CHECKLIST.md`, `docs/release/RELEASE_POLICY.md` — operational runbooks and checklists, all committed.
 - Root-level `ROADMAP.md` (no `ClipMark-` prefix) — an older, separate product roadmap predating the Aug-2026 planning pass ("Turn long YouTube videos into searchable, revisable knowledge") — still present, distinct from `ClipMark-ROADMAP.md`; worth the owner deciding whether it should be merged into or retired in favor of the newer one (see §6).
 
 **NOT committed to any branch — exist only as local files in a working checkout, confirmed via `git log --all` across every branch:**
@@ -121,7 +121,7 @@ No single PR owns this — it's a cross-cutting effort across the whole period:
 - `ClipMark-Claims-Buildout-Plan.md` — per-feature build spec for the 7 pricing-page claims (Deep Transcript Search, real Notion/Obsidian sync, etc.), also referenced from `ClipMark-ROADMAP.md` but never committed.
 - `docs/gtm/case-study-kortex.md` — the Kortex growth-lessons case study (this session's other deliverable).
 
-**This is a real gap, not a cosmetic one**: `ClipMark-ROADMAP.md`, which *is* committed and live on `main`, contains working-looking links to several of the files in the uncommitted list above (e.g. `[ClipMark-MedExam-Strategy-Brief.md](ClipMark-MedExam-Strategy-Brief.md)`, `[ClipMark-Distribution-Plan.md](ClipMark-Distribution-Plan.md)`). Anyone reading the roadmap directly on GitHub today hits a 404 on those links, since the target files were never pushed. See §6.
+**This is a real gap, not a cosmetic one**: `ClipMark-ROADMAP.md`, which *is* committed and live on `main`, contains working-looking links to several of the files in the uncommitted list above (e.g. `ClipMark-MedExam-Strategy-Brief.md`, `ClipMark-Distribution-Plan.md`). Anyone reading the roadmap directly on GitHub today hits a 404 on those links, since the target files were never pushed. See §6.
 
 ---
 

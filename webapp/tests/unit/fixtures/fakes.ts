@@ -94,6 +94,10 @@ export function makeFakeSupabase(responder: Responder, rpcResponder: RpcResponde
         ctx.filters.push(['neq', col, val]);
         return chain;
       },
+      is(col: string, val: unknown) {
+        ctx.filters.push(['is', col, val]);
+        return chain;
+      },
       single() {
         ctx.single = true;
         return finalize();

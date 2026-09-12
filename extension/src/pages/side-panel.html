@@ -15,6 +15,9 @@
   <!-- Fonts are self-hosted from assets/fonts via styles/fonts.css, which
        side-panel.css imports — no runtime request to a font CDN. -->
   <link rel="stylesheet" href="../../styles/side-panel.css">
+  <!-- Self-contained, scoped under .review-nudge; kept out of side-panel.css so
+       the two can be edited independently. -->
+  <link rel="stylesheet" href="../../styles/review-nudge.css">
 </head>
 <body class="side-panel-root">
 
@@ -124,6 +127,13 @@
 
     <!-- Revisit reminder -->
     <div id="revisit-reminder-panel" class="revisit-reminder-panel"></div>
+
+    <!-- Filled in by src/popup/review-nudge-banner.js, and only in the minutes
+         after a user past the engagement milestone finishes an Active Recall
+         session — empty for everyone else, nearly always. It sits here, beside
+         the recall surface its copy is about, rather than last in the scroll:
+         an ask this rare and this earned should not need scrolling to find. -->
+    <div id="review-nudge-slot"></div>
 
     <!-- Bookmarks / Comments Tabs -->
     <section class="sp-section sp-bookmarks-section">

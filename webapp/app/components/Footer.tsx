@@ -1,7 +1,17 @@
 import React from 'react';
+import { createServerSupabase } from '@/lib/supabase';
 import { CHROME_STORE_URL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import { CookiePreferencesButton } from './CookiePreferencesButton';
 
-export function Footer() {
+// Auth-aware for one reason: the footer is the only sign-in route a phone has.
+// Below 640px the header's "Log In" link is display:none, and until now nothing
+// in the footer replaced it, so a returning mobile user had to know /signin.
+// Mirrors the getUser() call Navigation already makes in this same layout, so
+// marketing pages were dynamic either way.
+export async function Footer() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -15,6 +25,9 @@ export function Footer() {
             <a href="/upgrade" className="footer-link">Pricing</a>
             <a href="/affiliate" className="footer-link">Affiliate Program</a>
             <a href={CHROME_STORE_URL} target="_blank" rel="noopener noreferrer" className="footer-link">Chrome Extension</a>
+            {user
+              ? <a href="/dashboard" className="footer-link">Your Dashboard</a>
+              : <a href="/signin" className="footer-link">Sign In</a>}
           </div>
           <div className="footer-links-col">
             <span className="footer-links-title">Learn</span>
@@ -29,6 +42,10 @@ export function Footer() {
             <span className="footer-links-title">Legal</span>
             <a href="/privacy" className="footer-link">Privacy Policy</a>
             <a href="/terms" className="footer-link">Terms of Service</a>
+            {/* Withdrawing consent must be as easy as giving it, so the control
+                is on every page rather than only on /privacy. */}
+            <CookiePreferencesButton />
+
           </div>
           <div className="footer-links-col">
             <span className="footer-links-title">Contact</span>

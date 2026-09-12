@@ -50,6 +50,18 @@
 
 /* Webapp-specific styles can be added below */
 
+/* ── Fragment landing offset ───────────────────────────────────────────────── */
+/* The header is position:fixed at 80px, and scroll-margin-top was 0, so every
+   in-page jump parked the target section's heading underneath it — measured on
+   production for #pricing (the hero's own "See Pricing" button), #features (the
+   nav link), #active-recall, #anki and #how-it-works. 96px = 80px of nav plus a
+   16px breath. Scoped to fragment targets and to <main> sections so it cannot
+   affect programmatic scrollIntoView in the dashboard. */
+main section[id],
+[id]:target {
+  scroll-margin-top: 96px;
+}
+
 @media (max-width: 767px) {
   .nav-links {
     display: none !important;
@@ -85,17 +97,67 @@
   .mobile-text {
     display: inline;
   }
+  /* min-height + centring, not more padding: the button measured 120x36 on a
+     phone, under the 44px WCAG 2.5.5 target minimum, and it is the only install
+     control above the mobile fold. */
   .nav-cta {
     padding: 10px 16px !important;
     font-size: 13px !important;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Hero above the fold at 375x812. Before this the badge, a 5-line h1 at the
+     desktop type scale and a 6-line 21px subhead consumed the whole viewport and
+     clipped the primary CTA. Layout only — no colours. */
+  .hero-inner {
+    padding-top: 56px !important;
+  }
+  .hero-badge {
+    margin-bottom: 20px !important;
+  }
+  .hero-sub {
+    margin-bottom: 28px !important;
+  }
+
+  /* 327x16 link rows are well under the touch minimum. */
+  .footer-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-account-mobile {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
   }
 }
 
+/* Desktop already has the "Log In" / "Dashboard" text link, so the icon would be
+   a duplicate control pointing at the same place. */
+.nav-account-mobile {
+  display: none;
+}
+
 /* ── Footer ────────────────────────────────────────────────────────────────── */
+/* Every colour here has to come from a SEMANTIC token (--surface, --border,
+   --text…), not from the raw ramp. The ramp scales are fixed values with no dark
+   override — `--gray-100` is #f3f4f6 in both themes — so a rule that reaches for
+   one is pinned to its light-mode appearance forever. That is exactly how this
+   footer ended up rendering as a white slab under a dark page: a literal
+   #ffffff background plus a --gray-100 border, on a surface whose text tokens
+   were flipping correctly around them.
+   Nothing token-level was wrong, which is why R9 (dark-mode completeness) passed
+   throughout — it checks that the tokens have dark values, not that a rule used
+   one. */
 .footer {
   padding: 80px 0 48px;
-  border-top: 1px solid var(--gray-100);
-  background: #ffffff;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .footer-container {
@@ -119,7 +181,10 @@
   font-size: 20px;
   font-weight: 800;
   font-family: var(--font-plus-jakarta);
-  color: var(--gray-900);
+  /* --gray-900 (#111827) is also the dark-mode --surface, so fixing only the
+     background would have painted the wordmark in the background colour and made
+     it disappear. --text is the same #111827 in light and inverts with the theme. */
+  color: var(--text);
   letter-spacing: -0.5px;
 }
 
@@ -203,12 +268,12 @@
 
 /* ── Upgrade page classes ──────────────────────────────────────────────────── */
 .faq-card {
-  background: #ffffff;
-  border: 1px solid rgba(17, 24, 39,0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
 }
-.feature-row:hover { background: rgba(243,243,244,0.5); }
+.feature-row:hover { background: var(--surface-alt); }
 .ghost-btn {
   background: transparent;
   border: 2px solid var(--border);
@@ -254,7 +319,9 @@
   padding: 6px 16px;
   border-radius: 9999px;
   background: var(--accent-light);
-  color: var(--primary-deep);
+  /* --primary-deep is teal-700 in BOTH themes; --brand-ink is the same teal-700
+     in light and flips to teal-400 on dark. */
+  color: var(--brand-ink);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -264,9 +331,9 @@
 }
 
 .cm-card {
-  background: white;
+  background: var(--surface);
   border-radius: 20px;
-  border: 1px solid rgba(17, 24, 39, 0.06);
+  border: 1px solid var(--border);
   padding: 40px 32px;
   box-shadow: 0 4px 20px rgba(17, 24, 39, 0.04);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -306,7 +373,7 @@
 .cm-step-tag {
   font-size: 12px;
   font-weight: 800;
-  color: var(--gray-600);
+  color: var(--text-muted);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -320,13 +387,29 @@
   left: 10%;
   right: 10%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gray-200) 15%, var(--gray-200) 85%, transparent);
+  background: linear-gradient(90deg, transparent, var(--border) 15%, var(--border) 85%, transparent);
   z-index: 0;
+}
+
+/* The "Four things we refuse to get wrong" grid (components/WhyClipMark.tsx).
+   Pinned to two columns rather than auto-fitting, because that section always
+   holds exactly four cards: `repeat(auto-fit, minmax(320px, 1fr))` fitted three
+   per row inside the 1080px container (3×320 + 2×24 = 1008 ≤ 1080, where four
+   would need 1352) and left the fourth card orphaned alone on a second row.
+   minmax(0, 1fr) rather than 1fr so a long unbroken word can't push a track
+   wider than its share. */
+.cm-why-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
 }
 
 @media (max-width: 768px) {
   .cm-timeline-line { display: none; }
   .cm-card { padding: 32px 24px; }
+  /* Same breakpoint as .pricing-grid, so both card sections go single-column at
+     the same width. */
+  .cm-why-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -497,6 +580,83 @@ html.cm-js-reveal .cm-reveal--visible {
   padding: 0;
 }
 
+/* ── One-tap choice list (the /uninstall reason picker) ────────────────────── */
+/* Same construction as .fb-star: the label is the touch target, the radio stays
+   a real radio (arrow-key navigable, announced as a radio group) and is
+   stretched transparently across the label rather than hidden, so a click that
+   lands on the input still selects the option it looks like. */
+.fb-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .fb-choices { grid-template-columns: 1fr; }
+}
+
+.fb-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.fb-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.fb-choice:hover { border-color: var(--gray-300); }
+
+.fb-choice[data-selected='true'] {
+  border-color: var(--accent-strong);
+  background: var(--accent-light);
+  font-weight: 600;
+}
+
+/* Decorative: the radio itself is transparent above it, so this only ever
+   mirrors state. */
+.fb-choice-dot {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-300);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.fb-choice[data-selected='true'] .fb-choice-dot {
+  border-color: var(--accent-strong);
+  box-shadow: inset 0 0 0 4px var(--accent-strong);
+}
+
+.fb-choice input:focus-visible + .fb-choice-dot {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-choice,
+  .fb-choice-dot { transition: none; }
+}
+
 .fb-stars {
   display: flex;
   align-items: center;
@@ -535,7 +695,7 @@ html.cm-js-reveal .cm-reveal--visible {
 /* `data-on` is computed in React from the selected rating, or from the hovered
    one while the pointer is over the row — a pure-CSS sibling trick can only
    light stars AFTER the hovered one, which is backwards for a rating. */
-.fb-star-glyph[data-on='selected'] { color: var(--accent-strong); }
+.fb-star-glyph[data-on='selected'] { color: var(--brand-ink); }
 .fb-star-glyph[data-on='hover']    { color: var(--accent); }
 .fb-star:hover .fb-star-glyph { transform: scale(1.06); }
 
@@ -639,4 +799,196 @@ html.cm-js-reveal .cm-reveal--visible {
   .fb-card { padding: 24px 20px; }
   .fb-submit { width: 100%; }
   .fb-ghost { width: 100%; }
+}
+
+/* ── Cookie consent banner ─────────────────────────────────────────────────── */
+/* Presentation for components/CookieConsent.tsx. Every colour is a semantic
+   token, never a raw ramp step, so the panel follows dark mode — the dark-mode
+   sweep in tests/ci/webapp-smoke.spec.ts would otherwise catch it as a light
+   slab pinned over a dark page, which is how the footer regressed once already.
+
+   Deliberately NOT a modal: no scrim, no scroll lock. Consent must be a real
+   choice, and a wall that only clears by answering is not one. */
+.cc-root {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 200;             /* over the sticky nav (50) and the dashboard chrome */
+  display: flex;
+  justify-content: center;
+  outline: none;            /* focus lands here on open; .cc-panel draws the ring */
+  animation: cc-rise 0.24s ease-out;
+}
+/* :focus, not :focus-visible — the banner is tabIndex=-1, so the only way it
+   receives focus is the programmatic .focus() on open, and Chrome's
+   focus-visible heuristic does not light up for that. Without the ring a
+   screen-reader or keyboard user is moved somewhere they cannot see. */
+.cc-root:focus .cc-panel {
+  box-shadow: var(--shadow-lg), 0 0 0 3px var(--focus-ring);
+}
+
+@keyframes cc-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-root { animation: none; }
+}
+
+.cc-panel {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.cc-copy { flex: 1 1 auto; min-width: 0; }
+
+.cc-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 32px 6px 0;     /* right gap keeps the close button off the title */
+}
+
+.cc-body {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--text-sub);
+  margin: 0;
+}
+
+.cc-meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+
+.cc-link {
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+/* Equal-width columns rather than flex, so the two buttons come out identical
+   even though "Reject optional" and "Accept optional" render 6px apart. Sizing
+   to content made reject the visibly smaller of the two, which is the shape
+   regulators read as nudging. */
+.cc-actions {
+  flex: 0 0 auto;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 12px;
+}
+
+/* Accept and Reject are the same shape and size on purpose — rejecting has to
+   be as easy as accepting. The only difference is fill vs outline, and the
+   outline is 2px of --text-sub (9.4:1 light / 9.9:1 dark on --surface) so it
+   still clears WCAG 1.4.11 for a non-text control boundary. */
+.cc-btn {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.2;
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  min-height: 44px;         /* touch target */
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.cc-btn:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.cc-btn-accept {
+  background: var(--accent-strong);
+  color: var(--on-primary);
+  border: 2px solid var(--accent-strong);
+}
+.cc-btn-accept:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.cc-btn-reject {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--text-sub);
+}
+.cc-btn-reject:hover { background: var(--surface-alt); }
+
+.cc-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.cc-close:hover { background: var(--surface-alt); color: var(--text); }
+.cc-close:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.cc-close .material-symbols-outlined { font-size: 20px; }
+
+/* The "change your choice" trigger. A <button> that has to read as a link, so
+   the browser's default button chrome is stripped rather than restyled. */
+.cc-pref-link,
+.cc-pref-inline {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.cc-pref-inline {
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.cc-pref-link:focus-visible,
+.cc-pref-inline:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* Below the panel's natural two-column width the copy stacks above the buttons,
+   which then split the row evenly — still side by side, still equal weight. */
+@media (max-width: 720px) {
+  .cc-root { left: 12px; right: 12px; bottom: 12px; }
+  .cc-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px;
+  }
+  .cc-actions { width: 100%; }
+  .cc-btn { padding: 12px 10px; }
+}
+
+/* At 375px "Reject optional" is the widest label the row can hold; letting it
+   wrap is better than letting it overflow the panel. */
+@media (max-width: 400px) {
+  .cc-btn { white-space: normal; }
 }

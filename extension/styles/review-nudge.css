@@ -1,0 +1,104 @@
+/* ─── Review nudge banner (side panel) ───────────────────────────────────────
+ *
+ * Deliberately a separate stylesheet rather than an addition to
+ * side-panel.css: that file is large, frequently in flight, and this feature
+ * needs no part of it. Everything here is scoped under .review-nudge.
+ *
+ * Colour comes only from the semantic tokens in design-tokens.css, so dark mode
+ * is inherited from the [data-theme="dark"] block with no duplicated palette.
+ * Contrast on the pairs used below (both themes) clears WCAG AA:
+ *   title/body   --text / --text-sub on --surface        16.1:1 / 9.4:1 light,
+ *                                                        17.4:1 / ~11:1 dark
+ *   primary btn  --on-primary on --accent-strong         5.5:1 in both themes
+ *   ghost btn    --btn-secondary-text on --btn-secondary-bg   ~9:1 / ~9.9:1
+ */
+
+.review-nudge {
+  margin: 16px 0 8px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-nudge-title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.review-nudge-body {
+  margin: 0 0 12px;
+  font-family: var(--font);
+  font-size: var(--text-base);
+  line-height: 1.45;
+  color: var(--text-sub);
+}
+
+/* Both actions share one row and one set of metrics. The dismiss is a full,
+   legible button rather than a faint link or a 12px "×" — the ask is only
+   honest if saying no is as easy as saying yes. */
+.review-nudge-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.review-nudge-btn {
+  flex: 1 1 0;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.review-nudge-btn--primary {
+  /* An <a> styled as a button: it navigates to the store listing. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-strong);
+  color: var(--on-primary);
+}
+
+.review-nudge-btn--primary:hover {
+  background: var(--accent-hover);
+}
+
+.review-nudge-btn--ghost {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--border);
+}
+
+.review-nudge-btn--ghost:hover {
+  background: var(--surface-alt);
+}
+
+.review-nudge-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* --focus-ring resolves to teal-700, which is only ~2.5:1 against the dark
+   canvas — a ring you cannot find is not a focus indicator. Dark mode uses the
+   same token the design system reserves for brand marks on dark surfaces. */
+[data-theme="dark"] .review-nudge-btn:focus-visible {
+  outline-color: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-nudge-btn {
+    transition: none;
+  }
+}

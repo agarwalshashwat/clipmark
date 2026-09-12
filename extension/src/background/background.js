@@ -10,9 +10,15 @@ import {
   isRecallStartBlocked,
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
+import { pruneVideoMaps } from '../storage-maps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
+import { getValidToken } from '../auth-token.module.js';
 import { buildPendingRevision } from '../constants.module.js';
 import { initSyncEngine } from '../sync/sync-engine.js';
+// config.js is a plain script (no import/export) that only sets
+// globalThis.API_BASE — safe to import here for its side effect even though
+// the service worker has no HTML host to load it as a classic <script>.
+import '../config.js';
 import {
   CONTENT_SCRIPT_MARKER,
   contentScriptMatchPatterns,
@@ -21,6 +27,7 @@ import {
   shouldInjectIntoTab,
   urlMatchesAnyPattern,
 } from './install-injection.js';
+import { registerUninstallUrl } from './uninstall-url.js';
 
 const errorReporter = initErrorReporting('extension-background');
 
@@ -172,6 +179,12 @@ const TAG_COLORS = {
     // Recreate keepalive alarm on update to ensure it persists
     chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
 
+    // Where Chrome sends the user if they remove ClipMark. Registered on both
+    // install and startup rather than install alone: the registration belongs to
+    // the worker's lifetime, and an update that changes the version has to
+    // re-register to keep ?v= truthful. The call is idempotent and never throws.
+    registerUninstallUrl().catch(() => {});
+
     if (shouldBackfillOnInstalled(details?.reason)) {
       backfillContentScripts().catch(() => {});
     }
@@ -191,6 +204,12 @@ const TAG_COLORS = {
       contexts: ['selection'],
       documentUrlPatterns: ['*://*.youtube.com/watch*'],
     });
+  });
+
+  // Browser restart: onInstalled does NOT fire, so without this the uninstall URL
+  // would only ever be registered by the install/update that first shipped it.
+  chrome.runtime.onStartup.addListener(() => {
+    registerUninstallUrl().catch(() => {});
   });
 
   // ─── Context Menu Handler ──────────────────────────────────────────────────────
@@ -305,12 +324,27 @@ const TAG_COLORS = {
     // Save to storage
     bookmarks.push(newBookmark);
     if (duration && !isNaN(duration)) videoDurations[videoId] = duration;
+    // Bookmark first and alone — see the same split in content/content.js.
+    // videoTitles/videoDurations are single storage items that grow on every
+    // video watched, so either can exceed QUOTA_BYTES_PER_ITEM; sharing a set()
+    // with them meant an oversized display cache failed the actual save.
     await new Promise((resolve, reject) => {
-      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks, videoDurations, videoTitles }, () => {
+      chrome.storage.sync.set({ [bmKey(videoId)]: bookmarks }, () => {
         if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
         else resolve();
       });
     });
+
+    // Caches after, pruned and non-fatal.
+    const prunedMaps = pruneVideoMaps({ videoTitles, videoDurations, keepVideoId: videoId });
+    chrome.storage.sync.set(
+      { videoTitles: prunedMaps.videoTitles, videoDurations: prunedMaps.videoDurations },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.warn('[background] video map write failed (bookmark already saved):', chrome.runtime.lastError.message);
+        }
+      }
+    );
 
     // Notify content script to update markers
     try {
@@ -564,17 +598,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 // ─── Reminder Alarms ──────────────────────────────────────────────────────────
-const REMINDERS_API = 'https://clipmark.mithahara.com/api/reminders';
+const REMINDERS_API = `${globalThis.API_BASE || 'https://clipmark.mithahara.com'}/api/reminders`;
 const REMINDER_HORIZON_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 async function scheduleReminderAlarms() {
-  const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
-  if (!bmUser?.accessToken) return;
+  // Must go through getValidToken: this runs from a daily alarm and on every
+  // service-worker wake-up, so the stored access token is almost always past
+  // its one-hour life. Reading `bmUser.accessToken` raw made every one of these
+  // syncs 401 and silently scheduled no alarms at all.
+  const token = await getValidToken();
+  if (!token) return;
 
   let reminders;
   try {
     const res = await fetch(REMINDERS_API, {
-      headers: { Authorization: `Bearer ${bmUser.accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return;
     const json = await res.json();
@@ -673,12 +711,12 @@ chrome.notifications.onButtonClicked.addListener(async (notifId, buttonIndex) =>
     chrome.tabs.create({ url: `https://www.youtube.com/watch?v=${meta.videoId}` });
   } else if (buttonIndex === 1) {
     // Mark Done — call API then reschedule
-    const { bmUser } = await chrome.storage.sync.get({ bmUser: null });
-    if (bmUser?.accessToken) {
+    const token = await getValidToken();
+    if (token) {
       try {
         await fetch(`${REMINDERS_API}/${reminderId}/done`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${bmUser.accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
       } catch {}
     }

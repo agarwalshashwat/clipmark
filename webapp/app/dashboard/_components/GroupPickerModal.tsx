@@ -60,12 +60,12 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        background: '#fff', borderRadius: 16, padding: '28px 32px',
+        background: 'var(--surface)', borderRadius: 16, padding: '28px 32px',
         width: 360, maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--gray-900)' }}>Add to Group</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Add to Group</h2>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', fontSize: 20, lineHeight: 1 }}
@@ -117,8 +117,8 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
             placeholder="New group…"
             maxLength={40}
             style={{
-              flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid var(--gray-200)',
-              fontSize: 13, fontFamily: 'inherit', outline: 'none', color: 'var(--gray-900)',
+              flex: 1, padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border)',
+              fontSize: 13, fontFamily: 'inherit', outline: 'none', color: 'var(--text)',
             }}
           />
           <button
@@ -138,14 +138,14 @@ export default function GroupPickerModal({ videoId, videoTitle, groups: initialG
         </div>
 
         {done ? (
-          <p style={{ textAlign: 'center', color: 'var(--accent-strong)', fontWeight: 700, fontSize: 15 }}>Added ✓</p>
+          <p style={{ textAlign: 'center', color: 'var(--brand-ink)', fontWeight: 700, fontSize: 15 }}>Added ✓</p>
         ) : (
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={onClose}
               style={{
-                flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--gray-200)',
-                background: '#fff', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600,
+                flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--border)',
+                background: 'var(--surface)', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >

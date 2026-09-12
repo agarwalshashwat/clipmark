@@ -69,7 +69,7 @@ Specifically:
   `/upgrade` FEATURES table.
 - **Editing a saved bookmark** — notes are editable, the one-line description is
   not yet; `/faq` gives the delete-and-re-save workaround.
-- **Free-tier numbers** — 25 enrolled cards, 30 reviews/month, 1 Anki export/month,
+- **Free-tier numbers** — 25 enrolled cards, 30 reviews/month, 10 Anki exports/month,
   10 shared collections, taken from `extension/src/usage-caps.js` and the
   `/upgrade` FEATURES table, quoted as numbers rather than as "generous".
 - **Competitor claims** — `/switch-from-videosegments` limits itself to checkable

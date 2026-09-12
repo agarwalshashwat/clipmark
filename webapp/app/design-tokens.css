@@ -90,6 +90,11 @@
   --danger-light:  rgba(220, 38, 38, 0.10);
   --success:       #15803d;
   --success-light: rgba(21, 128, 61, 0.10);
+  /* Solid fill behind a tag/category chip carrying --success text. Distinct from
+     --success-light, which is a 10% wash for panels; a chip needs an opaque fill
+     that --success clears AA against in BOTH themes. Light keeps the exact value
+     the chips already shipped, so nothing moves here. */
+  --success-chip:  #dcfce7;
   --warning:       #b45309;
   --warning-light: rgba(180, 83, 9, 0.10);
 
@@ -173,6 +178,14 @@
   --surface:      #ffffff;
   --surface-alt:  var(--gray-100);
   --border:       var(--gray-200);
+  /* Frosted chrome that sits OVER content (dashboard mobile bottom nav): the
+     same surface, kept translucent so the backdrop-filter blur still reads.
+     Light is the exact value that already shipped. */
+  --surface-translucent: rgba(255, 255, 255, 0.92);
+  /* Decorative empty-state glyphs. Purely illustrative and aria-hidden, so not
+     strictly bound by AA — tokenised anyway because a 2.76:1 icon on the dark
+     canvas is simply hard to see. Light keeps the value it already had. */
+  --icon-empty:   rgba(0, 107, 95, 0.3);
 
   /* One glass chrome shared by the dashboard header and the side-panel header. */
   --nav-bg:       rgba(249, 250, 251, 0.85);
@@ -204,6 +217,11 @@
   --danger-light:  rgba(248, 113, 113, 0.12);
   --success:       #4ade80;
   --success-light: rgba(74, 222, 128, 0.12);
+  /* The chip fill, dark side. The light literal (#dcfce7) stayed put when the
+     text lightened to #4ade80, which is how the homepage tag chip ended up at
+     1.59:1. A green wash over the dark canvas keeps the chip readable as a chip
+     while --success clears AA on it (~6:1). */
+  --success-chip:  rgba(74, 222, 128, 0.15);
   --warning:       #fbbf24;
   --warning-light: rgba(251, 191, 36, 0.12);
 
@@ -222,6 +240,13 @@
   --surface:      var(--gray-900);
   --surface-alt:  var(--gray-800);
   --border:       var(--gray-800);
+  /* gray-900 at the same alpha as light. The mobile bottom nav had the white
+     value hardcoded, so it stayed a bright bar pinned over a dark page — the
+     last light panel in the dashboard, and the reason its labels measured
+     2.54:1. */
+  --surface-translucent: rgba(17, 24, 39, 0.92);
+  /* teal-400 at 0.7 over the dark canvas ≈ 5:1 — visible without shouting. */
+  --icon-empty:   rgba(45, 212, 191, 0.7);
 
   --nav-bg:       rgba(10, 10, 15, 0.85);
   --nav-shadow:   0 1px 0 var(--border), 0 4px 16px rgba(0, 0, 0, 0.3);

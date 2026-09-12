@@ -2,6 +2,7 @@ import type DodoPayments from 'dodopayments';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
+import { resolvePendingRefund } from '@/app/lib/pending-refunds';
 
 // Injectable dependencies so the handler can be unit-tested with fakes.
 // Production supplies the real memoized clients (see POST wrapper at the bottom).
@@ -398,10 +399,32 @@ export async function handleDodoWebhook(request: NextRequest, { dodo, admin }: W
           .eq('status', 'pending');
         if (convErr) log.error(`cancel affiliate conversion failed payment=${refund.payment_id}`, convErr.message);
 
-        // Revoke Pro for a refunded one-time (lifetime) purchase. Subscription
-        // refunds are handled by subscription.cancelled/expired. A refund of
-        // the lifetime purchase shouldn't strip an unrelated active gifted-Pro
-        // window (creator seed or referral reward) on the same profile.
+        // Settle the obligation if we'd recorded one for this payment — i.e.
+        // the refund Dodo couldn't fund at cancellation time has now landed,
+        // whether it was issued by hand from the dashboard or went through on
+        // its own. A no-op for the common case where nothing was ever owed.
+        // Never fatal: this is bookkeeping, and failing it must not make the
+        // handler return 500 and have Dodo redeliver a refund event.
+        await resolvePendingRefund(admin, refund.payment_id);
+
+        // Revoke Pro for the refunded purchase, matched by pro_payment_id.
+        //
+        // This covers SUBSCRIPTIONS as well as one-time/lifetime purchases: an
+        // earlier comment here claimed subscription refunds were handled only
+        // by subscription.cancelled/expired, which was wrong. payment.succeeded
+        // fires for a subscription's initial charge too and sets
+        // pro_payment_id unconditionally, so a refunded subscription payment
+        // matches this lookup — verified against production on 2026-08-11, see
+        // docs/DODO-LIVE-GATE.md.
+        //
+        // What this does NOT do is stop the billing: it never touches
+        // subscription_id and never cancels anything at Dodo, so refunding
+        // without also cancelling leaves the subscription live and the next
+        // subscription.renewed re-grants Pro. That is a runbook rule, not
+        // something this branch can fix — see DODO-LIVE-GATE.md.
+        //
+        // A refund shouldn't strip an unrelated active gifted-Pro window
+        // (creator seed or referral reward) on the same profile.
         const { data: refundedProfile, error: findErr } = await admin
           .from('profiles')
           .select('id, is_gifted_pro, gifted_pro_expires_at')

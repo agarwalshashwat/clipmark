@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
 import * as Sentry from '@sentry/nextjs';
 import { createServerSupabase } from '@/lib/supabase';
 import { fetchProductPrices } from './actions';
@@ -10,43 +11,21 @@ import { SocialProof } from '@/app/components/SocialProof';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import styles from './upgrade.module.css';
-import { APP_URL } from '@/app/lib/constants';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'ClipMark Pricing — Free & Pro Plans',
   description: 'Compare ClipMark Free and Pro. Free covers unlimited local bookmarks and Active Recall basics; Pro adds cloud sync, unlimited flashcards, and Anki export.',
-  alternates: {
-    canonical: '/upgrade',
-  },
-  openGraph: {
-    title: 'ClipMark Pricing — Free & Pro Plans',
-    description: 'Compare ClipMark Free and Pro. Free covers unlimited local bookmarks and Active Recall basics; Pro adds cloud sync, unlimited flashcards, and Anki export.',
-    type: 'website',
-    url: '/upgrade',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'ClipMark Pricing — Free & Pro Plans',
-    description: 'Compare ClipMark Free and Pro. Free covers unlimited local bookmarks and Active Recall basics; Pro adds cloud sync, unlimited flashcards, and Anki export.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/upgrade',
+  ogTitle: 'Pricing — Free & Pro Plans',
+  ogSubtitle: 'Start free. Pro adds cloud sync, unlimited flashcards and Anki export.',
+});
 
 const FEATURES = [
   { label: 'Unlimited local bookmarks',          free: true,       pro: true       },
   { label: 'Cloud Sync across devices',          free: false,      pro: true       },
   { label: 'Active Recall flashcards',           free: '25 cards', pro: 'Unlimited' },
   { label: 'Active Recall reviews',              free: '30/month', pro: 'Unlimited' },
-  { label: 'Anki export',                        free: '1/month',  pro: 'Unlimited' },
+  { label: 'Anki export',                        free: '10/month', pro: 'Unlimited' },
   { label: 'Export to Notion & Obsidian',        free: false,      pro: true       },
   { label: 'Permanent Transcript Archiving',     free: false,      pro: 'coming-soon' as const },
   { label: 'Deep Search (inside transcripts)',   free: false,      pro: 'coming-soon' as const },

@@ -1,33 +1,13 @@
-import { APP_URL, SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
+import { SUPPORT_EMAIL, LEGAL_EMAIL } from '@/app/lib/constants';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Terms of Service — ClipMark',
   description: 'Terms and conditions for using ClipMark.',
-  alternates: {
-    canonical: '/terms',
-  },
-  openGraph: {
-    title: 'Terms of Service — ClipMark',
-    description: 'Terms and conditions for using ClipMark.',
-    type: 'website',
-    url: '/terms',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Terms of Service — ClipMark',
-    description: 'Terms and conditions for using ClipMark.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/terms',
+  ogTitle: 'Terms of Service',
+});
 
 const SECTION_STYLE = {
   marginBottom: 48,
@@ -37,14 +17,14 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: 'var(--gray-900)',
+  color: 'var(--text)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 12,
 };
@@ -56,7 +36,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -71,7 +51,7 @@ export default function TermsPage() {
           <h1 style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 'clamp(32px, 6vw, 48px)', fontWeight: 800, letterSpacing: '-1.5px',
-            color: 'var(--gray-900)', marginBottom: 16, marginTop: 0,
+            color: 'var(--text)', marginBottom: 16, marginTop: 0,
           }}>
             Terms of Service
           </h1>
@@ -99,7 +79,7 @@ export default function TermsPage() {
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>Save timestamped bookmarks on YouTube videos for personal use.</li>
             <li style={LI_STYLE}>Organize, tag, and share collections of bookmarks.</li>
-            <li style={LI_STYLE}>Use AI-powered features (Pro tier) to generate summaries and tags.</li>
+            <li style={LI_STYLE}>Use AI-powered features to draft notes and summaries. These run on Chrome&apos;s on-device model and are available on the free tier.</li>
           </ul>
           <p style={P_STYLE}>You may <strong>not</strong> use ClipMark to:</p>
           <ul style={UL_STYLE}>

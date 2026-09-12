@@ -51,7 +51,7 @@ export default function SwitchFromVideoSegmentsPage() {
           items={[
             {
               title: 'Your clips live in one browser, on one machine',
-              desc: 'With no cloud sync, the copy in that profile is the only copy. A new laptop, a wiped profile, or a reinstall takes the lot with it — and there is nobody shipping a recovery path.',
+              desc: 'With no cloud sync, the copy in that profile is the only copy. A new laptop, a wiped profile, or a reinstall takes the lot with it — and an extension that has stopped shipping updates is unlikely to ship you a recovery path.',
             },
             {
               title: 'No export means no way out',
@@ -146,8 +146,8 @@ export default function SwitchFromVideoSegmentsPage() {
           Sync and export are the reasons to move, but the reason to stay is the review loop. A bookmark tells you
           where something was; it does nothing about whether you remember it. ClipMark schedules the moments you saved,
           hides your note, and asks you to recall it before replaying the clip — the mechanism from{' '}
-          <a href="/active-recall-youtube" style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>active recall</a> and{' '}
-          <a href="/spaced-repetition-youtube" style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>spaced repetition</a>,
+          <a href="/active-recall-youtube" style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>active recall</a> and{' '}
+          <a href="/spaced-repetition-youtube" style={{ color: 'var(--brand-ink)', fontWeight: 600 }}>spaced repetition</a>,
           applied to video instead of cards.
         </p>
         <p style={{ ...PROSE, marginBottom: 0 }}>

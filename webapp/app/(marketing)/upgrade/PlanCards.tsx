@@ -1,5 +1,6 @@
 import { createCheckoutSession } from './actions';
 import type { ProductPrices } from './pricing';
+import { formatAmount, formatPrice, PRICE_CURRENCY } from './pricing';
 import styles from './upgrade.module.css';
 
 function Check() {
@@ -79,6 +80,11 @@ const PLANS: Plan[] = [
     name: 'Lifetime',
     priceKey: 'lifetime',
     period: '',
+    // --accent-strong, not --brand-ink: .badge paints its label white, and
+    // --brand-ink lightens to teal-400 in dark, which put white on a pale teal
+    // at 1.86:1. --accent-strong is teal-700 in BOTH themes, so light is byte
+    // for byte what it was (--brand-ink is teal-700 in light too) and dark
+    // becomes white-on-teal-700 at 5.47:1.
     badge: { label: 'Founding Price', color: 'var(--accent-strong)' },
     features: [
       <><strong>Everything in Pro</strong></>,
@@ -121,12 +127,13 @@ export default function PlanCards({
             )}
             <div className={styles.planName}>{plan.name}</div>
             <div className={styles.price}>
-              <span className={styles.amount}>${prices[plan.priceKey]}</span>
+              <span className={styles.amount}>{formatAmount(prices[plan.priceKey])}</span>
+              <span className={styles.currencyCode}>{PRICE_CURRENCY}</span>
               <span className={styles.period}>{plan.period}</span>
             </div>
             {plan.id === 'lifetime' && (
               <p className={styles.foundingNote}>
-                Founding price — lock in lifetime access at ${prices.lifetime} before it goes up.
+                Founding price — lock in lifetime access at {formatPrice(prices.lifetime)} before it goes up.
               </p>
             )}
             <div className={styles.featureList}>

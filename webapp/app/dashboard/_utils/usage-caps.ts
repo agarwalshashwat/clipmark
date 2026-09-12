@@ -19,7 +19,7 @@
  * consulting any of this.
  */
 
-export const FREE_ANKI_EXPORTS_PER_MONTH = 1;
+export const FREE_ANKI_EXPORTS_PER_MONTH = 10;
 
 export interface MonthlyCounter {
   periodStart: string;

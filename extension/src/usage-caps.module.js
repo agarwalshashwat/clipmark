@@ -5,7 +5,8 @@
 // These are the med/exam-pivot free caps (see ClipMark-UsageCaps-Spec.md):
 //   - Active Recall–enrolled segments: 25, standing (not monthly)
 //   - Active Recall reviews:           30 / month
-//   - Anki export:                     1 / month
+//   - Anki export:                     10 / month  (per EXPORT, not per card:
+//     one export writes the whole library into a single file)
 //   - Saved A–B loops:                 3, standing (not monthly)
 // Looping ITSELF is never capped — defining A–B points and looping them in the
 // session is the free acquisition hook. Only *saving* a named loop (which then
@@ -21,7 +22,7 @@
 
 export const FREE_RECALL_ENROLLED_CAP = 25;
 export const FREE_RECALL_REVIEWS_PER_MONTH = 30;
-export const FREE_ANKI_EXPORTS_PER_MONTH = 1;
+export const FREE_ANKI_EXPORTS_PER_MONTH = 10;
 export const FREE_SAVED_LOOPS_CAP = 3;
 export const RECALL_REVIEWS_WARN_THRESHOLD = Math.round(FREE_RECALL_REVIEWS_PER_MONTH * 0.8); // 24
 

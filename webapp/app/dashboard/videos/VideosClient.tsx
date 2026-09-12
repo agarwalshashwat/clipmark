@@ -54,7 +54,7 @@ export function VideosClient({ videos, groups, userId }: VideosClientProps) {
 
       {filtered.length === 0 ? (
         <div className={styles.emptyFilter}>
-          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>filter_list_off</span>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'var(--icon-empty)' }}>filter_list_off</span>
           <p>No videos tagged <strong>#{activeTag}</strong></p>
         </div>
       ) : (

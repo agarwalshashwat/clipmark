@@ -1,33 +1,13 @@
-import { APP_URL, LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
+import { LEGAL_EMAIL, SUPPORT_EMAIL } from '@/app/lib/constants';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Affiliate Terms & Conditions — ClipMark',
   description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
-  alternates: {
-    canonical: '/affiliate/terms',
-  },
-  openGraph: {
-    title: 'Affiliate Terms & Conditions — ClipMark',
-    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
-    type: 'website',
-    url: '/affiliate/terms',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Affiliate Terms & Conditions — ClipMark',
-    description: 'Terms and conditions governing participation in the ClipMark affiliate program.',
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/affiliate/terms',
+  ogTitle: 'Affiliate Terms & Conditions',
+});
 
 const SECTION_STYLE = {
   marginBottom: 48,
@@ -37,14 +17,14 @@ const H2_STYLE = {
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   fontSize: 22,
   fontWeight: 700,
-  color: 'var(--gray-900)',
+  color: 'var(--text)',
   marginBottom: 16,
   marginTop: 0,
 };
 
 const P_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 12,
   marginTop: 0,
@@ -57,7 +37,7 @@ const UL_STYLE = {
 
 const LI_STYLE = {
   fontSize: 15,
-  color: 'var(--gray-700)',
+  color: 'var(--text-sub)',
   lineHeight: 1.75,
   marginBottom: 6,
 };
@@ -66,8 +46,8 @@ export default function AffiliateTermsPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--gray-50)',
-      color: 'var(--gray-900)',
+      background: 'var(--bg)',
+      color: 'var(--text)',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       WebkitFontSmoothing: 'antialiased',
     }}>
@@ -89,7 +69,7 @@ export default function AffiliateTermsPage() {
         <h1 style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontSize: 40, fontWeight: 800, letterSpacing: '-1px',
-          color: 'var(--gray-900)', marginBottom: 12, marginTop: 0,
+          color: 'var(--text)', marginBottom: 12, marginTop: 0,
         }}>
           Affiliate Terms &amp; Conditions
         </h1>
@@ -107,11 +87,11 @@ export default function AffiliateTermsPage() {
           <h2 style={H2_STYLE}>1. Definitions</h2>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}><strong>&quot;Affiliate&quot;</strong> — an approved participant in the Program who has been issued a unique affiliate code.</li>
-            <li style={LI_STYLE}><strong>&quot;Affiliate Link&quot;</strong> — the personalised URL in the format <code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>clipmark.mithahara.com/r/[your-code]</code> assigned to you upon approval.</li>
+            <li style={LI_STYLE}><strong>&quot;Affiliate Link&quot;</strong> — the personalized URL in the format <code style={{ fontSize: 13, background: 'var(--surface-alt)', padding: '2px 6px', borderRadius: 4 }}>clipmark.mithahara.com/r/[your-code]</code> assigned to you upon approval.</li>
             <li style={LI_STYLE}><strong>&quot;Commission&quot;</strong> — 30% of the net sale amount earned when a Referred Customer completes a qualifying purchase.</li>
             <li style={LI_STYLE}><strong>&quot;Referred Customer&quot;</strong> — a new customer who clicks your Affiliate Link and completes a qualifying purchase within the 30-day attribution window.</li>
             <li style={LI_STYLE}><strong>&quot;Qualifying Purchase&quot;</strong> — a first-time Pro subscription (monthly, annual, or lifetime) by a Referred Customer. Subscription renewals and purchases by existing Pro users do not qualify.</li>
-            <li style={LI_STYLE}><strong>&quot;Attribution Window&quot;</strong> — the 30-day period during which a click on your Affiliate Link is tracked via the <code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code> cookie.</li>
+            <li style={LI_STYLE}><strong>&quot;Attribution Window&quot;</strong> — the 30-day period during which a click on your Affiliate Link is tracked via the <code style={{ fontSize: 13, background: 'var(--surface-alt)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code> cookie.</li>
           </ul>
         </div>
 
@@ -217,7 +197,15 @@ export default function AffiliateTermsPage() {
         <div style={SECTION_STYLE}>
           <h2 style={H2_STYLE}>7. Tracking &amp; Attribution</h2>
           <p style={P_STYLE}>
-            Affiliate attribution is tracked via a first-click, 30-day cookie (<code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code>) set when a visitor clicks your Affiliate Link. If a visitor already has an affiliate cookie from a different affiliate, a new click will <em>not</em> overwrite the existing cookie — first-click attribution applies.
+            Affiliate attribution is tracked via a first-click, 30-day cookie (<code style={{ fontSize: 13, background: 'var(--surface-alt)', padding: '2px 6px', borderRadius: 4 }}>clipmark_ref</code>) set when a visitor clicks your Affiliate Link. If a visitor already has an affiliate cookie from a different affiliate, a new click will <em>not</em> overwrite the existing cookie — first-click attribution applies.
+          </p>
+          <p style={P_STYLE}>
+            The attribution cookie is a non-essential cookie under UK and EU law, so it is set
+            only where the visitor has accepted optional cookies on our cookie banner (see the{' '}
+            <a href="/privacy#cookies" style={{ color: 'var(--brand-ink)' }}>Privacy Policy</a>).
+            Clicks on your Affiliate Link are recorded either way, but a visitor who declines or
+            ignores the banner cannot be attributed, and no commission arises from that visit.
+            This is a legal requirement and is outside our discretion.
           </p>
           <p style={P_STYLE}>
             ClipMark&apos;s tracking records are the authoritative source for commission calculations. Discrepancies must be reported within 30 days of the relevant payout statement by emailing{' '}
@@ -229,7 +217,7 @@ export default function AffiliateTermsPage() {
         <div style={SECTION_STYLE}>
           <h2 style={H2_STYLE}>8. Intellectual Property</h2>
           <p style={P_STYLE}>
-            ClipMark grants you a limited, non-exclusive, non-transferable, revocable licence to use the ClipMark name, logo, and official marketing assets solely for the purpose of promoting ClipMark through the Program. You may not:
+            ClipMark grants you a limited, non-exclusive, non-transferable, revocable license to use the ClipMark name, logo, and official marketing assets solely for the purpose of promoting ClipMark through the Program. You may not:
           </p>
           <ul style={UL_STYLE}>
             <li style={LI_STYLE}>Modify or alter the ClipMark logo or brand assets.</li>

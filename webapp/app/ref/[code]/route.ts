@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { CONSENT_COOKIE, rawConsentAllows } from '@/app/lib/consent';
+import { USER_REF_COOKIE, attributionCookieOptions } from '@/app/lib/attribution';
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -17,6 +20,12 @@ const supabaseAdmin = createClient(
  * - Validates the code belongs to a real user.
  * - First-click attribution: cookie is never overwritten once set.
  * - Logged-in users who click their own link will be blocked at the webhook level.
+ *
+ * Consent: `clipmark_user_ref` is the same class of non-essential marketing
+ * cookie as `clipmark_ref`, and gets the same treatment — nothing is stored
+ * until the visitor has accepted optional cookies. The code rides the redirect
+ * in `?uref=` so the banner can claim it on accept. The reasoning is written out
+ * once, in app/r/[code]/route.ts.
  */
 export async function GET(
   request: NextRequest,
@@ -36,20 +45,18 @@ export async function GET(
     return NextResponse.redirect(new URL('/', appUrl));
   }
 
-  const existingRef = request.cookies.get('clipmark_user_ref')?.value;
+  const existingRef = request.cookies.get(USER_REF_COOKIE)?.value;
 
-  // Redirect to upgrade page to maximise conversion
-  const response = NextResponse.redirect(new URL('/upgrade', appUrl));
+  // Redirect to upgrade page to maximise conversion. `?uref` carries the code
+  // for the consent banner to claim; it is read by ConsentProvider and by
+  // nothing else, and the upgrade page ignores it.
+  const response = NextResponse.redirect(
+    new URL(`/upgrade?uref=${encodeURIComponent(code)}`, appUrl),
+  );
 
-  if (!existingRef) {
-    // First click — claim attribution
-    response.cookies.set('clipmark_user_ref', code, {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30,   // 30-day window
-      secure: process.env.NODE_ENV === 'production',
-    });
+  if (!existingRef && rawConsentAllows(request.cookies.get(CONSENT_COOKIE)?.value, 'attribution')) {
+    // First click, and optional cookies already accepted — claim attribution.
+    response.cookies.set(USER_REF_COOKIE, code, attributionCookieOptions());
   }
 
   return response;

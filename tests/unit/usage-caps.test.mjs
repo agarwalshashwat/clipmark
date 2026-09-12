@@ -38,7 +38,7 @@ describe('cap constants', () => {
   it('match the approved spec numbers', () => {
     assert.equal(FREE_RECALL_ENROLLED_CAP, 25);
     assert.equal(FREE_RECALL_REVIEWS_PER_MONTH, 30);
-    assert.equal(FREE_ANKI_EXPORTS_PER_MONTH, 1);
+    assert.equal(FREE_ANKI_EXPORTS_PER_MONTH, 10);
   });
 });
 
@@ -114,12 +114,23 @@ describe('isMonthlyAnkiExportCapReached', () => {
     assert.equal(isMonthlyAnkiExportCapReached(null, NOW), false);
   });
 
-  it('is true after the one free export this month', () => {
-    assert.equal(isMonthlyAnkiExportCapReached({ periodStart: '2026-07', count: 1 }, NOW), true);
+  it('is false below the cap, true once it is reached', () => {
+    // The boundary is what matters: one export short must still be allowed.
+    assert.equal(
+      isMonthlyAnkiExportCapReached({ periodStart: '2026-07', count: FREE_ANKI_EXPORTS_PER_MONTH - 1 }, NOW),
+      false,
+    );
+    assert.equal(
+      isMonthlyAnkiExportCapReached({ periodStart: '2026-07', count: FREE_ANKI_EXPORTS_PER_MONTH }, NOW),
+      true,
+    );
   });
 
   it('resets on a new month', () => {
-    assert.equal(isMonthlyAnkiExportCapReached({ periodStart: '2026-06', count: 1 }, NOW), false);
+    assert.equal(
+      isMonthlyAnkiExportCapReached({ periodStart: '2026-06', count: FREE_ANKI_EXPORTS_PER_MONTH }, NOW),
+      false,
+    );
   });
 });
 

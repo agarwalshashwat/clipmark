@@ -78,3 +78,7 @@ extension/dist/
 screenshots/
 clipmark-extension-*.zip
 docs/.sync-notes.md
+
+# Release candidates cut by scripts/cut-release.sh — build outputs, never committed.
+# The zip that goes to the Chrome Web Store is rebuilt from the tagged commit.
+release-artifacts/

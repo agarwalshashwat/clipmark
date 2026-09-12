@@ -18,6 +18,15 @@ import React from 'react';
  * Comparative framing is kept to what ClipMark itself does. No competitor ratings,
  * user counts, or review quotes — those would be unsubstantiated claims on a
  * public page (see CLAUDE.md conventions).
+ *
+ * The fourth card used to read "It quizzes you — no other YouTube bookmarker
+ * does". That was false: docs/gtm/COMPETITIVE-BRIEF.md §2 found two shipping
+ * extensions that quiz on YouTube content and schedule the review themselves
+ * (Web Highlights, ~200K users; Ulearn). The card now states the distinction
+ * that actually survives — those tools generate questions FROM the transcript,
+ * ClipMark hides the note YOU wrote and replays the source as the answer key.
+ * Keep it that way: describe our own mechanism, never a claim about "every"
+ * other tool, which cannot be verified and dates badly.
  */
 
 const STRENGTHS = [
@@ -29,7 +38,7 @@ const STRENGTHS = [
   {
     icon: 'volunteer_activism',
     title: 'A free tier with the numbers printed on it',
-    body: 'Free means unlimited bookmarks stored locally, on-device AI notes, 25 Active Recall cards, 30 reviews a month, and 1 Anki export a month — no card, no trial clock. Those are the real limits, listed on the pricing page rather than discovered after you install.',
+    body: 'Free means unlimited bookmarks stored locally, on-device AI notes, 25 Active Recall cards, 30 reviews a month, and 10 Anki exports a month — no card, no trial clock. Those are the real limits, listed on the pricing page rather than discovered after you install.',
   },
   {
     icon: 'lock',
@@ -38,8 +47,8 @@ const STRENGTHS = [
   },
   {
     icon: 'psychology',
-    title: 'It quizzes you — no other YouTube bookmarker does',
-    body: 'Saving a timestamp is where every other extension stops. ClipMark schedules the moment for review (1, 3, then 7 days, doubling up to 60), hides your note, and asks you to remember it before it replays the clip. That loop is the product, not a bullet point.',
+    title: 'Your note is the question. The clip is the answer.',
+    body: 'Tools that quiz you on a video generate the questions themselves, from the transcript. ClipMark does the opposite: it hides the note you wrote and replays the exact second, so you check your own recall against the source. Every saved moment goes on a schedule — 1, 3, then 7 days, doubling up to 60. That retrieval loop is the product, not a bullet point.',
   },
 ];
 
@@ -63,7 +72,11 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+        {/* Two columns, not auto-fit: there are always exactly four cards, and an
+            auto-fitted track put three on the first row and orphaned the fourth.
+            Grid definition lives in globals.css (.cm-why-grid) because the
+            single-column collapse needs a media query. */}
+        <div className="cm-why-grid">
           {STRENGTHS.map(({ icon, title, body }) => (
             <div
               key={title}
@@ -75,7 +88,7 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
               <div
                 style={{
                   width: 46, height: 46, borderRadius: 14, marginBottom: 22,
-                  background: 'var(--accent-light)', color: 'var(--accent-strong)',
+                  background: 'var(--accent-light)', color: 'var(--brand-ink)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
@@ -91,7 +104,7 @@ export function WhyClipMark({ tint = false }: { tint?: boolean }) {
 
         <p style={{ textAlign: 'center', marginTop: 40, fontSize: 14, color: 'var(--text-muted)' }}>
           Switching from an extension that stopped getting updates?{' '}
-          <a href="/switch-from-videosegments" style={{ color: 'var(--accent-strong)', fontWeight: 700, textDecoration: 'none' }}>
+          <a href="/switch-from-videosegments" style={{ color: 'var(--brand-ink)', fontWeight: 700, textDecoration: 'none' }}>
             Read the migration guide
           </a>
           .

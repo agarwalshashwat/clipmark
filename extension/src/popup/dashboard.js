@@ -11,11 +11,16 @@ import {
   TITLE_TRUNCATE_LENGTH,
 } from '../constants.module.js';
 import { buildAnkiTsv } from '../export-anki.module.js';
+import {
+  getValidToken,
+  resolveAccessToken,
+  TOKEN_NO_SESSION,
+  TOKEN_SESSION_EXPIRED,
+} from '../auth-token.module.js';
 import { createDevLogger, installGlobalErrorLogging } from '../dev-logger.js';
 import { showUpgradeModal } from './upgrade-modal.js';
 import { applyProGating } from './pro-gating.js';
 import { isDueForRecall } from '../recall.module.js';
-import { getValidToken } from '../auth-token.module.js';
 import {
   isRecallStartBlocked,
   isMonthlyAnkiExportCapReached,
@@ -34,9 +39,6 @@ const logger = createDevLogger('Dashboard');
 // Logs to the console for local debugging; initErrorReporting above is what
 // forwards the same failures to Sentry in a packaged build.
 installGlobalErrorLogging('Dashboard');
-
-// getValidToken (token refresh) now lives in src/auth-token.module.js — one
-// copy shared with the side panel and the background sync engine.
 
 function bmKey(videoId) { return `bm_${videoId}`; }
 
@@ -761,11 +763,19 @@ function attachEventListeners() {
 
   document.querySelectorAll('.vc-revisit-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const isPro = await checkPro();
-      if (!isPro) {
+      // The shared gate, not a bare checkPro(): Active Recall is NOT Pro-only —
+      // the pricing page sells it as free up to FREE_RECALL_REVIEWS_PER_MONTH
+      // reviews a month, unlimited on Pro. This call site was missed when the
+      // rule was unified, so it kept hard-refusing every free user with an
+      // "unlock it with Pro" modal for a feature they are entitled to, while
+      // the due-strip button three functions down (startRecallForVideo) and
+      // both side-panel entry points already honoured the cap. Same rule
+      // everywhere, so the answer cannot differ by where the user clicked.
+      const { recallReviewUsage } = await chrome.storage.local.get({ recallReviewUsage: null });
+      if (isRecallStartBlocked({ isPro: await checkPro(), reviewUsage: recallReviewUsage, nowMs: Date.now() })) {
         showUpgradeModal({
-          feature: 'Active Recall Mode',
-          benefit: 'Active Recall replays your saved moments and quizzes you before the reveal — video flashcards for real retention. Unlock it with Pro.',
+          feature: 'More reviews this month',
+          benefit: `You've used all ${FREE_RECALL_REVIEWS_PER_MONTH} free Active Recall reviews this month. Upgrade to Pro for unlimited reviews.`,
         });
         return;
       }
@@ -1041,7 +1051,7 @@ async function exportAnki() {
     if (isMonthlyAnkiExportCapReached(ankiExportUsage, Date.now())) {
       showUpgradeModal({
         feature: 'More Anki exports this month',
-        benefit: `You've used your ${FREE_ANKI_EXPORTS_PER_MONTH} free Anki export this month. Upgrade to Pro for unlimited exports.`,
+        benefit: `You've used all ${FREE_ANKI_EXPORTS_PER_MONTH} of this month's free Anki exports. Upgrade to Pro for unlimited exports.`,
       });
       return;
     }
@@ -2224,9 +2234,11 @@ async function loadAuthState() {
         bmUser.isPro ? 'Manage Subscription' : 'Upgrade';
     }
 
-    // Silently validate/refresh token — sign out if session is fully expired
-    const token = await getValidToken();
-    if (!token) {
+    // Silently validate/refresh token — sign out only when the session is
+    // genuinely gone, not when the refresh merely failed to reach the server
+    // (see resolveAccessToken).
+    const { reason } = await resolveAccessToken();
+    if (reason === TOKEN_SESSION_EXPIRED || reason === TOKEN_NO_SESSION) {
       await new Promise(resolve => chrome.storage.sync.remove('bmUser', resolve));
       loadAuthState();
     }

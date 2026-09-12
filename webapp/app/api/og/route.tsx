@@ -7,8 +7,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const title = searchParams.get('title') || 'YouTube Timestamp Bookmarks';
-    const count = searchParams.get('count') || '0';
     const videoId = searchParams.get('videoId');
+
+    // `count` used to default to '0', so every card ended in "0 Bookmarks
+    // Curated" — fine for a shared collection, nonsense on the pricing or privacy
+    // page. Presence, not truthiness, decides: a collection legitimately has 0.
+    const count = searchParams.has('count') ? searchParams.get('count') : null;
+    // Marketing routes pass a plain strapline here instead of a count.
+    const subtitle = searchParams.get('subtitle');
 
     // Fallback image if YouTube thumbnail doesn't respond
     const imageUrl = videoId 
@@ -87,16 +93,31 @@ export async function GET(req: NextRequest) {
             }}>
               {title}
             </div>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: 600,
-              color: '#9ca3af',   // gray-400 (was the slate ramp)
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <span style={{ color: '#2dd4bf' }}>{count}</span> Bookmarks Curated
-            </div>
+            {count !== null && (
+              <div style={{
+                fontSize: '24px',
+                fontWeight: 600,
+                color: '#9ca3af',   // gray-400 (was the slate ramp)
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}>
+                <span style={{ color: '#2dd4bf' }}>{count}</span> Bookmarks Curated
+              </div>
+            )}
+
+            {count === null && subtitle && (
+              <div style={{
+                fontSize: '26px',
+                fontWeight: 500,
+                color: '#9ca3af',   // gray-400
+                display: 'flex',
+                textAlign: 'center',
+                lineHeight: 1.4,
+              }}>
+                {subtitle}
+              </div>
+            )}
           </div>
         </div>
       ),

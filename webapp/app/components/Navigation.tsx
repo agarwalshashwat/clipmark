@@ -1,6 +1,7 @@
 import React from 'react';
 import { createServerSupabase } from '@/lib/supabase';
 import { CHROME_STORE_URL } from '@/app/lib/constants';
+import { ThemeToggle } from './ThemeToggle';
 
 export async function Navigation() {
   const supabase = await createServerSupabase();
@@ -39,6 +40,9 @@ export async function Navigation() {
           <a href="/affiliate" style={{ color: 'var(--text-sub)', fontWeight: 600, fontSize: 13, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Affiliate</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* Sits in the actions cluster rather than the links group so it stays
+              reachable at 375px — .nav-links is the part that collapses. */}
+          <ThemeToggle />
           {user ? (
             <a href="/dashboard" className="nav-login" style={{
               color: 'var(--text)',
@@ -56,6 +60,20 @@ export async function Navigation() {
               Log In
             </a>
           )}
+          {/* Below 640px .nav-login, .nav-gopro and .nav-links are all display:none
+              and there is no menu, which left a phone visitor with no route to sign
+              in at all — the footer had no sign-in link either. A full-width text
+              link does not fit next to the wordmark and the install CTA, so mobile
+              gets this icon-only equivalent (44x44, labelled for AT) and desktop
+              keeps the text link above. */}
+          <a href={user ? '/dashboard' : '/signin'}
+             className="nav-account-mobile"
+             aria-label={user ? 'Go to your dashboard' : 'Sign in to ClipMark'}
+             style={{ color: 'var(--text)', textDecoration: 'none' }}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>
+              {user ? 'account_circle' : 'login'}
+            </span>
+          </a>
           {!isPro && (
             <a href="/upgrade"
                className="nav-gopro"

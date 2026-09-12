@@ -15,7 +15,9 @@ import { CHROME_STORE_URL } from '@/app/lib/constants';
 
 const INK = 'var(--text)';
 const INK_SUB = 'var(--text-muted)';
-const ACCENT_DEEP = 'var(--accent-strong)';
+// --accent-strong is teal-700 in BOTH themes, so as TEXT it lands dark-on-dark.
+// --brand-ink is the same teal-700 in light and flips to teal-400 on dark.
+const ACCENT_DEEP = 'var(--brand-ink)';
 
 export const PROSE: React.CSSProperties = {
   fontSize: 17,

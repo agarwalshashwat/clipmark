@@ -36,7 +36,7 @@ export default async function SharedPage() {
       {collections.length === 0 ? (
         <div className={styles.empty}>
           <div className={styles.emptyIcon}>
-            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'rgba(0,107,95,0.3)' }}>ios_share</span>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 32, color: 'var(--icon-empty)' }}>ios_share</span>
           </div>
           <h3 className={styles.emptyTitle}>Nothing shared yet</h3>
           <p className={styles.emptyText}>

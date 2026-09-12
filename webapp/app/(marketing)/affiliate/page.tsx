@@ -1,45 +1,25 @@
 import { Metadata } from 'next';
+import { buildPageMetadata } from '@/app/lib/seo';
 import * as Sentry from '@sentry/nextjs';
 import { fetchProductPrices } from '@/app/(marketing)/upgrade/actions';
-import { APP_URL } from '@/app/lib/constants';
+import { formatPrice, PRICE_DEFAULTS, type ProductPrices } from '@/app/(marketing)/upgrade/pricing';
 
 const META_DESCRIPTION =
   'Earn a one-time 30% commission on every Pro upgrade you refer. Your audience gets 10% off, and referrals are attributed for 30 days.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Affiliate Program — ClipMark',
   description: META_DESCRIPTION,
-  alternates: {
-    canonical: '/affiliate',
-  },
-  openGraph: {
-    title: 'Affiliate Program — ClipMark',
-    description: META_DESCRIPTION,
-    type: 'website',
-    url: '/affiliate',
-    siteName: 'ClipMark',
-    images: [
-      {
-        url: `${APP_URL}/clipmark-logo.png`,
-        width: 512,
-        height: 512,
-        alt: 'ClipMark — YouTube Bookmark Extension',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Affiliate Program — ClipMark',
-    description: META_DESCRIPTION,
-    images: [`${APP_URL}/clipmark-logo.png`],
-  },
-};
+  path: '/affiliate',
+  ogTitle: 'Affiliate Program',
+  ogSubtitle: 'Earn 30% on every Pro upgrade you refer.',
+});
 
 const H2 = {
   fontFamily: "var(--font-display)",
   fontSize: 32,
   fontWeight: 800,
-  color: 'var(--gray-900)',
+  color: 'var(--text)',
   marginBottom: 20,
   marginTop: 0,
   letterSpacing: '-1px',
@@ -54,7 +34,7 @@ const P = {
 };
 
 const CARD = {
-  background: 'white',
+  background: 'var(--surface)',
   borderRadius: 20,
   padding: '32px',
 };
@@ -78,7 +58,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How do I get paid?',
-    a: 'Payouts are handled manually today, by bank transfer (via Wise) or PayPal, once your eligible balance reaches $25. Conversions are held for 30 days before becoming eligible, to cover the refund window. Email affiliates@clipmark.mithahara.com to register your payout method and to request a payout.',
+    a: 'Payouts are handled manually today, by bank transfer (via Wise) or PayPal, once your eligible balance reaches $25 USD. Conversions are held for 30 days before becoming eligible, to cover the refund window. Email affiliates@clipmark.mithahara.com to register your payout method and to request a payout.',
   },
   {
     q: 'How long does my referral cookie last?',
@@ -108,7 +88,7 @@ const STEPS = [
   {
     number: '02',
     title: 'Share your unique link — they get 10% off',
-    body: 'Get a personalised link like clipmark.mithahara.com/r/yourname. Drop it in YouTube descriptions, newsletters, Twitter threads, or anywhere your audience hangs out. Anyone who clicks your link gets 10% off automatically at checkout.',
+    body: 'Get a personalized link like clipmark.mithahara.com/r/yourname. Drop it in YouTube descriptions, newsletters, Twitter threads, or anywhere your audience hangs out. Anyone who clicks your link gets 10% off automatically at checkout.',
     icon: 'share',
   },
   {
@@ -123,7 +103,10 @@ const COMMISSION_RATE = 0.30;
 const REFERRAL_DISCOUNT = 0.10; // 10% off for referred visitors
 
 export default async function AffiliatePage() {
-  let prices = { monthly: '5', annual: '40', lifetime: '40' };
+  // PRICE_DEFAULTS rather than an inline literal: this page's own fallback had
+  // drifted to 5 / 40 / 40 against the real 7.99 / 59.99 / 99.99, so a Dodo
+  // outage published a commission table computed from prices we don't charge.
+  let prices: ProductPrices = PRICE_DEFAULTS;
   try {
     prices = await fetchProductPrices();
   } catch (err) {
@@ -142,13 +125,13 @@ export default async function AffiliatePage() {
   function commissionDisplay(priceStr: string) {
     const net = Number(priceStr) * (1 - REFERRAL_DISCOUNT);
     const commission = net * COMMISSION_RATE;
-    return `$${commission.toFixed(2)} one-time`;
+    return `${formatPrice(commission.toFixed(2))} one-time`;
   }
 
   const COMMISSION_ROWS = [
-    { plan: 'Monthly',  price: `$${prices.monthly} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
-    { plan: 'Annual',   price: `$${prices.annual} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
-    { plan: 'Lifetime', price: `$${prices.lifetime} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
+    { plan: 'Monthly',  price: `${formatPrice(prices.monthly)} / mo`,      commission: commissionDisplay(prices.monthly),  note: 'On the first month, after the 10% referral discount' },
+    { plan: 'Annual',   price: `${formatPrice(prices.annual)} / yr`,       commission: commissionDisplay(prices.annual),   note: 'On the first year, after the 10% referral discount' },
+    { plan: 'Lifetime', price: `${formatPrice(prices.lifetime)} one-time`, commission: commissionDisplay(prices.lifetime), note: 'After the 10% referral discount' },
   ];
   return (
     <>
@@ -169,7 +152,7 @@ export default async function AffiliatePage() {
           <h1 style={{
             fontFamily: "var(--font-display)",
             fontSize: 'clamp(40px, 8vw, 64px)', fontWeight: 800, letterSpacing: '-3px',
-            color: 'var(--gray-900)', marginBottom: 24, marginTop: 0,
+            color: 'var(--text)', marginBottom: 24, marginTop: 0,
             lineHeight: 1,
           }}>
             Share ClipMark.<br />
@@ -201,8 +184,8 @@ export default async function AffiliatePage() {
             </a>
             <a href="/affiliate/terms" className="cm-card" style={{
               padding: '16px 32px',
-              background: 'white',
-              color: 'var(--gray-900)', borderRadius: 14, fontSize: 16, fontWeight: 800,
+              background: 'var(--surface)',
+              color: 'var(--text)', borderRadius: 14, fontSize: 16, fontWeight: 800,
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s'
             }}>
@@ -223,14 +206,14 @@ export default async function AffiliatePage() {
             { value: '30%', label: 'One-time commission per referred upgrade', icon: 'payments' },
             { value: '10% off', label: 'Incentive discount for your audience', icon: 'sell' },
             { value: '30 days', label: 'Long-lasting cookie attribution', icon: 'history' },
-            { value: '$25', label: 'Low minimum payout threshold', icon: 'account_balance_wallet' },
+            { value: '$25 USD', label: 'Low minimum payout threshold', icon: 'account_balance_wallet' },
           ].map((stat) => (
             <div key={stat.label} className="cm-card" style={{ padding: '32px', textAlign: 'center' }}>
               <div className="cm-icon-badge" style={{ margin: '0 auto 20px', width: 48, height: 48 }}>
                 <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 24 }}>{stat.icon}</span>
               </div>
               <p style={{
-                fontSize: 36, fontWeight: 800, color: 'var(--gray-900)',
+                fontSize: 36, fontWeight: 800, color: 'var(--text)',
                 fontFamily: "var(--font-display)",
                 marginBottom: 8, marginTop: 0, letterSpacing: '-1px'
               }}>
@@ -264,7 +247,7 @@ export default async function AffiliatePage() {
                 </div>
                 <h3 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: 20, fontWeight: 800, color: 'var(--gray-900)',
+                  fontSize: 20, fontWeight: 800, color: 'var(--text)',
                   marginBottom: 12, marginTop: 0, letterSpacing: '-0.5px'
                 }}>
                   {step.title}
@@ -295,7 +278,7 @@ export default async function AffiliatePage() {
             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15, minWidth: 520 }}>
               <thead>
-                <tr style={{ background: 'var(--gray-50)' }}>
+                <tr style={{ background: 'var(--bg)' }}>
                   {['Plan', 'Price', 'Your Commission', 'Notes'].map((h) => (
                     <th key={h} style={{
                       padding: '16px 24px', textAlign: 'left', fontSize: 12,
@@ -309,8 +292,8 @@ export default async function AffiliatePage() {
               </thead>
               <tbody>
                 {COMMISSION_ROWS.map((row, i) => (
-                  <tr key={row.plan} style={{ borderTop: '1px solid var(--gray-100)' }}>
-                    <td style={{ padding: '20px 24px', fontWeight: 800, color: 'var(--gray-900)' }}>{row.plan}</td>
+                  <tr key={row.plan} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td style={{ padding: '20px 24px', fontWeight: 800, color: 'var(--text)' }}>{row.plan}</td>
                     <td style={{ padding: '20px 24px', color: 'var(--text-muted)', fontWeight: 500 }}>{row.price}</td>
                     <td style={{ padding: '20px 24px', fontWeight: 800, color: 'var(--brand-ink)' }}>{row.commission}</td>
                     <td style={{ padding: '20px 24px', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500 }}>{row.note}</td>
@@ -348,7 +331,7 @@ export default async function AffiliatePage() {
                   <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20 }}>{item.icon}</span>
                 </div>
                 <div>
-                  <p style={{ fontWeight: 800, color: 'var(--gray-900)', marginBottom: 8, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.title}</p>
+                  <p style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 8, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.title}</p>
                   <p style={{ ...P, marginBottom: 0, fontSize: 15, color: 'var(--text-muted)' }}>{item.body}</p>
                 </div>
               </div>
@@ -369,13 +352,13 @@ export default async function AffiliatePage() {
               {[
                 { icon: 'schedule', title: '30-day hold', body: 'Commissions are held for 30 days to cover refund windows before becoming eligible.' },
                 { icon: 'event_repeat', title: 'Monthly review', body: 'We review eligible balances each month and settle them by hand — payouts are not yet automated.' },
-                { icon: 'attach_money', title: '$25 threshold', body: 'Once your eligible commissions reach $25, email us and we’ll arrange the payout.' },
+                { icon: 'attach_money', title: '$25 USD threshold', body: 'Once your eligible commissions reach $25 USD, email us and we’ll arrange the payout.' },
                 { icon: 'account_balance', title: 'Payout methods', body: 'We support Bank Transfer (via Wise) or PayPal for all global affiliates.' },
               ].map((item) => (
                 <div key={item.title}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                     <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 20, color: 'var(--brand-ink)' }}>{item.icon}</span>
-                    <span style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: 15 }}>{item.title}</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text)', fontSize: 15 }}>{item.title}</span>
                   </div>
                   <p style={{ ...P, fontSize: 14, color: 'var(--text-muted)', marginBottom: 0, lineHeight: 1.6 }}>{item.body}</p>
                 </div>
@@ -401,7 +384,7 @@ export default async function AffiliatePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {FAQ_ITEMS.map((item) => (
               <div key={item.q} className="cm-card" style={{ padding: '32px' }}>
-                <p style={{ fontWeight: 800, color: 'var(--gray-900)', marginBottom: 12, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.q}</p>
+                <p style={{ fontWeight: 800, color: 'var(--text)', marginBottom: 12, marginTop: 0, fontSize: 17, letterSpacing: '-0.3px' }}>{item.q}</p>
                 <p style={{ ...P, marginBottom: 0, fontSize: 15, color: 'var(--text-muted)' }}>{item.a}</p>
               </div>
             ))}
