@@ -1,3 +1,7 @@
+// FIRST import on purpose: error-reporting.js attaches its global handlers at
+// module-evaluation time, and ESM evaluates imports in order — so anything
+// thrown at the top level of the modules below is still captured.
+import { initErrorReporting } from '../error-reporting.js';
 import {
   parseTags,
   getTagColor,
@@ -47,7 +51,6 @@ import {
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
 import { isDueForRecall } from '../recall.module.js';
-import { initErrorReporting } from '../error-reporting.js';
 // `?sp` for the same reason as the driver.js imports below: content/tour.js
 // imports this too, and without the distinct module id Rollup hoists it into a
 // chunk shared with the content script. That happens to work (crxjs makes the
@@ -69,7 +72,7 @@ import '../tour-theme.css?sp';
 
 // Before anything else in this module runs, so an error during setup is caught.
 // Mirror this in any future popup page with its own `context` tag.
-initErrorReporting('extension-side-panel');
+const errorReporter = initErrorReporting('extension-side-panel');
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('SidePanel');
@@ -181,7 +184,11 @@ async function refreshEntitlement() {
         await syncSet({ bmUser: { ...bmUser, isPro } });
       }
     }
-  } catch { /* non-critical, ignore */ }
+  } catch (error) {
+    // Not fatal — the cached entitlement still applies — but a persistent
+    // failure here leaves someone who has paid looking at the free-tier gates.
+    errorReporter.capture(error, { where: 'refreshEntitlement' });
+  }
   // Re-check: the fetch above can take real wall-clock time, long enough for
   // an extension reload/update to invalidate this context mid-flight.
   if (!isExtensionContextValid()) return;
