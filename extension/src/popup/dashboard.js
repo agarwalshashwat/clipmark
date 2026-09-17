@@ -1,3 +1,5 @@
+// FIRST import on purpose — see the note in side-panel.js.
+import { initErrorReporting } from '../error-reporting.js';
 import { formatLoopRange } from '../loop.module.js';
 import {
   getTagColor,
@@ -28,11 +30,10 @@ import {
   FREE_RECALL_REVIEWS_PER_MONTH,
   FREE_ANKI_EXPORTS_PER_MONTH,
 } from '../usage-caps.module.js';
-import { initErrorReporting } from '../error-reporting.js';
 
 // Before anything else in this module runs, so an error during setup is caught.
 // Mirror this in any future popup page with its own `context` tag.
-initErrorReporting('extension-dashboard');
+const errorReporter = initErrorReporting('extension-dashboard');
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('Dashboard');
@@ -106,7 +107,11 @@ async function refreshEntitlement() {
         await new Promise(resolve => chrome.storage.sync.set({ bmUser: { ...bmUser, isPro } }, resolve));
       }
     }
-  } catch { /* non-critical, ignore */ }
+  } catch (error) {
+    // Twin of the same catch in side-panel.js — a paid user silently stuck
+    // behind the free-tier gates.
+    errorReporter.capture(error, { where: 'refreshEntitlement' });
+  }
   // Re-check: the fetch above can take real wall-clock time, long enough for
   // an extension reload/update to invalidate this context mid-flight.
   if (!isExtensionContextValid()) return;

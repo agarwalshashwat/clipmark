@@ -28,7 +28,10 @@ import {
 } from './install-injection.js';
 import { registerUninstallUrl } from './uninstall-url.js';
 
-const errorReporter = initErrorReporting('extension-background');
+// `session: true` only here. One session per service-worker start is the
+// denominator Release Health divides errors by; emitting it from the panel and
+// the dashboard too would count the same user several times over.
+const errorReporter = initErrorReporting('extension-background', { session: true });
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const TAG_COLORS = {
@@ -181,7 +184,12 @@ const TAG_COLORS = {
     registerUninstallUrl().catch(() => {});
 
     if (shouldBackfillOnInstalled(details?.reason)) {
-      backfillContentScripts().catch(() => {});
+      // First-run path: if this fails, every already-open YouTube tab has no
+      // content script and ClipMark looks completely dead to a brand-new user
+      // until they reload. Precisely the onboarding breakage we were blind to.
+      backfillContentScripts().catch((error) => {
+        errorReporter.capture(error, { where: 'backfillContentScripts', reason: details?.reason });
+      });
     }
 
     // "Bookmark at [time]" - visible only on YouTube watch pages

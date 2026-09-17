@@ -542,6 +542,10 @@ async function fetchTranscript() {
       return segments;
     } catch (error) {
       debugLog('Transcript', 'Failed to fetch', { error: error.message });
+      // Everything downstream of the transcript (AI summary, auto-fill, social
+      // post) degrades to empty without surfacing anything. A YouTube-side
+      // format change would look exactly like silence.
+      globalThis.clipmarkReportError?.(error, { where: 'fetchTranscript' });
       cachedTranscript = [];
       return [];
     }
@@ -705,6 +709,10 @@ async function silentSaveBookmark() {
     debugLog('Silent', 'Saved silent bookmark', { timestamp, description });
   } catch (error) {
     debugLog('Silent', 'Failed', { error: error.message });
+    // The core action of the extension just failed with no UI to say so — the
+    // exact shape of breakage the dashboard's "0 errors" was hiding. Most
+    // likely QUOTA_BYTES_PER_ITEM on a heavily-bookmarked video.
+    globalThis.clipmarkReportError?.(error, { where: 'saveSilentBookmark' });
   }
 }
 
