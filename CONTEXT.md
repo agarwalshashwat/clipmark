@@ -44,32 +44,38 @@ knowingly, not by accident.
 | **G9** | **Edit both twins.** `constants/recall/loop.js` and their `.module.js` pairs move together — a drift once shipped a production `ReferenceError`. Detail in AGENTS.md. | 2026-08-16 |
 | **G11** | **Every shipped extension build is tagged `vX.Y.Z` at its build commit** — an immutable rollback anchor, with the zip's sha256 in the annotated tag message. Created at release-cut / upload time by `scripts/cut-release.sh`, never before. Never move or reuse a release tag. | 2026-08-16 |
 | **G10** | **Primary paying target: US / UK / Australia** — Tier-1, high-purchasing-power, English-speaking (Canada/NZ likely similar). The product stays **globally available**; the lens is for decisions. Weigh features, copy, pricing/currency, positioning, SEO and compliance for **US/UK/AU fit** rather than treating them as generic-global. | 2026-08-16 |
+| **G12** | **Prices are USD and tax-EXCLUSIVE.** Dodo is Merchant of Record and adds local tax at checkout, so every price surface must say so (`local tax added at checkout`) and label the currency. Never show a tax-inclusive figure or an unlabelled number. | 2026-08-17 |
+| **G13** | **Mithahara stays out of public branding.** It is the parent entity and appears only where it already does infrastructurally (the `clipmark.mithahara.com` domain). Never present it as a company in listing copy, marketing or legal text — **never claim an entity that is not registered**. Public-facing, the product is ClipMark. | 2026-08-17 |
+| **G14** | **Browser/E2E tests: muted, lecture video, clean teardown.** Any spec driving a real page uses the 3Blue1Brown lecture **`aircAruvnKk`** via `tests/fixtures` — never the Rickroll (`dQw4w9WgXcQ`), which shipped in test output for months. Launch through `launchExtensionContext()` so `--mute-audio` is always set, and close the Chrome context/tab group on teardown. Enforced by `tests/unit/test-audio-muted.test.mjs`. | 2026-08-17 |
 
 ---
 
 ## 3. Current status
 
-**Last updated: 2026-08-16 by Claude (Cowork Dispatch)** — against `origin/main` @ `0208463`.
+**Last updated: 2026-08-17 by Claude Opus 5 (Claude Code)** — against `origin/main` @ `2f8a0f2`.
 
 **Phase:** webapp and live payments running; **launch / marketing phase**. Every remaining
-critical-path item is an owner action, not a coding problem. **v1.0.6 is the published Web Store
-build** (owner-reported), anchored at tag `v1.0.6`. `main` is at **1.0.7**, being rebuilt with a
-tour fix — it gets its tag at that build, per G11.
+critical-path item is an owner action, not a coding problem. **v1.0.7 is the published Web Store
+build** (owner-uploaded 2026-08-17), anchored at tag `v1.0.7`. `main` is at **1.0.8**, already
+cut, verified and tagged `v1.0.8` — **awaiting the owner's upload** (G4).
 
 **Done** — migrations 018 + 019 applied and verified in prod; the `/uninstall` survey is live end
 to end · refunds ledger (#110, #106, #116) · recall-gate paywall fixed (#111) · website
 launch-ready: wedge-led homepage, pre-launch wins, system-synced dark mode (#120, #131, #132,
-#134) · process and docs: release train (#114), parked backlog (#108), GTM kit (#109), CI build
-gate (#133), LAUNCH-PRD refresh (#136), docs prune (#138), release tagging (G11).
+#134) · cookie-consent banner gating the attribution cookies (#152) · Vercel Web Analytics
+enabled and collecting · `ci-extension-smoke` de-flaked onto a local fixture, closing #84 (#153) ·
+v1.0.8 content: storage write-split (#159), store-SEO manifest (#158), side-panel AA fix (#154),
+review nudge (#157) · process and docs: release train (#114), release tagging (#149, G11), GTM kit
+(#109), CI build gate (#133), docs prune (#138), listing/posting-kit refresh (#150, #156).
 
 **Pending**
 
 | | Item | Owner |
 |---|---|---|
-| **➡ NEXT** | **Cut and submit v1.0.7** once the tour fix lands. `cut-release.sh` tags it automatically (G11); the upload stays manual and owner-only (G4). | Owner |
+| **➡ NEXT** | **Upload v1.0.8** — built, verified and tagged `v1.0.8`; zip + sha256 handed over. Manual and owner-only (G4). Its manifest carries the store-SEO Title/Summary, so this upload is what applies them. | Owner |
 | 2 | PR #107 sync engine — parked post-launch, needs a full rebase; its migration renumbers to **020** | — |
 | 3 | Feature-usage analytics — **spec only** (`docs/analytics/FEATURE-ANALYTICS-SPEC.md`, #113), not built; blocked on Q1 | — |
-| 4 | 2 light-mode contrast misses, incl. `InstallCta` at **2.26:1** (owner-reported, not yet in a repo doc) | — |
+| 4 | 2 light-mode contrast misses, incl. `InstallCta` at **2.26:1** — both pre-existing and confirmed still live | — |
 
 ---
 
@@ -91,6 +97,12 @@ call that looked arbitrary. **Never edit or delete an entry.**
 | 2026-08-16 | **Release tagging: `vX.Y.Z` at the build commit, automated in `cut-release.sh`** (G11) | `main` merges many branches, so after the fact you cannot tell which commit a version was built from — v1.0.6 took a 14-commit, 3-tree forensic reconstruction to anchor, and its zip sha256 is gone for good. A per-version immutable tag is the only reliable rollback point. |
 | 2026-08-16 | **Primary target market set to US/UK/AU** (G10) | That's where the purchasing power for a Pro subscription is. The product stays global; decisions get weighed through that lens rather than an averaged-global one. |
 | 2026-08-16 | **Docs prune: 8 archived, 4 merged, 1 deleted, `docs/release/` removed** | Stale docs were causing real false work — a parity audit generating false P1s, two specs saying "not implemented" for shipped features, a policy stub listing 3 of 6 CI gates. Consolidated to the canonical set so there is one place to trust per question. Nothing lost: archived under `docs/archive/`, deletions recoverable from git. |
+| 2026-08-16 | **Prices shown USD and tax-exclusive, with "local tax added at checkout"** (#142, G12) | Dodo is MoR and adds local tax at checkout, so a tax-inclusive figure would under-quote every non-US buyer at the moment of payment. Saying it up front is cheaper than a refund and a support thread. |
+| 2026-08-16 | **Attribution cookies gated behind consent; reject deletes them** (#152) | GDPR/PECR: the referral cookie is marketing, not essential, so `/r/[code]` now sets nothing until consent exists. Vercel Analytics stays ungated — cookieless and anonymous, so it needs no consent. A referred visitor who rejects simply isn't attributed; that is the compliant trade, taken knowingly. |
+| 2026-08-17 | **`ci-extension-smoke` runs against a local watch-page fixture, not youtube.com** (#153) | Issue #84: the job depended on a live third party and went red on schedule, training everyone to re-run a red build — exactly how a real content-script regression would get waved through. Also stopped booting `next dev` for specs that never call it. |
+| 2026-08-17 | **v1.0.7 uploaded and tagged; v1.0.8 cut immediately after** | v1.0.7 carried the 10/month Anki cap the website already advertised, so it could not wait. v1.0.8 batches four more extension fixes rather than dribbling them out — G7's whole point. |
+| 2026-08-17 | **Mithahara kept out of public branding** (G13) | It is the parent entity, not a registered trading name for this product. Claiming an unregistered entity in listing or legal copy is a real exposure; ClipMark is the public-facing product. Domain use is infrastructural and stays. |
+| 2026-08-17 | **E2E specs use the 3Blue1Brown lecture, muted, with clean teardown** (G14) | The Rickroll shipped in test output for months — unprofessional in a public repo, and a comedy video is a poor stand-in for the study content the product is actually for. Muting is enforced statically because an unmuted headed browser plays audio out of the developer's speakers before any assertion could catch it. |
 
 ---
 
@@ -116,6 +128,9 @@ scripts/            cut-release.sh · design-audit.mjs · sync-design-tokens.js
 tests/              Playwright specs + unit/ (node:test). *-packaged.spec.ts are NOT in CI
 .github/workflows/  ci-launch-gates.yml (the six gates) · release-train.yml (draft build)
 DESIGN.md           design system rules, enforced by scripts/design-audit.mjs
+CONTEXT.md          this file — project state + guardrails. Read first, update before stopping
+AGENTS.md           canonical working protocol and engineering rules, tool-agnostic
+CLAUDE.md           2-line pointer to AGENTS.md (no duplicated content, by design)
 ```
 
 ---
