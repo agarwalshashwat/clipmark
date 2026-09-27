@@ -30,7 +30,6 @@ import {
 } from '../idle-summary.js';
 import {
   localAiAvailability,
-  localSummarizeBookmarks,
   localGeneratePost,
   // Was read as a bare global (local-ai.js is a content script the manifest
   // injects into youtube.com only), so on this page it was always undefined —
@@ -51,6 +50,7 @@ import {
   FREE_RECALL_REVIEWS_PER_MONTH,
 } from '../usage-caps.module.js';
 import { isDueForRecall } from '../recall.module.js';
+import { summarizerAvailability, summarizeTranscript } from '../ai/summarizer.js';
 // `?sp` for the same reason as the driver.js imports below: content/tour.js
 // imports this too, and without the distinct module id Rollup hoists it into a
 // chunk shared with the content script. That happens to work (crxjs makes the
@@ -73,6 +73,37 @@ import '../tour-theme.css?sp';
 // Before anything else in this module runs, so an error during setup is caught.
 // Mirror this in any future popup page with its own `context` tag.
 const errorReporter = initErrorReporting('extension-side-panel');
+
+/**
+ * Shown wherever the built-in AI is missing. One string so the panel and the
+ * summary overlay can never disagree about what the user has to do.
+ */
+const AI_UNAVAILABLE_NOTE = 'AI features need Chrome 138+ with built-in AI available.';
+
+/**
+ * chrome.storage.sync key for the AI (beta) opt-out. Default ON: the features
+ * are on-device, free, and degrade to a no-op where the model is missing.
+ * Spelled literally in src/content/content.js too (a content script cannot
+ * import this module); tests/unit/summarizer.test.mjs guards the drift.
+ */
+const AI_BETA_KEY = 'aiBetaEnabled';
+
+async function isAiBetaEnabled() {
+  try {
+    const { [AI_BETA_KEY]: enabled } = await syncGet({ [AI_BETA_KEY]: true });
+    return enabled !== false;
+  } catch {
+    return false;
+  }
+}
+
+async function setAiBetaEnabled(enabled) {
+  try {
+    await syncSet({ [AI_BETA_KEY]: !!enabled });
+  } catch (error) {
+    errorReporter.capture(error, { where: 'setAiBetaEnabled' });
+  }
+}
 
 const API_BASE = globalThis.API_BASE || 'https://clipmark.mithahara.com';
 const logger = createDevLogger('SidePanel');
@@ -781,7 +812,7 @@ async function shareBookmarks() {
 }
 
 // ─── Summarize Bookmarks ──────────────────────────────────────────────────────
-async function summarizeBookmarks() {
+async function summarizeVideo() {
   const btn = document.getElementById('summarize-btn');
   const panel = document.getElementById('summary-panel');
   const content = document.getElementById('summary-content');
@@ -791,80 +822,107 @@ async function summarizeBookmarks() {
     return;
   }
 
+  const show = (html) => { content.innerHTML = html; panel.style.display = 'block'; };
+
+  // Turned off by the user. Show the toggle rather than nothing, or the setting
+  // becomes unreachable the moment it is switched off.
+  if (!(await isAiBetaEnabled())) {
+    show(aiToggleMarkup(false, 'AI (beta) is off. Summaries and auto-labels are disabled.'));
+    return;
+  }
+
   try {
     const tab = await getCurrentTab();
     if (!(tab.url || '').includes('youtube.com/watch')) {
       throw new Error('Please navigate to a YouTube video first!');
     }
 
-    const videoId = extractVideoId(tab.url);
-    if (!videoId) throw new Error('Could not find video ID');
+    const availability = await summarizerAvailability();
+    if (availability === 'downloading' || availability === 'downloadable') {
+      show(`<div class="local-ai-notice"><p>Chrome is still downloading the on-device
+        model. This is a one-time download — try again in a few minutes.</p></div>`);
+      return;
+    }
+    if (availability !== 'available') {
+      show(`<div class="local-ai-notice"><p>${AI_UNAVAILABLE_NOTE}</p></div>`);
+      return;
+    }
 
-    const bookmarks = await getVideoBookmarks(videoId);
-    if (bookmarks.length === 0) {
-      throw new Error('Add some bookmarks first');
+    // The transcript lives in the content script — only it can read
+    // window.ytInitialPlayerResponse. Nothing here touches the network.
+    btn.disabled = true;
+    show('<div class="local-ai-notice"><p>Summarizing on your device…</p></div>');
+
+    const res = await sendMessageToTab(tab.id, { action: 'getTranscriptText' });
+    const transcript = res?.text;
+    if (!transcript) {
+      // Captions may well exist and still not be fetchable: YouTube's timedtext
+      // endpoint now answers 200 with an EMPTY body unless the request carries a
+      // proof-of-origin token, from the page world as well as ours. Say what the
+      // user can act on rather than asserting something false about the video.
+      show(`<div class="local-ai-notice"><p>No transcript available for this video,
+        so there is nothing to summarize yet.</p></div>`);
+      return;
     }
 
     const videoTitles = await getVideoTitles();
-    const videoTitle = videoTitles[videoId] || '';
+    const { points, truncated } = await summarizeTranscript(transcript, {
+      videoTitle: videoTitles[extractVideoId(tab.url)] || '',
+    });
 
-    const availability = await localAiAvailability();
-    let result = null;
-
-    if (availability === 'available') {
-      // Local AI (Gemini Nano) — free for everyone, on-device, zero cost to us.
-      btn.textContent = '…';
-      btn.disabled = true;
-      try {
-        result = await localSummarizeBookmarks(bookmarks, videoTitle);
-      } catch (e) {
-        throw new Error('Local AI failed to generate summary.');
-      }
-    } else if (availability === 'downloading') {
-      // Model is still downloading — show informational notice
-      content.innerHTML = `
-        <div class="local-ai-notice">
-          <p>Gemini Nano is downloading to your device. Try again in a few minutes.</p>
-        </div>`;
-      panel.style.display = 'block';
-      return;
-    } else {
-      // Local AI unavailable
-      content.innerHTML = `
-        <div class="ai-unavailable">
-          <span class="material-symbols-outlined" style="font-size:48px;color:#94a3b8;margin-bottom:12px;">robot_2</span>
-          <h3>Local AI Required</h3>
-          <p>ClipMark now uses Chrome's built-in <strong>Gemini Nano</strong> for your privacy and to keep the service sustainable.</p>
-          <p style="font-size:12px;color:#64748b;margin-top:12px;">Please ensure you are on Chrome 128+ and have "Enable Bypass for AI" flags set.</p>
-          <a href="https://clipmark.mithahara.com/docs/ai" target="_blank" class="ai-help-link">How to enable →</a>
-        </div>`;
-      panel.style.display = 'block';
+    if (!points.length) {
+      show('<div class="local-ai-notice"><p>The model returned an empty summary. Try again.</p></div>');
       return;
     }
 
-    const { summary, topics, actionItems } = result;
-
-    let html = `<p class="summary-text">${summary}</p>`;
-
-    if (topics?.length) {
-      html += `<div class="summary-section"><strong>Topics</strong><ul>${
-        topics.map(t => `<li>${t}</li>`).join('')
-      }</ul></div>`;
-    }
-
-    if (actionItems?.length) {
-      html += `<div class="summary-section"><strong>Action items</strong><ul>${
-        actionItems.map(a => `<li>${a}</li>`).join('')
-      }</ul></div>`;
-    }
-
-    content.innerHTML = html;
-    panel.style.display = 'block';
+    show(
+      `<ul class="summary-points">${points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` +
+      (truncated
+        ? '<p class="summary-note">Long video — this covers the first part of the transcript.</p>'
+        : '') +
+      aiToggleMarkup(true)
+    );
   } catch (error) {
+    errorReporter.capture(error, { where: 'summarizeVideo' });
     showError(error.message);
   } finally {
-    btn.textContent = '✦ Summary';
     btn.disabled = false;
+  }
+}
+
+/** The AI (beta) toggle, rendered inside the summary panel — its only home. */
+function aiToggleMarkup(enabled, note) {
+  return `
+    <div class="ai-beta-row">
+      <label class="ai-beta-toggle">
+        <input type="checkbox" id="ai-beta-checkbox" ${enabled ? 'checked' : ''}>
+        <span>AI (beta) — on-device summaries and auto-labels</span>
+      </label>
+      ${note ? `<p class="summary-note">${escapeHtml(note)}</p>` : ''}
+    </div>`;
+}
+
+/**
+ * Hide the AI entry point entirely where Chrome cannot run it.
+ *
+ * Progressive enhancement: a Chrome without the Summarizer must not be shown a
+ * button that can only ever fail. Runs once on panel init and never throws — the
+ * capture/flashcard/review loop does not depend on any of it.
+ */
+async function applyAiAvailability() {
+  const card = document.getElementById('summarize-btn');
+  const note = document.getElementById('ai-unavailable-note');
+  if (!card || !note) return;
+  try {
+    const availability = await summarizerAvailability();
+    const usable = availability !== 'unavailable';
+    card.hidden = !usable;
+    note.hidden = usable;
+    if (!usable) note.textContent = AI_UNAVAILABLE_NOTE;
+  } catch {
+    card.hidden = true;
+    note.hidden = false;
+    note.textContent = AI_UNAVAILABLE_NOTE;
   }
 }
 
@@ -1666,6 +1724,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Also subscribes to the recall-session record, so a drill finished while this
   // panel is open surfaces the ask at that moment rather than on a later open.
   initReviewNudge();
+  // Hide the AI entry point where Chrome cannot run it, rather than letting the
+  // user click into a guaranteed failure. Never throws; the core loop is
+  // unaffected either way.
+  applyAiAvailability();
   document.getElementById('replay-tour-btn')?.addEventListener('click', async () => {
     await setTourState({ youtubeTour: false, sidePanelTour: false });
     runSidePanelTour({ force: true });
@@ -1950,7 +2012,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  document.getElementById('summarize-btn').addEventListener('click', summarizeBookmarks);
+  document.getElementById('summarize-btn').addEventListener('click', summarizeVideo);
+  // Delegated: aiToggleMarkup re-renders the checkbox on every panel open, so a
+  // direct listener would be bound to a node that no longer exists.
+  document.getElementById('summary-panel').addEventListener('change', async (event) => {
+    if (event.target?.id !== 'ai-beta-checkbox') return;
+    await setAiBetaEnabled(event.target.checked);
+  });
 
   document.getElementById('summary-close').addEventListener('click', () => {
     document.getElementById('summary-panel').style.display = 'none';

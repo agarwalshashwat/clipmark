@@ -56,6 +56,12 @@
       ],
       "run_at": "document_end",
       "css": []
+    },
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["src/content/yt-player-bridge.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
     }
   ],
   "commands": {

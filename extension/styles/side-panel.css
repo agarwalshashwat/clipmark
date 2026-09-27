@@ -1990,3 +1990,62 @@ body {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+
+/* ─── AI (beta): summary output + the unavailable fallback ───────────────────
+   Colour comes only from the semantic tokens in design-tokens.css, so dark mode
+   is inherited rather than duplicated. */
+.ai-unavailable-note {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--text-sub);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.summary-points {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.summary-points li {
+  font-size: var(--text-base);
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.summary-note {
+  margin: 10px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-sub);
+}
+
+.ai-beta-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* A real, clickable label — the toggle is the only way back once AI is off. */
+.ai-beta-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--text-sub);
+  cursor: pointer;
+}
+
+.ai-beta-toggle input {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent-strong);
+  cursor: pointer;
+}

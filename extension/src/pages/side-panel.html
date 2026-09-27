@@ -74,6 +74,10 @@
         <span class="material-symbols-outlined ai-insights-chevron">chevron_right</span>
         <div class="ai-insights-bg" aria-hidden="true"></div>
       </button>
+      <!-- Shown INSTEAD of the card above when Chrome has no built-in AI, so the
+           user never gets a button that can only fail. applyAiAvailability()
+           in side-panel.js flips exactly one of the two on at init. -->
+      <p id="ai-unavailable-note" class="ai-unavailable-note" hidden></p>
     </section>
 
     <!-- Resume pill -->

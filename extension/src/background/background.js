@@ -135,6 +135,14 @@ const TAG_COLORS = {
       if (plan.js.length) {
         await chrome.scripting.executeScript({ target: { tabId: plan.tabId }, files: plan.js });
       }
+      // Page-world scripts have to be replayed into the page's own context, or
+      // they cannot see the globals they exist to read. One probe per tab above
+      // still gates both, so this cannot double-inject.
+      if (plan.mainJs?.length) {
+        await chrome.scripting.executeScript({
+          target: { tabId: plan.tabId }, files: plan.mainJs, world: 'MAIN',
+        });
+      }
       return 'injected';
     } catch {
       return 'skipped';
