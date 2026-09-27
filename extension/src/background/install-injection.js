@@ -111,7 +111,7 @@ export function isInjectableTab(tab) {
  * before content.js; see tests/unit/manifest.test.mjs).
  *
  * @param {{contentScripts?: Array, tabs?: Array}} input
- * @returns {Array<{tabId: number, url: string, js: string[], css: string[]}>}
+ * @returns {Array<{tabId: number, url: string, js: string[], css: string[], mainJs: string[]}>}
  */
 export function planInjections({ contentScripts = [], tabs = [] } = {}) {
   const plans = [];
@@ -119,16 +119,24 @@ export function planInjections({ contentScripts = [], tabs = [] } = {}) {
   for (const tab of tabs) {
     if (!isInjectableTab(tab)) continue;
 
-    const js = [];
+    const js = [];      // isolated world — the main content-script bundle
     const css = [];
+    const mainJs = [];  // `"world": "MAIN"` entries, kept separate on purpose
     for (const entry of contentScripts) {
       if (!entry || !urlMatchesAnyPattern(tab.url, entry.matches || [])) continue;
       if (urlMatchesAnyPattern(tab.url, entry.exclude_matches || [])) continue;
-      for (const file of entry.js || []) if (!js.includes(file)) js.push(file);
+      // A MAIN-world script replayed into the isolated world is worse than not
+      // replayed at all: it silently does nothing useful there (it exists to
+      // reach page globals the isolated world cannot see) while still stamping
+      // the tab as injected.
+      const target = entry.world === 'MAIN' ? mainJs : js;
+      for (const file of entry.js || []) if (!target.includes(file)) target.push(file);
       for (const file of entry.css || []) if (!css.includes(file)) css.push(file);
     }
 
-    if (js.length || css.length) plans.push({ tabId: tab.id, url: tab.url, js, css });
+    if (js.length || css.length || mainJs.length) {
+      plans.push({ tabId: tab.id, url: tab.url, js, css, mainJs });
+    }
   }
 
   return plans;

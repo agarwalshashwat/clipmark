@@ -476,6 +476,43 @@ function updateActiveMarker() {
 }
 
 // ─── Transcript ───────────────────────────────────────────────────────────────
+/**
+ * Ask the page-world bridge for YouTube's caption track list.
+ *
+ * Resolves null on timeout rather than hanging: the bridge is a content script
+ * like any other and may not have run yet (or at all, on a non-watch surface),
+ * and the transcript is an enhancement — never something the save path waits on
+ * indefinitely.
+ *
+ * @returns {Promise<Array<object>|null>}
+ */
+function getCaptionTracksFromPage(timeoutMs = 2000) {
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener('clipmark:caption-tracks', onResponse);
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const onResponse = (event) => {
+      try {
+        finish(JSON.parse(event.detail) || null);
+      } catch {
+        finish(null);
+      }
+    };
+    document.addEventListener('clipmark:caption-tracks', onResponse);
+    const timer = setTimeout(() => finish(null), timeoutMs);
+    try {
+      document.dispatchEvent(new CustomEvent('clipmark:get-caption-tracks'));
+    } catch {
+      finish(null);
+    }
+  });
+}
+
 async function fetchTranscript() {
   const videoId = new URLSearchParams(window.location.search).get('v');
 
@@ -491,8 +528,9 @@ async function fetchTranscript() {
 
   transcriptFetchPromise = (async () => {
     try {
-      const ytData = window.ytInitialPlayerResponse;
-      const tracks = ytData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+      // Via the MAIN-world bridge: this isolated world cannot see the page's
+      // own ytInitialPlayerResponse. See src/content/yt-player-bridge.js.
+      const tracks = await getCaptionTracksFromPage();
 
       if (!tracks) {
         // ytInitialPlayerResponse not ready yet — don't cache, allow retry
@@ -613,8 +651,11 @@ async function silentSaveBookmark() {
   
   let description = transcriptText || chapter || `Bookmark at ${formatTimestamp(timestamp)}`;
 
-  // AI MAGIC: If we have a transcript snippet, try to summarize it into a concept
-  if (transcriptText) {
+  // Auto-label: turn the raw transcript snippet into a short title via Chrome's
+  // built-in Prompt API. Gated on the AI (beta) setting, and localSummarizeSnippet
+  // returns its input unchanged when the model is unavailable — so a Chrome
+  // without built-in AI still saves the bookmark, just with the raw snippet.
+  if (transcriptText && await isAiBetaEnabled()) {
     try {
       const summarized = await localSummarizeSnippet(transcriptText);
       if (summarized && summarized !== transcriptText) {
@@ -927,7 +968,7 @@ function initializeMessageListener() {
       if (request.action === 'getTranscriptAtTimestamp') {
         const transcript = await fetchTranscript();
         const text       = getTextAtTimestamp(transcript, request.timestamp);
-        const hasCaptions = !!window.ytInitialPlayerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks?.length;
+        const hasCaptions = !!(await getCaptionTracksFromPage())?.length;
         debugLog('Transcript', 'getTranscriptAtTimestamp result', {
           timestamp: request.timestamp,
           segmentCount: transcript.length,
@@ -935,6 +976,15 @@ function initializeMessageListener() {
           textFound: !!text,
         });
         sendResponse({ text: text || null, _debug: { segmentCount: transcript.length, hasCaptions } });
+        return;
+      }
+      if (request.action === 'getTranscriptText') {
+        // The whole transcript as one string. Only the content script can reach
+        // window.ytInitialPlayerResponse, so the side panel's Summarizer has to
+        // ask for it rather than fetching anything itself.
+        const transcript = await fetchTranscript();
+        const text = (transcript || []).map(seg => seg.text).filter(Boolean).join(' ').trim();
+        sendResponse({ text: text || null, segmentCount: (transcript || []).length });
         return;
       }
       if (request.action === 'prefetchTranscript') {
@@ -2791,6 +2841,24 @@ async function incrementRecallReviewCounter() {
   );
   if (isMonthlyReviewWarnThreshold(updated, now)) {
     showSilentSaveIndicator(`${updated.count} of ${FREE_RECALL_REVIEWS_PER_MONTH} free reviews used this month`);
+  }
+}
+
+// ─── AI (beta) setting ───────────────────────────────────────────────────────
+// Default ON: the on-device features cost the user nothing and degrade to a
+// no-op where the model is missing, so opt-out is the honest default. The key is
+// spelled literally here and in src/popup/side-panel.js for the same reason
+// `recallSessionStats` is — a content script cannot import an ESM module.
+// tests/unit/summarizer.test.mjs asserts the spellings never drift.
+async function isAiBetaEnabled() {
+  try {
+    if (!isContextValid()) return false;
+    const { aiBetaEnabled } = await new Promise(resolve =>
+      chrome.storage.sync.get({ aiBetaEnabled: true }, resolve)
+    );
+    return aiBetaEnabled !== false;
+  } catch {
+    return false; // never let a settings read break a save
   }
 }
 

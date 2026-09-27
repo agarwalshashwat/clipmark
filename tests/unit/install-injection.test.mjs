@@ -96,8 +96,32 @@ describe('planInjections', () => {
       tabs: [{ id: 3, url: 'https://www.youtube.com/watch?v=abc' }],
     });
     assert.deepEqual(plans, [
-      { tabId: 3, url: 'https://www.youtube.com/watch?v=abc', js: ['a.js', 'b.js'], css: ['a.css'] },
+      {
+        tabId: 3,
+        url: 'https://www.youtube.com/watch?v=abc',
+        js: ['a.js', 'b.js'],
+        css: ['a.css'],
+        mainJs: [],
+      },
     ]);
+  });
+
+  it('replays a MAIN-world entry into the page world, not the isolated one', () => {
+    // A `"world": "MAIN"` script exists precisely to read page globals the
+    // isolated world cannot see (src/content/yt-player-bridge.js). Injecting it
+    // into the isolated world would be a silent no-op that still marks the tab
+    // as done, so the two lists stay separate all the way to executeScript.
+    const plans = planInjections({
+      contentScripts: [
+        { matches: ['*://*.youtube.com/*'], js: ['bundle.js'] },
+        { matches: ['*://*.youtube.com/*'], js: ['bridge.js'], world: 'MAIN' },
+      ],
+      tabs: [{ id: 9, url: 'https://www.youtube.com/watch?v=abc' }],
+    });
+
+    assert.equal(plans.length, 1, 'one plan per tab, not per world');
+    assert.deepEqual(plans[0].js, ['bundle.js']);
+    assert.deepEqual(plans[0].mainJs, ['bridge.js']);
   });
 
   it('skips non-matching and non-injectable tabs', () => {
