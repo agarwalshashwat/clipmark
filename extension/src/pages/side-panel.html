@@ -59,8 +59,10 @@
   <!-- Scrollable main content -->
   <main class="sp-main">
 
-    <!-- AI Insights Card -->
-    <section class="sp-section">
+    <!-- AI Insights Card — hidden until a transcript source works again: YouTube's
+         timedtext endpoint returns an empty body without a proof-of-origin token,
+         so Summarize has no input. Remove `hidden` to bring it back. -->
+    <section class="sp-section" hidden>
       <button class="ai-insights-card" id="summarize-btn">
         <div class="ai-insights-left">
           <div class="ai-insights-icon">
