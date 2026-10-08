@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { createServerSupabase, type Bookmark } from '@/lib/supabase';
+import { createServerSupabase } from '@/lib/supabase';
+import { liveBookmarks } from '@/lib/bookmarks';
 import styles from './page.module.css';
 import VideosSortSelect from './VideosSortSelect';
 import { VideosClient } from './VideosClient';
@@ -50,7 +51,8 @@ export default async function VideosPage({
     .order('updated_at', { ascending: false });
 
   const videos = (rows ?? []).map(row => {
-    const bookmarks = (row.bookmarks as Bookmark[]) ?? [];
+    // liveBookmarks: the JSONB may carry sync tombstones — never render those.
+    const bookmarks = liveBookmarks(row.bookmarks);
     const timestamps = bookmarks.map(b => b.timestamp).sort((a, b) => a - b);
     return {
       videoId: row.video_id as string,

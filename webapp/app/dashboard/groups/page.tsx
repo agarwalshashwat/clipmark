@@ -1,4 +1,5 @@
 import { createServerSupabase, type Collection } from '@/lib/supabase';
+import { liveBookmarks } from '@/lib/bookmarks';
 import styles from './page.module.css';
 import GroupsContent from './GroupsContent';
 
@@ -15,16 +16,19 @@ export default async function GroupsPage() {
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
-  type BmRow = { tags?: string[]; videoTitle?: string };
-  const collections: Collection[] = (userBookmarksData ?? []).map(row => ({
-    id: row.video_id as string,
-    video_id: row.video_id as string,
-    video_title: ((row.bookmarks as BmRow[])?.[0]?.videoTitle) ?? null,
-    bookmarks: (row.bookmarks as unknown) as import('@/lib/supabase').Bookmark[],
-    created_at: row.updated_at as string,
-    view_count: 0,
-    user_id: user.id,
-  }));
+  // liveBookmarks: the JSONB may carry sync tombstones — never render those.
+  const collections: Collection[] = (userBookmarksData ?? []).map(row => {
+    const bookmarks = liveBookmarks(row.bookmarks);
+    return {
+      id: row.video_id as string,
+      video_id: row.video_id as string,
+      video_title: bookmarks[0]?.videoTitle ?? null,
+      bookmarks,
+      created_at: row.updated_at as string,
+      view_count: 0,
+      user_id: user.id,
+    };
+  });
 
   // ── User-created groups ──────────────────────────────────────────────────
   // Ordering by `position` needs migrations/015_groups_position.sql applied.

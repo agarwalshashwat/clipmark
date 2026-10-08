@@ -1,0 +1,36 @@
+-- 020_user_bookmarks_revision.sql
+--
+-- Numbered 020, not 018: 018 was taken by 018_pending_refunds.sql and 019 by
+-- the uninstall-feedback survey, both of which landed on main while this branch
+-- was open. 019 is deliberately skipped here — it belongs to that other change,
+-- not to a gap in this one.
+-- Per-row optimistic concurrency for cloud bookmark sync (Phase 10a).
+--
+-- Adds a `revision` counter to public.user_bookmarks. Every write bumps it by
+-- one; the PUT handler's sync path does a compare-and-swap
+-- (`UPDATE ... WHERE revision = <baseRevision the client last saw>`), so a
+-- device writing on top of a state it no longer holds matches zero rows and
+-- gets a 409 with the current server state to re-merge from, instead of
+-- silently overwriting another device's changes.
+--
+-- Why a counter and not `updated_at` comparison: revisions compare with plain
+-- integer equality. A timestamptz has to survive a
+-- Postgres → PostgREST → JSON → client → JSON → PostgREST round-trip, where
+-- microsecond precision and formatting differences make "is this the same
+-- instant I read?" unreliable. A BIGINT round-trips exactly.
+--
+-- Tombstones (deleted-bookmark markers the sync engine merges by) live INSIDE
+-- the existing `bookmarks` JSONB as `{id, deleted: true, deletedAt}` entries —
+-- they need no schema change, so this column is the only DDL for Phase 10a.
+--
+-- Deliberately UNCHANGED:
+--   * RLS / grants — the policies from 002 + 016 are row-level and already
+--     cover the new column: writes still require ownership AND Pro, reads and
+--     deletes require ownership only.
+--   * Existing rows — they backfill to revision 1 via the DEFAULT, which is
+--     correct: "some state exists, and it has been written at least once."
+--
+-- Idempotent: safe to re-run.
+
+ALTER TABLE public.user_bookmarks
+  ADD COLUMN IF NOT EXISTS revision BIGINT NOT NULL DEFAULT 1;

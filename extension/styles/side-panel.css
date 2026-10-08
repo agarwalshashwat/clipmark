@@ -150,6 +150,36 @@ body {
   border-color: var(--danger) !important;
 }
 
+/* ── Cloud-sync status chip ─────────────────────────────────────────────────
+   State comes from the background SyncEngine (data-sync-state), never from
+   this stylesheet's guesswork. Semantic tokens only — they carry their own
+   dark overrides, so no [data-theme="dark"] block is needed here. */
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.sync-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sync-status[data-sync-state="synced"]  .sync-status-dot { background: var(--success); }
+.sync-status[data-sync-state="pending"] .sync-status-dot { background: var(--warning); }
+.sync-status[data-sync-state="offline"] .sync-status-dot { background: var(--text-muted); }
+.sync-status[data-sync-state="error"]   .sync-status-dot { background: var(--danger); }
+
 .user-chip {
   font-size: 11px;
   font-weight: 600;

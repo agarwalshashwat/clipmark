@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { createServerSupabase, type Collection, type Bookmark } from '@/lib/supabase';
+import { liveBookmarks } from '@/lib/bookmarks';
 import DashboardContent from './_components/DashboardContent';
 import styles from './page.module.css';
 
@@ -40,11 +41,11 @@ export default async function DashboardPage({
   const collections: Collection[] = (userBookmarksData ?? []).map(row => ({
     id: row.video_id as string,
     video_id: row.video_id as string,
-    video_title: ((row.bookmarks as Bookmark[]) ?? [])
-      .slice()
+    // liveBookmarks: the JSONB may carry sync tombstones — never render those.
+    video_title: liveBookmarks(row.bookmarks)
       .sort((a: Bookmark, b: Bookmark) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .find((b: Bookmark) => b.videoTitle)?.videoTitle ?? null,
-    bookmarks: (row.bookmarks as Bookmark[]) ?? [],
+    bookmarks: liveBookmarks(row.bookmarks),
     created_at: row.updated_at as string,
     view_count: 0,
     user_id: row.user_id as string,
