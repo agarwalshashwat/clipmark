@@ -384,7 +384,7 @@ async function runSidePanelTour({ force = false } = {}) {
           title: 'Active Recall',
           description:
             "Once you've saved a few moments, Active Recall quizzes you before each clip plays — real retention, not just a replay.",
-          side: 'top',
+          side: 'bottom',
           align: 'center',
           popoverClass: TOUR_POPOVER_CLASS,
           doneBtnText: 'Got it',
@@ -403,7 +403,7 @@ async function runSidePanelTour({ force = false } = {}) {
         popover: {
           title: 'Active Recall',
           description: "Come back here once you've saved a moment or two — Active Recall will quiz you on them before each clip plays.",
-          side: 'top',
+          side: 'bottom',
           align: 'center',
           popoverClass: TOUR_POPOVER_CLASS,
           doneBtnText: 'Got it',
@@ -442,7 +442,20 @@ async function runSidePanelTour({ force = false } = {}) {
     // button is right there — was recorded as having seen nothing. The flag was
     // never stored and the card re-showed on every panel open, forever. Both
     // hooks are wired up; the first to fire wins.
-    onPopoverRender: () => { stepShown = true; },
+    onPopoverRender: (popover) => {
+      stepShown = true;
+      // driver.js clamps to the viewport, not to our header. When the panel is
+      // too short for 'bottom' it falls back to 'top', which — with the button
+      // this close to the header — paints over the wordmark. Push it below.
+      // ponytail: one-shot after render; a later resize repositions without it.
+      requestAnimationFrame(() => {
+        const headerBottom = document.querySelector('.side-panel-header')?.getBoundingClientRect().bottom ?? 0;
+        if (popover.wrapper.getBoundingClientRect().top < headerBottom) {
+          popover.wrapper.style.top = `${headerBottom + 8}px`;
+          popover.wrapper.style.bottom = 'auto';
+        }
+      });
+    },
     onHighlighted: () => { stepShown = true; },
     // The only teardown hook driver.js calls unconditionally. `onDestroyed` is
     // guarded on its `__activeElement` state, which is set at the same instant

@@ -464,7 +464,9 @@ test.describe('First-run guided tour (packaged build)', () => {
     }
   });
 
-  test('the coach-mark never paints over the panel header, even when short', async () => {
+  // 700 = an ordinary panel. With the AI card hidden the anchor sits right
+  // under the header, so side:'top' painted over it at every height.
+  for (const height of [260, 700]) test(`the coach-mark never paints over the panel header (${height}px tall)`, async () => {
     // driver.js's element-less (centered) branch is positioned with no viewport
     // clamp, so under ~281px of CSS viewport height the card crossed the 50px
     // header and painted over the wordmark — the popover is z-index 1000010,
@@ -476,7 +478,7 @@ test.describe('First-run guided tour (packaged build)', () => {
       await resetTour(worker);
       const page = await context.newPage();
       // Deliberately brutal: shorter than the unclamped card needed.
-      await page.setViewportSize({ width: 400, height: 260 });
+      await page.setViewportSize({ width: 400, height });
       await page.goto(panelUrl(worker));
       await page.locator(POPOVER).waitFor({ state: 'visible', timeout: 20_000 });
       // Let driver.js finish positioning before measuring.
