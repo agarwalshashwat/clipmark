@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, createServerSupabase } from '@/lib/supabase';
 import { getSupabaseAdmin } from '@/lib/clients';
+import { liveBookmarks } from '@/lib/bookmarks';
 
 // Spaced-repetition reminders are a Pro-only feature (see the marketing
 // upgrade page); re-check server-side so a free/spoofed client calling this
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Enrich with target labels
-  type BookmarkRow = { video_id: string; bookmarks: { videoTitle?: string }[] };
+  type BookmarkRow = { video_id: string; bookmarks: unknown };
   type GroupRow = { id: string; name: string };
 
   const [{ data: userBookmarks }, { data: groups }] = await Promise.all([
@@ -66,8 +67,9 @@ export async function GET(request: NextRequest) {
     client.from('groups').select('id, name'),
   ]);
 
+  // liveBookmarks: the JSONB may carry sync tombstones — never surface those.
   const bookmarkMap = new Map<string, string>(
-    (userBookmarks as BookmarkRow[] ?? []).map(r => [r.video_id, r.bookmarks?.[0]?.videoTitle ?? 'Untitled Video'])
+    (userBookmarks as BookmarkRow[] ?? []).map(r => [r.video_id, liveBookmarks(r.bookmarks)[0]?.videoTitle ?? 'Untitled Video'])
   );
   const groupMap = new Map<string, string>(
     (groups as GroupRow[] ?? []).map(g => [g.id, g.name])

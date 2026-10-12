@@ -14,6 +14,7 @@ import { pruneVideoMaps } from '../storage-maps.module.js';
 import { isTrustedExternalSender, buildAuthUser } from '../external-messaging.module.js';
 import { getValidToken } from '../auth-token.module.js';
 import { buildPendingRevision } from '../constants.module.js';
+import { initSyncEngine } from '../sync/sync-engine.js';
 // config.js is a plain script (no import/export) that only sets
 // globalThis.API_BASE — safe to import here for its side effect even though
 // the service worker has no HTML host to load it as a classic <script>.
@@ -32,6 +33,10 @@ import { registerUninstallUrl } from './uninstall-url.js';
 // denominator Release Health divides errors by; emitting it from the panel and
 // the dashboard too would count the same user several times over.
 const errorReporter = initErrorReporting('extension-background', { session: true });
+
+// Cloud sync lives here in the worker (docs/SYNC-ENGINE.md). Registered at
+// evaluation time, as MV3 requires for its storage/alarm/message listeners.
+initSyncEngine();
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const TAG_COLORS = {
