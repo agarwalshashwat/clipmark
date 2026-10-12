@@ -563,7 +563,17 @@ async function fetchTranscript() {
       const res = await fetch(`${track.baseUrl}&fmt=json3`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      // YouTube now answers 200 with an EMPTY body unless the request carries a
+      // proof-of-origin token, so `res.json()` threw "Unexpected end of JSON
+      // input" on every watch page and reported it. Empty = no transcript, not
+      // an error; a non-empty body that fails to parse still reports below.
+      const body = await res.text();
+      if (!body.trim()) {
+        debugLog('Transcript', 'Empty timedtext response');
+        cachedTranscript = [];
+        return [];
+      }
+      const data = JSON.parse(body);
 
       // YouTube json3 format: { events: [{ tStartMs, dDurationMs, segs: [{ utf8 }] }] }
       const segments = (data.events || [])
