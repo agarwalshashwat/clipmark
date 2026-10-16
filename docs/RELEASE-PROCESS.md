@@ -370,3 +370,5 @@ Backfill candidates, if you want them. Each is the last commit on the newest ext
 | 1.0.3 | `a9e8f03` | `30911b4` … `a9e8f03` (9 commits) | 5 — the muddiest; `349c9075` … `a9e8f03` share the final tree |
 
 Backfilled tags should say so in the message so nobody mistakes a reconstruction for a record.
+
+**`v1.0.14` was moved on 2026-10-17.** It originally pointed at `fc518cc`, the fix commit *before* the version bump, so a rebuild from the tag produced a 1.0.13 manifest. It was force-updated to `4d7319a` (the merge of #174, manifest 1.0.14). The only source difference between the two commits is the version bump, so the shipped zip corresponds to the corrected tag; its sha256 in the tag message is the as-shipped artifact's, not a re-verified rebuild. Root cause: `cut-release.sh` tags the current HEAD when run with the bump uncommitted, so the tag lands one commit early — land the bump before relying on the tag, or tag after the bump merges.
