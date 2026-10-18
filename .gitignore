@@ -81,3 +81,14 @@ clipmark-extension-*.zip
 # Release candidates cut by scripts/cut-release.sh — build outputs, never committed.
 # The zip that goes to the Chrome Web Store is rebuilt from the tagged commit.
 release-artifacts/
+
+# Defensive net for credential files that must never enter this (or any) repo.
+# The real CWS publish service-account key lives out-of-repo at
+# ~/.config/cws/service-account.json — nothing under this name should ever
+# legitimately exist here, so these patterns exist purely to catch an accident.
+service-account*.json
+*.iam.gserviceaccount.com.json
+*-key.json
+*.pem
+.secrets/
+secrets/*.json
