@@ -98,18 +98,37 @@ The recovery is to run the migration body with `ON CONFLICT (version) DO NOTHING
 ledger insert, which is exactly what happened here — so `018`'s `applied_at` (08:51 UTC)
 is the timestamp of the *failed* attempt, a few hours before the DDL actually landed.
 
-## Accepted assumption: migrations rely on hosted Supabase's default grants
+## Grants: every `CREATE TABLE` ships its own
 
-These migrations **do not** explicitly `GRANT` table-level data privileges to the API
-roles (`anon`, `authenticated`, `service_role`). They assume hosted Supabase grants them
-via schema-level default privileges — so production works as-is.
+From **2026-10-30** Supabase no longer auto-grants Data API access on newly created
+`public` tables. A migration that creates a table and doesn't grant on it leaves
+supabase-js / PostgREST / GraphQL answering `permission denied` on any project that
+replays migrations (fresh project, preview branch, local `supabase db reset`). Tables that
+already exist keep their grants, so production is unaffected.
 
-- `013_rls_hardening.sql` `REVOKE`s UPDATE on `profiles` and re-grants specific columns;
-  this only makes sense *on top of* an existing base grant.
-- A bare local `supabase start` does **not** apply those default grants, so the
-  integration harness applies `ALTER DEFAULT PRIVILEGES` **before** migrations
-  (`tests/integration/fixtures/db-admin.ts` → `npm run db:bootstrap`). Test-harness
-  concern only; hosted Supabase already has the grants.
+`020_explicit_api_grants.sql` backfills the grants for every table in `001`–`019`. **From
+`021` on, a migration that creates a public table must grant in the same file**, least
+privilege, bounded by the table's RLS policies (grants are table-level; RLS is the row
+filter — never grant what no policy or code path uses, and never enable a grant without
+RLS on):
 
-**TODO (future self-host / hardening pass):** make grants explicit in the migrations
-instead of relying on the platform default. Deferred intentionally.
+```sql
+CREATE TABLE IF NOT EXISTS public.<table> ( ... );
+ALTER TABLE public.<table> ENABLE ROW LEVEL SECURITY;
+-- + CREATE POLICY ... for each operation you grant below
+
+GRANT SELECT ON public.<table> TO anon;                                 -- only if publicly readable
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated; -- only the ops a policy allows
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO service_role;  -- server routes (bypass RLS, still need privileges)
+-- Service-role-only table (e.g. pending_refunds): grant to service_role only.
+-- Write-only intake (e.g. feedback): column-level INSERT, no SELECT — see 017.
+```
+
+Use `GRANT` only, never a table-wide `REVOKE`, unless the table really is hardened (013,
+014, 017–019 show the column-level pattern) — a blanket grant on top of those would undo
+them. Sequences (`serial`/`identity`) need `GRANT USAGE, SELECT ON SEQUENCE ... TO` the
+same roles; none exist today (all ids are `gen_random_uuid()`).
+
+`db:bootstrap` (default privileges in `tests/integration/fixtures/db-admin.ts`) is now
+redundant for correctness and **masks a missing grant** in CI; to prove a new migration's
+grants, replay it on a database *without* bootstrap and run a query as each API role.

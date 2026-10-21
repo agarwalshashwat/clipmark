@@ -75,8 +75,8 @@ Add or update tests near the behavior you change — especially storage schema, 
 lifecycle, and UI injection flows.
 
 `npm run test:integration` needs a local Supabase stack: `supabase start` plus
-`npm --prefix webapp run db:bootstrap`. That bootstrap step is not optional — see the grants
-note under *Migrations*.
+`npm --prefix webapp run db:bootstrap` (kept for the harness; it no longer substitutes for a
+migration's own grants — see the grants note under *Migrations*).
 
 ### CI
 
@@ -160,10 +160,10 @@ against `DATABASE_URL`, and tracked in `public.schema_migrations`.
   INSERT INTO public.schema_migrations (version) VALUES ('NNN_name.sql') ON CONFLICT (version) DO NOTHING;
   ```
 
-- These migrations don't `GRANT` table privileges explicitly — they assume hosted Supabase's
-  default schema-level grants and layer `REVOKE`/column-`GRANT` on top. A bare local
-  `supabase start` lacks those defaults, which is why the integration harness runs
-  `npm --prefix webapp run db:bootstrap` before migrating.
+- Every migration that `CREATE`s a public table must `GRANT` on it in the same file
+  (Supabase stops auto-granting on new tables 2026-10-30). `020_explicit_api_grants.sql`
+  backfilled `001`–`019`; the per-table template and least-privilege rules are in
+  `webapp/migrations/README.md` → *Grants: every `CREATE TABLE` ships its own*.
 
 Taking a production backup: this machine has **no `pg_dump`**, and Ubuntu's default
 `postgresql-client` is PG 16 — too old for the PG 17 hosted server. Dump through Docker

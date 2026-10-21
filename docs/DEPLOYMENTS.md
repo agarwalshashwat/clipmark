@@ -67,7 +67,8 @@ DATABASE_URL='<prod DATABASE_URL>' npm run db:migrate
 ```
 
 - `db:bootstrap` is a **local-only** helper (hosted Supabase already has the
-  grants it adds); don't run it against prod.
+  grants it adds); don't run it against prod. It no longer stands in for a migration's own
+  grants — new `CREATE TABLE` migrations must include them (`migrations/README.md`).
 - Get the prod `DATABASE_URL` from Supabase dashboard → **Settings → Database →
   Connection string → URI** (Session pooler, port 5432). Note: your `.env` may
   only have the Supabase **API** keys, not this direct Postgres string — you may
